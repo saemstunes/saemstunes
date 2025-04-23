@@ -9,6 +9,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Auth from "./pages/Auth"; // New Auth page
 import Videos from "./pages/Videos";
 import VideoDetail from "./pages/VideoDetail";
 import Resources from "./pages/Resources";
@@ -31,8 +32,9 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+            <Route path="/login" element={<Auth />} />
+            <Route path="/signup" element={<Auth />} />
+            <Route path="/auth" element={<Auth />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             <Route path="/videos" element={<Videos />} />
             <Route path="/videos/:id" element={<VideoDetail />} />
@@ -42,12 +44,12 @@ const App = () => (
             
             {/* Protected Routes */}
             <Route path="/bookings" element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRoles={["student", "adult", "parent"]}>
                 <Bookings />
               </ProtectedRoute>
             } />
             <Route path="/book/:id" element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRoles={["student", "adult", "parent"]}>
                 <BookTutor />
               </ProtectedRoute>
             } />

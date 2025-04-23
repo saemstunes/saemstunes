@@ -4,8 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth, UserRole } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Music, ArrowRight } from "lucide-react";
+import { Music, ArrowRight, Loader2, AlertCircle } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -20,33 +19,77 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+
+const USER_ROLES: { value: UserRole; label: string }[] = [
+  { value: "student", label: "Student" },
+  { value: "adult", label: "Adult Learner" },
+  { value: "parent", label: "Parent/Guardian" },
+  { value: "teacher", label: "Music Teacher" },
+];
+
+const formSchema = z.object({
+  name: z
+    .string()
+    .min(2, "Name must be at least 2 characters")
+    .max(50, "Name must be less than 50 characters"),
+  email: z.string().email("Please enter a valid email"),
+  password: z
+    .string()
+    .min(6, "Password must be at least 6 characters")
+    .max(50, "Password must be less than 50 characters"),
+  role: z.enum(["student", "adult", "parent", "teacher", "admin"] as const),
+});
+
+type FormData = z.infer<typeof formSchema>;
 
 const SignupForm = () => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState<UserRole>("student");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { signup } = useAuth();
   const navigate = useNavigate();
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      role: "student",
+    },
+  });
+
+  const handleSignup = async (data: FormData) => {
+    setIsSubmitting(true);
 
     try {
-      await signup(name, email, password, role);
+      await signup(data.name, data.email, data.password, data.role);
       navigate("/");
     } catch (error) {
       console.error("Signup failed:", error);
       // Toast is already shown in the auth context
+      const errorMessage = 
+        error instanceof Error 
+          ? error.message 
+          : "An error occurred during signup";
+          
+      form.setError("root", { message: errorMessage });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="w-full border-gold/20 shadow-lg">
       <CardHeader className="space-y-1">
         <div className="flex justify-center mb-4">
           <div className="bg-gold/10 p-3 rounded-full">
@@ -57,86 +100,135 @@ const SignupForm = () => {
           Create Account
         </CardTitle>
         <CardDescription className="text-center">
-          Enter your information to create your account
+          Enter your information to start your musical journey
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSignup}>
-          <div className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="John Doe"
-                required
-                disabled={isLoading}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@example.com"
-                required
-                disabled={isLoading}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                disabled={isLoading}
-                minLength={6}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="role">I am a</Label>
-              <Select
-                value={role}
-                onValueChange={(value) => setRole(value as UserRole)}
-                disabled={isLoading}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select your role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="student">Student</SelectItem>
-                  <SelectItem value="adult">Adult Learner</SelectItem>
-                  <SelectItem value="parent">Parent/Guardian</SelectItem>
-                  <SelectItem value="teacher">Music Teacher</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSignup)} className="space-y-4">
+            {form.formState.errors.root && (
+              <div className="bg-destructive/10 text-destructive p-3 rounded-md flex items-center gap-2 text-sm">
+                <AlertCircle className="h-4 w-4" />
+                {form.formState.errors.root.message}
+              </div>
+            )}
+            
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Full Name</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="John Doe" 
+                      {...field} 
+                      disabled={isSubmitting} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="email" 
+                      placeholder="name@example.com" 
+                      {...field} 
+                      disabled={isSubmitting} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="password"
+                      placeholder="••••••••"
+                      {...field}
+                      disabled={isSubmitting}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>I am a</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    disabled={isSubmitting}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select your role" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {USER_ROLES.map((role) => (
+                        <SelectItem key={role.value} value={role.value}>
+                          {role.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <Button
               type="submit"
-              disabled={isLoading}
-              className="bg-gold hover:bg-gold-dark text-white"
+              disabled={isSubmitting}
+              className="w-full bg-gold hover:bg-gold/90 text-white"
             >
-              {isLoading ? "Creating account..." : "Create Account"}
-              {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating account...
+                </>
+              ) : (
+                <>
+                  Create Account
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
             </Button>
+            
             <div className="text-center text-sm">
               Already have an account?{" "}
               <Button
                 variant="link"
-                className="p-0 text-gold hover:text-gold-dark"
-                onClick={() => navigate("/login")}
+                className="p-0 text-gold hover:text-gold/80"
+                onClick={() => navigate("/auth?tab=login")}
+                type="button"
               >
-                Login
+                Sign in
               </Button>
             </div>
-          </div>
-        </form>
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );

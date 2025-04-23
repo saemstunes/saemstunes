@@ -1,13 +1,28 @@
 
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Home, Compass, Library, Search, User } from "lucide-react";
+import { Home, Compass, Library, Search, User, LogOut } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const MobileNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const { toast } = useToast();
+
+  const handleAuthAction = () => {
+    if (user) {
+      logout();
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out",
+      });
+      navigate("/");
+    } else {
+      navigate("/auth");
+    }
+  };
 
   const navigation = [
     {
@@ -35,10 +50,11 @@ const MobileNavigation = () => {
       public: true
     },
     {
-      name: "Profile",
-      href: user ? "/profile" : "/login",
+      name: user ? "Profile" : "Sign In",
+      href: user ? "/profile" : "/auth",
       icon: User,
-      public: true
+      public: true,
+      onClick: user ? undefined : handleAuthAction
     }
   ];
 
@@ -57,7 +73,7 @@ const MobileNavigation = () => {
         {filteredNavigation.map((item) => (
           <button
             key={item.name}
-            onClick={() => navigate(item.href)}
+            onClick={() => item.onClick ? item.onClick() : navigate(item.href)}
             className={cn(
               "flex flex-col items-center justify-center py-2 px-4 w-full",
               isActive(item.href) 
