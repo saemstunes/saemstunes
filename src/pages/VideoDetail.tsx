@@ -6,7 +6,7 @@ import { mockVideos } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Clock, Calendar, User, BookOpen } from "lucide-react";
+import { ArrowLeft, Clock, Calendar, User, BookOpen, Lock } from "lucide-react";
 
 const VideoDetail = () => {
   const { id } = useParams<{ id: string }>();

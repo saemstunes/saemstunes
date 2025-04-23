@@ -20,12 +20,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import ThemeToggle from "@/components/theme/ThemeToggle";
+import MobileNavigation from "./MobileNavigation";
+import MiniPlayer from "../player/MiniPlayer";
 
 interface MainLayoutProps {
   children: ReactNode;
+  showMiniPlayer?: boolean;
 }
 
-const MainLayout = ({ children }: MainLayoutProps) => {
+const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -81,6 +84,16 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   const handleNavigation = (href: string) => {
     navigate(href);
     setIsMobileMenuOpen(false);
+  };
+
+  // Sample track data for the MiniPlayer
+  const trackData = {
+    isPlaying: false,
+    title: "Example Track",
+    artist: "Example Artist",
+    thumbnail: "/placeholder.svg",
+    onTogglePlay: () => console.log("Toggle play"),
+    onExpand: () => navigate("/player"),
   };
 
   return (
@@ -257,9 +270,13 @@ const MainLayout = ({ children }: MainLayoutProps) => {
 
         {/* Main Content */}
         <main className="flex-1">
-          <div className="container mx-auto py-6 px-4 lg:px-6 min-h-screen">
+          <div className="container mx-auto py-6 px-4 lg:px-6 min-h-screen pb-24 lg:pb-6">
             {children}
           </div>
+          
+          {/* Mobile Navigation */}
+          {showMiniPlayer && <MiniPlayer {...trackData} />}
+          <MobileNavigation />
         </main>
       </div>
     </div>
