@@ -2,36 +2,43 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Home, Compass, Library, Search, User } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 const MobileNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const navigation = [
     {
       name: "Home",
       href: "/",
-      icon: Home
+      icon: Home,
+      public: true
     },
     {
       name: "Browse",
       href: "/videos",
-      icon: Compass
+      icon: Compass,
+      public: true
     },
     {
       name: "Library",
       href: "/resources",
-      icon: Library
+      icon: Library,
+      public: true
     },
     {
       name: "Search",
       href: "/search",
-      icon: Search
+      icon: Search,
+      public: true
     },
     {
       name: "Profile",
-      href: "/profile",
-      icon: User
+      href: user ? "/profile" : "/login",
+      icon: User,
+      public: true
     }
   ];
 
@@ -40,10 +47,14 @@ const MobileNavigation = () => {
       (path !== '/' && location.pathname.startsWith(path));
   };
 
+  const filteredNavigation = navigation.filter(
+    item => item.public || (user && !item.public)
+  );
+
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border lg:hidden z-50">
       <div className="flex items-center justify-around">
-        {navigation.map((item) => (
+        {filteredNavigation.map((item) => (
           <button
             key={item.name}
             onClick={() => navigate(item.href)}
