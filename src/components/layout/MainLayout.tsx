@@ -1,4 +1,3 @@
-
 import React, { ReactNode, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -14,6 +13,8 @@ import {
   Menu,
   X,
   Music,
+  Compass,
+  Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -42,21 +43,21 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
       roles: ["student", "adult", "parent", "teacher", "admin"],
     },
     {
-      name: "Videos",
-      href: "/videos",
-      icon: Video,
+      name: "Discover",
+      href: "/discover",
+      icon: Compass,
       roles: ["student", "adult", "parent", "teacher", "admin"],
     },
     {
-      name: "Resources",
-      href: "/resources",
+      name: "Library",
+      href: "/library",
       icon: BookOpen,
       roles: ["student", "adult", "parent", "teacher", "admin"],
     },
     {
-      name: "Bookings",
-      href: "/bookings",
-      icon: Calendar,
+      name: "Community",
+      href: "/community",
+      icon: Video,
       roles: ["student", "adult", "parent", "teacher", "admin"],
     },
     {
@@ -187,6 +188,14 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
           </div>
 
           <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/search')}
+            >
+              <Search className="h-5 w-5" />
+              <span className="sr-only">Search</span>
+            </Button>
             <ThemeToggle />
             {user ? (
               <Avatar

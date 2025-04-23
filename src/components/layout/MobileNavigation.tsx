@@ -1,7 +1,7 @@
 
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Home, Compass, Library, Search, User, LogOut } from "lucide-react";
+import { Home, Compass, Library, User, Search, Users, Music, Play } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -32,21 +32,21 @@ const MobileNavigation = () => {
       public: true
     },
     {
-      name: "Browse",
-      href: "/videos",
+      name: "Discover",
+      href: "/discover",
       icon: Compass,
       public: true
     },
     {
       name: "Library",
-      href: "/resources",
+      href: "/library",
       icon: Library,
       public: true
     },
     {
-      name: "Search",
-      href: "/search",
-      icon: Search,
+      name: "Community",
+      href: "/community",
+      icon: Users,
       public: true
     },
     {

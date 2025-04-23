@@ -9,7 +9,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import Auth from "./pages/Auth"; // New Auth page
+import Auth from "./pages/Auth"; 
 import Videos from "./pages/Videos";
 import VideoDetail from "./pages/VideoDetail";
 import Resources from "./pages/Resources";
@@ -20,6 +20,12 @@ import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import Search from "./pages/Search";
 import Unauthorized from "./pages/Unauthorized";
+import Discover from "./pages/Discover";
+import Library from "./pages/Library";
+import Community from "./pages/Community";
+import Player from "./pages/Player";
+import ArtistProfile from "./pages/ArtistProfile";
+import LearningHub from "./pages/LearningHub";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +47,12 @@ const App = () => (
             <Route path="/resources" element={<Resources />} />
             <Route path="/resources/:id" element={<ResourceDetail />} />
             <Route path="/search" element={<Search />} />
+            <Route path="/discover" element={<Discover />} />
+            <Route path="/library" element={<Library />} />
+            <Route path="/community" element={<Community />} />
+            <Route path="/player" element={<Player />} />
+            <Route path="/learning-hub" element={<LearningHub />} />
+            <Route path="/artist/:id" element={<ArtistProfile />} />
             
             {/* Protected Routes */}
             <Route path="/bookings" element={
