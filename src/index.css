@@ -1,5 +1,6 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://use.typekit.net/abc123.css'); /* Placeholder for Proxima Nova - needs actual license */
 
 @tailwind base;
 @tailwind components;
@@ -75,11 +76,15 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-poppins;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-serif;
+    @apply font-proxima;
+  }
+
+  .logo-font {
+    font-family: 'Null Free', sans-serif;
   }
 
   .music-note-pattern {
@@ -115,5 +120,14 @@
   
   .custom-scrollbar::-webkit-scrollbar-thumb {
     @apply bg-gold/50 rounded-full hover:bg-gold;
+  }
+  
+  /* Added styles for logo and links */
+  .brand-logo {
+    @apply transition-transform duration-300 hover:scale-105;
+  }
+  
+  .social-link {
+    @apply p-2 rounded-full transition-all hover:bg-gold/10;
   }
 }

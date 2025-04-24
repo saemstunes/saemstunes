@@ -1,3 +1,4 @@
+
 import React, { ReactNode, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -12,9 +13,10 @@ import {
   LogOut,
   Menu,
   X,
-  Music,
-  Compass,
   Search,
+  Instagram,
+  Mail,
+  Heart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -23,6 +25,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 import MobileNavigation from "./MobileNavigation";
 import MiniPlayer from "../player/MiniPlayer";
+import Logo from "../branding/Logo";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -45,7 +48,7 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
     {
       name: "Discover",
       href: "/discover",
-      icon: Compass,
+      icon: Video,
       roles: ["student", "adult", "parent", "teacher", "admin"],
     },
     {
@@ -71,6 +74,27 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
       href: "/settings",
       icon: Settings,
       roles: ["student", "adult", "parent", "teacher", "admin"],
+    },
+  ];
+
+  const socialLinks = [
+    {
+      name: "Follow us",
+      href: "https://instagram.com/saemstunes",
+      icon: Instagram,
+      ariaLabel: "Follow us on Instagram",
+    },
+    {
+      name: "Contact us",
+      href: "mailto:contact@saemstunes.com",
+      icon: Mail,
+      ariaLabel: "Email us",
+    },
+    {
+      name: "Support us",
+      href: "/support",
+      icon: Heart,
+      ariaLabel: "Support Saem's Tunes",
     },
   ];
 
@@ -112,10 +136,7 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
               </SheetTrigger>
               <SheetContent side="left" className="w-[280px] sm:w-[350px]">
                 <nav className="flex flex-col gap-6">
-                  <div className="flex items-center gap-2 mb-6">
-                    <Music className="h-6 w-6 text-gold" />
-                    <h3 className="font-serif text-xl font-bold">Saem's Tunes</h3>
-                  </div>
+                  <Logo size="md" className="mb-6" />
 
                   {user && (
                     <>
@@ -164,6 +185,30 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
                     </Button>
                   )}
 
+                  <Separator className="my-4" />
+                  
+                  <div className="flex flex-col gap-3">
+                    {socialLinks.map((item) => (
+                      <Button
+                        key={item.name}
+                        variant="ghost"
+                        size="sm"
+                        className="justify-start gap-3 text-muted-foreground hover:text-gold"
+                        onClick={() => {
+                          if (item.href.startsWith('http') || item.href.startsWith('mailto')) {
+                            window.open(item.href, '_blank');
+                          } else {
+                            handleNavigation(item.href);
+                          }
+                        }}
+                        aria-label={item.ariaLabel}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {item.name}
+                      </Button>
+                    ))}
+                  </div>
+
                   <div className="mt-auto flex items-center justify-between">
                     <ThemeToggle />
                     <Button
@@ -179,12 +224,7 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
               </SheetContent>
             </Sheet>
 
-            <div className="flex items-center gap-2 ml-4">
-              <Music className="h-6 w-6 text-gold" />
-              <h1 className="font-serif text-xl font-bold">
-                Saem's <span className="text-gold">Tunes</span>
-              </h1>
-            </div>
+            <Logo size="md" className="ml-4" />
           </div>
 
           <div className="flex items-center gap-2">
@@ -217,11 +257,8 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
       <div className="flex-1 flex">
         {/* Desktop Sidebar */}
         <aside className="hidden lg:flex flex-col w-64 bg-card border-r border-border">
-          <div className="flex items-center gap-2 p-6">
-            <Music className="h-6 w-6 text-gold" />
-            <h1 className="font-serif text-xl font-bold">
-              Saem's <span className="text-gold">Tunes</span>
-            </h1>
+          <div className="p-6">
+            <Logo size="lg" />
           </div>
 
           {user && (
@@ -272,7 +309,30 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
             )}
           </nav>
 
-          <div className="p-4 mt-auto">
+          <Separator className="my-4" />
+          
+          <div className="px-4 pb-4 flex justify-between">
+            {socialLinks.map((item) => (
+              <Button
+                key={item.name}
+                variant="ghost"
+                size="icon"
+                className="social-link"
+                onClick={() => {
+                  if (item.href.startsWith('http') || item.href.startsWith('mailto')) {
+                    window.open(item.href, '_blank');
+                  } else {
+                    handleNavigation(item.href);
+                  }
+                }}
+                aria-label={item.ariaLabel}
+              >
+                <item.icon className="h-5 w-5" />
+              </Button>
+            ))}
+          </div>
+
+          <div className="p-4 border-t border-border">
             <ThemeToggle />
           </div>
         </aside>

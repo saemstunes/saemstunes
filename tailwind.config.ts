@@ -80,6 +80,8 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
+        proxima: ["Proxima Nova", "sans-serif"],
+        poppins: ["Poppins", "sans-serif"],
         serif: ["Playfair Display", "serif"],
         sans: ["Poppins", "sans-serif"],
       },
