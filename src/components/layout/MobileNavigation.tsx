@@ -1,7 +1,7 @@
 
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Home, Compass, Library, User, Bell } from "lucide-react";
+import { Home, Compass, Library, User, Bell, Users } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "../ui/badge";
@@ -46,11 +46,10 @@ const MobileNavigation = () => {
       public: true
     },
     {
-      name: "Notifications",
-      href: "/notifications",
-      icon: Bell,
-      public: true,
-      badge: hasNotifications
+      name: "Community",
+      href: "/community",
+      icon: Users,
+      public: true
     },
     {
       name: user ? "Profile" : "Sign In",

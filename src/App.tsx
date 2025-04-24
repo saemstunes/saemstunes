@@ -30,6 +30,7 @@ import Notifications from "./pages/Notifications";
 import FollowUs from "./pages/FollowUs";
 import ContactUs from "./pages/ContactUs";
 import SupportUs from "./pages/SupportUs";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +62,7 @@ const App = () => (
             <Route path="/follow-us" element={<FollowUs />} />
             <Route path="/contact-us" element={<ContactUs />} />
             <Route path="/support-us" element={<SupportUs />} />
+            <Route path="/settings" element={<Settings />} />
             
             {/* Protected Routes */}
             <Route path="/bookings" element={

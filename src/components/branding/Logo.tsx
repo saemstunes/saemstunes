@@ -2,6 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
@@ -18,6 +19,8 @@ const Logo = ({
   linkClassName,
   showText = true
 }: LogoProps) => {
+  const isMobile = useIsMobile();
+  
   const sizeClasses = {
     sm: 'h-6 w-6',
     md: 'h-8 w-8',
@@ -25,9 +28,9 @@ const Logo = ({
   };
   
   const textSizeClasses = {
-    sm: 'text-sm',
-    md: 'text-xl',
-    lg: 'text-2xl'
+    sm: 'text-xs',
+    md: isMobile ? 'text-sm' : 'text-xl',
+    lg: isMobile ? 'text-base' : 'text-2xl'
   };
 
   return (
@@ -37,7 +40,7 @@ const Logo = ({
     >
       {(variant === 'full' || variant === 'icon') && (
         <img 
-          src="/logo.svg" 
+          src="/lovable-uploads/e3e374c1-f53c-4422-9c57-5b051471828c.png" 
           alt="Saem's Tunes Logo" 
           className={cn(sizeClasses[size], className)} 
         />
