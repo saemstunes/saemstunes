@@ -1,9 +1,27 @@
 
 import React from 'react';
 import MainLayout from '@/components/layout/MainLayout';
-import { Instagram, TikTok, Facebook, Music } from 'lucide-react';
+import { Instagram, Facebook, Music } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+
+// Custom TikTok icon as it's not available in lucide-react
+const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+  </svg>
+);
 
 const FollowUs = () => {
   const socialPlatforms = [
@@ -18,7 +36,7 @@ const FollowUs = () => {
     {
       name: 'TikTok',
       description: 'Check out our trending music tutorials and quick lessons.',
-      icon: TikTok,
+      icon: TikTokIcon,
       url: 'https://tiktok.com/@saemstunes',
       username: '@saemstunes',
       color: 'from-black to-gray-800'
@@ -73,7 +91,7 @@ const FollowUs = () => {
                 <div className={`h-3 bg-gradient-to-r ${platform.color}`}></div>
                 <CardHeader className="pb-2">
                   <CardTitle className="flex items-center gap-2">
-                    <platform.icon className="h-5 w-5" />
+                    {React.createElement(platform.icon, { className: "h-5 w-5" })}
                     {platform.name}
                   </CardTitle>
                   <CardDescription>{platform.username}</CardDescription>

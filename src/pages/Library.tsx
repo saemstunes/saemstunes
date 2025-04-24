@@ -1,14 +1,14 @@
-
 import React, { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
-import { Library as LibraryIcon, BookOpen, Bookmark, Clock, Music, Graduation } from "lucide-react";
+import { Library as LibraryIcon, BookOpen, Bookmark, Clock, Music, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { mockVideos } from "@/data/mockData";
 import VideoCard from "@/components/videos/VideoCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 const Library = () => {
   const { user } = useAuth();
@@ -179,7 +179,7 @@ const Library = () => {
         {/* Music Courses Section */}
         <div className="mb-8">
           <h2 className="text-xl font-proxima font-semibold mb-4 flex items-center">
-            <Graduation className="h-5 w-5 text-gold mr-2" />
+            <GraduationCap className="h-5 w-5 text-gold mr-2" />
             Music Courses
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

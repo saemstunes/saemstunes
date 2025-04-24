@@ -1,4 +1,3 @@
-
 import React, { ReactNode, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -18,7 +17,6 @@ import {
   Mail,
   Heart,
   Bell,
-  TikTok,
   Facebook,
   Music,
 } from "lucide-react";
@@ -32,6 +30,24 @@ import MiniPlayer from "../player/MiniPlayer";
 import Logo from "../branding/Logo";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "../ui/badge";
+
+// Custom TikTok icon as it's not available in lucide-react
+const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+  </svg>
+);
 
 interface MainLayoutProps {
   children: ReactNode;
