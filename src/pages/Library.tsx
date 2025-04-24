@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -24,7 +25,7 @@ const Library = () => {
       id: "course1",
       title: "Beginner Piano Masterclass",
       description: "Learn piano fundamentals from scratch",
-      instructor: "Saem Khalid",
+      instructor: "Saem",
       duration: "8 weeks",
       level: "beginner",
       thumbnail: "/placeholder.svg",
@@ -57,7 +58,7 @@ const Library = () => {
       id: "course4",
       title: "Advanced Guitar Techniques",
       description: "Take your guitar skills to the next level",
-      instructor: "Saem Khalid",
+      instructor: "Saem",
       duration: "12 weeks",
       level: "advanced",
       thumbnail: "/placeholder.svg",

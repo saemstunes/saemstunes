@@ -10,6 +10,7 @@ interface LogoProps {
   className?: string;
   linkClassName?: string;
   showText?: boolean;
+  inMobileMenu?: boolean;
 }
 
 const Logo = ({
@@ -17,7 +18,8 @@ const Logo = ({
   variant = 'full',
   className,
   linkClassName,
-  showText = true
+  showText = true,
+  inMobileMenu = false
 }: LogoProps) => {
   const isMobile = useIsMobile();
   
@@ -40,14 +42,18 @@ const Logo = ({
     >
       {(variant === 'full' || variant === 'icon') && (
         <img 
-          src="/lovable-uploads/e3e374c1-f53c-4422-9c57-5b051471828c.png" 
+          src="/lovable-uploads/4fdafda9-d6df-439b-935a-055eaf0f63c5.png" 
           alt="Saem's Tunes Logo" 
           className={cn(sizeClasses[size], className)} 
         />
       )}
       
       {(variant === 'full' || variant === 'text') && showText && (
-        <span className={cn("logo-font font-bold", textSizeClasses[size])}>
+        <span className={cn(
+          "logo-font font-bold", 
+          textSizeClasses[size],
+          inMobileMenu && "self-center" // Adjust vertical alignment in mobile menu
+        )}>
           Saem's <span className="text-gold">Tunes</span>
         </span>
       )}

@@ -1,4 +1,4 @@
-import React, { ReactNode, useState } from "react";
+import React, { ReactNode, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ import MiniPlayer from "../player/MiniPlayer";
 import Logo from "../branding/Logo";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "../ui/badge";
+import { useToast } from "@/hooks/use-toast";
 
 // Custom TikTok icon as it's not available in lucide-react
 const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -61,6 +62,63 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
   const isMobile = useIsMobile();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [hasNotifications] = useState(true);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [backButtonPressCount, setBackButtonPressCount] = useState(0);
+  const { toast } = useToast();
+
+  // Handle scroll effect for navbar
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Handle back button press
+  useEffect(() => {
+    const handleBackButton = (e: PopStateEvent) => {
+      if (location.pathname === '/') {
+        e.preventDefault();
+        if (backButtonPressCount === 0) {
+          toast({
+            title: "Tap again to exit app",
+            duration: 2000,
+          });
+          setBackButtonPressCount(1);
+          window.history.pushState(null, document.title, window.location.href);
+          
+          // Reset count after 3 seconds
+          setTimeout(() => {
+            setBackButtonPressCount(0);
+          }, 3000);
+        } else {
+          // In a real mobile app, this would exit the app
+          // For web, we'll just show a notification
+          toast({
+            title: "Exiting application",
+            description: "This would close the app on a mobile device",
+          });
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handleBackButton);
+    
+    // Set initial history state
+    if (location.pathname === '/') {
+      window.history.pushState(null, document.title, window.location.href);
+    }
+    
+    return () => {
+      window.removeEventListener('popstate', handleBackButton);
+    };
+  }, [location.pathname, backButtonPressCount, toast]);
+
+  // Scroll to top when route changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   const navigation = [
     {
@@ -147,8 +205,13 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Mobile Header */}
-      <header className="bg-card shadow-sm sticky top-0 z-40 lg:hidden">
+      {/* Mobile Header - Now with backdrop blur and transparency */}
+      <header className={cn(
+        "sticky top-0 z-40 lg:hidden transition-all duration-200",
+        isScrolled 
+          ? "bg-card/80 backdrop-blur-md shadow-sm" 
+          : "bg-transparent"
+      )}>
         <div className="container flex h-16 items-center justify-between px-4">
           <div className="flex items-center">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
@@ -160,7 +223,7 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
               </SheetTrigger>
               <SheetContent side="left" className="w-[280px] sm:w-[350px]">
                 <nav className="flex flex-col gap-6">
-                  <Logo size="md" className="mb-6" />
+                  <Logo size="md" className="mb-6" inMobileMenu={true} />
 
                   {user && (
                     <>
@@ -287,9 +350,14 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
       </header>
 
       <div className="flex-1 flex">
-        {/* Desktop Sidebar */}
+        {/* Desktop Sidebar - Now with transparent header */}
         <aside className="hidden lg:flex flex-col w-64 bg-card border-r border-border">
-          <div className="p-6">
+          <div className={cn(
+            "p-6 sticky top-0 z-40 transition-all duration-200",
+            isScrolled 
+              ? "bg-card/80 backdrop-blur-md" 
+              : "bg-transparent"
+          )}>
             <Logo size="lg" />
           </div>
 

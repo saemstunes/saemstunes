@@ -31,6 +31,9 @@ import FollowUs from "./pages/FollowUs";
 import ContactUs from "./pages/ContactUs";
 import SupportUs from "./pages/SupportUs";
 import Settings from "./pages/Settings";
+import Services from "./pages/Services";
+import Payment from "./pages/Payment";
+import PaymentSuccess from "./pages/PaymentSuccess";
 
 const queryClient = new QueryClient();
 
@@ -57,12 +60,16 @@ const App = () => (
             <Route path="/community" element={<Community />} />
             <Route path="/player" element={<Player />} />
             <Route path="/learning-hub" element={<LearningHub />} />
+            <Route path="/learning-hub/:id" element={<LearningHub />} />
             <Route path="/artist/:id" element={<ArtistProfile />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/follow-us" element={<FollowUs />} />
             <Route path="/contact-us" element={<ContactUs />} />
             <Route path="/support-us" element={<SupportUs />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/payment" element={<Payment />} />
+            <Route path="/payment-success" element={<PaymentSuccess />} />
             
             {/* Protected Routes */}
             <Route path="/bookings" element={

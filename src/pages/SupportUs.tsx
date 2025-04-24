@@ -1,3 +1,4 @@
+
 import React from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import { Heart, Gift, Star, Users, Music } from 'lucide-react';
@@ -16,7 +17,8 @@ const SupportUs = () => {
         { amount: "20", label: "Music Book" },
         { amount: "50", label: "New Strings" },
         { amount: "100", label: "Pro Supporter" },
-      ]
+      ],
+      url: "https://ko-fi.com/saemstunes"
     },
     {
       title: "Monthly Support",
@@ -27,7 +29,8 @@ const SupportUs = () => {
         { amount: "25", label: "Supporter" },
         { amount: "50", label: "Patron" },
         { amount: "100", label: "Benefactor" },
-      ]
+      ],
+      url: "https://ko-fi.com/saemstunes"
     },
   ];
 
@@ -52,8 +55,8 @@ const SupportUs = () => {
               <div className="w-full md:w-1/4">
                 <div className="aspect-square rounded-full overflow-hidden border-4 border-gold/20 mx-auto md:mx-0 max-w-[180px]">
                   <img 
-                    src="/placeholder.svg" 
-                    alt="Saem Khalid" 
+                    src="/lovable-uploads/4fdafda9-d6df-439b-935a-055eaf0f63c5.png" 
+                    alt="Saem" 
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -75,7 +78,7 @@ const SupportUs = () => {
                   big or small, brings us closer to our goal of making quality music education accessible to all.
                 </p>
                 <div className="mt-4 text-right">
-                  <p className="font-semibold">Saem Khalid</p>
+                  <p className="font-semibold">Saem</p>
                   <p className="text-sm text-muted-foreground">Founder, Saem's Tunes</p>
                 </div>
               </div>
@@ -125,7 +128,7 @@ const SupportUs = () => {
               <CardFooter>
                 <Button 
                   className="w-full bg-gold hover:bg-gold-dark"
-                  onClick={() => window.open('https://ko-fi.com/saemstunes', '_blank')}
+                  onClick={() => window.open(option.url, '_blank')}
                 >
                   Donate {option.title === 'One-time Donation' ? 'Now' : 'Monthly'}
                 </Button>
@@ -189,7 +192,11 @@ const SupportUs = () => {
                 </p>
               </CardContent>
               <CardFooter>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => window.open('https://linktr.ee/saemstunes', '_blank')}
+                >
                   Share Saem's Tunes
                 </Button>
               </CardFooter>
