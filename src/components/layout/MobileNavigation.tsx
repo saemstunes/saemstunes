@@ -85,7 +85,6 @@ const MobileNavigation = () => {
           >
             <div className="relative">
               <item.icon className="h-5 w-5" />
-              {/* Removing the 'badge' check that was causing the error */}
               {item.name === "Profile" && hasNotifications && (
                 <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full" />
               )}

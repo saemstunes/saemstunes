@@ -31,8 +31,8 @@ const Logo = ({
   
   const textSizeClasses = {
     sm: 'text-xs',
-    md: isMobile ? 'text-sm' : 'text-xl',
-    lg: isMobile ? 'text-base' : 'text-2xl'
+    md: isMobile ? 'text-xs' : 'text-xl', // Reduced text size for mobile
+    lg: isMobile ? 'text-sm' : 'text-2xl'  // Reduced text size for mobile
   };
 
   return (
@@ -52,7 +52,7 @@ const Logo = ({
         <span className={cn(
           "logo-font font-bold", 
           textSizeClasses[size],
-          inMobileMenu && "self-center" // Adjust vertical alignment in mobile menu
+          inMobileMenu && "self-center translate-y-0" // Adjust vertical alignment in mobile menu
         )}>
           Saem's <span className="text-gold">Tunes</span>
         </span>

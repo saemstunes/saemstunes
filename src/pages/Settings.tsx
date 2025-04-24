@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { 
@@ -20,7 +20,12 @@ import {
   Shield, 
   Monitor, 
   Save,
-  Moon
+  Moon,
+  Sun,
+  Smartphone,
+  PaintBucket,
+  PanelLeft,
+  PanelRight
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -37,11 +42,15 @@ import { useAuth } from "@/context/AuthContext";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import { Slider } from "@/components/ui/slider";
 
 const Settings = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [currentTheme, setCurrentTheme] = useState<'gold' | 'teal'>('gold');
+  const [brightness, setBrightness] = useState(100);
   
   // Settings state
   const [notificationSettings, setNotificationSettings] = useState({
@@ -70,6 +79,63 @@ const Settings = () => {
     fontSize: "medium",
     highContrast: false,
   });
+
+  // Apply theme based on the selected theme color
+  useEffect(() => {
+    // Get the root element
+    const root = document.documentElement;
+    
+    if (currentTheme === 'teal') {
+      // Apply teal theme
+      root.style.setProperty('--primary', '177 100% 22%'); // #036c5f
+      root.style.setProperty('--primary-foreground', '0 0% 100%');
+      root.style.setProperty('--accent', '177 54% 61%'); // #81cdc6
+      root.style.setProperty('--accent-foreground', '0 0% 100%');
+      root.style.setProperty('--gold', '180 100% 25%'); // #008080
+      root.style.setProperty('--gold-light', '177 54% 61%'); // #81cdc6
+      root.style.setProperty('--gold-dark', '179 94% 16%'); // #025043
+      localStorage.setItem('appThemeColor', 'teal');
+    } else {
+      // Default gold theme
+      root.style.setProperty('--primary', '43 100% 33%');
+      root.style.setProperty('--primary-foreground', '0 0% 100%');
+      root.style.setProperty('--accent', '43 60% 45%');
+      root.style.setProperty('--accent-foreground', '0 0% 100%');
+      root.style.setProperty('--gold', '43 100% 33%');
+      root.style.setProperty('--gold-light', '43 100% 50%');
+      root.style.setProperty('--gold-dark', '43 100% 25%');
+      localStorage.setItem('appThemeColor', 'gold');
+    }
+  }, [currentTheme]);
+
+  // Load saved theme on component mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('appThemeColor');
+    if (savedTheme === 'teal') {
+      setCurrentTheme('teal');
+    }
+    
+    // Load saved brightness
+    const savedBrightness = localStorage.getItem('appBrightness');
+    if (savedBrightness) {
+      const brightnessValue = parseInt(savedBrightness);
+      setBrightness(brightnessValue);
+      applyBrightness(brightnessValue);
+    }
+  }, []);
+
+  // Apply brightness filter
+  const applyBrightness = (value: number) => {
+    document.body.style.filter = `brightness(${value}%)`;
+    localStorage.setItem('appBrightness', value.toString());
+  };
+
+  // Handle brightness change
+  const handleBrightnessChange = (value: number[]) => {
+    const brightnessValue = value[0];
+    setBrightness(brightnessValue);
+    applyBrightness(brightnessValue);
+  };
   
   // Form submission handler (example)
   const handleSubmit = (settingType: string) => {
@@ -78,6 +144,30 @@ const Settings = () => {
       description: `Your ${settingType} settings have been saved.`,
     });
   };
+
+  // Theme options
+  const themeOptions = [
+    {
+      name: "Gold",
+      value: "gold",
+      preview: (
+        <div className="flex flex-col items-center">
+          <div className="w-8 h-8 rounded-full bg-amber-600"></div>
+          <span className="text-xs mt-1">Gold</span>
+        </div>
+      )
+    },
+    {
+      name: "Teal",
+      value: "teal",
+      preview: (
+        <div className="flex flex-col items-center">
+          <div className="w-8 h-8 rounded-full bg-teal-700"></div>
+          <span className="text-xs mt-1">Teal</span>
+        </div>
+      )
+    }
+  ];
 
   return (
     <MainLayout>
@@ -90,7 +180,7 @@ const Settings = () => {
         </div>
 
         <Tabs defaultValue="notifications" className="space-y-4">
-          <TabsList className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <TabsList className="grid grid-cols-2 md:grid-cols-4 gap-2 overflow-auto">
             <TabsTrigger value="notifications" className="text-center">
               <Bell className="h-4 w-4 mr-2 hidden sm:inline-block" />
               Notifications
@@ -410,92 +500,160 @@ const Settings = () => {
           <TabsContent value="display" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Display Preferences</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Monitor className="h-5 w-5" />
+                  Display Preferences
+                </CardTitle>
                 <CardDescription>
                   Customize how Saem's Tunes looks and behaves.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Theme</Label>
-                    <RadioGroup 
-                      defaultValue={displaySettings.theme} 
-                      onValueChange={(value) => 
-                        setDisplaySettings({...displaySettings, theme: value})
-                      }
-                      className="flex flex-col space-y-1"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="light" id="theme-light" />
-                        <Label htmlFor="theme-light">Light</Label>
+                {/* Theme Colors */}
+                <div className="space-y-3">
+                  <Label className="text-base">Theme Color</Label>
+                  <div className="flex flex-wrap gap-4 mt-2">
+                    {themeOptions.map((theme) => (
+                      <div
+                        key={theme.value}
+                        className={cn(
+                          "relative cursor-pointer hover:scale-105 transition-transform rounded-lg p-2 border",
+                          currentTheme === theme.value && "border-gold ring-1 ring-gold"
+                        )}
+                        onClick={() => setCurrentTheme(theme.value as 'gold' | 'teal')}
+                      >
+                        {theme.preview}
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="dark" id="theme-dark" />
-                        <Label htmlFor="theme-dark">Dark</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="system" id="theme-system" />
-                        <Label htmlFor="theme-system">Use System Preference</Label>
-                      </div>
-                    </RadioGroup>
+                    ))}
                   </div>
-                  
-                  <Separator />
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="language">Language</Label>
-                    <Select 
-                      defaultValue={displaySettings.language} 
-                      onValueChange={(value) => 
-                        setDisplaySettings({...displaySettings, language: value})
-                      }
-                    >
-                      <SelectTrigger id="language">
-                        <SelectValue placeholder="Select language" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="english">English</SelectItem>
-                        <SelectItem value="spanish">Español</SelectItem>
-                        <SelectItem value="french">Français</SelectItem>
-                        <SelectItem value="german">Deutsch</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="font-size">Font Size</Label>
-                    <Select 
-                      defaultValue={displaySettings.fontSize} 
-                      onValueChange={(value) => 
-                        setDisplaySettings({...displaySettings, fontSize: value})
-                      }
-                    >
-                      <SelectTrigger id="font-size">
-                        <SelectValue placeholder="Select font size" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="small">Small</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="large">Large</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="high-contrast">High Contrast Mode</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Increase contrast for better visibility
-                      </p>
-                    </div>
-                    <Switch 
-                      id="high-contrast" 
-                      checked={displaySettings.highContrast}
-                      onCheckedChange={(checked) => 
-                        setDisplaySettings({...displaySettings, highContrast: checked})
-                      }
+                </div>
+                
+                <Separator />
+                
+                {/* Brightness Control */}
+                <div className="space-y-3">
+                  <Label className="text-base">Screen Brightness</Label>
+                  <div className="flex items-center gap-4 mt-2">
+                    <Sun className="h-4 w-4 text-muted-foreground" />
+                    <Slider 
+                      min={50}
+                      max={150}
+                      step={5}
+                      value={[brightness]}
+                      onValueChange={handleBrightnessChange}
+                      className="flex-1"
                     />
+                    <Sun className="h-6 w-6" />
+                  </div>
+                </div>
+                
+                <Separator />
+                
+                <div className="space-y-2">
+                  <Label>Theme Mode</Label>
+                  <RadioGroup 
+                    defaultValue={displaySettings.theme} 
+                    onValueChange={(value) => 
+                      setDisplaySettings({...displaySettings, theme: value})
+                    }
+                    className="flex flex-col space-y-1"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="light" id="theme-light" />
+                      <Label htmlFor="theme-light" className="flex items-center gap-2">
+                        <Sun className="h-4 w-4" /> Light
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="dark" id="theme-dark" />
+                      <Label htmlFor="theme-dark" className="flex items-center gap-2">
+                        <Moon className="h-4 w-4" /> Dark
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="system" id="theme-system" />
+                      <Label htmlFor="theme-system" className="flex items-center gap-2">
+                        <Smartphone className="h-4 w-4" /> Use System Preference
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                
+                <Separator />
+                
+                <div className="space-y-2">
+                  <Label htmlFor="language">Language</Label>
+                  <Select 
+                    defaultValue={displaySettings.language} 
+                    onValueChange={(value) => 
+                      setDisplaySettings({...displaySettings, language: value})
+                    }
+                  >
+                    <SelectTrigger id="language">
+                      <SelectValue placeholder="Select language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="english">English</SelectItem>
+                      <SelectItem value="spanish">Español</SelectItem>
+                      <SelectItem value="french">Français</SelectItem>
+                      <SelectItem value="german">Deutsch</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="font-size">Font Size</Label>
+                  <Select 
+                    defaultValue={displaySettings.fontSize} 
+                    onValueChange={(value) => 
+                      setDisplaySettings({...displaySettings, fontSize: value})
+                    }
+                  >
+                    <SelectTrigger id="font-size">
+                      <SelectValue placeholder="Select font size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="small">Small</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="large">Large</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="high-contrast">High Contrast Mode</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Increase contrast for better visibility
+                    </p>
+                  </div>
+                  <Switch 
+                    id="high-contrast" 
+                    checked={displaySettings.highContrast}
+                    onCheckedChange={(checked) => 
+                      setDisplaySettings({...displaySettings, highContrast: checked})
+                    }
+                  />
+                </div>
+                
+                <Separator />
+                
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="sidebar-display">Sidebar Display</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Show or hide sidebar elements on desktop
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="flex items-center gap-1">
+                      <PanelLeft className="h-4 w-4" />
+                      <span className="hidden sm:inline">Collapsed</span>
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex items-center gap-1">
+                      <PanelRight className="h-4 w-4" />
+                      <span className="hidden sm:inline">Expanded</span>
+                    </Button>
                   </div>
                 </div>
               </CardContent>

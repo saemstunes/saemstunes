@@ -1,3 +1,4 @@
+
 import React, { ReactNode, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -146,6 +147,12 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
       roles: ["student", "adult", "parent", "teacher", "admin"],
     },
     {
+      name: "Music Tools",
+      href: "/music-tools",
+      icon: Music,
+      roles: ["student", "adult", "parent", "teacher", "admin"],
+    },
+    {
       name: "Profile",
       href: "/profile",
       icon: User,
@@ -205,11 +212,11 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Mobile Header - Now with backdrop blur and transparency */}
+      {/* Mobile Header - With backdrop blur and transparency */}
       <header className={cn(
         "sticky top-0 z-40 lg:hidden transition-all duration-200",
         isScrolled 
-          ? "bg-card/80 backdrop-blur-md shadow-sm" 
+          ? "bg-background/80 backdrop-blur-md shadow-sm border-b border-border/50" 
           : "bg-transparent"
       )}>
         <div className="container flex h-16 items-center justify-between px-4">
@@ -308,11 +315,12 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
             <Logo size="md" className="ml-4" />
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 md:gap-2">
             <Button 
               variant="ghost"
               size="icon"
               onClick={() => navigate('/search')}
+              className="ml-auto"
             >
               <Search className="h-5 w-5" />
               <span className="sr-only">Search</span>
@@ -332,17 +340,24 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
             </Button>
             
             <ThemeToggle />
+            
             {user ? (
               <Avatar
-                className="cursor-pointer"
+                className="cursor-pointer h-8 w-8"
                 onClick={() => navigate("/profile")}
               >
                 <AvatarImage src={user.avatar} alt={user.name} />
                 <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
               </Avatar>
             ) : (
-              <Button size="sm" onClick={() => navigate("/auth")}>
-                Login
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                onClick={() => navigate("/auth")}
+                className="h-8 w-8"
+              >
+                <User className="h-5 w-5" />
+                <span className="sr-only">Login</span>
               </Button>
             )}
           </div>
@@ -350,7 +365,7 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
       </header>
 
       <div className="flex-1 flex">
-        {/* Desktop Sidebar - Now with transparent header */}
+        {/* Desktop Sidebar - With transparent header */}
         <aside className="hidden lg:flex flex-col w-64 bg-card border-r border-border">
           <div className={cn(
             "p-6 sticky top-0 z-40 transition-all duration-200",

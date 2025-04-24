@@ -8,6 +8,7 @@
 
 @layer base {
   :root {
+    /* Default Gold Theme */
     --background: 36 33% 97%;
     --foreground: 20 14% 21%;
 
@@ -37,6 +38,13 @@
     --ring: 43 100% 33%;
 
     --radius: 0.75rem;
+
+    /* Theme Colors */
+    --gold: 43 100% 33%;
+    --gold-light: 43 100% 50%;
+    --gold-dark: 43 100% 25%;
+    
+    /* Teal theme will override these via JavaScript */
   }
 
   .dark {
@@ -90,6 +98,34 @@
   .music-note-pattern {
     background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 10.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM10.5 20a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM30 20a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM20 30a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z' fill='rgba(166, 124, 0, 0.05)' fill-rule='evenodd'/%3E%3C/svg%3E");
   }
+  
+  /* Mobile responsive layout improvements */
+  @media (max-width: 640px) {
+    h1 {
+      @apply text-2xl;
+    }
+    
+    h2 {
+      @apply text-xl;
+    }
+    
+    .container {
+      @apply px-3;
+    }
+  }
+  
+  /* Dynamic spacing using clamp for responsive layouts */
+  .responsive-padding {
+    padding: clamp(1rem, 5vw, 2rem);
+  }
+  
+  .responsive-width {
+    width: clamp(280px, 90vw, 1200px);
+  }
+  
+  .responsive-gap {
+    gap: clamp(0.5rem, 2vw, 1.5rem);
+  }
 }
 
 @layer components {
@@ -129,5 +165,42 @@
   
   .social-link {
     @apply p-2 rounded-full transition-all hover:bg-gold/10;
+  }
+  
+  /* Improved responsive layouts */
+  .responsive-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4;
+  }
+  
+  /* Improved card layout for mobile */
+  .mobile-card {
+    @apply p-3 sm:p-4;
+  }
+  
+  /* Flexible content width */
+  .content-width {
+    width: min(100%, 1200px);
+  }
+  
+  /* Dynamic spacing with responsive units */
+  .vertical-rhythm {
+    @apply space-y-4 sm:space-y-6;
+  }
+  
+  /* Header with responsive font size */
+  .responsive-heading {
+    @apply text-xl sm:text-2xl md:text-3xl font-bold;
+  }
+  
+  /* Button with proper touch target size */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  /* Remove hover effects on mobile */
+  @media (hover: hover) {
+    .hover-effect {
+      @apply transition-all hover:scale-105;
+    }
   }
 }

@@ -5,7 +5,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Compass, Search, Music, Mic, User, BookOpen } from "lucide-react";
 import { mockVideos } from "@/data/mockData";
-import VideoCard from "@/components/videos/VideoCard";
+import VideoCardWrapper from "@/components/videos/VideoCardWrapper";
 import { useNavigate } from "react-router-dom";
 import { 
   NavigationMenu,
@@ -176,7 +176,7 @@ const Discover = () => {
             <h2 className="text-xl font-proxima font-semibold mb-4">Popular Music Worldwide</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {mockVideos.slice(0, 8).map(video => (
-                <VideoCard 
+                <VideoCardWrapper 
                   key={video.id} 
                   video={video} 
                   onClick={() => navigate(`/videos/${video.id}`)}
@@ -238,7 +238,7 @@ const Discover = () => {
             <h2 className="text-xl font-proxima font-semibold mb-4">External Educational Content</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {mockVideos.filter(v => v.category === "Vocal Development").slice(0, 4).map(video => (
-                <VideoCard 
+                <VideoCardWrapper 
                   key={video.id} 
                   video={video} 
                   onClick={() => navigate(`/videos/${video.id}`)}
