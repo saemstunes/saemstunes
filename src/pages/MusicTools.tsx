@@ -16,6 +16,10 @@ import { Input } from "@/components/ui/input";
 import { Music, Mic, MicOff, Play, Square, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+interface Window {
+  webkitAudioContext: typeof AudioContext;
+}
+
 const MusicTools = () => {
   const [activeTab, setActiveTab] = useState("pitch");
   
@@ -72,7 +76,8 @@ const PitchFinder = () => {
   const startListening = async () => {
     try {
       if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          const audioContext = new AudioContextClass();
         analyserRef.current = audioContextRef.current.createAnalyser();
         analyserRef.current.fftSize = 2048;
       }
@@ -272,7 +277,8 @@ const TempoFinder = () => {
   
   // Initialize AudioContext
   useEffect(() => {
-    audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      const audioContext = new AudioContextClass();
     
     return () => {
       if (intervalRef.current) {
