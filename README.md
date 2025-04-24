@@ -1,98 +1,135 @@
-🎵 Saem's Tunes
-Saem’s Tunes is a music learning and creative collaboration platform crafted to help learners and musicians grow from voice to heart to industry. Whether you're a beginner building your foundation, or a professional nurturing your skills, Saem’s Tunes offers tools to learn, practice, collaborate, and thrive in your musical journey.
+📘 Saem’s Tunes — README
 
-✨ Overview
-Saem's Tunes is not just another music player — it's a purpose-built web app for music education and creative expression. Inside, you'll find structured learning levels, community interactions, progress tracking, and support resources — all within a simple, golden-brown themed interface that evokes musical warmth and clarity.
+🎵 Saem’s Tunes: Where Every Note Counts
 
-🚀 Features
-🎓 Step-by-step Curriculum with levels and interactive learning
+Saem’s Tunes is a music learning and creative collaboration platform designed to help learners grow from voice to heart to industry. Whether you're a curious beginner or a seasoned musician, Saem’s Tunes provides the tools to learn, practice, collaborate, and thrive in your musical journey.
 
-🧠 Music theory resources, exercises, and video tutorials
+Built with accessibility and simplicity in mind, the app combines a structured curriculum, community-driven learning, and a clean interface that echoes musical warmth through its signature golden-brown aesthetic.
 
-👥 Community Hub for peer sharing and collaboration
+✨ Features at a Glance
 
-📈 Personal Profile to track your progress and schedule lessons
+🎓 Structured Learning Path ‣ Tiered music curriculum with guided lessons ‣ Video tutorials, interactive theory, and exercises
 
-🛠️ Support Center with FAQs, setup guides, and protocols
+📚 Resource Hub ‣ Music theory explanations, cheat sheets, and infographics ‣ Downloadable guides for learners and educators
 
-🎨 Clean, friendly UI with Saem's signature golden-dark brown aesthetic
+👥 Community & Collaboration ‣ Peer-to-peer project sharing ‣ Collaborative spaces for duets, remixes, and critiques
 
-📱 Lightweight and mobile-friendly experience
+📈 Personalized Dashboard ‣ Track learning progress ‣ Schedule classes and receive feedback
 
-🛠 Installation
+💬 Support & FAQs ‣ Step-by-step onboarding ‣ In-app support articles and help requests
+
+🎨 Signature UI Design ‣ Golden-dark brown color scheme ‣ Minimalist and mobile-optimized UX
+
+⚙️ Tech Stack
+
+Frontend: React, Capacitor
+
+Backend: Firebase (Authentication, Firestore, Hosting, Messaging)
+
+Styling: Tailwind CSS
+
+CI/CD: GitHub Actions
+
+App Platform: Android WebView (via Capacitor), PWA
+
+🛠 Installation Guide
+
 📋 Prerequisites
-Ensure you have the following installed:
 
-Node.js (v16 or higher)
+Make sure you have the following installed:
 
-npm (v8 or higher)
+Node.js v16+
 
-🔧 Setup Instructions
-Clone the repository:
+npm v8+
 
-bash
-Copy
-Edit
-git clone https://github.com/saem/tunes-app.git
-cd tunes-app
-npm install
+🔧 Local Setup
+
+Clone and install dependencies:
+
+git clone https://github.com/saem/tunes-app.git cd tunes-app npm install
+
+To start the development server:
+
 npm start
-This will start the development server at http://localhost:3000.
 
-📦 Building for Production
-To build a production-ready version of the app:
+Visit http://localhost:3000 in your browser.
 
-bash
-Copy
-Edit
+📦 Production Build
+
+To generate an optimized build:
+
 npm run build
-The output will be located in the dist/ directory.
+
+The production-ready files will be located in the dist/ directory, ready for deployment.
+
+📲 Android Build (via Capacitor)
+
+To build and run the app as an Android package:
+
+npx cap sync android npx cap open android
+
+From there, you can run or build your APK/AAB via Android Studio.
 
 🤝 Contributing
-Contributions are warmly welcomed! Whether it's UI tweaks, curriculum content, or community tools — your ideas help Saem's Tunes grow.
 
-Fork the repo
+We welcome contributions from developers, designers, educators, and musicians!
 
-Create your feature branch: git checkout -b feature/your-feature-name
+To contribute:
 
-Commit your changes: git commit -m 'Add your feature'
+Fork the repository
 
-Push to the branch: git push origin feature/your-feature-name
+Create a feature branch: git checkout -b feature/your-feature-name
+
+Commit your changes: git commit -m "Add your feature"
+
+Push to your branch: git push origin feature/your-feature-name
 
 Open a Pull Request
 
-Please ensure your code follows the established style and passes linting checks.
+Make sure to follow our code style and pass any linting rules before submitting.
 
-❤️ Support Saem's Tunes
-Help sustain the mission to make music education accessible and holistic:
+💡 Roadmap Highlights
 
-☕ Support Saem's Tunes on Ko-fi
+Subscription-enabled video access
 
-Supporters get:
+In-app music challenges and badges
 
-🚀 Early access to new features
+Advanced content for instrument-specific learners
 
-🐞 Priority bug fixes
+Offline-first mobile support
 
-🧾 Name listed in credits (optional)
+Creator studio for user-submitted lessons
 
-🎯 Influence on future feature direction
+☕ Support Saem’s Tunes
+
+Saem’s Tunes is a passion project. If you believe in accessible music education:
+
+→ Support on Ko-fi: https://ko-fi.com/saemstunes
+
+Supporters enjoy:
+
+Early access to beta features
+
+Listed credits (optional)
+
+Influence on new curriculum modules
+
+Exclusive behind-the-scenes updates
 
 📄 License
-This project is licensed under the MIT License. See the LICENSE file for more details.
+
+This project is licensed under the MIT License — see the LICENSE file for more details.
 
 📬 Contact
-For questions, collaborations, or just to say hi:
+
+Have questions, feedback, or want to collaborate?
 
 GitHub Issues: Submit here
 
-Email: saem@saemstunes.com
+Email: saemstunes@gmail.com
 
-🎶 Thank you for using Saem’s Tunes — where every note counts.
+Website: https://saemstunes.setmore.com
 
+Instagram: https://instagram.com/saemstunes
 
-
-
-
-
-
+Thank you for tuning in to Saem’s Tunes. Every learner. Every note. Every time.
