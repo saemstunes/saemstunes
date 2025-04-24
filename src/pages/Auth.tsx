@@ -7,6 +7,9 @@ import LoginForm from "@/components/auth/LoginForm";
 import SignupForm from "@/components/auth/SignupForm";
 import { Music, Mic, Headphones, Piano, Guitar, Disc } from "lucide-react";
 import Logo from "@/components/branding/Logo";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 
 // Music-related icons for random decoration
 const MUSIC_ICONS = [
@@ -38,6 +41,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [decorativeIcons] = useState(() => getRandomIcons(5));
+  const [showCliquePicker, setShowCliquePicker] = useState(false);
   
   // Get the active tab from URL params or default to "login"
   const defaultTab = searchParams.get("tab") === "signup" ? "signup" : "login";
@@ -46,12 +50,26 @@ const Auth = () => {
   // Get the redirect path from URL params or default to "/"
   const redirectPath = searchParams.get("redirect") || "/";
 
+  // Check if the user just registered
+  const justRegistered = searchParams.get("registered") === "true";
+
   // Redirect to home or specified path if already logged in
   useEffect(() => {
-    if (user && !isLoading) {
+    if (user && !isLoading && !justRegistered) {
       navigate(redirectPath);
     }
-  }, [user, isLoading, navigate, redirectPath]);
+
+    // Show clique picker if user just registered
+    if (user && justRegistered) {
+      setShowCliquePicker(true);
+    }
+  }, [user, isLoading, navigate, redirectPath, justRegistered]);
+
+  const handleCliqueSelection = (clique: string) => {
+    // In a real app, you would save this preference to the user profile
+    setShowCliquePicker(false);
+    navigate("/");
+  };
 
   if (isLoading) {
     return (
@@ -106,6 +124,31 @@ const Auth = () => {
           );
         })}
         
+        {/* Music notes animation */}
+        <div className="absolute inset-0 overflow-hidden">
+          {Array.from({ length: 10 }).map((_, i) => {
+            const size = Math.random() * 20 + 10;
+            const startX = Math.random() * 100;
+            const duration = Math.random() * 10 + 15;
+            const delay = Math.random() * 5;
+            
+            return (
+              <div
+                key={i}
+                className="absolute text-gold/10"
+                style={{
+                  left: `${startX}%`,
+                  bottom: '-50px',
+                  fontSize: `${size}px`,
+                  animation: `float ${duration}s ${delay}s infinite linear`
+                }}
+              >
+                ♪
+              </div>
+            );
+          })}
+        </div>
+        
         {/* Auth tabs container */}
         <div className="relative z-10 w-full max-w-md">
           <div className="text-center mb-6">
@@ -136,6 +179,58 @@ const Auth = () => {
           </Tabs>
         </div>
       </div>
+      
+      {/* Clique Selection Dialog */}
+      <Dialog open={showCliquePicker} onOpenChange={setShowCliquePicker}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-center">Choose Your Clique</DialogTitle>
+            <DialogDescription className="text-center">
+              Select how you'd like to experience Saem's Tunes
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <div 
+              className="flex flex-col items-center p-4 border rounded-xl cursor-pointer hover:border-gold hover:bg-gold/5 transition-all"
+              onClick={() => handleCliqueSelection('student')}
+            >
+              <div className="w-16 h-16 rounded-full bg-gold/10 flex items-center justify-center mb-3">
+                <Headphones className="h-8 w-8 text-gold" />
+              </div>
+              <h3 className="font-semibold mb-1">Student</h3>
+              <p className="text-xs text-center text-muted-foreground">
+                Access educational content and music learning resources
+              </p>
+            </div>
+            
+            <div 
+              className="flex flex-col items-center p-4 border rounded-xl cursor-pointer hover:border-gold hover:bg-gold/5 transition-all"
+              onClick={() => handleCliqueSelection('fam')}
+            >
+              <div className="w-16 h-16 rounded-full bg-gold/10 flex items-center justify-center mb-3">
+                <Music className="h-8 w-8 text-gold" />
+              </div>
+              <h3 className="font-semibold mb-1">Fam</h3>
+              <p className="text-xs text-center text-muted-foreground">
+                Exclusive access to premium content and music releases
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex justify-center">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setShowCliquePicker(false);
+                navigate("/");
+              }}
+            >
+              I'll decide later
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

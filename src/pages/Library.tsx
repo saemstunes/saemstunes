@@ -3,10 +3,12 @@ import React, { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
-import { Library as LibraryIcon, BookOpen, Bookmark, Clock, Music } from "lucide-react";
+import { Library as LibraryIcon, BookOpen, Bookmark, Clock, Music, Graduation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { mockVideos } from "@/data/mockData";
 import VideoCard from "@/components/videos/VideoCard";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 const Library = () => {
   const { user } = useAuth();
@@ -14,7 +16,55 @@ const Library = () => {
 
   // Sample saved content data (would come from API in a real app)
   const savedVideos = mockVideos.slice(0, 4);
-  const saemOfferings = mockVideos.slice(4, 8);
+  const saemOfferings = mockVideos.slice(4, 8).map(video => ({...video, isExclusive: true}));
+  
+  // Sample courses data
+  const courses = [
+    {
+      id: "course1",
+      title: "Beginner Piano Masterclass",
+      description: "Learn piano fundamentals from scratch",
+      instructor: "Saem Khalid",
+      duration: "8 weeks",
+      level: "beginner",
+      thumbnail: "/placeholder.svg",
+      enrolled: true,
+      progress: 35
+    },
+    {
+      id: "course2",
+      title: "Vocal Development for Pop Music",
+      description: "Discover your unique voice and expand your range",
+      instructor: "Lisa Wong",
+      duration: "6 weeks",
+      level: "intermediate",
+      thumbnail: "/placeholder.svg",
+      enrolled: true,
+      progress: 72
+    },
+    {
+      id: "course3",
+      title: "Music Production Fundamentals",
+      description: "Learn to produce professional tracks from home",
+      instructor: "James Rodriguez",
+      duration: "10 weeks",
+      level: "beginner",
+      thumbnail: "/placeholder.svg",
+      enrolled: false,
+      progress: 0
+    },
+    {
+      id: "course4",
+      title: "Advanced Guitar Techniques",
+      description: "Take your guitar skills to the next level",
+      instructor: "Saem Khalid",
+      duration: "12 weeks",
+      level: "advanced",
+      thumbnail: "/placeholder.svg",
+      enrolled: false,
+      progress: 0
+    }
+  ];
   
   const EmptyState = ({ title, description, icon: Icon }) => (
     <div className="text-center py-16">
@@ -32,6 +82,55 @@ const Library = () => {
         Explore Content
       </Button>
     </div>
+  );
+
+  const CourseCard = ({ course }) => (
+    <Card className="overflow-hidden h-full flex flex-col">
+      <div className="relative aspect-video overflow-hidden">
+        <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
+        <div className="absolute top-2 right-2">
+          <Badge className={course.enrolled ? "bg-green-600" : "bg-gold"}>
+            {course.enrolled ? "Enrolled" : "Premium"}
+          </Badge>
+        </div>
+        <div className="absolute bottom-2 left-2">
+          <Badge variant="outline" className="bg-black/50 backdrop-blur-sm text-white capitalize">
+            {course.level}
+          </Badge>
+        </div>
+      </div>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg">{course.title}</CardTitle>
+        <CardDescription className="line-clamp-2">{course.description}</CardDescription>
+      </CardHeader>
+      <CardContent className="pb-4 flex-1">
+        <div className="flex justify-between text-sm text-muted-foreground mb-2">
+          <span>Instructor: {course.instructor}</span>
+          <span>{course.duration}</span>
+        </div>
+        {course.enrolled && (
+          <div className="mt-2">
+            <div className="text-sm text-muted-foreground mb-1 flex justify-between">
+              <span>Progress</span>
+              <span>{course.progress}%</span>
+            </div>
+            <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gold" 
+                style={{ width: `${course.progress}%` }}
+              ></div>
+            </div>
+          </div>
+        )}
+      </CardContent>
+      <div className="p-4 pt-0">
+        <Button 
+          className={cn("w-full", course.enrolled ? "bg-gold hover:bg-gold-dark" : "bg-muted-foreground")}
+        >
+          {course.enrolled ? "Continue Learning" : "Enroll Now"}
+        </Button>
+      </div>
+    </Card>
   );
   
   return (
@@ -77,6 +176,19 @@ const Library = () => {
           </div>
         </div>
         
+        {/* Music Courses Section */}
+        <div className="mb-8">
+          <h2 className="text-xl font-proxima font-semibold mb-4 flex items-center">
+            <Graduation className="h-5 w-5 text-gold mr-2" />
+            Music Courses
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {courses.map(course => (
+              <CourseCard key={course.id} course={course} />
+            ))}
+          </div>
+        </div>
+        
         {/* Saem's exclusive content */}
         <div className="mb-8">
           <h2 className="text-xl font-proxima font-semibold mb-4 flex items-center">
@@ -85,7 +197,7 @@ const Library = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {saemOfferings.map(video => (
-              <VideoCard key={video.id} video={{...video, isExclusive: true}} />
+              <VideoCard key={video.id} video={video} />
             ))}
           </div>
         </div>
@@ -127,11 +239,11 @@ const Library = () => {
           </TabsContent>
           
           <TabsContent value="courses" className="pt-4">
-            <EmptyState 
-              title="No Courses Yet" 
-              description="Enroll in Saem's exclusive courses to track your progress and continue learning."
-              icon={BookOpen}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {courses.filter(course => course.enrolled).map(course => (
+                <CourseCard key={course.id} course={course} />
+              ))}
+            </div>
           </TabsContent>
           
           <TabsContent value="history" className="pt-4">

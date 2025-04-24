@@ -1,0 +1,232 @@
+import React from 'react';
+import MainLayout from '@/components/layout/MainLayout';
+import { Heart, Gift, Star, Users, Music } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+
+const SupportUs = () => {
+  const supportOptions = [
+    {
+      title: "One-time Donation",
+      description: "Support our mission with a one-time contribution",
+      icon: Heart,
+      options: [
+        { amount: "5", label: "Cup of Coffee" },
+        { amount: "20", label: "Music Book" },
+        { amount: "50", label: "New Strings" },
+        { amount: "100", label: "Pro Supporter" },
+      ]
+    },
+    {
+      title: "Monthly Support",
+      description: "Become a regular supporter with monthly donations",
+      icon: Star,
+      options: [
+        { amount: "10", label: "Friend" },
+        { amount: "25", label: "Supporter" },
+        { amount: "50", label: "Patron" },
+        { amount: "100", label: "Benefactor" },
+      ]
+    },
+  ];
+
+  return (
+    <MainLayout>
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-proxima font-bold mb-2">Support Saem's Tunes</h1>
+          <p className="text-muted-foreground">Help us continue our mission of making music education accessible and enjoyable for everyone.</p>
+        </div>
+        
+        {/* Founder's Message */}
+        <Card className="bg-gradient-to-br from-gold/10 to-background border-gold/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Music className="h-5 w-5 text-gold" />
+              A Message from Saem
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col md:flex-row gap-6 items-center">
+              <div className="w-full md:w-1/4">
+                <div className="aspect-square rounded-full overflow-hidden border-4 border-gold/20 mx-auto md:mx-0 max-w-[180px]">
+                  <img 
+                    src="/placeholder.svg" 
+                    alt="Saem Khalid" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+              <div className="w-full md:w-3/4">
+                <p className="italic text-muted-foreground mb-4">
+                  "Music has the incredible power to transform lives, build confidence, and create joy. 
+                  At Saem's Tunes, we believe everyone deserves access to quality music education regardless 
+                  of their background or circumstances."
+                </p>
+                <p className="mb-4">
+                  I started this journey with a simple vision: to make learning music an enriching, accessible, 
+                  and enjoyable experience for everyone. Today, we've touched thousands of lives through our 
+                  teachings, but there's so much more we want to accomplish.
+                </p>
+                <p>
+                  Your support helps us develop new educational content, offer scholarships to deserving students, 
+                  improve our platform, and expand our reach to underserved communities. Every contribution, 
+                  big or small, brings us closer to our goal of making quality music education accessible to all.
+                </p>
+                <div className="mt-4 text-right">
+                  <p className="font-semibold">Saem Khalid</p>
+                  <p className="text-sm text-muted-foreground">Founder, Saem's Tunes</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Support Options */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {supportOptions.map((option) => (
+            <Card key={option.title}>
+              <CardHeader>
+                <div className="flex items-start gap-2">
+                  <div className="bg-gold/10 p-2 rounded-md">
+                    <option.icon className="h-5 w-5 text-gold" />
+                  </div>
+                  <div>
+                    <CardTitle>{option.title}</CardTitle>
+                    <CardDescription>{option.description}</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-3">
+                  {option.options.map((item) => (
+                    <div 
+                      key={item.label}
+                      className="border rounded-lg p-3 text-center hover:border-gold hover:bg-gold/5 cursor-pointer transition"
+                    >
+                      <div className="text-xl font-semibold">${item.amount}</div>
+                      <div className="text-sm text-muted-foreground">{item.label}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4">
+                  <label className="text-sm font-medium">Custom Amount</label>
+                  <div className="flex mt-1">
+                    <div className="bg-muted px-3 py-2 border border-r-0 rounded-l-md">$</div>
+                    <input
+                      type="text"
+                      className="flex-1 px-3 py-2 border rounded-r-md focus:outline-none focus:ring-2 focus:ring-gold/50"
+                      placeholder="Enter amount"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  className="w-full bg-gold hover:bg-gold-dark"
+                  onClick={() => window.open('https://ko-fi.com/saemstunes', '_blank')}
+                >
+                  Donate {option.title === 'One-time Donation' ? 'Now' : 'Monthly'}
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+        
+        {/* Other Ways to Help */}
+        <div>
+          <h2 className="text-2xl font-proxima font-semibold mb-4">Other Ways to Support Us</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Gift className="h-5 w-5 text-gold" />
+                  Instrument Donations
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">
+                  Donate your gently used instruments to help students who don't have access to musical equipment.
+                </p>
+              </CardContent>
+              <CardFooter>
+                <Button variant="outline" className="w-full">
+                  Learn More
+                </Button>
+              </CardFooter>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-gold" />
+                  Volunteer with Us
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">
+                  Share your skills and time to help with teaching, events, or platform development.
+                </p>
+              </CardContent>
+              <CardFooter>
+                <Button variant="outline" className="w-full">
+                  Join as Volunteer
+                </Button>
+              </CardFooter>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Music className="h-5 w-5 text-gold" />
+                  Spread the Word
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">
+                  Share our platform with your network and help us reach more music enthusiasts.
+                </p>
+              </CardContent>
+              <CardFooter>
+                <Button variant="outline" className="w-full">
+                  Share Saem's Tunes
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        </div>
+        
+        {/* Impact Section */}
+        <div className="bg-muted p-6 rounded-lg mt-8">
+          <h2 className="text-xl font-proxima font-semibold mb-4">Your Support Makes a Difference</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div>
+              <div className="text-3xl font-bold text-gold">500+</div>
+              <p className="text-muted-foreground">Students Supported</p>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-gold">50+</div>
+              <p className="text-muted-foreground">Scholarships Awarded</p>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-gold">15+</div>
+              <p className="text-muted-foreground">Communities Reached</p>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-gold">1000+</div>
+              <p className="text-muted-foreground">Hours of Content Created</p>
+            </div>
+          </div>
+          <Separator className="my-4" />
+          <p className="text-center text-muted-foreground">
+            Every contribution helps us bring music education to those who need it most.
+            Thank you for supporting our mission!
+          </p>
+        </div>
+      </div>
+    </MainLayout>
+  );
+};
+
+export default SupportUs;

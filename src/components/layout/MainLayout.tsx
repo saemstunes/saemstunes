@@ -17,6 +17,10 @@ import {
   Instagram,
   Mail,
   Heart,
+  Bell,
+  TikTok,
+  Facebook,
+  Music,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -26,6 +30,8 @@ import ThemeToggle from "@/components/theme/ThemeToggle";
 import MobileNavigation from "./MobileNavigation";
 import MiniPlayer from "../player/MiniPlayer";
 import Logo from "../branding/Logo";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Badge } from "../ui/badge";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -36,7 +42,9 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [hasNotifications] = useState(true);
 
   const navigation = [
     {
@@ -80,19 +88,19 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
   const socialLinks = [
     {
       name: "Follow us",
-      href: "https://instagram.com/saemstunes",
+      href: "/follow-us",
       icon: Instagram,
-      ariaLabel: "Follow us on Instagram",
+      ariaLabel: "Follow us on social media",
     },
     {
       name: "Contact us",
-      href: "mailto:contact@saemstunes.com",
+      href: "/contact-us",
       icon: Mail,
-      ariaLabel: "Email us",
+      ariaLabel: "Contact us",
     },
     {
       name: "Support us",
-      href: "/support",
+      href: "/support-us",
       icon: Heart,
       ariaLabel: "Support Saem's Tunes",
     },
@@ -103,7 +111,7 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
   };
 
   const filteredNavigation = navigation.filter(
-    (item) => user && item.roles.includes(user.role)
+    (item) => !user || (user && item.roles.includes(user.role))
   );
 
   const handleNavigation = (href: string) => {
@@ -194,13 +202,7 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
                         variant="ghost"
                         size="sm"
                         className="justify-start gap-3 text-muted-foreground hover:text-gold"
-                        onClick={() => {
-                          if (item.href.startsWith('http') || item.href.startsWith('mailto')) {
-                            window.open(item.href, '_blank');
-                          } else {
-                            handleNavigation(item.href);
-                          }
-                        }}
+                        onClick={() => handleNavigation(item.href)}
                         aria-label={item.ariaLabel}
                       >
                         <item.icon className="h-4 w-4" />
@@ -236,6 +238,20 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
               <Search className="h-5 w-5" />
               <span className="sr-only">Search</span>
             </Button>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative"
+              onClick={() => navigate("/notifications")}
+            >
+              <Bell className="h-5 w-5" />
+              {hasNotifications && (
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+              )}
+              <span className="sr-only">Notifications</span>
+            </Button>
+            
             <ThemeToggle />
             {user ? (
               <Avatar
@@ -246,7 +262,7 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
                 <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
               </Avatar>
             ) : (
-              <Button size="sm" onClick={() => navigate("/login")}>
+              <Button size="sm" onClick={() => navigate("/auth")}>
                 Login
               </Button>
             )}
@@ -311,29 +327,37 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
 
           <Separator className="my-4" />
           
-          <div className="px-4 pb-4 flex justify-between">
+          <div className="px-4 pb-4 space-y-1">
+            <h3 className="text-sm font-medium text-muted-foreground px-2 mb-2">Resources</h3>
             {socialLinks.map((item) => (
               <Button
                 key={item.name}
                 variant="ghost"
-                size="icon"
-                className="social-link"
-                onClick={() => {
-                  if (item.href.startsWith('http') || item.href.startsWith('mailto')) {
-                    window.open(item.href, '_blank');
-                  } else {
-                    handleNavigation(item.href);
-                  }
-                }}
+                size="sm"
+                className="w-full justify-start gap-3"
+                onClick={() => handleNavigation(item.href)}
                 aria-label={item.ariaLabel}
               >
-                <item.icon className="h-5 w-5" />
+                <item.icon className="h-4 w-4" />
+                <span>{item.name}</span>
               </Button>
             ))}
           </div>
 
-          <div className="p-4 border-t border-border">
+          <div className="p-4 border-t border-border flex items-center justify-between">
             <ThemeToggle />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative"
+              onClick={() => navigate("/notifications")}
+            >
+              <Bell className="h-5 w-5" />
+              {hasNotifications && (
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+              )}
+              <span className="sr-only">Notifications</span>
+            </Button>
           </div>
         </aside>
 
@@ -345,7 +369,7 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
           
           {/* Mobile Navigation */}
           {showMiniPlayer && <MiniPlayer {...trackData} />}
-          <MobileNavigation />
+          {isMobile && <MobileNavigation />}
         </main>
       </div>
     </div>

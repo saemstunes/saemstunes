@@ -1,15 +1,17 @@
 
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Home, Compass, Library, User, Search, Users } from "lucide-react";
+import { Home, Compass, Library, User, Users, Bell } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "../ui/badge";
 
 const MobileNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { toast } = useToast();
+  const hasNotifications = true;
 
   const handleAuthAction = () => {
     if (user) {
@@ -44,10 +46,11 @@ const MobileNavigation = () => {
       public: true
     },
     {
-      name: "Community",
-      href: "/community",
-      icon: Users,
-      public: true
+      name: "Notifications",
+      href: "/notifications",
+      icon: Bell,
+      public: true,
+      badge: hasNotifications
     },
     {
       name: user ? "Profile" : "Sign In",
@@ -81,7 +84,12 @@ const MobileNavigation = () => {
                 : "text-muted-foreground"
             )}
           >
-            <item.icon className="h-5 w-5" />
+            <div className="relative">
+              <item.icon className="h-5 w-5" />
+              {item.badge && (
+                <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full" />
+              )}
+            </div>
             <span className="text-xs mt-1">{item.name}</span>
           </button>
         ))}
