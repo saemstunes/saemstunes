@@ -186,13 +186,13 @@ const LoginForm = () => {
         </div>
         
         <div className="text-xs text-muted-foreground text-center w-full">
-          For demo purposes, you can use:
+          Making
           <br />
           <code className="bg-muted px-1 py-0.5 rounded text-xs">
-            student@example.com
+            music
           </code>{" "}
-          or any role with password{" "}
-          <code className="bg-muted px-1 py-0.5 rounded text-xs">password</code>
+          representing
+          <code className="bg-muted px-1 py-0.5 rounded text-xs">Christ</code>
         </div>
       </CardFooter>
     </Card>
