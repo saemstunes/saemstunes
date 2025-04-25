@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -31,7 +32,7 @@ import {
   ShieldCheck,
   Music2,
   Palette,
-  FlaskConical
+  Flask
 } from "lucide-react";
 import { Dialog, DialogContent } from "./dialog";
 import { ScrollArea } from "./scroll-area";
@@ -274,7 +275,7 @@ export const defaultSections: NavSection[] = [
       {
         title: "Music Lab",
         href: "/music-tools",
-        icon: FlaskConical,
+        icon: Flask,
       },
       {
         title: "Community",

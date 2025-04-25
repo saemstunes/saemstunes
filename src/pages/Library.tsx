@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -11,108 +12,16 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import ExclusiveCarousel from "@/components/library/ExclusiveCarousel";
 
-// Define proper type for VideoContent
-interface VideoContent {
-  id: string;
-  title: string;
-  description: string;
-  thumbnailUrl: string;
-  videoUrl: string;
-  duration: string;
-  instructor: string;
-  category: string;
-  level: "beginner" | "intermediate" | "advanced";
-  tags: string[];
-  isLocked: boolean;
-}
-
-// Add interface for videos with exclusive property
-interface ExclusiveVideoContent extends VideoContent {
-  isExclusive?: boolean;
-}
-
 const Library = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("saved");
 
-  // Sample saved content data (with updated thumbnails)
+  // Sample saved content data (would come from API in a real app)
   const savedVideos = mockVideos.slice(0, 4);
+  const saemOfferings = mockVideos.slice(4, 8).map(video => ({...video, isExclusive: true}));
   
-  // Fixed saemOfferings with proper typing
-  const saemOfferings: ExclusiveVideoContent[] = [
-    {
-      id: "exclusive1",
-      title: "Advanced Guitar Fingerpicking",
-      description: "Master complex fingerpicking patterns with our expert instructor",
-      thumbnailUrl: "https://images.unsplash.com/photo-1510915361894-db8b60106cb1",
-      videoUrl: "/videos/sample.mp4",
-      duration: "45m",
-      instructor: "Saem",
-      category: "Guitar",
-      level: "advanced",
-      tags: ["guitar", "fingerpicking", "advanced"],
-      isLocked: true,
-      isExclusive: true,
-    },
-    {
-      id: "exclusive2",
-      title: "Vocal Performance Masterclass",
-      description: "Learn professional vocal techniques for stage performance",
-      thumbnailUrl: "https://images.unsplash.com/photo-1516280440614-37939bbacd81",
-      videoUrl: "/videos/sample.mp4",
-      duration: "1h 20m",
-      instructor: "Lisa Wong",
-      category: "Vocal",
-      level: "intermediate",
-      tags: ["vocal", "performance", "stage"],
-      isLocked: true,
-      isExclusive: true,
-    },
-    {
-      id: "exclusive3",
-      title: "Music Production: Mixing Vocals",
-      description: "Professional techniques for mixing vocals in your productions",
-      thumbnailUrl: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04",
-      videoUrl: "/videos/sample.mp4",
-      duration: "55m",
-      instructor: "James Rodriguez",
-      category: "Production",
-      level: "intermediate",
-      tags: ["production", "mixing", "vocals"],
-      isLocked: true,
-      isExclusive: true,
-    },
-    {
-      id: "exclusive4",
-      title: "Piano Improvisation Workshop",
-      description: "Learn to improvise beautiful piano melodies in any style",
-      thumbnailUrl: "https://images.unsplash.com/photo-1520523839897-bd0b52f945a0",
-      videoUrl: "/videos/sample.mp4",
-      duration: "1h 05m",
-      instructor: "Saem",
-      category: "Piano",
-      level: "intermediate",
-      tags: ["piano", "improvisation", "creativity"],
-      isLocked: true,
-      isExclusive: true,
-    }
-  ];
-  
-  // Define the course interface
-  interface Course {
-    id: string;
-    title: string;
-    description: string;
-    instructor: string;
-    duration: string;
-    level: string;
-    thumbnail: string;
-    enrolled: boolean;
-    progress: number;
-  }
-  
-  // Sample courses data with updated thumbnails
-  const courses: Course[] = [
+  // Extended sample courses data
+  const courses = [
     {
       id: "course1",
       title: "Beginner Piano Masterclass",
@@ -120,7 +29,7 @@ const Library = () => {
       instructor: "Saem",
       duration: "8 weeks",
       level: "beginner",
-      thumbnail: "https://images.unsplash.com/photo-1520523839897-bd0b52f945a0",
+      thumbnail: "/placeholder.svg",
       enrolled: true,
       progress: 35
     },
@@ -131,7 +40,7 @@ const Library = () => {
       instructor: "Lisa Wong",
       duration: "6 weeks",
       level: "intermediate",
-      thumbnail: "https://images.unsplash.com/photo-1516280440614-37939bbacd81",
+      thumbnail: "/placeholder.svg",
       enrolled: true,
       progress: 72
     },
@@ -142,7 +51,7 @@ const Library = () => {
       instructor: "James Rodriguez",
       duration: "10 weeks",
       level: "beginner",
-      thumbnail: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04",
+      thumbnail: "/placeholder.svg",
       enrolled: false,
       progress: 0
     },
@@ -153,7 +62,7 @@ const Library = () => {
       instructor: "Saem",
       duration: "12 weeks",
       level: "advanced",
-      thumbnail: "https://images.unsplash.com/photo-1510915361894-db8b60106cb1",
+      thumbnail: "/placeholder.svg",
       enrolled: false,
       progress: 0
     },
@@ -164,7 +73,7 @@ const Library = () => {
       instructor: "Emily Carter",
       duration: "4 weeks",
       level: "intermediate",
-      thumbnail: "https://images.unsplash.com/photo-1507838153414-b4b713384a76",
+      thumbnail: "/placeholder.svg",
       enrolled: false,
       progress: 0
     },
@@ -175,7 +84,7 @@ const Library = () => {
       instructor: "DJ Marcus",
       duration: "5 weeks",
       level: "beginner",
-      thumbnail: "https://images.unsplash.com/photo-1571330735066-03aaa9429d89",
+      thumbnail: "/placeholder.svg",
       enrolled: false,
       progress: 0
     },
@@ -186,7 +95,7 @@ const Library = () => {
       instructor: "Professor Alan Smith",
       duration: "8 weeks",
       level: "beginner",
-      thumbnail: "https://images.unsplash.com/photo-1507838153414-b4b713384a76",
+      thumbnail: "/placeholder.svg",
       enrolled: false,
       progress: 0
     },
@@ -197,19 +106,13 @@ const Library = () => {
       instructor: "Robert Johnson",
       duration: "10 weeks",
       level: "advanced",
-      thumbnail: "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae",
+      thumbnail: "/placeholder.svg",
       enrolled: false,
       progress: 0
     }
   ];
   
-  interface EmptyStateProps {
-    title: string;
-    description: string;
-    icon: React.ComponentType<any>;
-  }
-  
-  const EmptyState = ({ title, description, icon: Icon }: EmptyStateProps) => (
+  const EmptyState = ({ title, description, icon: Icon }) => (
     <div className="text-center py-16">
       <div className="bg-muted/30 rounded-full p-6 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
         <Icon className="h-8 w-8 text-muted-foreground" />
@@ -227,11 +130,7 @@ const Library = () => {
     </div>
   );
 
-  interface CourseCardProps {
-    course: Course;
-  }
-
-  const CourseCard = ({ course }: CourseCardProps) => (
+  const CourseCard = ({ course }) => (
     <Card className="overflow-hidden h-full flex flex-col">
       <div className="relative aspect-video overflow-hidden">
         <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />

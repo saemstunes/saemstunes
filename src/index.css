@@ -33,24 +33,6 @@
     --color-primary-light: hsl(36, 77%, 69%); /* gold-light */
     --color-primary-text: hsl(36, 77%, 49%); /* gold */
   }
-
-  /* Dark theme */
-  .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-  }
   
   .theme-teal {
     --primary: 174 95% 22%;
@@ -179,24 +161,6 @@
   background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 }
 
-/* Glass morphism */
-.glass-morphism {
-  @apply backdrop-blur-xl bg-white/5 border border-white/10 shadow-[0_4px_12px_-2px_rgba(0,0,0,0.3)];
-}
-
-.neo-blur {
-  @apply backdrop-blur-2xl bg-black/40 border border-white/10;
-}
-
-/* Text gradients */
-.text-gradient {
-  @apply bg-gradient-to-br from-white via-white/90 to-white/70 bg-clip-text text-transparent;
-}
-
-.text-gradient-primary {
-  @apply bg-gradient-to-br from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent;
-}
-
 /* Font definitions */
 @font-face {
   font-family: 'Proxima Nova';
@@ -214,17 +178,4 @@
 
 .font-proxima {
   font-family: 'Proxima Nova', sans-serif;
-}
-
-/* Ensure dropdowns render properly */
-.dropdown-content {
-  position: absolute;
-  background-color: var(--background);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-  z-index: 50;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  width: auto;
-  max-height: 80vh;
-  overflow-y: auto;
 }
