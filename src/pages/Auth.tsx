@@ -1,5 +1,5 @@
-
-import { useEffect, useState } from "react";
+// Modified Auth.tsx with Secret Admin Access
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,7 +9,7 @@ import { Music, Mic, Headphones, Piano, Guitar, Disc } from "lucide-react";
 import Logo from "@/components/branding/Logo";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
+import AdminLoginForm from "@/components/auth/AdminLoginForm"; // We'll create this next
 
 // Music-related icons for random decoration
 const MUSIC_ICONS = [
@@ -42,6 +42,12 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const [decorativeIcons] = useState(() => getRandomIcons(5));
   const [showCliquePicker, setShowCliquePicker] = useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  
+  // Secret admin access state
+  const logoRef = useRef<HTMLDivElement>(null);
+  const tapCountRef = useRef(0);
+  const lastTapTimeRef = useRef(0);
   
   // Get the active tab from URL params or default to "login"
   const defaultTab = searchParams.get("tab") === "signup" ? "signup" : "login";
@@ -52,6 +58,44 @@ const Auth = () => {
 
   // Check if the user just registered
   const justRegistered = searchParams.get("registered") === "true";
+
+  // Secret admin access handler
+  useEffect(() => {
+    const handleSecretTap = () => {
+      const currentTime = new Date().getTime();
+      const timeSinceLastTap = currentTime - lastTapTimeRef.current;
+      
+      // Reset counter if more than 2 seconds passed between taps
+      if (timeSinceLastTap > 2000) {
+        tapCountRef.current = 0;
+      }
+      
+      tapCountRef.current++;
+      lastTapTimeRef.current = currentTime;
+      
+      // When seven taps are detected, show admin login
+      if (tapCountRef.current === 7) {
+        setShowAdminLogin(true);
+        tapCountRef.current = 0; // Reset counter
+        
+        // Subtle feedback (small vibration if available)
+        if (navigator.vibrate) {
+          navigator.vibrate(100);
+        }
+      }
+    };
+    
+    const logoElement = logoRef.current;
+    if (logoElement) {
+      logoElement.addEventListener("click", handleSecretTap);
+    }
+    
+    return () => {
+      if (logoElement) {
+        logoElement.addEventListener("click", handleSecretTap);
+      }
+    };
+  }, []);
 
   // Redirect to home or specified path if already logged in
   useEffect(() => {
@@ -71,6 +115,11 @@ const Auth = () => {
     navigate("/");
   };
 
+  // Close admin dialog
+  const handleCloseAdminDialog = () => {
+    setShowAdminLogin(false);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -86,7 +135,9 @@ const Auth = () => {
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
       <header className="p-4 flex items-center justify-between">
-        <Logo size="md" />
+        <div ref={logoRef} className="cursor-pointer">
+          <Logo size="md" />
+        </div>
       </header>
 
       {/* Main content */}
@@ -229,6 +280,20 @@ const Auth = () => {
               I'll decide later
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Secret Admin Login Dialog */}
+      <Dialog open={showAdminLogin} onOpenChange={setShowAdminLogin}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-center">Admin Access</DialogTitle>
+            <DialogDescription className="text-center">
+              Enter admin credentials to continue
+            </DialogDescription>
+          </DialogHeader>
+          
+          <AdminLoginForm onClose={handleCloseAdminDialog} />
         </DialogContent>
       </Dialog>
     </div>
