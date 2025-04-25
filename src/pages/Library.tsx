@@ -11,11 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import ExclusiveCarousel from "@/components/library/ExclusiveCarousel";
 
-const Library = () => {
-  const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("saved");
-
-// Update the VideoContent type definition at the top of your file
+// Define proper type for VideoContent
 interface VideoContent {
   id: string;
   title: string;
@@ -30,69 +26,93 @@ interface VideoContent {
   isLocked: boolean;
 }
 
+// Add interface for videos with exclusive property
+interface ExclusiveVideoContent extends VideoContent {
+  isExclusive?: boolean;
+}
+
+const Library = () => {
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState("saved");
+
   // Sample saved content data (with updated thumbnails)
   const savedVideos = mockVideos.slice(0, 4);
-  const saemOfferings = [
-  {
-    id: "exclusive1",
-    title: "Advanced Guitar Fingerpicking",
-    description: "Master complex fingerpicking patterns with our expert instructor",
-    thumbnailUrl: "https://images.unsplash.com/photo-1510915361894-db8b60106cb1",
-    videoUrl: "/videos/sample.mp4",
-    duration: "45m",
-    instructor: "Saem",
-    category: "Guitar",
-    level: "advanced", // This is already correct
-    tags: ["guitar", "fingerpicking", "advanced"],
-    isLocked: true,
-    isExclusive: true,
-  },
-  {
-    id: "exclusive2",
-    title: "Vocal Performance Masterclass",
-    description: "Learn professional vocal techniques for stage performance",
-    thumbnailUrl: "https://images.unsplash.com/photo-1516280440614-37939bbacd81",
-    videoUrl: "/videos/sample.mp4",
-    duration: "1h 20m",
-    instructor: "Lisa Wong",
-    category: "Vocal",
-    level: "intermediate", // This is already correct
-    tags: ["vocal", "performance", "stage"],
-    isLocked: true,
-    isExclusive: true,
-  },
-  {
-    id: "exclusive3",
-    title: "Music Production: Mixing Vocals",
-    description: "Professional techniques for mixing vocals in your productions",
-    thumbnailUrl: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04",
-    videoUrl: "/videos/sample.mp4",
-    duration: "55m",
-    instructor: "James Rodriguez",
-    category: "Production",
-    level: "intermediate", // This is already correct
-    tags: ["production", "mixing", "vocals"],
-    isLocked: true,
-    isExclusive: true,
-  },
-  {
-    id: "exclusive4",
-    title: "Piano Improvisation Workshop",
-    description: "Learn to improvise beautiful piano melodies in any style",
-    thumbnailUrl: "https://images.unsplash.com/photo-1520523839897-bd0b52f945a0",
-    videoUrl: "/videos/sample.mp4",
-    duration: "1h 05m",
-    instructor: "Saem",
-    category: "Piano",
-    level: "intermediate", // This is already correct
-    tags: ["piano", "improvisation", "creativity"],
-    isLocked: true,
-    isExclusive: true,
+  
+  // Fixed saemOfferings with proper typing
+  const saemOfferings: ExclusiveVideoContent[] = [
+    {
+      id: "exclusive1",
+      title: "Advanced Guitar Fingerpicking",
+      description: "Master complex fingerpicking patterns with our expert instructor",
+      thumbnailUrl: "https://images.unsplash.com/photo-1510915361894-db8b60106cb1",
+      videoUrl: "/videos/sample.mp4",
+      duration: "45m",
+      instructor: "Saem",
+      category: "Guitar",
+      level: "advanced",
+      tags: ["guitar", "fingerpicking", "advanced"],
+      isLocked: true,
+      isExclusive: true,
+    },
+    {
+      id: "exclusive2",
+      title: "Vocal Performance Masterclass",
+      description: "Learn professional vocal techniques for stage performance",
+      thumbnailUrl: "https://images.unsplash.com/photo-1516280440614-37939bbacd81",
+      videoUrl: "/videos/sample.mp4",
+      duration: "1h 20m",
+      instructor: "Lisa Wong",
+      category: "Vocal",
+      level: "intermediate",
+      tags: ["vocal", "performance", "stage"],
+      isLocked: true,
+      isExclusive: true,
+    },
+    {
+      id: "exclusive3",
+      title: "Music Production: Mixing Vocals",
+      description: "Professional techniques for mixing vocals in your productions",
+      thumbnailUrl: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04",
+      videoUrl: "/videos/sample.mp4",
+      duration: "55m",
+      instructor: "James Rodriguez",
+      category: "Production",
+      level: "intermediate",
+      tags: ["production", "mixing", "vocals"],
+      isLocked: true,
+      isExclusive: true,
+    },
+    {
+      id: "exclusive4",
+      title: "Piano Improvisation Workshop",
+      description: "Learn to improvise beautiful piano melodies in any style",
+      thumbnailUrl: "https://images.unsplash.com/photo-1520523839897-bd0b52f945a0",
+      videoUrl: "/videos/sample.mp4",
+      duration: "1h 05m",
+      instructor: "Saem",
+      category: "Piano",
+      level: "intermediate",
+      tags: ["piano", "improvisation", "creativity"],
+      isLocked: true,
+      isExclusive: true,
+    }
+  ];
+  
+  // Define the course interface
+  interface Course {
+    id: string;
+    title: string;
+    description: string;
+    instructor: string;
+    duration: string;
+    level: string;
+    thumbnail: string;
+    enrolled: boolean;
+    progress: number;
   }
-];
   
   // Sample courses data with updated thumbnails
-  const courses = [
+  const courses: Course[] = [
     {
       id: "course1",
       title: "Beginner Piano Masterclass",
@@ -183,7 +203,13 @@ interface VideoContent {
     }
   ];
   
-  const EmptyState = ({ title, description, icon: Icon }) => (
+  interface EmptyStateProps {
+    title: string;
+    description: string;
+    icon: React.ComponentType<any>;
+  }
+  
+  const EmptyState = ({ title, description, icon: Icon }: EmptyStateProps) => (
     <div className="text-center py-16">
       <div className="bg-muted/30 rounded-full p-6 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
         <Icon className="h-8 w-8 text-muted-foreground" />
@@ -201,7 +227,11 @@ interface VideoContent {
     </div>
   );
 
-  const CourseCard = ({ course }) => (
+  interface CourseCardProps {
+    course: Course;
+  }
+
+  const CourseCard = ({ course }: CourseCardProps) => (
     <Card className="overflow-hidden h-full flex flex-col">
       <div className="relative aspect-video overflow-hidden">
         <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
