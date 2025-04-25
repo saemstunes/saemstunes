@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -16,11 +15,68 @@ const Library = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("saved");
 
-  // Sample saved content data (would come from API in a real app)
+  // Sample saved content data (with updated thumbnails)
   const savedVideos = mockVideos.slice(0, 4);
-  const saemOfferings = mockVideos.slice(4, 8).map(video => ({...video, isExclusive: true}));
+  const saemOfferings = [
+    {
+      id: "exclusive1",
+      title: "Advanced Guitar Fingerpicking",
+      description: "Master complex fingerpicking patterns with our expert instructor",
+      thumbnailUrl: "https://images.unsplash.com/photo-1510915361894-db8b60106cb1",
+      videoUrl: "/videos/sample.mp4",
+      duration: "45m",
+      instructor: "Saem",
+      category: "Guitar",
+      level: "advanced",
+      tags: ["guitar", "fingerpicking", "advanced"],
+      isLocked: true,
+      isExclusive: true,
+    },
+    {
+      id: "exclusive2",
+      title: "Vocal Performance Masterclass",
+      description: "Learn professional vocal techniques for stage performance",
+      thumbnailUrl: "https://images.unsplash.com/photo-1516280440614-37939bbacd81",
+      videoUrl: "/videos/sample.mp4",
+      duration: "1h 20m",
+      instructor: "Lisa Wong",
+      category: "Vocal",
+      level: "intermediate",
+      tags: ["vocal", "performance", "stage"],
+      isLocked: true,
+      isExclusive: true,
+    },
+    {
+      id: "exclusive3",
+      title: "Music Production: Mixing Vocals",
+      description: "Professional techniques for mixing vocals in your productions",
+      thumbnailUrl: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04",
+      videoUrl: "/videos/sample.mp4",
+      duration: "55m",
+      instructor: "James Rodriguez",
+      category: "Production",
+      level: "intermediate",
+      tags: ["production", "mixing", "vocals"],
+      isLocked: true,
+      isExclusive: true,
+    },
+    {
+      id: "exclusive4",
+      title: "Piano Improvisation Workshop",
+      description: "Learn to improvise beautiful piano melodies in any style",
+      thumbnailUrl: "https://images.unsplash.com/photo-1520523839897-bd0b52f945a0",
+      videoUrl: "/videos/sample.mp4",
+      duration: "1h 05m",
+      instructor: "Saem",
+      category: "Piano",
+      level: "intermediate",
+      tags: ["piano", "improvisation", "creativity"],
+      isLocked: true,
+      isExclusive: true,
+    }
+  ];
   
-  // Extended sample courses data
+  // Sample courses data with updated thumbnails
   const courses = [
     {
       id: "course1",
@@ -29,7 +85,7 @@ const Library = () => {
       instructor: "Saem",
       duration: "8 weeks",
       level: "beginner",
-      thumbnail: "/placeholder.svg",
+      thumbnail: "https://images.unsplash.com/photo-1520523839897-bd0b52f945a0",
       enrolled: true,
       progress: 35
     },
@@ -40,7 +96,7 @@ const Library = () => {
       instructor: "Lisa Wong",
       duration: "6 weeks",
       level: "intermediate",
-      thumbnail: "/placeholder.svg",
+      thumbnail: "https://images.unsplash.com/photo-1516280440614-37939bbacd81",
       enrolled: true,
       progress: 72
     },
@@ -51,7 +107,7 @@ const Library = () => {
       instructor: "James Rodriguez",
       duration: "10 weeks",
       level: "beginner",
-      thumbnail: "/placeholder.svg",
+      thumbnail: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04",
       enrolled: false,
       progress: 0
     },
@@ -62,7 +118,7 @@ const Library = () => {
       instructor: "Saem",
       duration: "12 weeks",
       level: "advanced",
-      thumbnail: "/placeholder.svg",
+      thumbnail: "https://images.unsplash.com/photo-1510915361894-db8b60106cb1",
       enrolled: false,
       progress: 0
     },
@@ -73,7 +129,7 @@ const Library = () => {
       instructor: "Emily Carter",
       duration: "4 weeks",
       level: "intermediate",
-      thumbnail: "/placeholder.svg",
+      thumbnail: "https://images.unsplash.com/photo-1507838153414-b4b713384a76",
       enrolled: false,
       progress: 0
     },
@@ -84,7 +140,7 @@ const Library = () => {
       instructor: "DJ Marcus",
       duration: "5 weeks",
       level: "beginner",
-      thumbnail: "/placeholder.svg",
+      thumbnail: "https://images.unsplash.com/photo-1571330735066-03aaa9429d89",
       enrolled: false,
       progress: 0
     },
@@ -95,7 +151,7 @@ const Library = () => {
       instructor: "Professor Alan Smith",
       duration: "8 weeks",
       level: "beginner",
-      thumbnail: "/placeholder.svg",
+      thumbnail: "https://images.unsplash.com/photo-1507838153414-b4b713384a76",
       enrolled: false,
       progress: 0
     },
@@ -106,7 +162,7 @@ const Library = () => {
       instructor: "Robert Johnson",
       duration: "10 weeks",
       level: "advanced",
-      thumbnail: "/placeholder.svg",
+      thumbnail: "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae",
       enrolled: false,
       progress: 0
     }
