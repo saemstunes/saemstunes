@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -64,6 +65,7 @@ const MusicTools = () => {
 const PitchFinder = () => {
   const [isListening, setIsListening] = useState(false);
   const [currentNote, setCurrentNote] = useState("--");
+  const [octave, setOctave] = useState<number | null>(null);
   const [frequency, setFrequency] = useState(0);
   const [micAccessGranted, setMicAccessGranted] = useState(false);
   const [error, setError] = useState("");
@@ -76,14 +78,17 @@ const PitchFinder = () => {
   
   const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
   
-  // Get tuning indicator display - moved inside component to access centsDifference and currentNote
+  // Get tuning indicator display
   const getTuningIndicator = () => {
     if (centsDifference === 0 || currentNote === "--") return null;
     
     let indicatorText = "In tune";
     let indicatorColor = "text-green-500";
     
-    if (centsDifference > 5) {
+    if (Math.abs(centsDifference) <= 5) {
+      indicatorText = "In tune";
+      indicatorColor = "text-green-500";
+    } else if (centsDifference > 5) {
       indicatorText = "Sharp";
       indicatorColor = "text-amber-500";
     } else if (centsDifference < -5) {
@@ -97,9 +102,18 @@ const PitchFinder = () => {
     
     return (
       <div className={`text-sm ${indicatorColor}`}>
-        {indicatorText} ({centsDifference > 0 ? "+" : ""}{centsDifference} cents)
+        {indicatorText} ({centsDifference > 0 ? "+" : ""}{centsDifference.toFixed(1)} cents)
       </div>
     );
+  };
+
+  // Get needle position for the tuning gauge
+  const getNeedlePosition = () => {
+    if (centsDifference === 0 || currentNote === "--") return "rotate-0";
+    
+    // Clamp the cents difference to the range of -50 to 50 degrees for visualization
+    const clampedCents = Math.max(-50, Math.min(50, centsDifference));
+    return `rotate-[${clampedCents}deg]`;
   };
   
   const startListening = async () => {
@@ -143,10 +157,12 @@ const PitchFinder = () => {
     
     setIsListening(false);
     setCurrentNote("--");
+    setOctave(null);
     setFrequency(0);
     setCentsDifference(0);
   };
   
+  // Improved pitch detection with more accurate cents calculation
   const detectPitch = () => {
     if (!analyserRef.current || !audioContextRef.current) return;
     
@@ -159,13 +175,22 @@ const PitchFinder = () => {
       const ac = autoCorrelate(dataArray, audioContextRef.current?.sampleRate || 44100);
       
       if (ac !== -1) {
-        // Calculate note and cents difference
-        const noteNum = 12 * (Math.log(ac / 440) / Math.log(2));
-        const roundedNoteNum = Math.round(noteNum);
-        const cents = Math.round((noteNum - roundedNoteNum) * 100);
+        // A4 is 440Hz, which is note number 69 in MIDI
+        const noteNum = 12 * (Math.log(ac / 440) / Math.log(2)) + 69;
+        const note = Math.round(noteNum);
+        const cents = Math.round((noteNum - note) * 100);
         
-        const note = notes[Math.round(noteNum) % 12];
-        setCurrentNote(note);
+        // Calculate octave (C4 is middle C, note number 60)
+        const calculatedOctave = Math.floor((note - 12) / 12);
+        
+        // Note index in the 12-note scale
+        const noteIndex = (note - 12) % 12;
+        if (noteIndex < 0 || noteIndex >= notes.length) return;
+        
+        const noteName = notes[noteIndex];
+        
+        setCurrentNote(noteName);
+        setOctave(calculatedOctave);
         setFrequency(Math.round(ac));
         setCentsDifference(cents);
       }
@@ -176,16 +201,15 @@ const PitchFinder = () => {
     detectPitchFrame();
   };
   
-  // Auto-correlation algorithm for pitch detection - fixed correlation reference
+  // Enhanced auto-correlation algorithm for pitch detection
   const autoCorrelate = (buffer: Float32Array, sampleRate: number): number => {
     const SIZE = buffer.length;
     const MAX_SAMPLES = Math.floor(SIZE / 2);
     let bestOffset = -1;
     let bestCorrelation = 0;
     let rms = 0;
-    let foundGoodCorrelation = false;
     
-    // Calculate RMS
+    // Calculate RMS (root mean square) to determine if there's enough signal
     for (let i = 0; i < SIZE; i++) {
       const val = buffer[i];
       rms += val * val;
@@ -195,28 +219,44 @@ const PitchFinder = () => {
     // Not enough signal
     if (rms < 0.01) return -1;
     
-    // Find best correlation
-    for (let offset = 0; offset < MAX_SAMPLES; offset++) {
-      let currentCorrelation = 0;
-      for (let i = 0; i < MAX_SAMPLES; i++) {
-        currentCorrelation += Math.abs(buffer[i] - buffer[i + offset]);
-      }
-      currentCorrelation = 1 - (currentCorrelation / MAX_SAMPLES);
+    let lastCorrelation = 1;
+    
+    // Find the best correlation
+    for (let offset = 1; offset < MAX_SAMPLES; offset++) {
+      let correlation = 0;
       
-      if (currentCorrelation > bestCorrelation) {
-        bestCorrelation = currentCorrelation;
+      // Compare samples with offset
+      for (let i = 0; i < MAX_SAMPLES; i++) {
+        correlation += Math.abs(buffer[i] - buffer[i + offset]);
+      }
+      
+      correlation = 1 - (correlation / MAX_SAMPLES);
+      
+      // Track crossings from positive to negative
+      if ((correlation > bestCorrelation) && (correlation > 0.9) && (correlation > lastCorrelation)) {
+        bestCorrelation = correlation;
         bestOffset = offset;
       }
       
-      if (currentCorrelation > 0.9) {
-        foundGoodCorrelation = true;
-      } else if (foundGoodCorrelation) {
-        break;
-      }
+      lastCorrelation = correlation;
     }
     
-    if (bestCorrelation > 0.5) {
-      return sampleRate / bestOffset;
+    // If we found a good correlation
+    if (bestCorrelation > 0.01) {
+      // Refine the estimate with quadratic interpolation for better accuracy
+      let shift = 0;
+      if (bestOffset > 0 && bestOffset < MAX_SAMPLES - 1) {
+        const before = buffer[bestOffset - 1];
+        const current = buffer[bestOffset];
+        const after = buffer[bestOffset + 1];
+        const delta = after - before;
+        if (delta !== 0) {
+          shift = (current - before) / delta;
+        }
+      }
+      
+      // Convert to frequency
+      return sampleRate / (bestOffset + shift);
     }
     
     return -1;
@@ -250,9 +290,28 @@ const PitchFinder = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center">
-        <div className="w-32 h-32 rounded-full flex items-center justify-center border-4 border-gold mb-6">
-          <div className="text-center">
+        <div className="w-48 h-48 rounded-full flex items-center justify-center border-4 border-gold mb-6 relative">
+          {/* Tuning gauge */}
+          <div className="w-full h-full absolute">
+            <div className="absolute top-0 left-1/2 h-1/2 w-0.5 bg-red-500 origin-bottom transform -translate-x-1/2 rotate-[-50deg]"></div>
+            <div className="absolute top-0 left-1/2 h-1/2 w-0.5 bg-amber-500 origin-bottom transform -translate-x-1/2 rotate-[-25deg]"></div>
+            <div className="absolute top-0 left-1/2 h-1/2 w-0.5 bg-green-500 origin-bottom transform -translate-x-1/2 rotate-0"></div>
+            <div className="absolute top-0 left-1/2 h-1/2 w-0.5 bg-amber-500 origin-bottom transform -translate-x-1/2 rotate-[25deg]"></div>
+            <div className="absolute top-0 left-1/2 h-1/2 w-0.5 bg-red-500 origin-bottom transform -translate-x-1/2 rotate-[50deg]"></div>
+            
+            {/* Dynamic needle */}
+            {isListening && frequency > 0 && (
+              <div 
+                className={`absolute top-0 left-1/2 h-1/2 w-1 bg-gold origin-bottom transform -translate-x-1/2 transition-transform duration-100 ${getNeedlePosition()}`}
+              ></div>
+            )}
+          </div>
+          
+          <div className="text-center z-10">
             <div className="text-4xl font-bold">{currentNote}</div>
+            {octave !== null && (
+              <div className="text-xl">{octave}</div>
+            )}
             {frequency > 0 && (
               <div className="text-sm text-muted-foreground">{frequency} Hz</div>
             )}

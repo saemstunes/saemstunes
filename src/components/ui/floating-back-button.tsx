@@ -9,15 +9,30 @@ export function FloatingBackButton() {
   const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(true);
   const [lastInteraction, setLastInteraction] = useState(Date.now());
+  const [isMobile, setIsMobile] = useState(false);
   
   useEffect(() => {
+    // Check if the device is mobile based on screen width
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // Common breakpoint for mobile
+    };
+    
+    // Initial check
+    checkMobile();
+    
+    // Add event listener for window resize
+    window.addEventListener('resize', checkMobile);
+    
     const timer = setInterval(() => {
       if (Date.now() - lastInteraction > 5000) {
         setIsVisible(false);
       }
     }, 1000);
     
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('resize', checkMobile);
+    };
   }, [lastInteraction]);
 
   const handleInteraction = () => {
@@ -28,6 +43,9 @@ export function FloatingBackButton() {
   const handleClick = () => {
     navigate(-1);
   };
+
+  // Only render on mobile devices
+  if (!isMobile) return null;
 
   return (
     <AnimatePresence>
