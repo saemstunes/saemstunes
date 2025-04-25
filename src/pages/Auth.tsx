@@ -12,7 +12,7 @@ import AdminLoginForm from "@/components/auth/AdminLoginForm";
 import Logo from "@/components/branding/Logo";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Google } from "lucide-react";
+import { Globe } from "lucide-react";
 
 const Auth = () => {
   const [activeTab, setActiveTab] = useState<string>("login");
