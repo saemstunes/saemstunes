@@ -58,7 +58,7 @@ const SearchPage = () => {
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {searchResults.map(video => (
-                  <VideoCard key={video.id} video={video} />
+                  <VideoCard key={video.id} video={video} isPremium={video.isLocked} />
                 ))}
               </div>
               
@@ -81,7 +81,7 @@ const SearchPage = () => {
         <TabsContent value="beginner" className="mt-0">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {searchResults.map(video => (
-              <VideoCard key={video.id} video={video} />
+              <VideoCard key={video.id} video={video} isPremium={video.isLocked} />
             ))}
           </div>
           
@@ -96,7 +96,7 @@ const SearchPage = () => {
         <TabsContent value="intermediate" className="mt-0">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {searchResults.map(video => (
-              <VideoCard key={video.id} video={video} />
+              <VideoCard key={video.id} video={video} isPremium={video.isLocked} />
             ))}
           </div>
           
@@ -111,7 +111,7 @@ const SearchPage = () => {
         <TabsContent value="advanced" className="mt-0">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {searchResults.map(video => (
-              <VideoCard key={video.id} video={video} />
+              <VideoCard key={video.id} video={video} isPremium={video.isLocked} />
             ))}
           </div>
           

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -253,6 +252,7 @@ const Library = () => {
                   <VideoCardWrapper 
                     key={video.id} 
                     video={video}
+                    isPremium={video.isLocked}
                     onClick={() => navigate(`/videos/${video.id}`)}
                   />
                 ))}

@@ -132,7 +132,7 @@ const ArtistProfile = () => {
             <h2 className="text-xl font-medium mb-4">Featured Lessons</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {tutorVideos.map(video => (
-                <VideoCard key={video.id} video={video} />
+                <VideoCard key={video.id} video={video} isPremium={video.isLocked} />
               ))}
             </div>
           </TabsContent>

@@ -12,10 +12,10 @@ import { useToast } from "@/hooks/use-toast";
 
 interface VideoCardProps {
   video: VideoContent & { isExclusive?: boolean };
-  isPremium: boolean; // <-- Added this
+  isPremium?: boolean; // Make isPremium optional with a default value
 }
 
-const VideoCard = ({ video }: VideoCardProps) => {
+const VideoCard = ({ video, isPremium = false }: VideoCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();

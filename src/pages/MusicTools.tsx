@@ -77,6 +77,32 @@ const PitchFinder = () => {
   
   const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
   
+  // Get tuning indicator display - moved inside component to access centsDifference and currentNote
+  const getTuningIndicator = () => {
+    if (centsDifference === 0 || currentNote === "--") return null;
+    
+    let indicatorText = "In tune";
+    let indicatorColor = "text-green-500";
+    
+    if (centsDifference > 5) {
+      indicatorText = "Sharp";
+      indicatorColor = "text-amber-500";
+    } else if (centsDifference < -5) {
+      indicatorText = "Flat";
+      indicatorColor = "text-amber-500";
+    }
+    
+    if (Math.abs(centsDifference) > 30) {
+      indicatorColor = "text-red-500";
+    }
+    
+    return (
+      <div className={`text-sm ${indicatorColor}`}>
+        {indicatorText} ({centsDifference > 0 ? "+" : ""}{centsDifference} cents)
+      </div>
+    );
+  };
+  
   const startListening = async () => {
     try {
       // First initialize AudioContext
@@ -172,18 +198,18 @@ const PitchFinder = () => {
     
     // Find best correlation
     for (let offset = 0; offset < MAX_SAMPLES; offset++) {
-      let correlation = 0;
+      let currentCorrelation = 0;
       for (let i = 0; i < MAX_SAMPLES; i++) {
-        correlation += Math.abs(buffer[i] - buffer[i + offset]);
+        currentCorrelation += Math.abs(buffer[i] - buffer[i + offset]);
       }
-      correlation = 1 - (correlation / MAX_SAMPLES);
+      currentCorrelation = 1 - (currentCorrelation / MAX_SAMPLES);
       
-      if (correlation > bestCorrelation) {
-        bestCorrelation = correlation;
+      if (currentCorrelation > bestCorrelation) {
+        bestCorrelation = currentCorrelation;
         bestOffset = offset;
       }
       
-      if (correlation > 0.9) {
+      if (currentCorrelation > 0.9) {
         foundGoodCorrelation = true;
       } else if (foundGoodCorrelation) {
         break;
@@ -213,32 +239,6 @@ const PitchFinder = () => {
     };
   }, []);
 
-  // Get tuning indicator display
-  const getTuningIndicator = () => {
-    if (centsDifference === 0 || currentNote === "--") return null;
-    
-    let indicatorText = "In tune";
-    let indicatorColor = "text-green-500";
-    
-    if (centsDifference > 5) {
-      indicatorText = "Sharp";
-      indicatorColor = "text-amber-500";
-    } else if (centsDifference < -5) {
-      indicatorText = "Flat";
-      indicatorColor = "text-amber-500";
-    }
-    
-    if (Math.abs(centsDifference) > 30) {
-      indicatorColor = "text-red-500";
-    }
-    
-    return (
-      <div className={`text-sm ${indicatorColor}`}>
-        {indicatorText} ({centsDifference > 0 ? "+" : ""}{centsDifference} cents)
-      </div>
-    );
-  };
-  
   return (
     <Card>
       <CardHeader>
@@ -526,7 +526,7 @@ const TempoFinder = () => {
             max={240} 
             step={1} 
             value={[tempo]}
-            onValueChange={handleTempoChange}
+            onValueChange={(values) => handleTempoChange(values)}
             className="my-4"
             aria-label="Tempo slider"
           />
