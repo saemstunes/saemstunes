@@ -272,3 +272,205 @@ const Admin = () => {
                                  content.enrollments ? `${content.enrollments} enrollments` :
                                  content.plays ? `${content.plays} plays` :
                                  content.downloads ? `${content.downloads} downloads` : ''}
+                                </div>
+                            </td>
+                            <td className="p-3">
+                              <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-gold/10 text-gold">
+                                {content.type}
+                              </span>
+                            </td>
+                            <td className="p-3 hidden md:table-cell text-sm">
+                              {new Date(content.created).toLocaleDateString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </CardContent>
+                  <CardFooter className="border-t p-3">
+                    <Button variant="link" className="text-gold h-auto p-0">View all content</Button>
+                  </CardFooter>
+                </Card>
+              </div>
+            </TabsContent>
+            
+            {/* Users Tab */}
+            <TabsContent value="users">
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h1 className="text-2xl font-bold">User Management</h1>
+                  <Button className="bg-gold hover:bg-gold/90 text-white">
+                    Add New User
+                  </Button>
+                </div>
+                
+                <Card>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle>All Users</CardTitle>
+                        <CardDescription>
+                          Manage and monitor all registered users
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Input 
+                          placeholder="Search users..." 
+                          className="w-64" 
+                        />
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <table className="w-full">
+                      <thead className="border-b">
+                        <tr className="text-xs text-muted-foreground font-medium">
+                          <th className="text-left p-3">Name</th>
+                          <th className="text-left p-3">Email</th>
+                          <th className="text-left p-3">Role</th>
+                          <th className="text-left p-3">Joined</th>
+                          <th className="text-left p-3">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[...RECENT_USERS, ...RECENT_USERS].map((user, index) => (
+                          <tr key={`${user.id}-${index}`} className="border-b last:border-0 hover:bg-muted/50">
+                            <td className="p-3 font-medium">{user.name}</td>
+                            <td className="p-3">{user.email}</td>
+                            <td className="p-3">
+                              <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-gold/10 text-gold">
+                                {user.role}
+                              </span>
+                            </td>
+                            <td className="p-3">
+                              {new Date(user.joined).toLocaleDateString()}
+                            </td>
+                            <td className="p-3">
+                              <div className="flex items-center gap-2">
+                                <Button variant="ghost" size="sm">Edit</Button>
+                                <Button variant="ghost" size="sm" className="text-destructive">Delete</Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </CardContent>
+                  <CardFooter className="border-t p-3 flex items-center justify-between">
+                    <div className="text-sm text-muted-foreground">
+                      Showing 8 of 2,468 users
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" disabled>Previous</Button>
+                      <Button variant="outline" size="sm">Next</Button>
+                    </div>
+                  </CardFooter>
+                </Card>
+              </div>
+            </TabsContent>
+            
+            {/* Content Tab */}
+            <TabsContent value="content">
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h1 className="text-2xl font-bold">Content Management</h1>
+                  <Button className="bg-gold hover:bg-gold/90 text-white">
+                    Add New Content
+                  </Button>
+                </div>
+                
+                <Card>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle>All Content</CardTitle>
+                        <CardDescription>
+                          Manage lessons, music, and educational materials
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Input 
+                          placeholder="Search content..." 
+                          className="w-64" 
+                        />
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <table className="w-full">
+                      <thead className="border-b">
+                        <tr className="text-xs text-muted-foreground font-medium">
+                          <th className="text-left p-3">Title</th>
+                          <th className="text-left p-3">Type</th>
+                          <th className="text-left p-3">Engagement</th>
+                          <th className="text-left p-3">Created</th>
+                          <th className="text-left p-3">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[...RECENT_CONTENT, ...RECENT_CONTENT].map((content, index) => (
+                          <tr key={`${content.id}-${index}`} className="border-b last:border-0 hover:bg-muted/50">
+                            <td className="p-3 font-medium">{content.title}</td>
+                            <td className="p-3">
+                              <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-gold/10 text-gold">
+                                {content.type}
+                              </span>
+                            </td>
+                            <td className="p-3">
+                              {content.views ? `${content.views} views` : 
+                               content.enrollments ? `${content.enrollments} enrollments` :
+                               content.plays ? `${content.plays} plays` :
+                               content.downloads ? `${content.downloads} downloads` : ''}
+                            </td>
+                            <td className="p-3">
+                              {new Date(content.created).toLocaleDateString()}
+                            </td>
+                            <td className="p-3">
+                              <div className="flex items-center gap-2">
+                                <Button variant="ghost" size="sm">Edit</Button>
+                                <Button variant="ghost" size="sm" className="text-destructive">Delete</Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </CardContent>
+                  <CardFooter className="border-t p-3 flex items-center justify-between">
+                    <div className="text-sm text-muted-foreground">
+                      Showing 8 of 342 content items
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" disabled>Previous</Button>
+                      <Button variant="outline" size="sm">Next</Button>
+                    </div>
+                  </CardFooter>
+                </Card>
+              </div>
+            </TabsContent>
+            
+            {/* Placeholder for other tabs */}
+            {['schedule', 'notifications', 'reports', 'settings'].map((tab) => (
+              <TabsContent key={tab} value={tab}>
+                <div className="flex flex-col items-center justify-center py-12">
+                  <div className="bg-muted p-4 rounded-full mb-4">
+                    {tab === 'schedule' && <Calendar className="h-8 w-8 text-gold" />}
+                    {tab === 'notifications' && <Bell className="h-8 w-8 text-gold" />}
+                    {tab === 'reports' && <FileText className="h-8 w-8 text-gold" />}
+                    {tab === 'settings' && <Settings className="h-8 w-8 text-gold" />}
+                  </div>
+                  <h2 className="text-2xl font-bold mb-2 capitalize">{tab}</h2>
+                  <p className="text-muted-foreground text-center max-w-md">
+                    This section is currently under development. Check back soon for updates!
+                  </p>
+                </div>
+              </TabsContent>
+            ))}
+          </Tabs>
+        </main>
+      </div>
+    </div>
+  );
+};
+
+export default Admin;
