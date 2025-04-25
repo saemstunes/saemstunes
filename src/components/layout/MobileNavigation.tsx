@@ -1,7 +1,7 @@
 
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Home, Compass, Library, User, Bell, Users, Flask } from "lucide-react";
+import { Home, Compass, Library, User, Bell, Users } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "../ui/badge";
@@ -70,7 +70,7 @@ const MobileNavigation = () => {
   );
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border lg:hidden z-40">
+    <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border lg:hidden z-50">
       <div className="flex items-center justify-around">
         {filteredNavigation.map((item) => (
           <button

@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -5,6 +6,7 @@ import {
   Card, 
   CardContent, 
   CardDescription, 
+  CardFooter, 
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
@@ -75,7 +77,7 @@ const PitchFinder = () => {
   
   const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
   
-  // Get tuning indicator display
+  // Get tuning indicator display - moved inside component to access centsDifference and currentNote
   const getTuningIndicator = () => {
     if (centsDifference === 0 || currentNote === "--") return null;
     

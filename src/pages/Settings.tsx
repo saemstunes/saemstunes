@@ -1,64 +1,172 @@
 
-import React, { useState } from 'react';
-import MainLayout from '@/components/layout/MainLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import React, { useState, useEffect } from "react";
+import MainLayout from "@/components/layout/MainLayout";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { 
-  BellRing, 
-  User, 
-  Shield, 
-  Palette, 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { 
+  Bell, 
+  Lock, 
   Globe, 
-  Type, 
-  Eye, 
-  Sidebar as SidebarIcon,
-  Laptop,
+  Volume2, 
+  User, 
+  Calendar, 
+  Shield, 
+  Monitor, 
+  Save,
   Moon,
-  SunMedium
+  Sun,
+  Smartphone,
+  PaintBucket,
+  PanelLeft,
+  PanelRight
 } from "lucide-react";
-import { Separator } from '@/components/ui/separator';
-import { useAuth } from '@/context/AuthContext';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useTheme } from '@/context/ThemeContext';
-import { useToast } from '@/hooks/use-toast';
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { useAuth } from "@/context/AuthContext";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Separator } from "@/components/ui/separator";
+import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import { Slider } from "@/components/ui/slider";
 
 const Settings = () => {
-  const { user } = useAuth();
-  const { theme, setTheme, highContrast, toggleHighContrast } = useTheme();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("appearance");
-  const [language, setLanguage] = useState("english");
-  const [fontSize, setFontSize] = useState("medium");
-  const [sidebarDisplay, setSidebarDisplay] = useState(true);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [pushNotifications, setPushNotifications] = useState(true);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [currentTheme, setCurrentTheme] = useState<'gold' | 'teal'>('gold');
+  const [brightness, setBrightness] = useState(100);
   
-  const handleSaveSettings = () => {
-    toast({
-      title: "Settings saved",
-      description: "Your preferences have been updated."
-    });
+  // Settings state
+  const [notificationSettings, setNotificationSettings] = useState({
+    email: true,
+    push: true,
+    newContent: true,
+    events: true,
+    mentions: true,
+  });
+  
+  const [privacySettings, setPrivacySettings] = useState({
+    profileVisibility: "everyone",
+    allowMessages: true,
+    activityVisibility: "friends",
+    dataCollection: true,
+  });
+  
+  const [syncSettings, setSyncSettings] = useState({
+    googleCalendar: false,
+    iCloudCalendar: false,
+  });
+  
+  const [displaySettings, setDisplaySettings] = useState({
+    language: "english",
+    theme: "system",
+    fontSize: "medium",
+    highContrast: false,
+  });
+
+  // Apply theme based on the selected theme color
+  useEffect(() => {
+    // Get the root element
+    const root = document.documentElement;
+    
+    if (currentTheme === 'teal') {
+      // Apply teal theme
+      root.style.setProperty('--primary', '177 100% 22%'); // #036c5f
+      root.style.setProperty('--primary-foreground', '0 0% 100%');
+      root.style.setProperty('--accent', '177 54% 61%'); // #81cdc6
+      root.style.setProperty('--accent-foreground', '0 0% 100%');
+      root.style.setProperty('--gold', '180 100% 25%'); // #008080
+      root.style.setProperty('--gold-light', '177 54% 61%'); // #81cdc6
+      root.style.setProperty('--gold-dark', '179 94% 16%'); // #025043
+      localStorage.setItem('appThemeColor', 'teal');
+    } else {
+      // Default gold theme
+      root.style.setProperty('--primary', '43 100% 33%');
+      root.style.setProperty('--primary-foreground', '0 0% 100%');
+      root.style.setProperty('--accent', '43 60% 45%');
+      root.style.setProperty('--accent-foreground', '0 0% 100%');
+      root.style.setProperty('--gold', '43 100% 33%');
+      root.style.setProperty('--gold-light', '43 100% 50%');
+      root.style.setProperty('--gold-dark', '43 100% 25%');
+      localStorage.setItem('appThemeColor', 'gold');
+    }
+  }, [currentTheme]);
+
+  // Load saved theme on component mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('appThemeColor');
+    if (savedTheme === 'teal') {
+      setCurrentTheme('teal');
+    }
+    
+    // Load saved brightness
+    const savedBrightness = localStorage.getItem('appBrightness');
+    if (savedBrightness) {
+      const brightnessValue = parseInt(savedBrightness);
+      setBrightness(brightnessValue);
+      applyBrightness(brightnessValue);
+    }
+  }, []);
+
+  // Apply brightness filter
+  const applyBrightness = (value: number) => {
+    document.body.style.filter = `brightness(${value}%)`;
+    localStorage.setItem('appBrightness', value.toString());
+  };
+
+  // Handle brightness change
+  const handleBrightnessChange = (value: number[]) => {
+    const brightnessValue = value[0];
+    setBrightness(brightnessValue);
+    applyBrightness(brightnessValue);
   };
   
-  const languages = [
-    { value: "english", label: "English" },
-    { value: "spanish", label: "Español" },
-    { value: "french", label: "Français" },
-    { value: "german", label: "Deutsch" },
-    { value: "japanese", label: "日本語" },
-    { value: "chinese", label: "中文" },
-  ];
-  
-  const fontSizes = [
-    { value: "small", label: "Small" },
-    { value: "medium", label: "Medium" },
-    { value: "large", label: "Large" },
-    { value: "xlarge", label: "Extra Large" },
+  // Form submission handler (example)
+  const handleSubmit = (settingType: string) => {
+    toast({
+      title: "Settings Updated",
+      description: `Your ${settingType} settings have been saved.`,
+    });
+  };
+
+  // Theme options
+  const themeOptions = [
+    {
+      name: "Gold",
+      value: "gold",
+      preview: (
+        <div className="flex flex-col items-center">
+          <div className="w-8 h-8 rounded-full bg-amber-600"></div>
+          <span className="text-xs mt-1">Gold</span>
+        </div>
+      )
+    },
+    {
+      name: "Teal",
+      value: "teal",
+      preview: (
+        <div className="flex flex-col items-center">
+          <div className="w-8 h-8 rounded-full bg-teal-700"></div>
+          <span className="text-xs mt-1">Teal</span>
+        </div>
+      )
+    }
   ];
 
   return (
@@ -67,160 +175,29 @@ const Settings = () => {
         <div>
           <h1 className="text-3xl font-proxima font-bold">Settings</h1>
           <p className="text-muted-foreground">
-            Manage your account settings and preferences
+            Manage your account settings and preferences.
           </p>
         </div>
 
-        <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid grid-cols-4 md:grid-cols-5">
-            <TabsTrigger value="appearance" className="text-xs md:text-sm">
-              <Palette className="h-4 w-4 mr-2 hidden sm:inline" />
-              Appearance
-            </TabsTrigger>
-            <TabsTrigger value="accessibility" className="text-xs md:text-sm">
-              <Eye className="h-4 w-4 mr-2 hidden sm:inline" />
-              Accessibility
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="text-xs md:text-sm">
-              <BellRing className="h-4 w-4 mr-2 hidden sm:inline" />
+        <Tabs defaultValue="notifications" className="space-y-4">
+          <TabsList className="grid grid-cols-2 md:grid-cols-4 gap-2 overflow-auto">
+            <TabsTrigger value="notifications" className="text-center">
+              <Bell className="h-4 w-4 mr-2 hidden sm:inline-block" />
               Notifications
             </TabsTrigger>
-            <TabsTrigger value="account" className="text-xs md:text-sm">
-              <User className="h-4 w-4 mr-2 hidden sm:inline" />
-              Account
-            </TabsTrigger>
-            <TabsTrigger value="privacy" className="text-xs md:text-sm hidden md:flex">
-              <Shield className="h-4 w-4 mr-2 hidden sm:inline" />
+            <TabsTrigger value="privacy" className="text-center">
+              <Lock className="h-4 w-4 mr-2 hidden sm:inline-block" />
               Privacy
             </TabsTrigger>
+            <TabsTrigger value="calendar" className="text-center">
+              <Calendar className="h-4 w-4 mr-2 hidden sm:inline-block" />
+              Calendar
+            </TabsTrigger>
+            <TabsTrigger value="display" className="text-center">
+              <Monitor className="h-4 w-4 mr-2 hidden sm:inline-block" />
+              Display
+            </TabsTrigger>
           </TabsList>
-
-          {/* Appearance Tab */}
-          <TabsContent value="appearance" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Theme Options</CardTitle>
-                <CardDescription>
-                  Customize the look and feel of the application
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-lg font-medium mb-4">Color Theme</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div 
-                        className={`border rounded-lg p-4 cursor-pointer transition-all ${theme === 'gold' ? 'ring-2 ring-gold border-gold' : ''}`}
-                        onClick={() => setTheme('gold')}
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-amber-500"></div>
-                          <span className="font-medium">Gold</span>
-                        </div>
-                        <div className="mt-2 h-6 bg-gradient-to-r from-amber-500 to-amber-700 rounded"></div>
-                      </div>
-                      
-                      <div 
-                        className={`border rounded-lg p-4 cursor-pointer transition-all ${theme === 'teal' ? 'ring-2 ring-teal-500 border-teal-500' : ''}`}
-                        onClick={() => setTheme('teal')}
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-teal-500"></div>
-                          <span className="font-medium">Teal</span>
-                        </div>
-                        <div className="mt-2 h-6 bg-gradient-to-r from-teal-500 to-teal-700 rounded"></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <Separator />
-                  
-                  <div className="flex flex-col space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label htmlFor="sidebar-toggle">Sidebar Display</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Show or hide the sidebar navigation
-                        </p>
-                      </div>
-                      <Switch
-                        id="sidebar-toggle"
-                        checked={sidebarDisplay}
-                        onCheckedChange={setSidebarDisplay}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          {/* Accessibility Tab */}
-          <TabsContent value="accessibility" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Accessibility Settings</CardTitle>
-                <CardDescription>
-                  Configure settings to improve accessibility
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex flex-col space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="language-select">Language</Label>
-                    <Select
-                      value={language}
-                      onValueChange={setLanguage}
-                    >
-                      <SelectTrigger id="language-select" className="w-full md:w-[200px]">
-                        <SelectValue placeholder="Select language" />
-                      </SelectTrigger>
-                      <SelectContent position="item-aligned">
-                        {languages.map((lang) => (
-                          <SelectItem key={lang.value} value={lang.value}>
-                            {lang.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="font-size-select">Font Size</Label>
-                    <Select
-                      value={fontSize}
-                      onValueChange={setFontSize}
-                    >
-                      <SelectTrigger id="font-size-select" className="w-full md:w-[200px]">
-                        <SelectValue placeholder="Select font size" />
-                      </SelectTrigger>
-                      <SelectContent position="item-aligned">
-                        {fontSizes.map((size) => (
-                          <SelectItem key={size.value} value={size.value}>
-                            {size.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="flex items-center justify-between pt-2">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="high-contrast">High Contrast Mode</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Increase contrast for better readability
-                      </p>
-                    </div>
-                    <Switch
-                      id="high-contrast"
-                      checked={highContrast}
-                      onCheckedChange={toggleHighContrast}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
           
           {/* Notifications Tab */}
           <TabsContent value="notifications" className="space-y-4">
@@ -228,159 +205,104 @@ const Settings = () => {
               <CardHeader>
                 <CardTitle>Notification Preferences</CardTitle>
                 <CardDescription>
-                  Configure how and when you receive notifications
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="notifications">Enable Notifications</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receive notifications from the app
-                    </p>
-                  </div>
-                  <Switch
-                    id="notifications"
-                    checked={notificationsEnabled}
-                    onCheckedChange={setNotificationsEnabled}
-                  />
-                </div>
-                
-                {notificationsEnabled && (
-                  <>
-                    <Separator />
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label htmlFor="email-notifications">Email Notifications</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Receive notifications via email
-                        </p>
-                      </div>
-                      <Switch
-                        id="email-notifications"
-                        checked={emailNotifications}
-                        onCheckedChange={setEmailNotifications}
-                      />
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label htmlFor="push-notifications">Push Notifications</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Receive push notifications in the app
-                        </p>
-                      </div>
-                      <Switch
-                        id="push-notifications"
-                        checked={pushNotifications}
-                        onCheckedChange={setPushNotifications}
-                      />
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <h3 className="text-sm font-medium">Notify me about:</h3>
-                      <div className="grid gap-2">
-                        <div className="flex items-center space-x-2">
-                          <input type="checkbox" id="notify-new-music" className="rounded border-gray-300" defaultChecked />
-                          <label htmlFor="notify-new-music" className="text-sm">New music releases</label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <input type="checkbox" id="notify-lessons" className="rounded border-gray-300" defaultChecked />
-                          <label htmlFor="notify-lessons" className="text-sm">Upcoming lessons and events</label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <input type="checkbox" id="notify-comments" className="rounded border-gray-300" defaultChecked />
-                          <label htmlFor="notify-comments" className="text-sm">Comments and mentions</label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <input type="checkbox" id="notify-promotions" className="rounded border-gray-300" />
-                          <label htmlFor="notify-promotions" className="text-sm">Promotions and special offers</label>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          {/* Account Tab */}
-          <TabsContent value="account" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Account Information</CardTitle>
-                <CardDescription>
-                  Manage your account details and preferences
+                  Configure how and when you receive notifications.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="name">Name</Label>
-                    <input
-                      id="name"
-                      type="text"
-                      className="w-full p-2 rounded-md border"
-                      defaultValue={user?.displayName || ""}
-                      placeholder="Your name"
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="email-notifications">Email Notifications</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Receive notifications via email
+                      </p>
+                    </div>
+                    <Switch 
+                      id="email-notifications" 
+                      checked={notificationSettings.email}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings({...notificationSettings, email: checked})
+                      }
                     />
                   </div>
-
-                  <div className="grid gap-2">
-                    <Label htmlFor="email">Email Address</Label>
-                    <input
-                      id="email"
-                      type="email"
-                      className="w-full p-2 rounded-md border bg-gray-100"
-                      defaultValue={user?.email || ""}
-                      placeholder="Your email"
-                      disabled
-                    />
-                  </div>
-
-                  <Button variant="secondary" className="w-full mt-4">Change Password</Button>
                   
-                  <div className="pt-2">
-                    <h3 className="text-sm font-medium mb-3">Subscription Plan</h3>
-                    {user?.subscribed ? (
-                      <div className="bg-muted p-3 rounded-md">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium">Premium Plan</p>
-                            <p className="text-sm text-muted-foreground">Active until December 31, 2023</p>
-                          </div>
-                          <Button variant="outline" size="sm">Manage</Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="bg-muted p-3 rounded-md">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium">Free Plan</p>
-                            <p className="text-sm text-muted-foreground">Limited access to content</p>
-                          </div>
-                          <Button className="bg-gold hover:bg-gold-dark" size="sm">Upgrade</Button>
-                        </div>
-                      </div>
-                    )}
+                  <Separator />
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="push-notifications">Push Notifications</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Receive push notifications on your devices
+                      </p>
+                    </div>
+                    <Switch 
+                      id="push-notifications" 
+                      checked={notificationSettings.push}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings({...notificationSettings, push: checked})
+                      }
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Notify me about</h3>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>New Content</Label>
+                      <p className="text-sm text-muted-foreground">
+                        New lessons, courses, and resources
+                      </p>
+                    </div>
+                    <Switch 
+                      checked={notificationSettings.newContent}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings({...notificationSettings, newContent: checked})
+                      }
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Events & Sessions</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Upcoming bookings and event reminders
+                      </p>
+                    </div>
+                    <Switch 
+                      checked={notificationSettings.events}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings({...notificationSettings, events: checked})
+                      }
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Mentions & Comments</Label>
+                      <p className="text-sm text-muted-foreground">
+                        When someone mentions or replies to you
+                      </p>
+                    </div>
+                    <Switch 
+                      checked={notificationSettings.mentions}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings({...notificationSettings, mentions: checked})
+                      }
+                    />
                   </div>
                 </div>
               </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Danger Zone</CardTitle>
-                <CardDescription>
-                  Actions that can't be undone
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <Button variant="destructive">Delete Account</Button>
-                </div>
-              </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={() => handleSubmit("notification")}
+                  className="bg-gold hover:bg-gold/90 text-white ml-auto"
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Changes
+                </Button>
+              </CardFooter>
             </Card>
           </TabsContent>
           
@@ -390,61 +312,363 @@ const Settings = () => {
               <CardHeader>
                 <CardTitle>Privacy Settings</CardTitle>
                 <CardDescription>
-                  Control your data and privacy settings
+                  Manage your privacy preferences and data settings.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="analytics">Usage Analytics</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Allow collection of anonymous usage data
-                    </p>
-                  </div>
-                  <Switch id="analytics" defaultChecked />
-                </div>
-                
-                <Separator />
-                
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="personalization">Personalization</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receive personalized content recommendations
-                    </p>
-                  </div>
-                  <Switch id="personalization" defaultChecked />
-                </div>
-                
-                <Separator />
-                
                 <div className="space-y-4">
-                  <h3 className="text-sm font-medium">Profile Visibility</h3>
-                  <RadioGroup defaultValue="friends">
+                  <div className="space-y-2">
+                    <Label htmlFor="profile-visibility">Profile Visibility</Label>
+                    <Select 
+                      defaultValue={privacySettings.profileVisibility} 
+                      onValueChange={(value) => 
+                        setPrivacySettings({...privacySettings, profileVisibility: value})
+                      }
+                    >
+                      <SelectTrigger id="profile-visibility">
+                        <SelectValue placeholder="Who can see your profile" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="everyone">Everyone</SelectItem>
+                        <SelectItem value="friends">Friends Only</SelectItem>
+                        <SelectItem value="private">Private</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="allow-messages">Direct Messages</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Allow others to send you direct messages
+                      </p>
+                    </div>
+                    <Switch 
+                      id="allow-messages" 
+                      checked={privacySettings.allowMessages}
+                      onCheckedChange={(checked) => 
+                        setPrivacySettings({...privacySettings, allowMessages: checked})
+                      }
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="activity-visibility">Activity Visibility</Label>
+                    <Select 
+                      defaultValue={privacySettings.activityVisibility} 
+                      onValueChange={(value) => 
+                        setPrivacySettings({...privacySettings, activityVisibility: value})
+                      }
+                    >
+                      <SelectTrigger id="activity-visibility">
+                        <SelectValue placeholder="Who can see your activity" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="everyone">Everyone</SelectItem>
+                        <SelectItem value="friends">Friends Only</SelectItem>
+                        <SelectItem value="private">Private</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="data-collection">Data Collection</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Allow us to collect anonymous usage data to improve our service
+                      </p>
+                    </div>
+                    <Switch 
+                      id="data-collection" 
+                      checked={privacySettings.dataCollection}
+                      onCheckedChange={(checked) => 
+                        setPrivacySettings({...privacySettings, dataCollection: checked})
+                      }
+                    />
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate("/privacy-policy")}
+                  className="mr-auto"
+                >
+                  <Shield className="mr-2 h-4 w-4" />
+                  View Privacy Policy
+                </Button>
+                <Button 
+                  onClick={() => handleSubmit("privacy")}
+                  className="bg-gold hover:bg-gold/90 text-white"
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Changes
+                </Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+          
+          {/* Calendar Tab */}
+          <TabsContent value="calendar" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Calendar Settings</CardTitle>
+                <CardDescription>
+                  Synchronize Saem's Tunes with your personal calendar.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label className="text-base font-medium">Google Calendar Sync</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Connect your Google Calendar to see availability and sync events
+                      </p>
+                    </div>
+                    <Switch 
+                      checked={syncSettings.googleCalendar}
+                      onCheckedChange={(checked) => {
+                        setSyncSettings({...syncSettings, googleCalendar: checked});
+                        if (checked) {
+                          // This would normally trigger Google OAuth flow
+                          toast({
+                            title: "Google Calendar",
+                            description: "You would be redirected to Google for authentication",
+                          });
+                        }
+                      }}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label className="text-base font-medium">iCloud Calendar Sync</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Connect your Apple iCloud Calendar to see availability and sync events
+                      </p>
+                    </div>
+                    <Switch 
+                      checked={syncSettings.iCloudCalendar}
+                      onCheckedChange={(checked) => {
+                        setSyncSettings({...syncSettings, iCloudCalendar: checked});
+                        if (checked) {
+                          // This would normally trigger Apple OAuth flow
+                          toast({
+                            title: "iCloud Calendar",
+                            description: "You would be redirected to Apple for authentication",
+                          });
+                        }
+                      }}
+                    />
+                  </div>
+                  
+                  <div className="bg-muted/50 rounded-lg p-4 mt-4">
+                    <h4 className="text-sm font-medium mb-2">What gets synced?</h4>
+                    <ul className="text-sm text-muted-foreground space-y-2">
+                      <li className="flex items-start">
+                        <span className="bg-green-500 rounded-full w-2 h-2 mt-1.5 mr-2"></span>
+                        Your booked music lessons and tutoring sessions
+                      </li>
+                      <li className="flex items-start">
+                        <span className="bg-blue-500 rounded-full w-2 h-2 mt-1.5 mr-2"></span>
+                        Community events you've registered for
+                      </li>
+                      <li className="flex items-start">
+                        <span className="bg-purple-500 rounded-full w-2 h-2 mt-1.5 mr-2"></span>
+                        Instructor availability will be checked against your calendar
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={() => handleSubmit("calendar")}
+                  className="bg-gold hover:bg-gold/90 text-white ml-auto"
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Changes
+                </Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+          
+          {/* Display Tab */}
+          <TabsContent value="display" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Monitor className="h-5 w-5" />
+                  Display Preferences
+                </CardTitle>
+                <CardDescription>
+                  Customize how Saem's Tunes looks and behaves.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Theme Colors */}
+                <div className="space-y-3">
+                  <Label className="text-base">Theme Color</Label>
+                  <div className="flex flex-wrap gap-4 mt-2">
+                    {themeOptions.map((theme) => (
+                      <div
+                        key={theme.value}
+                        className={cn(
+                          "relative cursor-pointer hover:scale-105 transition-transform rounded-lg p-2 border",
+                          currentTheme === theme.value && "border-gold ring-1 ring-gold"
+                        )}
+                        onClick={() => setCurrentTheme(theme.value as 'gold' | 'teal')}
+                      >
+                        {theme.preview}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <Separator />
+                
+                {/* Brightness Control */}
+                <div className="space-y-3">
+                  <Label className="text-base">Screen Brightness</Label>
+                  <div className="flex items-center gap-4 mt-2">
+                    <Sun className="h-4 w-4 text-muted-foreground" />
+                    <Slider 
+                      min={50}
+                      max={150}
+                      step={5}
+                      value={[brightness]}
+                      onValueChange={handleBrightnessChange}
+                      className="flex-1"
+                    />
+                    <Sun className="h-6 w-6" />
+                  </div>
+                </div>
+                
+                <Separator />
+                
+                <div className="space-y-2">
+                  <Label>Theme Mode</Label>
+                  <RadioGroup 
+                    defaultValue={displaySettings.theme} 
+                    onValueChange={(value) => 
+                      setDisplaySettings({...displaySettings, theme: value})
+                    }
+                    className="flex flex-col space-y-1"
+                  >
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="public" id="public" />
-                      <Label htmlFor="public">Public - Anyone can see your profile</Label>
+                      <RadioGroupItem value="light" id="theme-light" />
+                      <Label htmlFor="theme-light" className="flex items-center gap-2">
+                        <Sun className="h-4 w-4" /> Light
+                      </Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="friends" id="friends" />
-                      <Label htmlFor="friends">Members Only - Only other members can see your profile</Label>
+                      <RadioGroupItem value="dark" id="theme-dark" />
+                      <Label htmlFor="theme-dark" className="flex items-center gap-2">
+                        <Moon className="h-4 w-4" /> Dark
+                      </Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="private" id="private" />
-                      <Label htmlFor="private">Private - Only you can see your profile</Label>
+                      <RadioGroupItem value="system" id="theme-system" />
+                      <Label htmlFor="theme-system" className="flex items-center gap-2">
+                        <Smartphone className="h-4 w-4" /> Use System Preference
+                      </Label>
                     </div>
                   </RadioGroup>
                 </div>
+                
+                <Separator />
+                
+                <div className="space-y-2">
+                  <Label htmlFor="language">Language</Label>
+                  <Select 
+                    defaultValue={displaySettings.language} 
+                    onValueChange={(value) => 
+                      setDisplaySettings({...displaySettings, language: value})
+                    }
+                  >
+                    <SelectTrigger id="language">
+                      <SelectValue placeholder="Select language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="english">English</SelectItem>
+                      <SelectItem value="spanish">Español</SelectItem>
+                      <SelectItem value="french">Français</SelectItem>
+                      <SelectItem value="german">Deutsch</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="font-size">Font Size</Label>
+                  <Select 
+                    defaultValue={displaySettings.fontSize} 
+                    onValueChange={(value) => 
+                      setDisplaySettings({...displaySettings, fontSize: value})
+                    }
+                  >
+                    <SelectTrigger id="font-size">
+                      <SelectValue placeholder="Select font size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="small">Small</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="large">Large</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="high-contrast">High Contrast Mode</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Increase contrast for better visibility
+                    </p>
+                  </div>
+                  <Switch 
+                    id="high-contrast" 
+                    checked={displaySettings.highContrast}
+                    onCheckedChange={(checked) => 
+                      setDisplaySettings({...displaySettings, highContrast: checked})
+                    }
+                  />
+                </div>
+                
+                <Separator />
+                
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="sidebar-display">Sidebar Display</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Show or hide sidebar elements on desktop
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="flex items-center gap-1">
+                      <PanelLeft className="h-4 w-4" />
+                      <span className="hidden sm:inline">Collapsed</span>
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex items-center gap-1">
+                      <PanelRight className="h-4 w-4" />
+                      <span className="hidden sm:inline">Expanded</span>
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={() => handleSubmit("display")}
+                  className="bg-gold hover:bg-gold/90 text-white ml-auto"
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Changes
+                </Button>
+              </CardFooter>
             </Card>
           </TabsContent>
         </Tabs>
-        
-        <div className="flex justify-end">
-          <Button onClick={handleSaveSettings} className="bg-gold hover:bg-gold-dark">
-            Save Changes
-          </Button>
-        </div>
       </div>
     </MainLayout>
   );

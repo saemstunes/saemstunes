@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Calendar, Music, Bell, BookOpen, Users } from "lucide-react";
@@ -19,7 +19,8 @@ interface Notification {
 
 const Notifications = () => {
   const { toast } = useToast();
-  const [notifications, setNotifications] = useState<Notification[]>([
+
+  const notifications: Notification[] = [
     {
       id: '1',
       title: 'New Music Release',
@@ -60,22 +61,13 @@ const Notifications = () => {
       isRead: true,
       type: 'system'
     }
-  ]);
+  ];
 
   const markAllAsRead = () => {
-    setNotifications(prev => prev.map(notification => ({ ...notification, isRead: true })));
     toast({
       title: "All notifications marked as read",
       description: "You've cleared all your notifications"
     });
-  };
-
-  const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === id ? { ...notification, isRead: true } : notification
-      )
-    );
   };
 
   const getIconByType = (type: string) => {
@@ -93,8 +85,6 @@ const Notifications = () => {
     }
   };
 
-  const hasUnreadNotifications = notifications.some(n => !n.isRead);
-
   return (
     <MainLayout>
       <div className="space-y-6">
@@ -108,15 +98,13 @@ const Notifications = () => {
               Stay updated with events, releases, and more
             </p>
           </div>
-          {hasUnreadNotifications && (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={markAllAsRead}
-            >
-              Mark all as read
-            </Button>
-          )}
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={markAllAsRead}
+          >
+            Mark all as read
+          </Button>
         </div>
 
         <Separator />
@@ -150,14 +138,7 @@ const Notifications = () => {
                     </div>
                     <div className="mt-2 flex items-center justify-between">
                       <span className="text-xs text-muted-foreground">{notification.time}</span>
-                      <Button 
-                        variant="link" 
-                        size="sm" 
-                        className="text-gold p-0 h-auto"
-                        onClick={() => markAsRead(notification.id)}
-                      >
-                        {notification.isRead ? "View details" : "Mark as read"}
-                      </Button>
+                      <Button variant="link" size="sm" className="text-gold p-0 h-auto">View details</Button>
                     </div>
                   </div>
                 </div>
@@ -181,11 +162,7 @@ const Notifications = () => {
           <p className="text-sm text-muted-foreground mb-3">
             Choose what types of notifications you want to receive.
           </p>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => window.location.href = "/settings?tab=notifications"}
-          >
+          <Button variant="outline" size="sm">
             Manage preferences
           </Button>
         </div>

@@ -1,58 +1,80 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://use.typekit.net/abc123.css'); /* Placeholder for Proxima Nova - needs actual license */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Base colors */
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 36 77% 49%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 54.9%;
-    --radius: 0.5rem;
+    /* Default Gold Theme */
+    --background: 36 33% 97%;
+    --foreground: 20 14% 21%;
 
-    /* Theme-specific variables */
-    --color-primary: hsl(36, 77%, 49%); /* gold */
-    --color-primary-dark: hsl(36, 77%, 39%); /* gold-dark */
-    --color-primary-light: hsl(36, 77%, 69%); /* gold-light */
-    --color-primary-text: hsl(36, 77%, 49%); /* gold */
-  }
-  
-  .theme-teal {
-    --primary: 174 95% 22%;
-    --primary-foreground: 210 40% 98%;
-    --color-primary: #036c5f;
-    --color-primary-dark: #025043;
-    --color-primary-light: #81cdc6;
-    --color-primary-text: #008080;
-  }
-  
-  .high-contrast {
-    --foreground: 0 0% 0%;
-    --background: 0 0% 100%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 0%;
+    --card-foreground: 20 14% 21%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 0%;
-    --muted: 0 0% 90%;
-    --muted-foreground: 0 0% 10%;
-    --border: 0 0% 0%;
+    --popover-foreground: 20 14% 21%;
+
+    --primary: 43 100% 33%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 20 14% 21%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 43 30% 90%;
+    --muted-foreground: 43 10% 40%;
+
+    --accent: 43 60% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 20 5% 85%;
+    --input: 20 5% 85%;
+    --ring: 43 100% 33%;
+
+    --radius: 0.75rem;
+
+    /* Theme Colors */
+    --gold: 43 100% 33%;
+    --gold-light: 43 100% 50%;
+    --gold-dark: 43 100% 25%;
+    
+    /* Teal theme will override these via JavaScript */
+  }
+
+  .dark {
+    --background: 20 14% 10%;
+    --foreground: 0 0% 95%;
+
+    --card: 20 14% 15%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 20 14% 15%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 43 100% 33%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 20 14% 30%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 20 14% 20%;
+    --muted-foreground: 0 0% 65%;
+
+    --accent: 43 60% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 20 14% 25%;
+    --input: 20 14% 25%;
+    --ring: 43 100% 33%;
   }
 }
 
@@ -60,122 +82,125 @@
   * {
     @apply border-border;
   }
+
   body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    @apply bg-background text-foreground font-poppins;
   }
+
   h1, h2, h3, h4, h5, h6 {
-    @apply font-serif;
+    @apply font-proxima;
+  }
+
+  .logo-font {
+    font-family: 'Null Free', sans-serif;
+  }
+
+  .music-note-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 10.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM10.5 20a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM30 20a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM20 30a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z' fill='rgba(166, 124, 0, 0.05)' fill-rule='evenodd'/%3E%3C/svg%3E");
+  }
+  
+  /* Mobile responsive layout improvements */
+  @media (max-width: 640px) {
+    h1 {
+      @apply text-2xl;
+    }
+    
+    h2 {
+      @apply text-xl;
+    }
+    
+    .container {
+      @apply px-3;
+    }
+  }
+  
+  /* Dynamic spacing using clamp for responsive layouts */
+  .responsive-padding {
+    padding: clamp(1rem, 5vw, 2rem);
+  }
+  
+  .responsive-width {
+    width: clamp(280px, 90vw, 1200px);
+  }
+  
+  .responsive-gap {
+    gap: clamp(0.5rem, 2vw, 1.5rem);
   }
 }
 
-/* Gold theme utilities */
-.text-gold {
-  color: var(--color-primary) !important;
-}
-
-.bg-gold {
-  background-color: var(--color-primary) !important;
-}
-
-.hover\:bg-gold:hover {
-  background-color: var(--color-primary) !important;
-}
-
-.border-gold {
-  border-color: var(--color-primary) !important;
-}
-
-.hover\:border-gold:hover {
-  border-color: var(--color-primary) !important;
-}
-
-.text-gold-dark {
-  color: var(--color-primary-dark) !important;
-}
-
-.bg-gold-dark {
-  background-color: var(--color-primary-dark) !important;
-}
-
-.hover\:bg-gold-dark:hover {
-  background-color: var(--color-primary-dark) !important;
-}
-
-.bg-gold\/10 {
-  background-color: color-mix(in srgb, var(--color-primary) 10%, transparent) !important;
-}
-
-.bg-gold\/20 {
-  background-color: color-mix(in srgb, var(--color-primary) 20%, transparent) !important;
-}
-
-.bg-gold\/5 {
-  background-color: color-mix(in srgb, var(--color-primary) 5%, transparent) !important;
-}
-
-.border-gold\/20 {
-  border-color: color-mix(in srgb, var(--color-primary) 20%, transparent) !important;
-}
-
-/* Animation keyframes */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0);
+@layer components {
+  .hero-gradient {
+    @apply bg-gradient-to-br from-gold-light via-gold to-gold-dark;
   }
-  50% {
-    transform: translateY(-150px);
+  
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
   }
-  100% {
-    transform: translateY(-300px);
+  
+  .music-card {
+    @apply rounded-lg overflow-hidden bg-card shadow-md card-hover;
   }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 0.5;
+  
+  .gold-gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-gold-light via-gold to-gold-dark;
   }
-  50% {
-    opacity: 0.9;
+  
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    @apply w-2;
   }
-}
-
-/* Animation classes */
-.animate-fade-in {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-muted rounded-full;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-gold/50 rounded-full hover:bg-gold;
   }
-}
-
-/* Music pattern background */
-.music-note-pattern {
-  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-}
-
-/* Font definitions */
-@font-face {
-  font-family: 'Proxima Nova';
-  src: url('/fonts/proxima-nova-regular.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Proxima Nova';
-  src: url('/fonts/proxima-nova-bold.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-}
-
-.font-proxima {
-  font-family: 'Proxima Nova', sans-serif;
+  
+  /* Added styles for logo and links */
+  .brand-logo {
+    @apply transition-transform duration-300 hover:scale-105;
+  }
+  
+  .social-link {
+    @apply p-2 rounded-full transition-all hover:bg-gold/10;
+  }
+  
+  /* Improved responsive layouts */
+  .responsive-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4;
+  }
+  
+  /* Improved card layout for mobile */
+  .mobile-card {
+    @apply p-3 sm:p-4;
+  }
+  
+  /* Flexible content width */
+  .content-width {
+    width: min(100%, 1200px);
+  }
+  
+  /* Dynamic spacing with responsive units */
+  .vertical-rhythm {
+    @apply space-y-4 sm:space-y-6;
+  }
+  
+  /* Header with responsive font size */
+  .responsive-heading {
+    @apply text-xl sm:text-2xl md:text-3xl font-bold;
+  }
+  
+  /* Button with proper touch target size */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  /* Remove hover effects on mobile */
+  @media (hover: hover) {
+    .hover-effect {
+      @apply transition-all hover:scale-105;
+    }
+  }
 }

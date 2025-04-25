@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 
 interface VideoCardProps {
   video: VideoContent & { isExclusive?: boolean };
-  isPremium?: boolean; // Made isPremium optional with a default value
+  isPremium?: boolean; // Make isPremium optional with a default value
 }
 
 const VideoCard = ({ video, isPremium = false }: VideoCardProps) => {

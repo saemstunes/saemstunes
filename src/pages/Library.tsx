@@ -10,7 +10,6 @@ import VideoCard from "@/components/videos/VideoCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import ExclusiveCarousel from "@/components/library/ExclusiveCarousel";
 
 const Library = () => {
   const { user } = useAuth();
@@ -20,7 +19,7 @@ const Library = () => {
   const savedVideos = mockVideos.slice(0, 4);
   const saemOfferings = mockVideos.slice(4, 8).map(video => ({...video, isExclusive: true}));
   
-  // Extended sample courses data
+  // Sample courses data
   const courses = [
     {
       id: "course1",
@@ -61,50 +60,6 @@ const Library = () => {
       description: "Take your guitar skills to the next level",
       instructor: "Saem",
       duration: "12 weeks",
-      level: "advanced",
-      thumbnail: "/placeholder.svg",
-      enrolled: false,
-      progress: 0
-    },
-    {
-      id: "course5",
-      title: "Songwriting Workshop",
-      description: "Master the art of writing compelling lyrics and melodies",
-      instructor: "Emily Carter",
-      duration: "4 weeks",
-      level: "intermediate",
-      thumbnail: "/placeholder.svg",
-      enrolled: false,
-      progress: 0
-    },
-    {
-      id: "course6",
-      title: "DJing for Beginners",
-      description: "Learn how to mix tracks and create seamless transitions",
-      instructor: "DJ Marcus",
-      duration: "5 weeks",
-      level: "beginner",
-      thumbnail: "/placeholder.svg",
-      enrolled: false,
-      progress: 0
-    },
-    {
-      id: "course7",
-      title: "Music Theory Essentials",
-      description: "Understand the fundamentals of music theory for any instrument",
-      instructor: "Professor Alan Smith",
-      duration: "8 weeks",
-      level: "beginner",
-      thumbnail: "/placeholder.svg",
-      enrolled: false,
-      progress: 0
-    },
-    {
-      id: "course8",
-      title: "Jazz Improvisation",
-      description: "Master the art of jazz improvisation and expression",
-      instructor: "Robert Johnson",
-      duration: "10 weeks",
       level: "advanced",
       thumbnail: "/placeholder.svg",
       enrolled: false,
@@ -172,24 +127,12 @@ const Library = () => {
       <div className="p-4 pt-0">
         <Button 
           className={cn("w-full", course.enrolled ? "bg-gold hover:bg-gold-dark" : "bg-muted-foreground")}
-          onClick={() => {
-            if (!course.enrolled && (!user || !user.subscribed)) {
-              window.location.href = "/payment";
-              return;
-            }
-            // Handle enrolled course navigation
-          }}
         >
           {course.enrolled ? "Continue Learning" : "Enroll Now"}
         </Button>
       </div>
     </Card>
   );
-  
-  // Guest check for limited content
-  const isGuest = !user;
-  const displayLimitedContent = isGuest && activeTab !== "saved";
-  const maxGuestItems = 4;
   
   return (
     <MainLayout>
@@ -213,8 +156,26 @@ const Library = () => {
           )}
         </div>
         
-        {/* Exclusive Content Carousel */}
-        <ExclusiveCarousel />
+        {/* Featured Saem's content */}
+        <div className="relative rounded-lg overflow-hidden h-48 md:h-64 bg-gradient-to-r from-gold/70 to-brown/70 mb-8">
+          <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent z-10"></div>
+          <img 
+            src="/placeholder.svg" 
+            alt="Featured Saem's content" 
+            className="absolute inset-0 w-full h-full object-cover" 
+          />
+          <div className="relative z-20 p-6 flex flex-col h-full justify-end">
+            <div className="inline-block bg-gold text-white px-2 py-1 rounded-md text-xs mb-2 w-fit">
+              EXCLUSIVE
+            </div>
+            <h3 className="text-xl md:text-2xl font-proxima text-white font-bold mb-1">
+              Master Class: Advanced Guitar Techniques
+            </h3>
+            <p className="text-white/80 text-sm md:text-base max-w-lg">
+              Learn advanced techniques from Saem's top instructor
+            </p>
+          </div>
+        </div>
         
         {/* Music Courses Section */}
         <div className="mb-8">
@@ -223,34 +184,9 @@ const Library = () => {
             Music Courses
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {displayLimitedContent ? (
-              <>
-                {courses.slice(0, maxGuestItems).map(course => (
-                  <CourseCard key={course.id} course={course} />
-                ))}
-                <Card className="h-full flex flex-col justify-center items-center p-6 border-dashed">
-                  <div className="text-center space-y-4">
-                    <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto">
-                      <Music className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                    <h3 className="text-lg font-medium">Access More Courses</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Sign up for free to see more music courses and track your progress
-                    </p>
-                    <Button 
-                      className="bg-gold hover:bg-gold-dark"
-                      onClick={() => window.location.href = "/auth?tab=signup"}
-                    >
-                      Sign Up Free
-                    </Button>
-                  </div>
-                </Card>
-              </>
-            ) : (
-              courses.map(course => (
-                <CourseCard key={course.id} course={course} />
-              ))
-            )}
+            {courses.map(course => (
+              <CourseCard key={course.id} course={course} />
+            ))}
           </div>
         </div>
         
@@ -258,11 +194,11 @@ const Library = () => {
         <div className="mb-8">
           <h2 className="text-xl font-proxima font-semibold mb-4 flex items-center">
             <BookOpen className="h-5 w-5 text-gold mr-2" />
-            Featured Lessons
+            Exclusive Content
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {saemOfferings.map(video => (
-              <VideoCard key={video.id} video={video} isPremium={video.isLocked} />
+              <VideoCard key={video.id} video={video} />
             ))}
           </div>
         </div>
@@ -291,7 +227,7 @@ const Library = () => {
             {savedVideos.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {savedVideos.map(video => (
-                  <VideoCard key={video.id} video={video} isPremium={video.isLocked} />
+                  <VideoCard key={video.id} video={video} />
                 ))}
               </div>
             ) : (
