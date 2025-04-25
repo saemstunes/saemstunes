@@ -32,7 +32,7 @@ import Notifications from "./pages/Notifications";
 import FollowUs from "./pages/FollowUs";
 import ContactUs from "./pages/ContactUs";
 import SupportUs from "./pages/SupportUs";
-import Settings from "./pages/Settings";
+import { Settings } from "./pages/Settings";
 import Services from "./pages/Services";
 import Payment from "./pages/Payment";
 import PaymentSuccess from "./pages/PaymentSuccess";
