@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/lib/supabase"; // Update path as needed
+import { supabase } from "@/supabase"; // Update path as needed
 import { Session, User as SupabaseUser } from "@supabase/supabase-js";
 
 // Define user roles
