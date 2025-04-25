@@ -1,3 +1,4 @@
+
 // Modified Auth.tsx with Secret Admin Access
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -5,11 +6,11 @@ import { useAuth } from "@/context/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LoginForm from "@/components/auth/LoginForm";
 import SignupForm from "@/components/auth/SignupForm";
-import { Music, Mic, Headphones, Piano, Guitar, Disc } from "lucide-react";
+import { Music, Mic, Headphones, Piano, Guitar, Disc, Flask } from "lucide-react";
 import Logo from "@/components/branding/Logo";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import AdminLoginForm from "@/components/auth/AdminLoginForm"; // We'll create this next
+import AdminLoginForm from "@/components/auth/AdminLoginForm";
 
 // Music-related icons for random decoration
 const MUSIC_ICONS = [
@@ -92,7 +93,7 @@ const Auth = () => {
     
     return () => {
       if (logoElement) {
-        logoElement.addEventListener("click", handleSecretTap);
+        logoElement.removeEventListener("click", handleSecretTap);
       }
     };
   }, []);

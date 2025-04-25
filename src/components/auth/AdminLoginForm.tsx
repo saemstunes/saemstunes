@@ -1,177 +1,129 @@
-// src/components/auth/AdminLoginForm.tsx
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Loader2, AlertCircle, ShieldAlert } from "lucide-react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 
-const formSchema = z.object({
-  email: z.string().email("Please enter a valid email"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  adminCode: z.string().min(1, "Admin code is required"),
-});
-
-type FormData = z.infer<typeof formSchema>;
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { Eye, EyeOff, Shield } from 'lucide-react';
 
 interface AdminLoginFormProps {
   onClose: () => void;
 }
 
-const AdminLoginForm = ({ onClose }: AdminLoginFormProps) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login } = useAuth();
+const AdminLoginForm: React.FC<AdminLoginFormProps> = ({ onClose }) => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { toast } = useToast();
   
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      adminCode: "",
-    },
-  });
+  // Admin credentials - in a real app, these would be checked securely on a backend
+  // This is just for demo purposes
+  const ADMIN_USERNAME = 'admin';
+  const ADMIN_PASSWORD = 'saem2025';
 
-  const handleAdminLogin = async (data: FormData) => {
-    setIsSubmitting(true);
-
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    setIsLoading(true);
+    setError('');
+    
     try {
-      // First verify if admin code is correct
-      // In a real app, this would be a secure verification process
-      const isValidAdminCode = data.adminCode === "ST-ADMIN-2024"; // Replace with a secure method
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      if (!isValidAdminCode) {
-        form.setError("adminCode", { 
-          message: "Invalid admin code" 
+      if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+        toast({
+          title: "Admin access granted",
+          description: "Welcome to the admin panel",
         });
-        setIsSubmitting(false);
-        return;
+        onClose();
+        navigate('/admin');
+      } else {
+        setError('Invalid credentials. Please try again.');
       }
-      
-      // Now attempt normal login - in a real system you'd have a separate admin login endpoint
-      await login(data.email, data.password);
-      
-      // After successful login, navigate to admin dashboard
-      navigate("/admin");
-      onClose();
-    } catch (error) {
-      console.error("Admin login failed:", error);
-      form.setError("root", { 
-        message: "Authentication failed. Please verify your credentials." 
-      });
+    } catch (err) {
+      setError('An error occurred. Please try again.');
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleAdminLogin)} className="space-y-4 py-4">
-        {form.formState.errors.root && (
-          <div className="bg-destructive/10 text-destructive p-3 rounded-md flex items-center gap-2 text-sm">
-            <AlertCircle className="h-4 w-4" />
-            {form.formState.errors.root.message}
-          </div>
-        )}
-        
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input 
-                  type="email" 
-                  placeholder="admin@example.com" 
-                  {...field} 
-                  disabled={isSubmitting} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+    <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+      <div className="bg-muted/50 p-4 rounded-md mb-4 flex items-center gap-3">
+        <Shield className="text-gold h-5 w-5" />
+        <p className="text-sm text-muted-foreground">This area is restricted to authorized administrators only.</p>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="username">Username</Label>
+        <Input
+          id="username"
+          type="text"
+          placeholder="Admin username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+          disabled={isLoading}
         />
-
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input 
-                  type="password"
-                  placeholder="••••••••"
-                  {...field}
-                  disabled={isSubmitting}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="adminCode"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Admin Code</FormLabel>
-              <FormControl>
-                <Input 
-                  type="password"
-                  placeholder="Enter admin verification code"
-                  {...field}
-                  disabled={isSubmitting}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="flex justify-between pt-2">
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="password">Password</Label>
+        <div className="relative">
+          <Input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            placeholder="Enter password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            disabled={isLoading}
+            className="pr-10"
+          />
           <Button
             type="button"
             variant="ghost"
-            onClick={onClose}
-            disabled={isSubmitting}
+            size="icon"
+            className="absolute right-0 top-0 h-full px-3"
+            onClick={() => setShowPassword(!showPassword)}
+            tabIndex={-1}
           >
-            Cancel
-          </Button>
-          
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="bg-gold hover:bg-gold/90 text-white"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Verifying...
-              </>
+            {showPassword ? (
+              <EyeOff className="h-4 w-4 text-muted-foreground" />
             ) : (
-              <>
-                <ShieldAlert className="mr-2 h-4 w-4" />
-                Access Admin
-              </>
+              <Eye className="h-4 w-4 text-muted-foreground" />
             )}
           </Button>
         </div>
-      </form>
-    </Form>
+      </div>
+      
+      {error && (
+        <p className="text-sm font-medium text-destructive">{error}</p>
+      )}
+      
+      <div className="flex justify-between items-center pt-2">
+        <Button 
+          type="button" 
+          variant="ghost" 
+          onClick={onClose} 
+          disabled={isLoading}
+        >
+          Cancel
+        </Button>
+        <Button 
+          type="submit"
+          className="bg-gold hover:bg-gold-dark"
+          disabled={isLoading}
+        >
+          {isLoading ? "Authenticating..." : "Login as Admin"}
+        </Button>
+      </div>
+    </form>
   );
 };
 
