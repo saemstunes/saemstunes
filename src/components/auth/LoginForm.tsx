@@ -191,7 +191,7 @@ const LoginForm = () => {
           <code className="bg-muted px-1 py-0.5 rounded text-xs">
             music
           </code>{" "}
-          representing
+          , representing
           <code className="bg-muted px-1 py-0.5 rounded text-xs">Christ</code>
         </div>
       </CardFooter>
