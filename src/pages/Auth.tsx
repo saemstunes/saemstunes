@@ -75,7 +75,7 @@ const Auth = () => {
             >
               <Logo size="lg" className="mx-auto mb-2" />
             </div>
-            <h1 className="text-3xl font-bold font-proxima">Welcome Back</h1>
+            <h1 className="text-3xl font-bold font-proxima">Karibu Sana</h1>
             <p className="text-muted-foreground">
               Sign in to continue to Saem's Tunes
             </p>
