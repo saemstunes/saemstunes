@@ -1,7 +1,7 @@
 
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Home, Compass, Library, User, Bell, Users } from "lucide-react";
+import { Home, Compass, Library, User, Bell, Users, FlaskConical } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "../ui/badge";

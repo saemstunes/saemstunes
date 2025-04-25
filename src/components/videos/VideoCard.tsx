@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { VideoContent } from "@/data/mockData";
 import { Card, CardContent } from "@/components/ui/card";

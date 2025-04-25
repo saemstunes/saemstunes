@@ -169,6 +169,9 @@ const Settings = () => {
     }
   ];
 
+  // Safe access to user display name
+  const userDisplayName = user ? (user.email ? user.email.split('@')[0] : 'User') : 'User';
+
   return (
     <MainLayout>
       <div className="space-y-6">

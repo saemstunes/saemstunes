@@ -35,6 +35,7 @@ import Settings from "./pages/Settings";
 import Services from "./pages/Services";
 import Payment from "./pages/Payment";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import MusicTools from "./pages/MusicTools";
 
 const queryClient = new QueryClient();
 
@@ -72,6 +73,7 @@ const App = () => (
             <Route path="/services" element={<Services />} />
             <Route path="/payment" element={<Payment />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
+            <Route path="/music-tools" element={<MusicTools />} />
             
             {/* Protected Routes */}
             <Route path="/bookings" element={

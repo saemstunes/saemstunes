@@ -19,7 +19,7 @@ const Library = () => {
   const savedVideos = mockVideos.slice(0, 4);
   const saemOfferings = mockVideos.slice(4, 8).map(video => ({...video, isExclusive: true}));
   
-  // Sample courses data
+  // Sample courses data with properly typed levels
   const courses = [
     {
       id: "course1",
@@ -27,7 +27,7 @@ const Library = () => {
       description: "Learn piano fundamentals from scratch",
       instructor: "Saem",
       duration: "8 weeks",
-      level: "beginner",
+      level: "beginner" as const, // Type assertion to match VideoContent's level type
       thumbnail: "/placeholder.svg",
       enrolled: true,
       progress: 35
@@ -38,7 +38,7 @@ const Library = () => {
       description: "Discover your unique voice and expand your range",
       instructor: "Lisa Wong",
       duration: "6 weeks",
-      level: "intermediate",
+      level: "intermediate" as const,
       thumbnail: "/placeholder.svg",
       enrolled: true,
       progress: 72
@@ -49,7 +49,7 @@ const Library = () => {
       description: "Learn to produce professional tracks from home",
       instructor: "James Rodriguez",
       duration: "10 weeks",
-      level: "beginner",
+      level: "beginner" as const,
       thumbnail: "/placeholder.svg",
       enrolled: false,
       progress: 0
@@ -60,7 +60,7 @@ const Library = () => {
       description: "Take your guitar skills to the next level",
       instructor: "Saem",
       duration: "12 weeks",
-      level: "advanced",
+      level: "advanced" as const,
       thumbnail: "/placeholder.svg",
       enrolled: false,
       progress: 0
@@ -198,7 +198,7 @@ const Library = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {saemOfferings.map(video => (
-              <VideoCard key={video.id} video={video} />
+              <VideoCard key={video.id} video={video} isPremium={true} />
             ))}
           </div>
         </div>
@@ -227,7 +227,7 @@ const Library = () => {
             {savedVideos.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {savedVideos.map(video => (
-                  <VideoCard key={video.id} video={video} />
+                  <VideoCard key={video.id} video={video} isPremium={false} />
                 ))}
               </div>
             ) : (

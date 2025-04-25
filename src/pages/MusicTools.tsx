@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -177,7 +176,7 @@ const PitchFinder = () => {
     detectPitchFrame();
   };
   
-  // Auto-correlation algorithm for pitch detection
+  // Auto-correlation algorithm for pitch detection - fixed correlation reference
   const autoCorrelate = (buffer: Float32Array, sampleRate: number): number => {
     const SIZE = buffer.length;
     const MAX_SAMPLES = Math.floor(SIZE / 2);
@@ -322,7 +321,7 @@ const TempoFinder = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const beatsRef = useRef<number>(1);
   const visualTimerRef = useRef<number | null>(null);
-  
+
   // Tempo presets
   const tempoPresets = [
     { name: "Largo", bpm: 50 },
