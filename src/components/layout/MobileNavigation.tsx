@@ -70,7 +70,7 @@ const MobileNavigation = () => {
   );
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border lg:hidden z-50">
+    <nav className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-t border-border z-50">
       <div className="flex items-center justify-around">
         {filteredNavigation.map((item) => (
           <button
@@ -93,7 +93,7 @@ const MobileNavigation = () => {
           </button>
         ))}
       </div>
-    </div>
+    </nav>
   );
 };
 

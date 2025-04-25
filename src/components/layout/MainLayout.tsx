@@ -1,4 +1,3 @@
-
 import React, { ReactNode, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -32,6 +31,7 @@ import Logo from "../branding/Logo";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "../ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { FloatingBackButton } from "@/components/ui/floating-back-button";
 
 // Custom TikTok icon as it's not available in lucide-react
 const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -466,7 +466,8 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
             {children}
           </div>
           
-          {/* Mobile Navigation */}
+          {/* Fixed Position Elements */}
+          <FloatingBackButton />
           {showMiniPlayer && <MiniPlayer {...trackData} />}
           {isMobile && <MobileNavigation />}
         </main>
