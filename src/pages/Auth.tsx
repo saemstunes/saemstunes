@@ -13,6 +13,7 @@ import Logo from "@/components/branding/Logo";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Globe } from "lucide-react";
+import { supabase } from "@/supabase";
 
 const Auth = () => {
   const [activeTab, setActiveTab] = useState<string>("login");
@@ -58,10 +59,22 @@ const Auth = () => {
     setLastClickTime(currentTime);
   };
 
-  const handleGoogleSignIn = () => {
-    // This would normally call the Google Sign In method
-    console.log("Google sign in clicked");
-  };
+  const handleGoogleSignIn = async () => {
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`
+      }
+    });
+    
+    if (error) throw error;
+    // The redirect will happen automatically
+  } catch (error) {
+    console.error("Error signing in with Google:", error);
+    // You might want to show an error message to the user
+  }
+};
 
   return (
     <MainLayout>
