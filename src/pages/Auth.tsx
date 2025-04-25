@@ -100,7 +100,7 @@ const Auth = () => {
                     className="w-full flex items-center gap-2 h-10"
                     onClick={handleGoogleSignIn}
                   >
-                    <Google className="h-4 w-4" />
+                    <Globe className="h-4 w-4" />
                     <span>Continue with Google</span>
                   </Button>
                   
