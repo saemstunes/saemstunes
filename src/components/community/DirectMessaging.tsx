@@ -74,19 +74,19 @@ const MOCK_MESSAGES: Message[] = [
   },
   {
     id: '3',
-    text: 'That's great to hear! Have you learned any new pieces recently?',
+    text: "That's great to hear! Have you learned any new pieces recently?",
     timestamp: '10:36 AM',
     sender: 'other',
   },
   {
     id: '4',
-    text: 'Yes! I'm working on a Bach partita. It's challenging but fun!',
+    text: "Yes! I'm working on a Bach partita. It's challenging but fun!",
     timestamp: '10:40 AM',
     sender: 'user',
   },
   {
     id: '5',
-    text: 'Bach is always challenging! Would you like to share a recording next time? I'd love to listen and provide feedback.',
+    text: "Bach is always challenging! Would you like to share a recording next time? I'd love to listen and provide feedback.",
     timestamp: '10:42 AM',
     sender: 'other',
   },
