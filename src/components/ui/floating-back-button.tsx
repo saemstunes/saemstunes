@@ -51,7 +51,7 @@ export function FloatingBackButton() {
     <AnimatePresence>
       <motion.button
         className={cn(
-          "fixed bottom-24 left-4 z-50 p-3 rounded-full bg-primary/90 shadow-lg",
+          "fixed bottom-24 left-4 z-40 p-3 rounded-full bg-primary/90 shadow-lg",
           "hover:bg-primary/100 transition-colors duration-200",
           "touch-none cursor-pointer"
         )}

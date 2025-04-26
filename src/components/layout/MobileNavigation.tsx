@@ -1,10 +1,9 @@
 
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Home, Compass, Library, User, Bell, Users, FlaskConical } from "lucide-react";
+import { Home, Compass, Library, User, Bell, Users, Music } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Badge } from "../ui/badge";
 
 const MobileNavigation = () => {
   const location = useLocation();
@@ -75,7 +74,18 @@ const MobileNavigation = () => {
         {filteredNavigation.map((item) => (
           <button
             key={item.name}
-            onClick={() => item.onClick ? item.onClick() : navigate(item.href)}
+            onClick={() => {
+              if (item.onClick) {
+                item.onClick();
+              } else {
+                // If clicking on home while already on home, scroll to top
+                if (item.href === "/" && location.pathname === "/") {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                } else {
+                  navigate(item.href);
+                }
+              }
+            }}
             className={cn(
               "flex flex-col items-center justify-center py-2 px-4 w-full",
               isActive(item.href) 

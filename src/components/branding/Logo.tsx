@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -22,6 +22,7 @@ const Logo = ({
   inMobileMenu = false
 }: LogoProps) => {
   const isMobile = useIsMobile();
+  const [imageLoaded, setImageLoaded] = useState(false);
   
   const sizeClasses = {
     sm: 'h-6 w-6',
@@ -35,16 +36,30 @@ const Logo = ({
     lg: isMobile ? 'text-sm' : 'text-2xl'  // Reduced text size for mobile
   };
 
+  // Use the appropriate logo based on device type
+  const logoSrc = isMobile 
+    ? "/lovable-uploads/4fdafda9-d6df-439b-935a-055eaf0f63c5.webp" // Mobile optimized webp
+    : "/lovable-uploads/4fdafda9-d6df-439b-935a-055eaf0f63c5.png"; // Original SVG for desktop
+
   return (
     <Link 
       to="/" 
       className={cn("flex items-center gap-2 brand-logo", linkClassName)}
+      onClick={(e) => {
+        // If clicking while already on home page, scroll to top
+        if (window.location.pathname === "/") {
+          e.preventDefault();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      }}
     >
       {(variant === 'full' || variant === 'icon') && (
         <img 
-          src="/lovable-uploads/4fdafda9-d6df-439b-935a-055eaf0f63c5.png" 
+          src={logoSrc}
           alt="Saem's Tunes Logo" 
           className={cn(sizeClasses[size], className)} 
+          onLoad={() => setImageLoaded(true)}
+          fetchPriority="high"
         />
       )}
       
