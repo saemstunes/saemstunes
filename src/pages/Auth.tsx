@@ -12,7 +12,7 @@ import Logo from "@/components/branding/Logo";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Globe } from "lucide-react";
-import { supabase } from "@/supabase";
+import { supabase } from "@/integrations/supabase/client"; // Updated import path
 import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
