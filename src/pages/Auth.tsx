@@ -12,8 +12,11 @@ import Logo from "@/components/branding/Logo";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Globe } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client"; // Updated import path
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+
+// Admin password hash (for "staadmin2025")
+const ADMIN_PASSWORD_HASH = "4ba16fadf3ea339e7175ca7c442392ca";
 
 const Auth = () => {
   const [activeTab, setActiveTab] = useState<string>("login");
@@ -39,6 +42,9 @@ const Auth = () => {
     if (user) {
       navigate("/");
     }
+    
+    // Set admin password hash in local storage (in a real app, this would be server-side)
+    localStorage.setItem("admin_pwd_hash", ADMIN_PASSWORD_HASH);
   }, [location.pathname, user, navigate]);
 
   const handleMusicIconClick = () => {

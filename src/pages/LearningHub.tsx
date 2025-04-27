@@ -25,7 +25,7 @@ const LearningHub = () => {
   // Sample modules data
   const modules = [
     {
-      id: 1,
+      id: "breathing-techniques",
       title: "Breathing Techniques",
       description: "Learn proper diaphragmatic breathing for singing",
       progress: 100,
@@ -34,7 +34,7 @@ const LearningHub = () => {
       image: "/placeholder.svg"
     },
     {
-      id: 2,
+      id: "vocal-warm-ups",
       title: "Vocal Warm-Ups",
       description: "Essential exercises to prepare your voice",
       progress: 75,
@@ -43,7 +43,7 @@ const LearningHub = () => {
       image: "/placeholder.svg"
     },
     {
-      id: 3,
+      id: "pitch-and-tone",
       title: "Pitch and Tone",
       description: "Master pitch accuracy and develop your tone",
       progress: 0,
@@ -52,7 +52,7 @@ const LearningHub = () => {
       image: "/placeholder.svg"
     },
     {
-      id: 4,
+      id: "range-extension",
       title: "Range Extension",
       description: "Techniques to extend your vocal range safely",
       progress: 0,
@@ -61,7 +61,7 @@ const LearningHub = () => {
       image: "/placeholder.svg"
     },
     {
-      id: 5,
+      id: "performance-skills",
       title: "Performance Skills",
       description: "Move from practice to confident performance",
       progress: 0,
@@ -183,6 +183,7 @@ const LearningHub = () => {
                     <Button 
                       className={module.progress === 0 ? "w-full" : "w-full bg-gold hover:bg-gold-dark text-white"}
                       variant={module.progress === 0 ? "outline" : "default"}
+                      onClick={() => navigate(`/learning-hub/${module.id}`)}
                     >
                       {module.progress === 0 ? "Start Module" : "Continue Module"}
                     </Button>

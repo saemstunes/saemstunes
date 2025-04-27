@@ -9,10 +9,12 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { mockSubscriptionPlans } from "@/data/mockData";
+import AvatarEditor from "@/components/profile/AvatarEditor";
 
 const Profile = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [avatarEditorOpen, setAvatarEditorOpen] = useState(false);
 
   const [profile, setProfile] = useState({
     name: user?.name || "",
@@ -23,6 +25,16 @@ const Profile = () => {
     toast({
       title: "Profile Updated",
       description: "Your profile has been successfully updated.",
+    });
+  };
+
+  const handleAvatarSave = (avatarUrl: string) => {
+    // In a real app, would call an API to update the user's avatar
+    console.log("Avatar updated:", avatarUrl);
+    // For now just show a toast message
+    toast({
+      title: "Avatar Updated",
+      description: "Your profile picture has been changed successfully.",
     });
   };
 
@@ -66,11 +78,18 @@ const Profile = () => {
               <CardContent>
                 <div className="flex flex-col md:flex-row gap-6 items-start">
                   <div className="flex flex-col items-center">
-                    <Avatar className="h-24 w-24">
+                    <Avatar 
+                      className="h-24 w-24 cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={() => setAvatarEditorOpen(true)}
+                    >
                       <AvatarImage src={user.avatar} alt={user.name} />
                       <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                     </Avatar>
-                    <Button variant="link" className="text-gold hover:text-gold-dark mt-2">
+                    <Button 
+                      variant="link" 
+                      className="text-gold hover:text-gold-dark mt-2"
+                      onClick={() => setAvatarEditorOpen(true)}
+                    >
                       Change Avatar
                     </Button>
                   </div>
@@ -201,6 +220,15 @@ const Profile = () => {
           </div>
         </div>
       </div>
+
+      {/* Avatar editor dialog */}
+      <AvatarEditor 
+        currentAvatar={user.avatar}
+        username={user.name}
+        onSave={handleAvatarSave}
+        open={avatarEditorOpen}
+        onOpenChange={setAvatarEditorOpen}
+      />
     </MainLayout>
   );
 };

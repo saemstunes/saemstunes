@@ -36,10 +36,23 @@ const Logo = ({
     lg: isMobile ? 'text-sm' : 'text-2xl'  // Reduced text size for mobile
   };
 
-  // Use the appropriate logo based on device type
-  const logoSrc = isMobile 
-    ? "/lovable-uploads/4fdafda9-d6df-439b-935a-055eaf0f63c5.webp" // Mobile optimized webp
-    : "/lovable-uploads/4fdafda9-d6df-439b-935a-055eaf0f63c5.png"; // Original SVG for desktop
+  // Use optimized logo files based on size and device type
+  const getLogoSrc = () => {
+    // Select WebP for modern browsers or SVG for maximum compatibility
+    if (variant === 'icon') {
+      return isMobile
+        ? `/lovable-uploads/logo-icon-sm.webp`
+        : size === 'lg'
+          ? `/lovable-uploads/logo-icon-lg.webp`
+          : `/lovable-uploads/logo-icon-md.webp`;
+    } else {
+      return isMobile
+        ? `/lovable-uploads/logo-full-md.webp`
+        : size === 'lg'
+          ? `/lovable-uploads/logo-full-lg.webp`
+          : `/lovable-uploads/logo-full-md.webp`;
+    }
+  };
 
   return (
     <Link 
@@ -54,13 +67,29 @@ const Logo = ({
       }}
     >
       {(variant === 'full' || variant === 'icon') && (
-        <img 
-          src={logoSrc}
-          alt="Saem's Tunes Logo" 
-          className={cn(sizeClasses[size], className)} 
-          onLoad={() => setImageLoaded(true)}
-          fetchPriority="high"
-        />
+        <picture>
+          {/* WebP version (optimized) */}
+          <source 
+            srcSet={getLogoSrc()} 
+            type="image/webp" 
+          />
+          
+          {/* SVG version (vector quality) */}
+          <source 
+            srcSet={getLogoSrc().replace('.webp', '.svg')} 
+            type="image/svg+xml" 
+          />
+          
+          {/* Fallback PNG version */}
+          <img 
+            src={getLogoSrc().replace('.webp', '.png')}
+            alt="Saem's Tunes Logo" 
+            className={cn(sizeClasses[size], className)} 
+            onLoad={() => setImageLoaded(true)}
+            fetchPriority="high"
+            decoding="async"
+          />
+        </picture>
       )}
       
       {(variant === 'full' || variant === 'text') && showText && (
