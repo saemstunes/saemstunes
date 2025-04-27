@@ -1,11 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Mail } from 'lucide-react';
+import { Mail, Send } from 'lucide-react';
 
 interface ToolSuggestionFormProps {
   adminEmail?: string;
@@ -19,6 +19,8 @@ interface FormData {
 const ToolSuggestionForm = ({ adminEmail = 'saemstunes@gmail.com' }: ToolSuggestionFormProps) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mailtoLink, setMailtoLink] = useState('');
+  
   const { register, handleSubmit, watch, reset, formState: { isValid, errors } } = useForm<FormData>({
     defaultValues: {
       toolName: '',
@@ -30,15 +32,15 @@ const ToolSuggestionForm = ({ adminEmail = 'saemstunes@gmail.com' }: ToolSuggest
   const toolName = watch('toolName');
   const description = watch('description');
   
-  // Generate mailto link with current form data
-  const generateMailtoLink = () => {
+  // Update mailto link whenever form data changes
+  useEffect(() => {
     const subject = encodeURIComponent(`Tool Suggestion: ${toolName || '[Tool Name]'}`);
     const body = encodeURIComponent(
       `New Tool Suggestion\n\nTool Name: ${toolName || '[Not specified]'}\n\nDescription: ${description || '[Not provided]'}\n\n`
     );
     
-    return `mailto:${adminEmail}?subject=${subject}&body=${body}`;
-  };
+    setMailtoLink(`mailto:${adminEmail}?subject=${subject}&body=${body}`);
+  }, [toolName, description, adminEmail]);
   
   // Form submission handler
   const onSubmit = async (data: FormData) => {
@@ -90,9 +92,14 @@ const ToolSuggestionForm = ({ adminEmail = 'saemstunes@gmail.com' }: ToolSuggest
           <Button 
             type="submit" 
             disabled={isSubmitting || !isValid} 
-            className="flex-1"
+            className="flex-1 bg-gold hover:bg-gold/90"
           >
-            {isSubmitting ? "Submitting..." : "Submit Suggestion"}
+            {isSubmitting ? "Submitting..." : (
+              <>
+                <Send className="h-4 w-4 mr-2" />
+                Submit Suggestion
+              </>
+            )}
           </Button>
           
           <Button 
@@ -101,7 +108,7 @@ const ToolSuggestionForm = ({ adminEmail = 'saemstunes@gmail.com' }: ToolSuggest
             className="flex-1"
             asChild
           >
-            <a href={generateMailtoLink()} target="_blank" rel="noopener noreferrer">
+            <a href={mailtoLink} target="_blank" rel="noopener noreferrer">
               <Mail className="h-4 w-4 mr-2" />
               Email Directly
             </a>
