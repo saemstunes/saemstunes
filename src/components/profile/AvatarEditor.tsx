@@ -44,6 +44,7 @@ const AvatarEditor: React.FC<AvatarEditorProps> = ({
   const [activeTab, setActiveTab] = useState("default");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const { user, updateUserProfile } = useAuth();
   
   // Get initials for avatar fallback
   const getInitials = (name: string) => {
@@ -53,6 +54,12 @@ const AvatarEditor: React.FC<AvatarEditorProps> = ({
       .join('')
       .toUpperCase();
   };
+  
+  useEffect(() => {
+    if (currentAvatar) {
+      setSelectedAvatar(currentAvatar);
+    }
+  }, [currentAvatar]);
   
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -107,7 +114,14 @@ const AvatarEditor: React.FC<AvatarEditorProps> = ({
   
   const handleSave = () => {
     if (selectedAvatar) {
+      // Save avatar change
       onSave(selectedAvatar);
+      
+      // Update user profile in context for immediate effect
+      if (user) {
+        updateUserProfile({ ...user, avatar: selectedAvatar });
+      }
+      
       toast({
         title: "Success",
         description: "Avatar updated successfully.",

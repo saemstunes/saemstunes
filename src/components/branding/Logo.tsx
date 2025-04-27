@@ -36,21 +36,21 @@ const Logo = ({
     lg: isMobile ? 'text-sm' : 'text-2xl'  // Reduced text size for mobile
   };
 
-  // Use optimized logo files based on size and device type
+  // Use icon files based on size and device type
   const getLogoSrc = () => {
-    // Select WebP for modern browsers or SVG for maximum compatibility
+    // Prefer png over svg over webp for standard logo
     if (variant === 'icon') {
       return isMobile
-        ? `/lovable-uploads/logo-icon-sm.webp`
+        ? `/lovable-uploads/logo-icon-sm.png`
         : size === 'lg'
-          ? `/lovable-uploads/logo-icon-lg.webp`
-          : `/lovable-uploads/logo-icon-md.webp`;
+          ? `/lovable-uploads/logo-icon-lg.png`
+          : `/lovable-uploads/logo-icon-md.png`;
     } else {
       return isMobile
-        ? `/lovable-uploads/logo-full-md.webp`
+        ? `/lovable-uploads/logo-full-md.png`
         : size === 'lg'
-          ? `/lovable-uploads/logo-full-lg.webp`
-          : `/lovable-uploads/logo-full-md.webp`;
+          ? `/lovable-uploads/logo-full-lg.png`
+          : `/lovable-uploads/logo-full-md.png`;
     }
   };
 
@@ -68,21 +68,21 @@ const Logo = ({
     >
       {(variant === 'full' || variant === 'icon') && (
         <picture>
-          {/* WebP version (optimized) */}
+          {/* PNG version (primary) */}
           <source 
             srcSet={getLogoSrc()} 
-            type="image/webp" 
+            type="image/png" 
           />
           
-          {/* SVG version (vector quality) */}
+          {/* SVG version (secondary) */}
           <source 
-            srcSet={getLogoSrc().replace('.webp', '.svg')} 
+            srcSet={getLogoSrc().replace('.png', '.svg')} 
             type="image/svg+xml" 
           />
           
-          {/* Fallback PNG version */}
+          {/* Fallback WebP version */}
           <img 
-            src={getLogoSrc().replace('.webp', '.png')}
+            src={getLogoSrc().replace('.png', '.webp')}
             alt="Saem's Tunes Logo" 
             className={cn(sizeClasses[size], className)} 
             onLoad={() => setImageLoaded(true)}
@@ -96,7 +96,8 @@ const Logo = ({
         <span className={cn(
           "logo-font font-bold", 
           textSizeClasses[size],
-          inMobileMenu && "self-center translate-y-0" // Adjust vertical alignment in mobile menu
+          inMobileMenu && "self-center translate-y-0",
+          "flex items-center" // Add this to vertically center
         )}>
           Saem's <span className="text-gold">Tunes</span>
         </span>

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth, UserRole } from "@/context/AuthContext";
 import MainLayout from "@/components/layout/MainLayout";
@@ -10,9 +9,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { mockSubscriptionPlans } from "@/data/mockData";
 import AvatarEditor from "@/components/profile/AvatarEditor";
+import { Link } from "react-router-dom";
+import { ExternalLink, LogOut } from "lucide-react";
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, logout, updateUserProfile } = useAuth();
   const { toast } = useToast();
   const [avatarEditorOpen, setAvatarEditorOpen] = useState(false);
 
@@ -31,7 +32,13 @@ const Profile = () => {
   const handleAvatarSave = (avatarUrl: string) => {
     // In a real app, would call an API to update the user's avatar
     console.log("Avatar updated:", avatarUrl);
-    // For now just show a toast message
+    
+    // Update the user profile in context for immediate global effect
+    if (user) {
+      updateUserProfile({ ...user, avatar: avatarUrl });
+    }
+    
+    // Show success message
     toast({
       title: "Avatar Updated",
       description: "Your profile picture has been changed successfully.",
@@ -196,8 +203,12 @@ const Profile = () => {
             </Card>
 
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle>Account Activity</CardTitle>
+                <Link to="/user-details" className="text-sm text-gold hover:underline flex items-center">
+                  <span>View Details</span>
+                  <ExternalLink className="ml-1 h-3 w-3" />
+                </Link>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -215,6 +226,28 @@ const Profile = () => {
                     </p>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-destructive/5 border-destructive/20">
+              <CardHeader>
+                <CardTitle className="text-destructive">Danger Zone</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  variant="destructive" 
+                  className="w-full"
+                  onClick={() => {
+                    logout();
+                    toast({
+                      title: "Logged out",
+                      description: "You have been successfully logged out"
+                    });
+                  }}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Log Out
+                </Button>
               </CardContent>
             </Card>
           </div>
