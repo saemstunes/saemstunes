@@ -1,9 +1,18 @@
 
 import { useToast as useToastHook } from "@/hooks/use-toast";
 
+// Define our own PermissionName type to avoid conflicts
+export type DevicePermissionName = 
+  | "geolocation" 
+  | "notifications" 
+  | "microphone" 
+  | "camera"
+  | "persistent-storage"
+  | "midi";
+
 // Device permissions helper
 export const requestPermission = async (
-  permissionName: PermissionName,
+  permissionName: DevicePermissionName,
   purpose: string
 ): Promise<boolean> => {
   // Check if the Permissions API is supported
@@ -14,7 +23,9 @@ export const requestPermission = async (
 
   try {
     // Check current permission status
-    const { state } = await navigator.permissions.query({ name: permissionName });
+    const { state } = await navigator.permissions.query({ 
+      name: permissionName as PermissionName 
+    });
 
     // If already granted, return true
     if (state === "granted") {
@@ -45,10 +56,28 @@ export const requestPermission = async (
       }
     }
 
-    // For other permissions, use the permissions API
-    // Note: This is a prompt request
-    const result = await navigator.permissions.request({ name: permissionName });
-    return result.state === "granted";
+    // For other permissions, need to handle differently as the Permissions API doesn't have a standard request method
+    // Note: This is a workaround since navigator.permissions.request is not widely supported
+    if (permissionName === "geolocation") {
+      return new Promise((resolve) => {
+        navigator.geolocation.getCurrentPosition(
+          () => resolve(true),
+          () => resolve(false)
+        );
+      });
+    } else if (permissionName === "notifications") {
+      try {
+        const result = await Notification.requestPermission();
+        return result === "granted";
+      } catch (err) {
+        console.error("Notification permission error:", err);
+        return false;
+      }
+    } else {
+      // For other permission types, we can't easily request them programmatically
+      console.warn(`No standard way to request ${permissionName} permission`);
+      return false;
+    }
     
   } catch (error) {
     console.error(`Error requesting ${permissionName} permission:`, error);
@@ -61,7 +90,7 @@ export const usePermissionRequest = () => {
   const { toast } = useToastHook();
   
   const requestPermissionWithFeedback = async (
-    permissionName: PermissionName,
+    permissionName: DevicePermissionName,
     purpose: string
   ): Promise<boolean> => {
     const granted = await requestPermission(permissionName, purpose);
@@ -84,12 +113,3 @@ export const usePermissionRequest = () => {
   
   return { requestPermissionWithFeedback };
 };
-
-// Type definition for PermissionName
-type PermissionName = 
-  | "geolocation" 
-  | "notifications" 
-  | "microphone" 
-  | "camera"
-  | "persistent-storage"
-  | "midi";

@@ -1,6 +1,16 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "@/integrations/supabase/types";
+
+// Define the User interface since it's not exported from supabase types
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  avatar: string;
+  subscribed: boolean;
+}
 
 // Define the user roles
 export type UserRole = "student" | "adult" | "parent" | "teacher" | "admin";

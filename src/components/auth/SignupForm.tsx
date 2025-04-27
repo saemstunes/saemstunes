@@ -55,7 +55,7 @@ type FormData = z.infer<typeof formSchema>;
 
 const SignupForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { signup } = useAuth();
+  const { signUp } = useAuth(); // Changed from signup to signUp to match the context
   const navigate = useNavigate();
 
   const form = useForm<FormData>({
@@ -72,7 +72,7 @@ const SignupForm = () => {
     setIsSubmitting(true);
 
     try {
-      await signup(data.name, data.email, data.password, data.role);
+      await signUp(data.email, data.password, data.name, data.role);
       navigate("/");
     } catch (error) {
       console.error("Signup failed:", error);
