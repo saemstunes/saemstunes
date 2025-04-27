@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -36,23 +36,27 @@ const Logo = ({
     lg: isMobile ? 'text-sm' : 'text-2xl'  // Reduced text size for mobile
   };
 
-  // Use icon files based on size and device type
-  const getLogoSrc = () => {
-    // Prefer png over svg over webp for standard logo
+  // Determine the appropriate logo base name
+  const getLogoBaseName = () => {
     if (variant === 'icon') {
+      // For icon variant, use size-appropriate icons
       return isMobile
-        ? `/lovable-uploads/logo-icon-sm.png`
+        ? 'logo-icon-sm'
         : size === 'lg'
-          ? `/lovable-uploads/logo-icon-lg.png`
-          : `/lovable-uploads/logo-icon-md.png`;
+          ? 'logo-icon-lg'
+          : 'logo-icon-md';
     } else {
+      // For full variant, use size-appropriate full logos
       return isMobile
-        ? `/lovable-uploads/logo-full-md.png`
+        ? 'logo-full-md'
         : size === 'lg'
-          ? `/lovable-uploads/logo-full-lg.png`
-          : `/lovable-uploads/logo-full-md.png`;
+          ? 'logo-full-lg'
+          : 'logo-full-md';
     }
   };
+
+  // Get base path for logo
+  const logoBasePath = `/lovable-uploads/${getLogoBaseName()}`;
 
   return (
     <Link 
@@ -68,26 +72,27 @@ const Logo = ({
     >
       {(variant === 'full' || variant === 'icon') && (
         <picture>
-          {/* PNG version (primary) */}
+          {/* WebP version (most efficient) */}
           <source 
-            srcSet={getLogoSrc()} 
-            type="image/png" 
+            srcSet={`${logoBasePath}.webp`} 
+            type="image/webp" 
           />
           
-          {/* SVG version (secondary) */}
+          {/* SVG version (best quality) */}
           <source 
-            srcSet={getLogoSrc().replace('.png', '.svg')} 
+            srcSet={`${logoBasePath}.svg`} 
             type="image/svg+xml" 
           />
           
-          {/* Fallback WebP version */}
+          {/* Fallback PNG version */}
           <img 
-            src={getLogoSrc().replace('.png', '.webp')}
+            src={`/lovable-uploads/logo-desktop.png`}
             alt="Saem's Tunes Logo" 
             className={cn(sizeClasses[size], className)} 
             onLoad={() => setImageLoaded(true)}
             fetchPriority="high"
             decoding="async"
+            loading={variant === 'icon' && !isMobile ? "lazy" : "eager"}
           />
         </picture>
       )}
@@ -96,8 +101,8 @@ const Logo = ({
         <span className={cn(
           "logo-font font-bold", 
           textSizeClasses[size],
-          inMobileMenu && "self-center translate-y-0",
-          "flex items-center" // Add this to vertically center
+          inMobileMenu ? "translate-y-0" : "", // Only apply transform when in mobile menu
+          "flex items-center self-center" // Ensure vertical centering
         )}>
           Saem's <span className="text-gold">Tunes</span>
         </span>
