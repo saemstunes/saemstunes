@@ -60,14 +60,38 @@ const PitchFinder = () => {
     };
   };
 
-  // Convert cents to a tuning accuracy indication
+  // Convert cents to a color on a red-to-green gradient
+  const getCentsAccuracyColor = (cents: number) => {
+    // Get absolute value of cents (distance from perfect pitch)
+    const absCents = Math.abs(cents);
+    
+    // Create a non-linear scale for color mapping (more green for closer matches)
+    // Logarithmic calculation for opacity
+    let opacity = 1.0;
+    if (absCents > 5) {
+      // logarithmically decrease opacity as cents increase
+      opacity = Math.max(0.2, 1 - Math.log10(absCents / 5) * 0.4);
+    }
+    
+    // Colors: red (furthest) to green (perfect)
+    if (absCents < 5) return `rgba(0, 255, 0, ${opacity})`; // Green - perfect match
+    if (absCents < 10) return `rgba(0, 200, 100, ${opacity})`; // Turquoise-ish
+    if (absCents < 15) return `rgba(0, 150, 150, ${opacity})`; // Blue-ish
+    if (absCents < 20) return `rgba(50, 100, 200, ${opacity})`; // Cyan blue
+    if (absCents < 30) return `rgba(200, 200, 0, ${opacity})`; // Yellow
+    if (absCents < 40) return `rgba(255, 180, 0, ${opacity})`; // Golden
+    if (absCents < 50) return `rgba(255, 120, 0, ${opacity})`; // Orange
+    return `rgba(255, 0, 0, ${opacity})`; // Red - far off
+  };
+
+  // Get CSS class for accuracy badge
   const getCentsAccuracyClass = (cents: number) => {
     const absCents = Math.abs(cents);
-    if (absCents < 5) return 'bg-green-500';
-    if (absCents < 15) return 'bg-green-400';
-    if (absCents < 30) return 'bg-yellow-400';
-    if (absCents < 50) return 'bg-orange-400';
-    return 'bg-red-500';
+    if (absCents < 5) return 'bg-green-500 text-white';
+    if (absCents < 15) return 'bg-green-400 text-white';
+    if (absCents < 30) return 'bg-yellow-400 text-black';
+    if (absCents < 50) return 'bg-orange-400 text-white';
+    return 'bg-red-500 text-white';
   };
 
   // Calculate needle position based on cents
@@ -233,23 +257,38 @@ const PitchFinder = () => {
             <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-400 to-purple-600 dark:from-blue-600 dark:to-purple-900 shadow-xl flex items-center justify-center overflow-hidden">
               {/* Inner circle with musical notes background */}
               <div className="w-52 h-52 rounded-full bg-card flex items-center justify-center relative">
-                {/* Decorative music note symbols */}
-                {NOTES.map((note, index) => (
-                  <div 
-                    key={index}
-                    className={cn(
-                      "absolute text-xs font-bold transform -translate-x-1/2 -translate-y-1/2",
-                      currentNote?.name === note ? "text-gold font-bold" : "text-muted-foreground"
-                    )}
-                    style={{
-                      left: '50%',
-                      top: '50%',
-                      transform: `rotate(${index * 30}deg) translate(0, -21px) rotate(${-index * 30}deg)`
-                    }}
-                  >
-                    {note}
-                  </div>
-                ))}
+                {/* Decorative music note symbols - arranged in circle */}
+                {NOTES.map((note, index) => {
+                  // Calculate position on a circle
+                  const angle = (index * Math.PI * 2) / NOTES.length;
+                  const x = Math.sin(angle) * 80; // Radius
+                  const y = -Math.cos(angle) * 80; // Negative because y increases downward
+                  
+                  const isCurrentNote = currentNote?.name === note;
+                  
+                  // Dynamic color based on current note and cents difference
+                  const noteColor = isCurrentNote && currentNote ? getCentsAccuracyColor(currentNote.cents) : 
+                                                                  'rgb(107, 114, 128)'; // text-muted-foreground
+                  
+                  return (
+                    <motion.div 
+                      key={index}
+                      className="absolute text-sm font-bold transform -translate-x-1/2 -translate-y-1/2"
+                      style={{
+                        left: '50%',
+                        top: '50%',
+                        transform: `translate(${x}px, ${y}px)`,
+                        color: isCurrentNote ? noteColor : undefined
+                      }}
+                      animate={{
+                        scale: isCurrentNote ? [1, 1.3, 1] : 1,
+                        transition: { duration: isCurrentNote ? 0.3 : 0 }
+                      }}
+                    >
+                      {note}
+                    </motion.div>
+                  );
+                })}
                 
                 {/* Center circle with note display */}
                 <motion.div 
@@ -262,11 +301,12 @@ const PitchFinder = () => {
                   {currentNote ? (
                     <>
                       <motion.div 
-                        className="text-4xl font-bold text-gold"
+                        className="text-4xl font-bold"
                         key={currentNote.name + currentNote.octave}
                         initial={{ y: 10, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ duration: 0.2 }}
+                        style={{ color: getCentsAccuracyColor(currentNote.cents) }}
                       >
                         {currentNote.name}
                       </motion.div>
@@ -296,23 +336,35 @@ const PitchFinder = () => {
         
         {/* Tuning meter */}
         {currentNote && (
-          <div className="relative h-10 flex items-center justify-center" ref={tuningMeterRef}>
-            <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
-              <div className="absolute top-0 left-0 w-full flex justify-center">
-                <div className="h-10 w-1 bg-gold rounded-full"></div>
+          <div className="relative h-16 flex flex-col items-center justify-center" ref={tuningMeterRef}>
+            <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+              {/* Center line */}
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 h-10 w-0.5 bg-gold"></div>
+              
+              {/* Markings */}
+              <div className="absolute top-2 left-0 w-full flex justify-between px-0">
+                <div className="h-3 w-0.5 bg-muted-foreground"></div>
+                <div className="h-2 w-0.5 bg-muted-foreground"></div>
+                <div className="h-2 w-0.5 bg-muted-foreground"></div>
+                <div className="h-3 w-0.5 bg-muted-foreground"></div>
+                <div className="h-2 w-0.5 bg-muted-foreground"></div>
+                <div className="h-2 w-0.5 bg-muted-foreground"></div>
+                <div className="h-3 w-0.5 bg-muted-foreground"></div>
               </div>
               
+              {/* Tuner needle */}
               <motion.div 
-                className="absolute top-1 left-1/2"
+                className="absolute top-0 left-1/2 -mt-1"
                 initial={{ rotate: 0 }}
                 animate={{ rotate: getNeedleRotation(currentNote.cents) }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                style={{ transformOrigin: 'bottom center' }}
               >
-                <div className="w-20 h-1 bg-primary rounded-full origin-left transform -translate-x-1"></div>
-                <div className="w-3 h-3 rounded-full bg-primary absolute -right-1 -top-1"></div>
+                <div className="h-10 w-1 bg-primary rounded-t-full"></div>
+                <div className="w-3 h-3 rounded-full bg-primary absolute -top-1 left-1/2 transform -translate-x-1/2"></div>
               </motion.div>
               
-              <div className="flex justify-between px-4 mt-3 text-xs text-muted-foreground">
+              <div className="flex justify-between px-1 mt-12 text-xs text-muted-foreground">
                 <span>-50</span>
                 <span>-25</span>
                 <span>0</span>
@@ -320,6 +372,9 @@ const PitchFinder = () => {
                 <span>+50</span>
               </div>
             </div>
+            
+            {/* Cents gradient bar */}
+            <div className="w-full h-4 mt-2 rounded-full bg-gradient-to-r from-red-500 via-yellow-400 to-green-500 opacity-60"></div>
           </div>
         )}
         

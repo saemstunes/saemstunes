@@ -1,13 +1,14 @@
 
 import { Moon, Sun } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function ThemeToggle() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [isAnimating, setIsAnimating] = useState(false);
-
+  const hasAnimatedRef = useRef(false); // Track if animation has run in this session
+  
   useEffect(() => {
     // Check if user has a theme preference in localStorage
     const savedTheme = localStorage.getItem("theme");
@@ -19,6 +20,15 @@ export default function ThemeToggle() {
     } else if (prefersDark) {
       setTheme("dark");
       document.documentElement.classList.add("dark");
+    }
+    
+    // Run initial animation only once per session
+    if (!hasAnimatedRef.current) {
+      setIsAnimating(true);
+      setTimeout(() => {
+        setIsAnimating(false);
+        hasAnimatedRef.current = true;
+      }, 500);
     }
   }, []);
 
@@ -54,7 +64,7 @@ export default function ThemeToggle() {
           <motion.div
             key="moon"
             variants={moonVariants}
-            initial="initial"
+            initial={hasAnimatedRef.current ? "animate" : "initial"}
             animate="animate"
             exit="exit"
           >
@@ -64,7 +74,7 @@ export default function ThemeToggle() {
           <motion.div
             key="sun"
             variants={sunVariants}
-            initial="initial"
+            initial={hasAnimatedRef.current ? "animate" : "initial"}
             animate="animate"
             exit="exit"
           >

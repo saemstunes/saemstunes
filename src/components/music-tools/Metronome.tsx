@@ -6,6 +6,7 @@ import { PlayCircle, PauseCircle, Settings } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Metronome = () => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -18,6 +19,7 @@ const Metronome = () => {
   const timerID = useRef<number | null>(null);
   const nextNoteTime = useRef(0);
   const scheduledNotes = useRef<{time: number, beat: number}[]>([]);
+  const beatAnimationRef = useRef<HTMLDivElement | null>(null);
   
   // Initialize audio context
   useEffect(() => {
@@ -120,35 +122,82 @@ const Metronome = () => {
     };
   }, []);
   
+  const getBeatPosition = (index: number) => {
+    // Calculate position on a circle for each beat
+    const angle = (2 * Math.PI * index) / beatsPerMeasure;
+    const radius = 40; // Circle radius percentage
+    
+    return {
+      top: `${50 - radius * Math.cos(angle)}%`,
+      left: `${50 + radius * Math.sin(angle)}%`,
+    };
+  };
+  
   return (
     <div className="space-y-6">
       {/* Metronome visual display */}
-      <div className="flex justify-center mb-6">
-        <div className="relative w-48 h-48">
+      <div className="flex justify-center mb-6" ref={beatAnimationRef}>
+        <div className="relative w-60 h-60 md:w-72 md:h-72">
           <div className="absolute inset-0 rounded-full border-4 border-muted flex items-center justify-center">
-            <div className="text-4xl font-mono font-bold">
-              {tempo}
-            </div>
+            <AnimatePresence>
+              <motion.div 
+                key={tempo}
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                className="text-4xl font-mono font-bold"
+              >
+                {tempo}
+              </motion.div>
+            </AnimatePresence>
+            <div className="text-sm text-muted-foreground">BPM</div>
           </div>
           
-          {visualFeedback && isPlaying && (
+          {visualFeedback && (
             <div className="absolute top-0 left-0 right-0 bottom-0">
-              {Array.from({ length: beatsPerMeasure }).map((_, i) => (
-                <div 
-                  key={i}
-                  className={`absolute w-3 h-3 rounded-full transition-all duration-100 ${
-                    currentBeat === i 
-                      ? 'bg-gold scale-150' 
-                      : 'bg-muted-foreground'
-                  }`}
-                  style={{
-                    top: `${50 - 40 * Math.cos(2 * Math.PI * i / beatsPerMeasure)}%`,
-                    left: `${50 + 40 * Math.sin(2 * Math.PI * i / beatsPerMeasure)}%`,
-                    transform: 'translate(-50%, -50%)'
-                  }}
-                />
-              ))}
+              {Array.from({ length: beatsPerMeasure }).map((_, i) => {
+                const position = getBeatPosition(i);
+                const isActive = isPlaying && currentBeat === i;
+                
+                return (
+                  <motion.div 
+                    key={i}
+                    className={`absolute w-4 h-4 rounded-full transition-all ${
+                      isActive ? 'bg-gold shadow-lg shadow-gold/50' : 'bg-muted-foreground'
+                    }`}
+                    style={{
+                      top: position.top,
+                      left: position.left,
+                      transform: 'translate(-50%, -50%)'
+                    }}
+                    animate={{
+                      scale: isActive ? [1, 1.5, 1] : 1,
+                      opacity: isActive ? [0.7, 1, 0.7] : 0.7
+                    }}
+                    transition={{
+                      duration: isActive ? 0.2 : 0,
+                      ease: "easeInOut"
+                    }}
+                  />
+                );
+              })}
             </div>
+          )}
+          
+          {/* Pendulum */}
+          {visualFeedback && isPlaying && (
+            <motion.div
+              className="absolute top-[50%] left-[50%] w-[1px] h-[45%] bg-gold origin-top"
+              animate={{
+                rotate: [-30, 30, -30],
+              }}
+              transition={{
+                duration: 60 / tempo,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            >
+              <div className="absolute -bottom-2 -left-1 w-2 h-2 rounded-full bg-gold" />
+            </motion.div>
           )}
         </div>
       </div>
@@ -181,6 +230,7 @@ const Metronome = () => {
             max={220}
             step={1}
             onValueChange={(value) => setTempo(value[0])}
+            className="py-2"
           />
         </div>
         
@@ -220,7 +270,7 @@ const Metronome = () => {
           <Button 
             size="lg"
             onClick={startStop}
-            className={isPlaying ? "bg-red-500 hover:bg-red-600" : "bg-gold hover:bg-gold-dark"}
+            className={isPlaying ? "bg-red-500 hover:bg-red-600" : "bg-gold hover:bg-gold/90"}
           >
             {isPlaying ? (
               <>

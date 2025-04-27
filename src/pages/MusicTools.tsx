@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Music, FlaskConical, Mic, AlertCircle, MessageCircle } from "lucide-react";
@@ -7,62 +7,13 @@ import PitchFinder from "@/components/music-tools/PitchFinder";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useForm } from "react-hook-form";
-import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import Metronome from "@/components/music-tools/Metronome";
-
-// Tool suggestion form
-const ToolSuggestionForm = () => {
-  const { toast } = useToast();
-  const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm();
-  
-  const onSubmit = async (data) => {
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    toast({
-      title: "Suggestion submitted!",
-      description: "Thank you for your input. We'll consider it for future updates.",
-    });
-    
-    reset();
-  };
-  
-  return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="space-y-2">
-        <label htmlFor="toolName" className="text-sm font-medium">Tool Name</label>
-        <Input 
-          id="toolName"
-          placeholder="E.g., Scale Practice Helper"
-          {...register("toolName", { required: true })}
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <label htmlFor="description" className="text-sm font-medium">Description</label>
-        <Textarea
-          id="description"
-          placeholder="Tell us what you'd like this tool to do..."
-          rows={4}
-          {...register("description", { required: true })}
-        />
-      </div>
-      
-      <Button type="submit" disabled={isSubmitting} className="w-full">
-        {isSubmitting ? "Submitting..." : "Submit Suggestion"}
-      </Button>
-    </form>
-  );
-};
+import ToolSuggestionForm from "@/components/music-tools/ToolSuggestionForm";
 
 const MusicTools = () => {
   const [activeTab, setActiveTab] = useState("pitch-finder");
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [permissionState, setPermissionState] = useState({
     microphone: null, // null = not asked, true = granted, false = denied
   });
@@ -77,11 +28,6 @@ const MusicTools = () => {
     } catch (err) {
       console.error("Error requesting microphone permission:", err);
       setPermissionState(prev => ({ ...prev, microphone: false }));
-      toast({
-        title: "Permission Denied",
-        description: "Microphone access is required for this feature.",
-        variant: "destructive",
-      });
       return false;
     }
   };
@@ -100,7 +46,7 @@ const MusicTools = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 pb-24 md:pb-12">
         <div className="flex flex-col space-y-2">
           <h1 className="text-3xl font-serif font-bold flex items-center">
             <Music className="mr-2 h-6 w-6 text-gold" />
@@ -156,7 +102,7 @@ const MusicTools = () => {
               <p>A simple metronome to help you practice with accurate timing.</p>
               <p className="text-sm text-muted-foreground mt-2">Adjust the tempo using the slider below.</p>
             </div>
-            <Card>
+            <Card className="overflow-hidden">
               <CardContent className="pt-6">
                 <Metronome />
               </CardContent>
@@ -173,7 +119,7 @@ const MusicTools = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ToolSuggestionForm />
+                  <ToolSuggestionForm adminEmail="saemstunes@gmail.com" />
                 </CardContent>
               </Card>
               
