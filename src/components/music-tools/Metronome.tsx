@@ -388,7 +388,7 @@ const Metronome = () => {
           </Button>
         </div>
       </motion.div>
-    </div>
+    </motion.div>
   );
 };
 
