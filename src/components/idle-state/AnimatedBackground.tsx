@@ -33,7 +33,7 @@ const AnimatedBackground: React.FC = () => {
           repeatType: "reverse",
         }}
       >
-        <Logo size="xl" className="opacity-10" />
+        <Logo size="lg" className="opacity-10" />
       </motion.div>
       
       {/* Floating music notes */}
