@@ -18,10 +18,17 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
   const [factFetchAttempted, setFactFetchAttempted] = useState(false);
   const [currentFact, setCurrentFact] = useState('');
   const location = useLocation();
-
-  // Use our idle state hook
-  const { isIdle, isOnline, getIdleTime } = useIdleState({
+  
+  // Use our idle state hook with the improved configuration
+  const { 
+    isIdle, 
+    isOnline, 
+    getIdleTime, 
+    activationCount, 
+    resetActivationCount 
+  } = useIdleState({
     idleTime,
+    maxActivations: 5, // Max 5 activations before increasing wait time
     onIdleStart: () => {
       // Wait 1 second before showing idle content to prevent flashing
       setTimeout(() => setShowIdleContent(true), 1000);
@@ -31,6 +38,12 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
       setFactFetchAttempted(false);
     }
   });
+
+  // Reset activation count after significant user engagement
+  useEffect(() => {
+    // Reset when user navigates to a different route
+    resetActivationCount();
+  }, [location.pathname, resetActivationCount]);
 
   // Decide which idle mode to display based on idle time and online status
   useEffect(() => {
@@ -105,15 +118,21 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
             <MusicFactDisplay 
               fact={currentFact || "Did you know that music can improve your mood and cognitive performance?"}
               isOnline={isOnline}
+              onInteraction={() => setShowIdleContent(false)}
             />
           )}
           
           {idleMode === 'game' && (
-            <IdleGameOverlay />
+            <IdleGameOverlay 
+              onInteraction={() => setShowIdleContent(false)}
+            />
           )}
           
           {idleMode === 'showcase' && (
-            <AutoShowcaseFeature path={location.pathname} />
+            <AutoShowcaseFeature 
+              path={location.pathname} 
+              onInteraction={() => setShowIdleContent(false)}
+            />
           )}
         </>
       )}

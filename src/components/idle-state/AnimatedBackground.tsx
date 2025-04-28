@@ -10,7 +10,7 @@ const AnimatedBackground: React.FC = () => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
-      className="fixed inset-0 z-40 overflow-hidden pointer-events-none"
+      className="fixed inset-0 z-20 overflow-hidden pointer-events-none"
     >
       {/* Animated gradient background */}
       <div 
@@ -33,7 +33,7 @@ const AnimatedBackground: React.FC = () => {
           repeatType: "reverse",
         }}
       >
-        <Logo size="lg" className="opacity-10" />
+        <Logo size="md" className="opacity-10" />
       </motion.div>
       
       {/* Floating music notes */}
@@ -58,7 +58,7 @@ const FloatingNote: React.FC<{ index: number }> = ({ index }) => {
   
   return (
     <motion.div
-      className="absolute text-gold/20 font-serif"
+      className="absolute text-gold/20 font-serif pointer-events-none"
       style={{
         left: `${startX}%`,
         top: '100%',

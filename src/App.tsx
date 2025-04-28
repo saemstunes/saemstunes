@@ -67,7 +67,7 @@ const App = () => {
           <Sonner />
           <SplashScreen loading={loading} />
           <BrowserRouter>
-            <IdleStateManager idleTime={30000} /> {/* Set to 30 seconds for testing */}
+            <IdleStateManager idleTime={60000} /> {/* Set to 60 seconds (1 minute) */}
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/admin" element={<Admin />} />

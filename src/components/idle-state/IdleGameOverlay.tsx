@@ -5,11 +5,29 @@ import { Music, Star, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
-const IdleGameOverlay: React.FC = () => {
+interface IdleGameOverlayProps {
+  onInteraction: () => void;
+}
+
+const IdleGameOverlay: React.FC<IdleGameOverlayProps> = ({ onInteraction }) => {
   const [score, setScore] = useState(0);
   const [notes, setNotes] = useState<{ id: number; x: number; y: number; color: string; captured: boolean }[]>([]);
   const [gameStarted, setGameStarted] = useState(false);
   const { toast } = useToast();
+
+  // Exit the game if user navigates or changes focus to app
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== 'hidden' && gameStarted) {
+        onInteraction();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [gameStarted, onInteraction]);
   
   useEffect(() => {
     if (!gameStarted) return;
@@ -82,14 +100,21 @@ const IdleGameOverlay: React.FC = () => {
     setNotes([]);
   };
 
+  const handleBackgroundClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Only dismiss if the game hasn't started or if clicking directly on the background
+    if (!gameStarted && e.currentTarget === e.target) {
+      onInteraction();
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
-      className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
-      onClick={() => !gameStarted && startGame()}
+      className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm"
+      onClick={handleBackgroundClick}
     >
       {gameStarted ? (
         <>
@@ -97,6 +122,16 @@ const IdleGameOverlay: React.FC = () => {
             <Music className="h-4 w-4 text-gold" />
             <span className="font-medium">Score: {score}</span>
           </div>
+          
+          {/* Exit button in game mode */}
+          <Button
+            className="absolute top-4 right-4 bg-card/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg border border-gold/20"
+            variant="ghost"
+            size="sm"
+            onClick={() => onInteraction()}
+          >
+            Exit Game
+          </Button>
           
           {notes.map(note => (
             <AnimatePresence key={note.id}>
@@ -150,14 +185,25 @@ const IdleGameOverlay: React.FC = () => {
             </p>
           </motion.div>
           
-          <Button 
-            onClick={startGame}
-            size="lg"
-            className="bg-gold hover:bg-gold/90 text-primary"
-          >
-            <Star className="mr-2 h-5 w-5" />
-            Start Game
-          </Button>
+          <div className="flex gap-4">
+            <Button 
+              onClick={startGame}
+              size="lg"
+              className="bg-gold hover:bg-gold/90 text-primary"
+            >
+              <Star className="mr-2 h-5 w-5" />
+              Start Game
+            </Button>
+            
+            <Button 
+              onClick={() => onInteraction()}
+              size="lg"
+              variant="outline"
+              className="border-white/30 text-white hover:bg-white/10"
+            >
+              Return to App
+            </Button>
+          </div>
           
           <motion.div
             initial={{ y: 20, opacity: 0 }}

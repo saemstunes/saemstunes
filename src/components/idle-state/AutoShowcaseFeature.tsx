@@ -1,14 +1,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Info, ArrowRight } from 'lucide-react';
+import { Info, ArrowRight, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 interface AutoShowcaseFeatureProps {
   path: string;
+  onInteraction: () => void;
 }
 
-const AutoShowcaseFeature: React.FC<AutoShowcaseFeatureProps> = ({ path }) => {
+const AutoShowcaseFeature: React.FC<AutoShowcaseFeatureProps> = ({ path, onInteraction }) => {
   const [currentHighlight, setCurrentHighlight] = useState(0);
   const [features, setFeatures] = useState<{ title: string; description: string; path: string; }[]>([]);
   const navigate = useNavigate();
@@ -87,6 +89,11 @@ const AutoShowcaseFeature: React.FC<AutoShowcaseFeatureProps> = ({ path }) => {
 
   const currentFeature = features[currentHighlight];
 
+  const handleNavigate = () => {
+    onInteraction(); // Dismiss the idle state
+    navigate(currentFeature.path);
+  };
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -95,14 +102,11 @@ const AutoShowcaseFeature: React.FC<AutoShowcaseFeatureProps> = ({ path }) => {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.5 }}
-        className="fixed inset-x-0 bottom-24 md:bottom-8 flex justify-center z-50 px-4"
+        className="fixed inset-x-0 bottom-24 md:bottom-8 flex justify-center z-30 px-4"
       >
         <motion.div 
           className="bg-card/90 backdrop-blur-md border border-gold/20 rounded-lg shadow-xl p-4 max-w-md w-full"
           whileHover={{ scale: 1.02 }}
-          onClick={() => {
-            navigate(currentFeature.path);
-          }}
         >
           <div className="flex items-start gap-4">
             <div className="h-10 w-10 bg-gold/20 rounded-full flex items-center justify-center flex-shrink-0">
@@ -110,7 +114,18 @@ const AutoShowcaseFeature: React.FC<AutoShowcaseFeatureProps> = ({ path }) => {
             </div>
             
             <div className="flex-1">
-              <h3 className="font-medium text-lg mb-1">{currentFeature.title}</h3>
+              <div className="flex justify-between items-start">
+                <h3 className="font-medium text-lg mb-1">{currentFeature.title}</h3>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="h-6 w-6 rounded-full -mt-1 -mr-1"
+                  onClick={() => onInteraction()}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+              
               <p className="text-sm text-muted-foreground mb-3">{currentFeature.description}</p>
               
               <div className="flex items-center justify-between">
@@ -126,10 +141,14 @@ const AutoShowcaseFeature: React.FC<AutoShowcaseFeatureProps> = ({ path }) => {
                   ))}
                 </div>
                 
-                <div className="text-sm text-gold flex items-center">
+                <Button
+                  variant="link"
+                  className="text-sm text-gold p-0 flex items-center"
+                  onClick={handleNavigate}
+                >
                   <span>Learn more</span>
                   <ArrowRight className="h-3.5 w-3.5 ml-1" />
-                </div>
+                </Button>
               </div>
             </div>
           </div>

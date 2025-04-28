@@ -9,9 +9,10 @@ import { useToast } from '@/hooks/use-toast';
 interface MusicFactProps {
   fact: string;
   isOnline: boolean;
+  onInteraction: () => void;
 }
 
-const MusicFactDisplay: React.FC<MusicFactProps> = ({ fact, isOnline }) => {
+const MusicFactDisplay: React.FC<MusicFactProps> = ({ fact, isOnline, onInteraction }) => {
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
   const [closed, setClosed] = useState(false);
@@ -23,10 +24,19 @@ const MusicFactDisplay: React.FC<MusicFactProps> = ({ fact, isOnline }) => {
     setSaved(false);
     setClosed(false);
   }, [fact]);
+
+  // Handle any click outside the card to dismiss
+  const handleBackgroundClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Check if the click was directly on the background div, not its children
+    if (e.currentTarget === e.target) {
+      onInteraction();
+    }
+  };
   
   if (closed) return null;
   
-  const handleLike = () => {
+  const handleLike = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent dismissing when clicking like
     setLiked(!liked);
     if (!liked) {
       toast({
@@ -36,7 +46,8 @@ const MusicFactDisplay: React.FC<MusicFactProps> = ({ fact, isOnline }) => {
     }
   };
   
-  const handleSave = () => {
+  const handleSave = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent dismissing when clicking save
     setSaved(!saved);
     if (!saved) {
       toast({
@@ -46,13 +57,20 @@ const MusicFactDisplay: React.FC<MusicFactProps> = ({ fact, isOnline }) => {
     }
   };
   
+  const handleClose = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent event bubbling
+    setClosed(true);
+    onInteraction();
+  };
+  
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ duration: 0.5 }}
-      className="fixed inset-0 flex items-center justify-center z-50 bg-black/40 backdrop-blur-sm"
+      className="fixed inset-0 flex items-center justify-center z-30 bg-black/40 backdrop-blur-sm"
+      onClick={handleBackgroundClick}
     >
       <Card className="max-w-md mx-4 shadow-xl border-gold/30 bg-card/95 backdrop-blur">
         <CardContent className="p-6">
@@ -70,7 +88,7 @@ const MusicFactDisplay: React.FC<MusicFactProps> = ({ fact, isOnline }) => {
               variant="ghost" 
               size="icon" 
               className="h-8 w-8 rounded-full" 
-              onClick={() => setClosed(true)}
+              onClick={handleClose}
             >
               <X className="h-4 w-4" />
               <span className="sr-only">Close</span>
