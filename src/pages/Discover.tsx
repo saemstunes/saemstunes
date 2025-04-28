@@ -3,7 +3,8 @@ import React, { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Compass, Search, Music, Mic, User, BookOpen, Clock } from "lucide-react";
+import { Compass, Search, Music, Mic, User, BookOpen } from "lucide-react";
+import { Clock as ClockIcon } from "lucide-react";
 import { mockVideos } from "@/data/mockData";
 import VideoCardWrapper from "@/components/videos/VideoCardWrapper";
 import { useNavigate } from "react-router-dom";
@@ -104,7 +105,7 @@ const Discover = () => {
                       navigate('/search', { state: { initialQuery: search }});
                     }}
                   >
-                    <Clock className="h-3 w-3 text-muted-foreground" />
+                    <ClockIcon className="h-3 w-3 text-muted-foreground" />
                     <span>{search}</span>
                   </div>
                 ))}
@@ -384,8 +385,5 @@ const ArtistCard = ({ name, role, imageSrc, onClick }) => (
     </div>
   </div>
 );
-
-// Add missing import
-import { Clock } from "lucide-react";
 
 export default Discover;
