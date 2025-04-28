@@ -4,6 +4,8 @@ import { cn } from "@/lib/utils";
 import { Home, Compass, Library, User, Bell, Users, Music, LogOut } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +15,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 
 const MobileNavigation = () => {
   const location = useLocation();
@@ -22,6 +23,26 @@ const MobileNavigation = () => {
   const { toast } = useToast();
   const hasNotifications = true;
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [authText, setAuthText] = useState(user ? "Profile" : "Sign In");
+
+  // Check if user is a first-time visitor or returning user
+  useEffect(() => {
+    if (!user) {
+      const storedAuthText = localStorage.getItem("authNavText");
+      if (storedAuthText) {
+        setAuthText(storedAuthText);
+      } else {
+        const isReturningUser = localStorage.getItem("isReturningUser");
+        if (!isReturningUser) {
+          setAuthText("Sign Up");
+        } else {
+          setAuthText("Sign In");
+        }
+      }
+    } else {
+      setAuthText("Profile");
+    }
+  }, [user]);
 
   const handleAuthAction = () => {
     if (user) {
@@ -67,7 +88,7 @@ const MobileNavigation = () => {
       public: true
     },
     {
-      name: user ? "Profile" : "Sign In",
+      name: authText,
       href: user ? "/profile" : "/auth",
       icon: User,
       public: true
@@ -83,17 +104,40 @@ const MobileNavigation = () => {
     item => item.public || (user && !item.public)
   );
 
+  const navVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { 
+        duration: 0.3,
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0 }
+  };
+
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-t border-border z-50">
+      <motion.nav 
+        className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-t border-border z-50"
+        variants={navVariants}
+        initial="hidden"
+        animate="visible"
+      >
         <div className="flex items-center justify-around">
-          {filteredNavigation.map((item) => (
-            <button
+          {filteredNavigation.map((item, index) => (
+            <motion.button
               key={item.name}
+              variants={itemVariants}
               onClick={() => {
                 if (item.name === "Profile" && user) {
                   navigate(item.href);
-                } else if (item.name === "Sign In") {
+                } else if (item.name === "Sign In" || item.name === "Sign Up") {
                   handleAuthAction();
                 } else {
                   // If clicking on home while already on home, scroll to top
@@ -110,6 +154,7 @@ const MobileNavigation = () => {
                   ? "text-gold" 
                   : "text-muted-foreground"
               )}
+              whileTap={{ scale: 0.95 }}
             >
               <div className="relative">
                 <item.icon className="h-5 w-5" />
@@ -118,10 +163,10 @@ const MobileNavigation = () => {
                 )}
               </div>
               <span className="text-xs mt-1">{item.name}</span>
-            </button>
+            </motion.button>
           ))}
         </div>
-      </nav>
+      </motion.nav>
 
       <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
         <DialogContent>

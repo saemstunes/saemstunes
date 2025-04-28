@@ -598,7 +598,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      refresh_mat_views: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       access_level: "free" | "basic" | "premium" | "private"

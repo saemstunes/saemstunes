@@ -3,6 +3,7 @@ import { Moon, Sun } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { DURATIONS, EASINGS } from "@/lib/animation-utils";
 
 export default function ThemeToggle() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -28,7 +29,7 @@ export default function ThemeToggle() {
       setTimeout(() => {
         setIsAnimating(false);
         hasAnimatedRef.current = true;
-      }, 500);
+      }, DURATIONS.normal);
     }
   }, []);
 
@@ -43,41 +44,59 @@ export default function ThemeToggle() {
     // Reset animation state after animation completes
     setTimeout(() => {
       setIsAnimating(false);
-    }, 500);
+    }, DURATIONS.normal);
   };
 
-  const sunVariants = {
-    initial: { scale: 0.6, rotate: 0 },
-    animate: { scale: 1, rotate: 180, transition: { duration: 0.5 } },
-    exit: { scale: 0.6, rotate: 360, transition: { duration: 0.5 } }
-  };
-
-  const moonVariants = {
-    initial: { scale: 0.6, rotate: 0 },
-    animate: { scale: 1, rotate: -180, transition: { duration: 0.5 } },
-    exit: { scale: 0.6, rotate: -360, transition: { duration: 0.5 } }
+  const iconVariants = {
+    initial: { scale: 0.5, opacity: 0, rotate: 0 },
+    animate: { 
+      scale: 1, 
+      opacity: 1, 
+      rotate: theme === "light" ? -180 : 180,
+      transition: { 
+        duration: DURATIONS.normal / 1000,
+        ease: EASINGS.standard
+      } 
+    },
+    exit: { 
+      scale: 0.5, 
+      opacity: 0, 
+      rotate: theme === "light" ? -360 : 360,
+      transition: { 
+        duration: DURATIONS.normal / 1000,
+        ease: EASINGS.standard
+      } 
+    }
   };
 
   return (
-    <Button variant="outline" size="icon" onClick={toggleTheme} disabled={isAnimating}>
+    <Button 
+      variant="outline" 
+      size="icon" 
+      onClick={toggleTheme} 
+      disabled={isAnimating}
+      className="overflow-hidden"
+    >
       <AnimatePresence mode="wait">
         {theme === "light" ? (
           <motion.div
             key="moon"
-            variants={moonVariants}
+            variants={iconVariants}
             initial={hasAnimatedRef.current ? "animate" : "initial"}
             animate="animate"
             exit="exit"
+            className="flex items-center justify-center"
           >
             <Moon className="h-[1.2rem] w-[1.2rem]" />
           </motion.div>
         ) : (
           <motion.div
             key="sun"
-            variants={sunVariants}
+            variants={iconVariants}
             initial={hasAnimatedRef.current ? "animate" : "initial"}
             animate="animate"
             exit="exit"
+            className="flex items-center justify-center"
           >
             <Sun className="h-[1.2rem] w-[1.2rem]" />
           </motion.div>

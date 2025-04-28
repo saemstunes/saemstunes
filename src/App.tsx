@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -40,6 +41,8 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import MusicTools from "./pages/MusicTools";
 import AuthCallback from "./components/auth/AuthCallback";
 import UserDetails from "./pages/UserDetails";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 
 const queryClient = new QueryClient();
 
@@ -69,6 +72,8 @@ const App = () => {
               <Route path="/login" element={<Auth />} />
               <Route path="/signup" element={<Auth />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
               <Route path="/unauthorized" element={<Unauthorized />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/videos" element={<Videos />} />

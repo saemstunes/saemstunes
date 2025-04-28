@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -19,6 +18,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+import { pageTransition } from "@/lib/animation-utils";
 
 const Discover = () => {
   const navigate = useNavigate();
@@ -32,9 +33,48 @@ const Discover = () => {
     navigate("/learning-hub/advanced-guitar-techniques");
   };
 
+  // List of skills for the dropdown
+  const skillsList = [
+    {
+      title: "Music Theory",
+      description: "Learn about harmonics, scales, modes and more"
+    },
+    {
+      title: "Sight Reading",
+      description: "Improve your ability to read and play sheet music"
+    },
+    {
+      title: "Ear Training",
+      description: "Develop your ability to identify pitches, intervals, and chords"
+    },
+    {
+      title: "Improvisation",
+      description: "Learn to create spontaneous musical compositions"
+    },
+    {
+      title: "Composition",
+      description: "Create your own songs and musical pieces"
+    },
+    {
+      title: "Sound Engineering",
+      description: "Record, edit and produce music professionally"
+    },
+    {
+      title: "Performance",
+      description: "Master stage presence and performance techniques"
+    },
+    {
+      title: "Music Production",
+      description: "Create, arrange, and produce music using software"
+    }
+  ];
+
   return (
     <MainLayout>
-      <div className="space-y-6">
+      <motion.div 
+        className="space-y-6" 
+        {...pageTransition}
+      >
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-proxima font-bold">Discover</h1>
@@ -96,65 +136,81 @@ const Discover = () => {
           </div>
         </div>
         
-        {/* Category Navigation */}
-        <NavigationMenu className="max-w-none w-full justify-start mb-6">
-          <NavigationMenuList className="space-x-2">
-            <NavigationMenuItem>
-              <NavigationMenuTrigger className="bg-muted/50">Instruments</NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                  {["Piano", "Guitar", "Drums", "Violin", "Saxophone", "Flute", "Bass", "Trumpet"].map((item) => (
-                    <li key={item}>
-                      <NavigationMenuLink asChild>
-                        <a
-                          href={`#${item.toLowerCase()}`}
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                        >
-                          <div className="text-sm font-medium leading-none">{item}</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            Discover {item.toLowerCase()} lessons, techniques, and performances
-                          </p>
-                        </a>
-                      </NavigationMenuLink>
-                    </li>
-                  ))}
-                </ul>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuTrigger className="bg-muted/50">Genres</NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                  {["Classical", "Jazz", "Rock", "Pop", "Hip Hop", "R&B", "Electronic", "Folk"].map((item) => (
-                    <li key={item}>
-                      <NavigationMenuLink asChild>
-                        <a
-                          href={`#${item.toLowerCase().replace(" ", "-")}`}
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                        >
-                          <div className="text-sm font-medium leading-none">{item}</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            Explore {item.toLowerCase()} music theory, history, and performances
-                          </p>
-                        </a>
-                      </NavigationMenuLink>
-                    </li>
-                  ))}
-                </ul>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild>
-                <a
-                  href="#skills"
-                  className={cn(navigationMenuTriggerStyle(), "bg-muted/50")}
-                >
-                  Skills
-                </a>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
+        {/* Category Navigation - Updated with proper widths and fixed Skills dropdown */}
+        <div className="overflow-x-auto pb-2">
+          <NavigationMenu className="max-w-none w-full justify-start mb-6">
+            <NavigationMenuList className="space-x-2">
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className="bg-muted/50">Instruments</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="grid w-[300px] sm:w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                    {["Piano", "Guitar", "Drums", "Violin", "Saxophone", "Flute", "Bass", "Trumpet"].map((item) => (
+                      <li key={item}>
+                        <NavigationMenuLink asChild>
+                          <a
+                            href={`#${item.toLowerCase()}`}
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                          >
+                            <div className="text-sm font-medium leading-none">{item}</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              Discover {item.toLowerCase()} lessons, techniques, and performances
+                            </p>
+                          </a>
+                        </NavigationMenuLink>
+                      </li>
+                    ))}
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className="bg-muted/50">Genres</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="grid w-[300px] sm:w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                    {["Classical", "Jazz", "Rock", "Pop", "Hip Hop", "R&B", "Electronic", "Folk"].map((item) => (
+                      <li key={item}>
+                        <NavigationMenuLink asChild>
+                          <a
+                            href={`#${item.toLowerCase().replace(" ", "-")}`}
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                          >
+                            <div className="text-sm font-medium leading-none">{item}</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              Explore {item.toLowerCase()} music theory, history, and performances
+                            </p>
+                          </a>
+                        </NavigationMenuLink>
+                      </li>
+                    ))}
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className="bg-muted/50">Skills</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="grid w-[300px] sm:w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                    {skillsList.map((skill) => (
+                      <li key={skill.title}>
+                        <NavigationMenuLink asChild>
+                          <a
+                            href={`#${skill.title.toLowerCase().replace(" ", "-")}`}
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                          >
+                            <div className="text-sm font-medium leading-none">{skill.title}</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              {skill.description}
+                            </p>
+                          </a>
+                        </NavigationMenuLink>
+                      </li>
+                    ))}
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
+        </div>
+        
+        {/* Tabs content section */}
         
         <Tabs defaultValue="music" className="w-full" onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-3">
@@ -303,7 +359,7 @@ const Discover = () => {
             </Card>
           </div>
         </div>
-      </div>
+      </motion.div>
     </MainLayout>
   );
 };

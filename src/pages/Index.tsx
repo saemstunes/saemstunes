@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -10,6 +9,8 @@ import RecommendedContent from "@/components/dashboard/RecommendedContent";
 import UpcomingBookings from "@/components/dashboard/UpcomingBookings";
 import { mockSubscriptionPlans } from "@/data/mockData";
 import PricingCard from "@/components/subscription/PricingCard";
+import { motion } from "framer-motion";
+import { pageTransition } from "@/lib/animation-utils";
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -37,19 +38,45 @@ const LandingPage = () => {
     },
   ];
 
+  // Updated variant and colors for better light mode contrast
+  const getSubscriptionPlanVariant = (index: number, plan: any) => {
+    if (index === 1) return "default"; // Middle plan is already good
+    
+    // Use light variant for side plans in light mode for better contrast
+    return "outline";
+  };
+
   return (
-    <div className="min-h-screen">
+    <motion.div 
+      className="min-h-screen"
+      {...pageTransition}
+    >
       {/* Hero Section */}
       <section className="relative overflow-hidden py-20 px-6 md:py-32 text-center">
         <div className="absolute inset-0 music-note-pattern opacity-10 z-0"></div>
         <div className="relative z-10 max-w-3xl mx-auto">
-          <h1 className="text-4xl md:text-6xl font-serif font-bold">
+          <motion.h1 
+            className="text-4xl md:text-6xl font-serif font-bold"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
             Unlock Your <span className="text-gold">Musical</span> Potential
-          </h1>
-          <p className="mt-6 text-lg text-muted-foreground">
+          </motion.h1>
+          <motion.p 
+            className="mt-6 text-lg text-muted-foreground"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
             Saem's Tunes provides comprehensive music education with expert tutors, rich content, and a supportive community to help you grow as a musician.
-          </p>
-          <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+          </motion.p>
+          <motion.div 
+            className="mt-10 flex flex-col sm:flex-row gap-4 justify-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
             <Button 
               size="lg"
               className="bg-gold hover:bg-gold-dark text-white"
@@ -65,7 +92,7 @@ const LandingPage = () => {
             >
               Explore Lessons
             </Button>
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -77,19 +104,26 @@ const LandingPage = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, index) => (
-              <div key={index} className="bg-card p-6 rounded-lg shadow-sm flex flex-col items-center text-center">
+              <motion.div 
+                key={index} 
+                className="bg-card p-6 rounded-lg shadow-sm flex flex-col items-center text-center"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                whileHover={{ y: -5, transition: { duration: 0.3 } }}
+              >
                 <div className="bg-gold/10 p-3 rounded-full mb-4">
                   {feature.icon}
                 </div>
                 <h3 className="text-lg font-medium mb-2">{feature.title}</h3>
                 <p className="text-muted-foreground">{feature.description}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Pricing Section */}
+      {/* Pricing Section - Updated for better light mode contrast */}
       <section className="py-16">
         <div className="container px-4">
           <h2 className="text-3xl font-serif font-bold text-center mb-4">
@@ -99,8 +133,20 @@ const LandingPage = () => {
             Choose a plan that works for you and start your musical journey today. All plans include access to our community and support.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {mockSubscriptionPlans.map((plan) => (
-              <PricingCard key={plan.id} plan={plan} />
+            {mockSubscriptionPlans.map((plan, index) => (
+              <motion.div
+                key={plan.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.2 }}
+                whileHover={{ y: -8, transition: { duration: 0.3 } }}
+              >
+                <PricingCard 
+                  plan={plan} 
+                  variant={getSubscriptionPlanVariant(index, plan)}
+                  className={index !== 1 ? "shadow-lg border-gold/40 dark:border-gold/20" : ""}
+                />
+              </motion.div>
             ))}
           </div>
         </div>
@@ -109,23 +155,39 @@ const LandingPage = () => {
       {/* CTA Section */}
       <section className="py-16 bg-gold/10">
         <div className="container px-4 text-center">
-          <h2 className="text-3xl font-serif font-bold mb-6">
-            Ready to Start Your Musical Journey?
-          </h2>
-          <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Join Saem's Tunes today and discover the joy of learning music with our expert tutors and comprehensive resources.
-          </p>
-          <Button 
-            size="lg"
-            className="bg-gold hover:bg-gold-dark text-white"
-            onClick={() => navigate("/signup")}
+          <motion.h2 
+            className="text-3xl font-serif font-bold mb-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
           >
-            Sign Up Now
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
+            Ready to Start Your Musical Journey?
+          </motion.h2>
+          <motion.p 
+            className="text-muted-foreground mb-8 max-w-2xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            Join Saem's Tunes today and discover the joy of learning music with our expert tutors and comprehensive resources.
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            <Button 
+              size="lg"
+              className="bg-gold hover:bg-gold-dark text-white"
+              onClick={() => navigate("/signup")}
+            >
+              Sign Up Now
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </motion.div>
         </div>
       </section>
-    </div>
+    </motion.div>
   );
 };
 
