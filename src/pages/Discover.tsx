@@ -3,8 +3,7 @@ import React, { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Compass, Search, Music, Mic, User, BookOpen } from "lucide-react";
-import { Clock as ClockIcon } from "lucide-react";
+import { Compass, Search, Music, Mic, User, BookOpen, Clock } from "lucide-react";
 import { mockVideos } from "@/data/mockData";
 import VideoCardWrapper from "@/components/videos/VideoCardWrapper";
 import { useNavigate } from "react-router-dom";
@@ -105,7 +104,7 @@ const Discover = () => {
                       navigate('/search', { state: { initialQuery: search }});
                     }}
                   >
-                    <ClockIcon className="h-3 w-3 text-muted-foreground" />
+                    <Clock className="h-3 w-3 text-muted-foreground" />
                     <span>{search}</span>
                   </div>
                 ))}
@@ -145,7 +144,7 @@ const Discover = () => {
               <NavigationMenuItem>
                 <NavigationMenuTrigger className="bg-muted/50">Instruments</NavigationMenuTrigger>
                 <NavigationMenuContent>
-                  <div className="w-screen max-w-md">
+                  <div className="w-[min(95vw,400px)]">
                     <ul className="grid w-full gap-3 p-4 md:grid-cols-2">
                       {["Piano", "Guitar", "Drums", "Violin", "Saxophone", "Flute", "Bass", "Trumpet"].map((item) => (
                         <li key={item}>
@@ -169,7 +168,7 @@ const Discover = () => {
               <NavigationMenuItem>
                 <NavigationMenuTrigger className="bg-muted/50">Genres</NavigationMenuTrigger>
                 <NavigationMenuContent>
-                  <div className="w-screen max-w-md">
+                  <div className="w-[min(95vw,400px)]">
                     <ul className="grid w-full gap-3 p-4 md:grid-cols-2">
                       {["Classical", "Jazz", "Rock", "Pop", "Hip Hop", "R&B", "Electronic", "Folk"].map((item) => (
                         <li key={item}>
@@ -193,7 +192,7 @@ const Discover = () => {
               <NavigationMenuItem>
                 <NavigationMenuTrigger className="bg-muted/50">Skills</NavigationMenuTrigger>
                 <NavigationMenuContent>
-                  <div className="w-screen max-w-md">
+                  <div className="w-[min(95vw,400px)]">
                     <ul className="grid w-full gap-3 p-4 md:grid-cols-2">
                       {skillsList.map((skill) => (
                         <li key={skill.title}>
