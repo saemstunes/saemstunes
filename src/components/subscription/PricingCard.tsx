@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 
 interface PricingCardProps {
   plan: SubscriptionPlan;
+  variant?: string;
+  className?: string;
 }
 
 const PricingCard = ({ plan }: PricingCardProps) => {
