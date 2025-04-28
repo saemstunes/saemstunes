@@ -2,6 +2,7 @@ import React, { ReactNode, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
+import { App } from "@capacitor/app";
 import {
   Home,
   Video,
@@ -120,6 +121,7 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
             title: "Exiting application",
             description: "This would close the app on a mobile device",
           });
+          App.exitApp();
         }
       }
     };
