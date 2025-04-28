@@ -25,7 +25,7 @@ const AnimatedBackground: React.FC = () => {
         className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
         animate={{
           scale: [1, 1.05, 1],
-          opacity: [0.2, 0.3, 0.2],
+          opacity: [0.5, 0.6, 0.5],
         }}
         transition={{
           duration: 4,
