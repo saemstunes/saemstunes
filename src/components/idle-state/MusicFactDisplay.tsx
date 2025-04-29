@@ -24,6 +24,8 @@ const MusicFactDisplay: React.FC<MusicFactProps> = ({ fact, isOnline, onInteract
     setSaved(false);
     setClosed(false);
   }, [fact]);
+// Prevent failure if card fails to render, adds a safety check
+  if (closed || !fact) return null;
 
   // Handle any click outside the card to dismiss
   const handleBackgroundClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -70,7 +72,7 @@ const MusicFactDisplay: React.FC<MusicFactProps> = ({ fact, isOnline, onInteract
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ duration: 0.5 }}
-      className="fixed inset-0 flex items-center justify-center pointer-events-none"
+      className="fixed inset-0 flex items-center justify-center pointer-events-none z-50"
       onClick={handleBackgroundClick}
     >
       <Card className="max-w-md mx-4 shadow-xl border-gold/30 bg-card/95 backdrop-blur pointer-events-auto">
