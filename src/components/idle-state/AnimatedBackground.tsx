@@ -10,7 +10,7 @@ const AnimatedBackground: React.FC = () => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
-      className="fixed inset-0 overflow-hidden pointer-events-none"
+      className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none"
     >
       {/* Animated gradient background */}
       <div 
