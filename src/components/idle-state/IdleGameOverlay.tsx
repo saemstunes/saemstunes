@@ -73,25 +73,29 @@ const IdleGameOverlay: React.FC<IdleGameOverlayProps> = ({ onInteraction }) => {
         note.id === id ? { ...note, captured: true } : note
       )
     );
-    setScore(prev => prev + 1);
+    
+    setScore(prev => {
+    const newScore = prev + 1;
     
     // Show achievements based on score
-    if (score === 4) {
+    if (newScore === 4) {
       toast({
         title: "Achievement Unlocked!",
         description: "Musical Newcomer: Caught 5 notes",
       });
-    } else if (score === 9) {
+    } else if (newScore === 9) {
       toast({
         title: "Achievement Unlocked!",
         description: "Melody Master: Caught 10 notes",
       });
-    } else if (score === 24) {
+    } else if (newScore === 24) {
       toast({
         title: "Achievement Unlocked!",
         description: "Symphony Conductor: Caught 25 notes",
       });
     }
+      return newScore;
+    });
   };
   
   const startGame = (e: React.MouseEvent) => {
@@ -128,6 +132,7 @@ const IdleGameOverlay: React.FC<IdleGameOverlayProps> = ({ onInteraction }) => {
             
             {/* Exit button in game mode */}
             <Button
+              aria-label="Exit Note Catcher Game"
               className="absolute top-4 right-4 bg-card/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg border border-gold/20"
               variant="ghost"
               size="sm"
@@ -193,6 +198,7 @@ const IdleGameOverlay: React.FC<IdleGameOverlayProps> = ({ onInteraction }) => {
             
             <div className="flex gap-4">
               <Button 
+                aria-label="Start Note Catcher Game"
                 onClick={startGame}
                 size="lg"
                 className="bg-gold hover:bg-gold/90 text-primary"
@@ -202,6 +208,7 @@ const IdleGameOverlay: React.FC<IdleGameOverlayProps> = ({ onInteraction }) => {
               </Button>
               
               <Button 
+                aria-label="Return to App"
                 onClick={(e) => {
                   e.stopPropagation();
                   onInteraction();
