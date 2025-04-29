@@ -137,7 +137,15 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
         "Did you know? In Saem's Tunes, you can double-tap any music tool to open advanced settings.",
         "Tip: Use the metronome's visual feedback to improve your rhythm.",
         "Tip: You can adjust the pitch finder's sensitivity in the settings menu.",
-        "Tip: Save your favorite tools to your profile for quick access."
+        "Tip: Save your favorite tools to your profile for quick access.",
+        "Did You Know: This app has some Easter eggs! Will you find them all? :)",
+        "Tip: Sign up to enjoy a side of the app you didn't know existed",
+        "Tip: Practice everyday! :)",
+        "The first recorded music performance took place around 3100 BCE in ancient Egypt.",
+        "The vibrations of a cello closely mimic the range of the human voice.",
+        "Studies show singing releases endorphins, instantly boosting your mood.",
+        "Studies found that cows produce more milk when listening to calming classical music.",
+        "Ancient Greek athletes trained to specific musical rhythms to boost stamina and coordination.",
       ];
       
       const randomFact = facts[Math.floor(Math.random() * facts.length)];
@@ -156,7 +164,7 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
       {showIdleContent && (
         <div 
           ref={idleWrapperRef}
-          className="idle-state-wrapper fixed inset-0 pointer-events-none"
+          className="idle-state-wrapper fixed inset-0 pointer-events-auto"
           style={{ zIndex: 50 }}
         >
           <AnimatedBackground />
