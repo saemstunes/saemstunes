@@ -29,6 +29,7 @@ const MusicFactDisplay: React.FC<MusicFactProps> = ({ fact, isOnline, onInteract
   const handleBackgroundClick = (e: React.MouseEvent<HTMLDivElement>) => {
     // Check if the click was directly on the background div, not its children
     if (e.currentTarget === e.target) {
+      e.stopPropagation();
       onInteraction();
     }
   };
@@ -69,7 +70,7 @@ const MusicFactDisplay: React.FC<MusicFactProps> = ({ fact, isOnline, onInteract
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ duration: 0.5 }}
-      className="fixed inset-0 flex items-center justify-center z-10 pointer-events-none"
+      className="fixed inset-0 flex items-center justify-center pointer-events-none"
       onClick={handleBackgroundClick}
     >
       <Card className="max-w-md mx-4 shadow-xl border-gold/30 bg-card/95 backdrop-blur pointer-events-auto">

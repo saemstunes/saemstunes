@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useIdleState } from '@/hooks/use-idle-state';
 import { AnimatePresence } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
@@ -18,6 +18,7 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
   const [factFetchAttempted, setFactFetchAttempted] = useState(false);
   const [currentFact, setCurrentFact] = useState('');
   const location = useLocation();
+  const idleWrapperRef = useRef<HTMLDivElement>(null);
   
   // Use our idle state hook with the improved configuration
   const { 
@@ -55,10 +56,10 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
     };
 
     // Add event listeners for common user interactions
-    document.addEventListener('touchstart', handleUserInteraction);
-    document.addEventListener('mousedown', handleUserInteraction);
-    document.addEventListener('keydown', handleUserInteraction);
-    document.addEventListener('scroll', handleUserInteraction);
+    document.addEventListener('touchstart', handleUserInteraction, { passive: true });
+    document.addEventListener('mousedown', handleUserInteraction, { passive: true });
+    document.addEventListener('keydown', handleUserInteraction, { passive: true });
+    document.addEventListener('scroll', handleUserInteraction, { passive: true });
 
     return () => {
       // Clean up event listeners
@@ -68,6 +69,25 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
       document.removeEventListener('scroll', handleUserInteraction);
     };
   }, [isIdle]);
+
+  // Detect clicks outside idle content
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      // If the idle wrapper exists and the click is not inside any idle component
+      // This will exit idle mode when clicking anywhere outside idle components
+      if (idleWrapperRef.current && !idleWrapperRef.current.contains(e.target as Node)) {
+        setShowIdleContent(false);
+      }
+    };
+
+    if (showIdleContent) {
+      document.addEventListener('mousedown', handleOutsideClick);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [showIdleContent]);
 
   // Decide which idle mode to display based on idle time and online status
   useEffect(() => {
@@ -100,7 +120,6 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
   }, [isIdle, showIdleContent, idleMode, isOnline, factFetchAttempted]);
   
   // Simulated fetch function for music facts
-  // In a real app, this would fetch from an API
   const fetchMusicFact = async () => {
     try {
       // Simulating API call with some predefined facts
@@ -135,7 +154,11 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
   return (
     <AnimatePresence>
       {showIdleContent && (
-        <div className="idle-state-wrapper" style={{ pointerEvents: 'none', zIndex: 10 }}>
+        <div 
+          ref={idleWrapperRef}
+          className="idle-state-wrapper fixed inset-0 pointer-events-none"
+          style={{ zIndex: 50 }}
+        >
           <AnimatedBackground />
           
           {idleMode === 'fact' && (

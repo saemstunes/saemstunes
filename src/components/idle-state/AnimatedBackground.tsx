@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import Logo from '@/components/branding/Logo';
@@ -9,7 +10,7 @@ const AnimatedBackground: React.FC = () => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
-      className="fixed inset-0 z-10 overflow-hidden pointer-events-none"
+      className="fixed inset-0 overflow-hidden pointer-events-none"
     >
       {/* Animated gradient background */}
       <div 

@@ -94,7 +94,8 @@ const IdleGameOverlay: React.FC<IdleGameOverlayProps> = ({ onInteraction }) => {
     }
   };
   
-  const startGame = () => {
+  const startGame = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setGameStarted(true);
     setScore(0);
     setNotes([]);
@@ -103,6 +104,7 @@ const IdleGameOverlay: React.FC<IdleGameOverlayProps> = ({ onInteraction }) => {
   const handleBackgroundClick = (e: React.MouseEvent<HTMLDivElement>) => {
     // Only dismiss if the game hasn't started or if clicking directly on the background
     if (!gameStarted && e.currentTarget === e.target) {
+      e.stopPropagation();
       onInteraction();
     }
   };
@@ -113,7 +115,7 @@ const IdleGameOverlay: React.FC<IdleGameOverlayProps> = ({ onInteraction }) => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
-      className="fixed inset-0 z-10 pointer-events-none bg-black/40 backdrop-blur-sm"
+      className="fixed inset-0 pointer-events-none bg-black/40 backdrop-blur-sm"
       onClick={handleBackgroundClick}
     >
       <div className="pointer-events-auto">
@@ -129,7 +131,10 @@ const IdleGameOverlay: React.FC<IdleGameOverlayProps> = ({ onInteraction }) => {
               className="absolute top-4 right-4 bg-card/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg border border-gold/20"
               variant="ghost"
               size="sm"
-              onClick={() => onInteraction()}
+              onClick={(e) => {
+                e.stopPropagation();
+                onInteraction();
+              }}
             >
               Exit Game
             </Button>
@@ -197,7 +202,10 @@ const IdleGameOverlay: React.FC<IdleGameOverlayProps> = ({ onInteraction }) => {
               </Button>
               
               <Button 
-                onClick={() => onInteraction()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onInteraction();
+                }}
                 size="lg"
                 variant="outline"
                 className="border-white/30 text-white hover:bg-white/10"

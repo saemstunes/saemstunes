@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface IdleStateOptions {
   idleTime?: number;             // Time in ms before user is considered idle
@@ -21,11 +21,14 @@ export const useIdleState = ({
   maxActivations = 5            // Default: 5 activations before increasing wait time
 }: IdleStateOptions = {}) => {
   const [isIdle, setIsIdle] = useState(initialState);
-  const [idleTimer, setIdleTimer] = useState<number | null>(null);
   const [idleSince, setIdleSince] = useState<Date | null>(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [activationCount, setActivationCount] = useState(0);
   const [currentIdleTime, setCurrentIdleTime] = useState(idleTime);
+  
+  // Use refs to avoid dependency issues in useEffect
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   
   useEffect(() => {
     // Online state detection
@@ -42,15 +45,13 @@ export const useIdleState = ({
   }, []);
   
   useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout>;
-    let intervalId: ReturnType<typeof setInterval>;
-    
     const startIdleTimer = () => {
       // Clear any existing timers
-      clearIdleTimers();
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (intervalRef.current) clearInterval(intervalRef.current);
       
       // Set a timeout to mark user as idle
-      timeoutId = setTimeout(() => {
+      timeoutRef.current = setTimeout(() => {
         // Check if we've reached the maximum number of activations
         if (activationCount >= maxActivations) {
           // Increase idle time for subsequent activations
@@ -62,14 +63,7 @@ export const useIdleState = ({
         setIdleSince(new Date());
         setActivationCount(prev => prev + 1);
         onIdleStart();
-        
-        // Start interval to keep checking idle time
-        intervalId = setInterval(() => {
-          // This interval can be used to update idle duration
-        }, detectionInterval);
       }, currentIdleTime);
-      
-      setIdleTimer(timeoutId as unknown as number);
     };
     
     const resetIdleTimer = () => {
@@ -79,11 +73,6 @@ export const useIdleState = ({
         onIdleEnd();
       }
       startIdleTimer();
-    };
-    
-    const clearIdleTimers = () => {
-      if (idleTimer) clearTimeout(idleTimer);
-      if (intervalId) clearInterval(intervalId);
     };
     
     // Set up event listeners
@@ -96,12 +85,14 @@ export const useIdleState = ({
     
     // Cleanup
     return () => {
-      clearIdleTimers();
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      
       events.forEach(event => {
         window.removeEventListener(event, resetIdleTimer);
       });
     };
-  }, [idleTime, currentIdleTime, detectionInterval, onIdleStart, onIdleEnd, events, idleTimer, isIdle, activationCount, maxActivations]);
+  }, [idleTime, currentIdleTime, detectionInterval, onIdleStart, onIdleEnd, events, isIdle, activationCount, maxActivations]);
   
   const getIdleTime = (): number => {
     if (!idleSince) return 0;
