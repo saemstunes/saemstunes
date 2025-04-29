@@ -14,7 +14,7 @@ const AnimatedBackground: React.FC = () => {
     >
       {/* Animated gradient background */}
       <div 
-        className="absolute inset-0 bg-gradient-to-br dark:from-gray-900/50 dark:to-gray-800/50 from-gray-100/50 to-gray-200/50"
+        className="absolute inset-0 bg-gradient-to-br dark:from-gray-900/50 dark:to-gray-800/50 from-gray-100/50 to-gray-200/50 pointer-events-none"
         style={{ 
           backdropFilter: 'blur(8px)',
         }}
