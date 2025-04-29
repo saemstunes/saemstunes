@@ -102,7 +102,7 @@ const AutoShowcaseFeature: React.FC<AutoShowcaseFeatureProps> = ({ path, onInter
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.5 }}
-        className="fixed inset-x-0 bottom-24 md:bottom-8 flex justify-center z-[-1] px-4 pointer-events-none"
+        className="fixed inset-x-0 bottom-24 md:bottom-8 flex justify-center z-10 px-4 pointer-events-none"
       >
         <motion.div 
           className="bg-card/90 backdrop-blur-md border border-gold/20 rounded-lg shadow-xl p-4 max-w-md w-full pointer-events-auto"

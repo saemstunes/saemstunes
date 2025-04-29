@@ -135,7 +135,7 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
   return (
     <AnimatePresence>
       {showIdleContent && (
-        <div className="idle-state-wrapper" style={{ pointerEvents: 'none' }}>
+        <div className="idle-state-wrapper" style={{ pointerEvents: 'none', zIndex: 10 }}>
           <AnimatedBackground />
           
           {idleMode === 'fact' && (

@@ -113,7 +113,7 @@ const IdleGameOverlay: React.FC<IdleGameOverlayProps> = ({ onInteraction }) => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
-      className="fixed inset-0 z-[-1] pointer-events-none bg-black/40 backdrop-blur-sm"
+      className="fixed inset-0 z-10 pointer-events-none bg-black/40 backdrop-blur-sm"
       onClick={handleBackgroundClick}
     >
       <div className="pointer-events-auto">
