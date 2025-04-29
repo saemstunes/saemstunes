@@ -45,6 +45,30 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
     resetActivationCount();
   }, [location.pathname, resetActivationCount]);
 
+  // Add touch event listeners to detect any user interaction with the screen
+  useEffect(() => {
+    const handleUserInteraction = () => {
+      if (isIdle) {
+        setShowIdleContent(false);
+        setFactFetchAttempted(false);
+      }
+    };
+
+    // Add event listeners for common user interactions
+    document.addEventListener('touchstart', handleUserInteraction);
+    document.addEventListener('mousedown', handleUserInteraction);
+    document.addEventListener('keydown', handleUserInteraction);
+    document.addEventListener('scroll', handleUserInteraction);
+
+    return () => {
+      // Clean up event listeners
+      document.removeEventListener('touchstart', handleUserInteraction);
+      document.removeEventListener('mousedown', handleUserInteraction);
+      document.removeEventListener('keydown', handleUserInteraction);
+      document.removeEventListener('scroll', handleUserInteraction);
+    };
+  }, [isIdle]);
+
   // Decide which idle mode to display based on idle time and online status
   useEffect(() => {
     if (!isIdle) return;
@@ -111,7 +135,7 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
   return (
     <AnimatePresence>
       {showIdleContent && (
-        <>
+        <div className="idle-state-wrapper" style={{ pointerEvents: 'none' }}>
           <AnimatedBackground />
           
           {idleMode === 'fact' && (
@@ -134,7 +158,7 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
               onInteraction={() => setShowIdleContent(false)}
             />
           )}
-        </>
+        </div>
       )}
     </AnimatePresence>
   );
