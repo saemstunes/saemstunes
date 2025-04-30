@@ -1,0 +1,124 @@
+
+import React, { useState, useEffect } from 'react';
+import { useIdleState } from '@/hooks/use-idle-state';
+import { AnimatePresence } from 'framer-motion';
+import { useLocation } from 'react-router-dom';
+import MusicFactDisplay from './MusicFactDisplay';
+import AnimatedBackground from './AnimatedBackground';
+import IdleGameOverlay from './IdleGameOverlay';
+import AutoShowcaseFeature from './AutoShowcaseFeature';
+
+interface IdleStateManagerProps {
+  idleTime?: number;
+}
+
+const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 }) => {
+  const [showIdleContent, setShowIdleContent] = useState(false);
+  const [idleMode, setIdleMode] = useState<'fact' | 'game' | 'showcase'>('fact');
+  const [factFetchAttempted, setFactFetchAttempted] = useState(false);
+  const [currentFact, setCurrentFact] = useState('');
+  const location = useLocation();
+
+  // Use our idle state hook
+  const { isIdle, isOnline, getIdleTime } = useIdleState({
+    idleTime,
+    onIdleStart: () => {
+      // Wait 1 second before showing idle content to prevent flashing
+      setTimeout(() => setShowIdleContent(true), 1000);
+    },
+    onIdleEnd: () => {
+      setShowIdleContent(false);
+      setFactFetchAttempted(false);
+    }
+  });
+
+  // Decide which idle mode to display based on idle time and online status
+  useEffect(() => {
+    if (!isIdle) return;
+    
+    const idleTimeMs = getIdleTime();
+    
+    if (idleTimeMs < 120000) { // First 2 minutes
+      // Show facts if online, or animated background if offline
+      setIdleMode('fact');
+    } else if (idleTimeMs < 300000) { // Between 2-5 minutes
+      // Show auto showcase on appropriate pages
+      if (['/music-tools', '/discover', '/library'].includes(location.pathname)) {
+        setIdleMode('showcase');
+      } else {
+        setIdleMode('fact');
+      }
+    } else { // After 5 minutes
+      // Show idle game
+      setIdleMode('game');
+    }
+  }, [isIdle, getIdleTime, isOnline, location.pathname]);
+  
+  // Fetch music facts if we're in online fact mode
+  useEffect(() => {
+    if (isIdle && showIdleContent && idleMode === 'fact' && isOnline && !factFetchAttempted) {
+      fetchMusicFact();
+      setFactFetchAttempted(true);
+    }
+  }, [isIdle, showIdleContent, idleMode, isOnline, factFetchAttempted]);
+  
+  // Simulated fetch function for music facts
+  // In a real app, this would fetch from an API
+  const fetchMusicFact = async () => {
+    try {
+      // Simulating API call with some predefined facts
+      const facts = [
+        "The first piano was invented in Italy by Bartolomeo Cristofori around 1700.",
+        "Mozart wrote his first symphony at the age of eight.",
+        "The Beatles have sold over 600 million albums worldwide.",
+        "A standard guitar has 6 strings tuned to E, A, D, G, B, and E.",
+        "In 1952, John Cage composed '4′33″', which consists of 4 minutes and 33 seconds of silence.",
+        "The longest commercially released song is 'The Rise and Fall of Bossanova' at 13 hours, 23 minutes, and 32 seconds.",
+        "Beethoven composed many of his most famous works after becoming completely deaf.",
+        "The theremin is the only instrument played without physical contact.",
+        "The oldest known musical instrument is a flute carved from bone, estimated to be over 40,000 years old.",
+        "Michael Jackson's 'Thriller' is the best-selling album of all time with over 66 million copies sold.",
+        "Did you know? In Saem's Tunes, you can double-tap any music tool to open advanced settings.",
+        "Tip: Use the metronome's visual feedback to improve your rhythm.",
+        "Tip: You can adjust the pitch finder's sensitivity in the settings menu.",
+        "Tip: Save your favorite tools to your profile for quick access."
+      ];
+      
+      const randomFact = facts[Math.floor(Math.random() * facts.length)];
+      setCurrentFact(randomFact);
+    } catch (error) {
+      console.error("Error fetching music fact:", error);
+      setCurrentFact("Music connects people across all cultures and time periods.");
+    }
+  };
+
+  // Don't render anything if not idle
+  if (!isIdle || !showIdleContent) return null;
+  
+  return (
+    <AnimatePresence>
+      {showIdleContent && (
+        <>
+          <AnimatedBackground />
+          
+          {idleMode === 'fact' && (
+            <MusicFactDisplay 
+              fact={currentFact || "Did you know that music can improve your mood and cognitive performance?"}
+              isOnline={isOnline}
+            />
+          )}
+          
+          {idleMode === 'game' && (
+            <IdleGameOverlay />
+          )}
+          
+          {idleMode === 'showcase' && (
+            <AutoShowcaseFeature path={location.pathname} />
+          )}
+        </>
+      )}
+    </AnimatePresence>
+  );
+};
+
+export default IdleStateManager;
