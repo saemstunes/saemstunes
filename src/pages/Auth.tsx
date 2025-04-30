@@ -1,3 +1,4 @@
+
 import { Flask } from "@/components/icons";
 import { useEffect, useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
@@ -14,7 +15,7 @@ const Auth = () => {
   const [activeTab, setActiveTab] = useState<string>("login");
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [logoClicks, setLogoClicks] = useState(0);
-  const [lastClickTime, setLastClickTime = useState(0);
+  const [lastClickTime, setLastClickTime] = useState(0);  // Fixed: Correct useState syntax
   const location = useLocation();
   const navigate = useNavigate();
   const { user, login, signup } = useAuth();
