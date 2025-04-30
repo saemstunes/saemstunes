@@ -144,7 +144,7 @@ const Discover = () => {
               <NavigationMenuItem>
                 <NavigationMenuTrigger className="bg-muted/50">Instruments</NavigationMenuTrigger>
                 <NavigationMenuContent>
-                  <div className="w-screen max-w-md">
+                  <div className="w-[min(95vw,400px)]">
                     <ul className="grid w-full gap-3 p-4 md:grid-cols-2">
                       {["Piano", "Guitar", "Drums", "Violin", "Saxophone", "Flute", "Bass", "Trumpet"].map((item) => (
                         <li key={item}>
@@ -168,7 +168,7 @@ const Discover = () => {
               <NavigationMenuItem>
                 <NavigationMenuTrigger className="bg-muted/50">Genres</NavigationMenuTrigger>
                 <NavigationMenuContent>
-                  <div className="w-screen max-w-md">
+                  <div className="w-[min(95vw,400px)]">
                     <ul className="grid w-full gap-3 p-4 md:grid-cols-2">
                       {["Classical", "Jazz", "Rock", "Pop", "Hip Hop", "R&B", "Electronic", "Folk"].map((item) => (
                         <li key={item}>
@@ -192,7 +192,7 @@ const Discover = () => {
               <NavigationMenuItem>
                 <NavigationMenuTrigger className="bg-muted/50">Skills</NavigationMenuTrigger>
                 <NavigationMenuContent>
-                  <div className="w-screen max-w-md">
+                  <div className="w-[min(95vw,400px)]">
                     <ul className="grid w-full gap-3 p-4 md:grid-cols-2">
                       {skillsList.map((skill) => (
                         <li key={skill.title}>
@@ -384,8 +384,5 @@ const ArtistCard = ({ name, role, imageSrc, onClick }) => (
     </div>
   </div>
 );
-
-// Add missing import
-import { Clock } from "lucide-react";
 
 export default Discover;
