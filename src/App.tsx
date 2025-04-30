@@ -65,7 +65,7 @@ const App = () => {
           <Toaster />
           <Sonner />
           <SplashScreen loading={loading} />
-          <BrowserRouter>
+          <BrowserRouter>            
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/admin" element={<Admin />} />
