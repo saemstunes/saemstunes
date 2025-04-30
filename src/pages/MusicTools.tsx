@@ -1,198 +1,659 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Music, FlaskConical, Mic, AlertCircle, MessageCircle } from "lucide-react";
-import PitchFinder from "@/components/music-tools/PitchFinder";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import Metronome from "@/components/music-tools/Metronome";
-import ToolSuggestionForm from "@/components/music-tools/ToolSuggestionForm";
-import { motion } from "framer-motion";
-import { pageTransition } from "@/lib/animation-utils";
+import { Input } from "@/components/ui/input";
+import { Music, Mic, MicOff, Play, Square, Volume2, AlertTriangle } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+// Add proper type declaration
+declare global {
+  interface Window {
+    webkitAudioContext: typeof AudioContext;
+  }
+}
 
 const MusicTools = () => {
-  const [activeTab, setActiveTab] = useState("pitch-finder");
-  const navigate = useNavigate();
-  const [permissionState, setPermissionState] = useState({
-    microphone: null, // null = not asked, true = granted, false = denied
-  });
-
-  const requestMicrophonePermission = async () => {
-    try {
-      const result = await navigator.mediaDevices.getUserMedia({ audio: true });
-      setPermissionState(prev => ({ ...prev, microphone: true }));
-      // Stop the audio tracks after permission is granted
-      result.getTracks().forEach(track => track.stop());
-      return true;
-    } catch (err) {
-      console.error("Error requesting microphone permission:", err);
-      setPermissionState(prev => ({ ...prev, microphone: false }));
-      return false;
-    }
-  };
-
-  const handleTabChange = async (value) => {
-    // Check if we're switching to a tab that requires microphone
-    if ((value === "pitch-finder") && permissionState.microphone === null) {
-      const permissionGranted = await requestMicrophonePermission();
-      if (permissionGranted) {
-        setActiveTab(value);
-      }
-    } else {
-      setActiveTab(value);
-    }
-  };
-
+  const [activeTab, setActiveTab] = useState("pitch");
+  
   return (
     <MainLayout>
-      <motion.div 
-        className="space-y-6 pb-24 md:pb-12"
-        {...pageTransition}
-      >
-        <div className="flex flex-col space-y-2">
-          <motion.h1 
-            className="text-3xl font-serif font-bold flex items-center"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <Music className="mr-2 h-6 w-6 text-gold" />
-            Music Tools
-          </motion.h1>
-          <motion.p 
-            className="text-muted-foreground"
-            initial={{ opacity: 0, y: -5 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-          >
-            Interactive tools to enhance your musical journey
-          </motion.p>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-proxima font-bold">Music Tools</h1>
+          <p className="text-muted-foreground">
+            Handy tools for musicians to find pitch and tempo
+          </p>
         </div>
 
-        {permissionState.microphone === null && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Alert className="bg-gold/10 border-gold/30">
-              <AlertCircle className="h-4 w-4 text-gold" />
-              <AlertTitle>Microphone Access Required</AlertTitle>
-              <AlertDescription>
-                Some tools require microphone access. Please allow microphone permissions when prompted.
-              </AlertDescription>
-            </Alert>
-          </motion.div>
-        )}
-        
-        <Tabs defaultValue="pitch-finder" value={activeTab} onValueChange={handleTabChange}>
-          <TabsList className="grid grid-cols-3 bg-muted/70">
-            <TabsTrigger value="pitch-finder" className="flex items-center data-[state=active]:bg-gold/20">
-              <Mic className="h-4 w-4 mr-2" />
+        <Tabs defaultValue="pitch" className="space-y-4" onValueChange={setActiveTab}>
+          <TabsList className="grid grid-cols-2">
+            <TabsTrigger value="pitch" className="text-center" aria-label="Pitch Finder Tool">
+              <Music className="h-4 w-4 mr-2 hidden sm:inline-block" />
               Pitch Finder
             </TabsTrigger>
-            <TabsTrigger value="metronome" className="flex items-center data-[state=active]:bg-gold/20">
-              <Music className="h-4 w-4 mr-2" />
-              Metronome
-            </TabsTrigger>
-            <TabsTrigger value="suggest-tool" className="flex items-center data-[state=active]:bg-gold/20">
-              <MessageCircle className="h-4 w-4 mr-2" />
-              Suggest a Tool
+            <TabsTrigger value="tempo" className="text-center" aria-label="Tempo Finder Tool">
+              <Volume2 className="h-4 w-4 mr-2 hidden sm:inline-block" />
+              Tempo Finder
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="pitch-finder" className="pt-6">
-            <div className="mb-4 p-4 bg-gold/5 rounded-lg border border-gold/10">
-              <h2 className="text-xl font-medium mb-2 flex items-center">
-                <Mic className="mr-2 h-5 w-5 text-gold" />
-                <span>Pitch Finder</span>
-              </h2>
-              <p>Analyze and identify musical notes with precision in real-time.</p>
-              <p className="text-sm text-muted-foreground mt-2">Sing or play an instrument to see the detected pitch, note, and accuracy.</p>
-            </div>
+          <TabsContent value="pitch" className="space-y-4">
             <PitchFinder />
           </TabsContent>
           
-          <TabsContent value="metronome" className="pt-6">
-            <div className="mb-4 p-4 bg-gold/5 rounded-lg border border-gold/10">
-              <h2 className="text-xl font-medium mb-2 flex items-center">
-                <Music className="mr-2 h-5 w-5 text-gold" />
-                <span>Metronome</span>
-              </h2>
-              <p>Keep perfect time with our wooden-style interactive metronome.</p>
-              <p className="text-sm text-muted-foreground mt-2">Adjust tempo, beats per measure, and watch the pendulum swing to the beat.</p>
-            </div>
-            <Card className="border-gold/20 shadow-md overflow-hidden">
-              <CardContent className="pt-6">
-                <Metronome />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="suggest-tool" className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="border-gold/20 shadow-md">
-                <CardHeader className="bg-gold/5 border-b border-gold/10">
-                  <CardTitle className="flex items-center">
-                    <MessageCircle className="mr-2 h-5 w-5 text-gold" />
-                    Suggest a New Tool
-                  </CardTitle>
-                  <CardDescription>
-                    Help us improve by suggesting music tools you'd like to see.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <ToolSuggestionForm adminEmail="saemstunes@gmail.com" />
-                </CardContent>
-              </Card>
-              
-              <div className="space-y-4">
-                <Card className="border-gold/20 shadow-md">
-                  <CardHeader className="bg-gold/5 border-b border-gold/10">
-                    <CardTitle className="flex items-center">
-                      <FlaskConical className="mr-2 h-5 w-5 text-gold" />
-                      Coming Soon
-                    </CardTitle>
-                    <CardDescription>Tools we're currently developing</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <ul className="space-y-3">
-                      <li className="flex items-center gap-3 p-2 rounded-md bg-gold/5 hover:bg-gold/10 transition-colors">
-                        <div className="h-2 w-2 rounded-full bg-gold"></div>
-                        <span className="font-medium">Chord Finder</span>
-                        <span className="text-xs text-muted-foreground ml-auto bg-muted px-2 py-1 rounded-full">Coming soon</span>
-                      </li>
-                      <li className="flex items-center gap-3 p-2 rounded-md bg-gold/5 hover:bg-gold/10 transition-colors">
-                        <div className="h-2 w-2 rounded-full bg-gold"></div>
-                        <span className="font-medium">Scale Practice Assistant</span>
-                        <span className="text-xs text-muted-foreground ml-auto bg-muted px-2 py-1 rounded-full">Coming soon</span>
-                      </li>
-                      <li className="flex items-center gap-3 p-2 rounded-md bg-gold/5 hover:bg-gold/10 transition-colors">
-                        <div className="h-2 w-2 rounded-full bg-gold"></div>
-                        <span className="font-medium">Sight Reading Trainer</span>
-                        <span className="text-xs text-muted-foreground ml-auto bg-muted px-2 py-1 rounded-full">Coming soon</span>
-                      </li>
-                    </ul>
-                  </CardContent>
-                  <CardFooter className="pt-2 pb-4">
-                    <Button 
-                      variant="outline" 
-                      className="w-full border-gold/30 text-gold hover:bg-gold/10"
-                      onClick={() => navigate('/contact-us')}
-                    >
-                      Contact Us For More Ideas
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </div>
-            </div>
+          <TabsContent value="tempo" className="space-y-4">
+            <TempoFinder />
           </TabsContent>
         </Tabs>
-      </motion.div>
+      </div>
     </MainLayout>
+  );
+};
+
+// Pitch Finder Component
+const PitchFinder = () => {
+  const [isListening, setIsListening] = useState(false);
+  const [currentNote, setCurrentNote] = useState("--");
+  const [frequency, setFrequency] = useState(0);
+  const [micAccessGranted, setMicAccessGranted] = useState(false);
+  const [error, setError] = useState("");
+  const [centsDifference, setCentsDifference] = useState(0);
+  
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const animationRef = useRef<number | null>(null);
+  
+  const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+  
+  // Get tuning indicator display - moved inside component to access centsDifference and currentNote
+  const getTuningIndicator = () => {
+    if (centsDifference === 0 || currentNote === "--") return null;
+    
+    let indicatorText = "In tune";
+    let indicatorColor = "text-green-500";
+    
+    if (centsDifference > 5) {
+      indicatorText = "Sharp";
+      indicatorColor = "text-amber-500";
+    } else if (centsDifference < -5) {
+      indicatorText = "Flat";
+      indicatorColor = "text-amber-500";
+    }
+    
+    if (Math.abs(centsDifference) > 30) {
+      indicatorColor = "text-red-500";
+    }
+    
+    return (
+      <div className={`text-sm ${indicatorColor}`}>
+        {indicatorText} ({centsDifference > 0 ? "+" : ""}{centsDifference} cents)
+      </div>
+    );
+  };
+  
+  const startListening = async () => {
+    try {
+      // First initialize AudioContext
+      if (!audioContextRef.current) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        audioContextRef.current = new AudioContextClass();
+        analyserRef.current = audioContextRef.current.createAnalyser();
+        analyserRef.current.fftSize = 2048;
+      }
+      
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      
+      const source = audioContextRef.current.createMediaStreamSource(stream);
+      source.connect(analyserRef.current);
+      
+      setIsListening(true);
+      setMicAccessGranted(true);
+      setError("");
+      
+      detectPitch();
+    } catch (err) {
+      setError("Microphone access denied. Please allow microphone access to use this feature.");
+      console.error("Error accessing microphone:", err);
+    }
+  };
+  
+  const stopListening = () => {
+    if (streamRef.current) {
+      const tracks = streamRef.current.getTracks();
+      tracks.forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
+    
+    setIsListening(false);
+    setCurrentNote("--");
+    setFrequency(0);
+    setCentsDifference(0);
+  };
+  
+  const detectPitch = () => {
+    if (!analyserRef.current || !audioContextRef.current) return;
+    
+    const bufferLength = analyserRef.current.fftSize;
+    const dataArray = new Float32Array(bufferLength);
+    
+    const detectPitchFrame = () => {
+      analyserRef.current?.getFloatTimeDomainData(dataArray);
+      
+      const ac = autoCorrelate(dataArray, audioContextRef.current?.sampleRate || 44100);
+      
+      if (ac !== -1) {
+        // Calculate note and cents difference
+        const noteNum = 12 * (Math.log(ac / 440) / Math.log(2));
+        const roundedNoteNum = Math.round(noteNum);
+        const cents = Math.round((noteNum - roundedNoteNum) * 100);
+        
+        const note = notes[Math.round(noteNum) % 12];
+        setCurrentNote(note);
+        setFrequency(Math.round(ac));
+        setCentsDifference(cents);
+      }
+      
+      animationRef.current = requestAnimationFrame(detectPitchFrame);
+    };
+    
+    detectPitchFrame();
+  };
+  
+  // Auto-correlation algorithm for pitch detection - fixed correlation reference
+  const autoCorrelate = (buffer: Float32Array, sampleRate: number): number => {
+    const SIZE = buffer.length;
+    const MAX_SAMPLES = Math.floor(SIZE / 2);
+    let bestOffset = -1;
+    let bestCorrelation = 0;
+    let rms = 0;
+    let foundGoodCorrelation = false;
+    
+    // Calculate RMS
+    for (let i = 0; i < SIZE; i++) {
+      const val = buffer[i];
+      rms += val * val;
+    }
+    rms = Math.sqrt(rms / SIZE);
+    
+    // Not enough signal
+    if (rms < 0.01) return -1;
+    
+    // Find best correlation
+    for (let offset = 0; offset < MAX_SAMPLES; offset++) {
+      let currentCorrelation = 0;
+      for (let i = 0; i < MAX_SAMPLES; i++) {
+        currentCorrelation += Math.abs(buffer[i] - buffer[i + offset]);
+      }
+      currentCorrelation = 1 - (currentCorrelation / MAX_SAMPLES);
+      
+      if (currentCorrelation > bestCorrelation) {
+        bestCorrelation = currentCorrelation;
+        bestOffset = offset;
+      }
+      
+      if (currentCorrelation > 0.9) {
+        foundGoodCorrelation = true;
+      } else if (foundGoodCorrelation) {
+        break;
+      }
+    }
+    
+    if (bestCorrelation > 0.5) {
+      return sampleRate / bestOffset;
+    }
+    
+    return -1;
+  };
+  
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        const tracks = streamRef.current.getTracks();
+        tracks.forEach(track => track.stop());
+      }
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+        audioContextRef.current.close();
+      }
+    };
+  }, []);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Music className="h-5 w-5 text-gold" />
+          Pitch Finder
+        </CardTitle>
+        <CardDescription>
+          Detect the pitch of the notes you sing or play
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col items-center">
+        <div className="w-32 h-32 rounded-full flex items-center justify-center border-4 border-gold mb-6">
+          <div className="text-center">
+            <div className="text-4xl font-bold">{currentNote}</div>
+            {frequency > 0 && (
+              <div className="text-sm text-muted-foreground">{frequency} Hz</div>
+            )}
+            {getTuningIndicator()}
+          </div>
+        </div>
+        
+        {error && (
+          <div className="text-center text-destructive mb-4 flex items-center justify-center gap-2">
+            <AlertTriangle className="h-4 w-4" />
+            {error}
+          </div>
+        )}
+        
+        <Button
+          onClick={isListening ? stopListening : startListening}
+          className={cn(
+            "flex items-center gap-2 mb-4",
+            isListening ? "bg-destructive hover:bg-destructive/90" : "bg-gold hover:bg-gold/90"
+          )}
+          size="lg"
+          aria-label={isListening ? "Stop listening for pitch" : "Start listening for pitch"}
+        >
+          {isListening ? (
+            <>
+              <MicOff className="h-5 w-5" />
+              Stop Listening
+            </>
+          ) : (
+            <>
+              <Mic className="h-5 w-5" />
+              Start Listening
+            </>
+          )}
+        </Button>
+        
+        <div className="text-center text-sm text-muted-foreground">
+          {!micAccessGranted ? 
+            "Click 'Start Listening' and allow microphone access to begin" : 
+            isListening ? 
+              "Sing or play a note to detect its pitch" : 
+              "Click 'Start Listening' to detect pitch again"
+          }
+        </div>
+      </CardContent>
+      <CardFooter className="flex-col gap-2">
+        <p className="text-sm text-muted-foreground">
+          Note: For best results, use in a quiet environment with a clear tone.
+        </p>
+      </CardFooter>
+    </Card>
+  );
+};
+
+// Tempo Finder Component
+const TempoFinder = () => {
+  const [tempo, setTempo] = useState(120);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [countingMode, setCountingMode] = useState(false);
+  const [taps, setTaps] = useState<number[]>([]);
+  const [tapCount, setTapCount] = useState(0);
+  const [timeSignature, setTimeSignature] = useState({ beats: 4, value: 4 });
+  const [currentBeat, setCurrentBeat] = useState(1);
+  
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const beatsRef = useRef<number>(1);
+  const visualTimerRef = useRef<number | null>(null);
+
+  // Tempo presets
+  const tempoPresets = [
+    { name: "Largo", bpm: 50 },
+    { name: "Adagio", bpm: 70 },
+    { name: "Andante", bpm: 90 },
+    { name: "Moderato", bpm: 110 },
+    { name: "Allegro", bpm: 130 },
+    { name: "Vivace", bpm: 160 },
+    { name: "Presto", bpm: 180 }
+  ];
+  
+  // Initialize AudioContext
+  useEffect(() => {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    audioContextRef.current = new AudioContextClass();
+    
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+      if (visualTimerRef.current) {
+        cancelAnimationFrame(visualTimerRef.current);
+      }
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+        audioContextRef.current.close();
+      }
+    };
+  }, []);
+  
+  // Metronome click sound
+  const playClick = () => {
+    if (!audioContextRef.current) return;
+    
+    const oscillator = audioContextRef.current.createOscillator();
+    const gainNode = audioContextRef.current.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContextRef.current.destination);
+    
+    // First beat gets higher pitch
+    oscillator.frequency.value = beatsRef.current === 1 ? 1000 : 800;
+    gainNode.gain.value = 0.5;
+    
+    oscillator.start();
+    oscillator.stop(audioContextRef.current.currentTime + 0.05);
+    
+    // Update current beat
+    setCurrentBeat(beatsRef.current);
+    
+    // Increment beat counter
+    beatsRef.current = beatsRef.current % timeSignature.beats + 1;
+  };
+  
+  // Start/Stop metronome
+  const togglePlay = () => {
+    if (isPlaying) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      setIsPlaying(false);
+      beatsRef.current = 1;
+      setCurrentBeat(1);
+      return;
+    }
+    
+    setIsPlaying(true);
+    beatsRef.current = 1;
+    
+    const intervalTime = 60000 / tempo;
+    playClick();
+    intervalRef.current = setInterval(playClick, intervalTime);
+  };
+  
+  // Handle tempo change
+  const handleTempoChange = (value: number[]) => {
+    const newTempo = value[0];
+    setTempo(newTempo);
+    
+    if (isPlaying) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+      
+      const intervalTime = 60000 / newTempo;
+      intervalRef.current = setInterval(playClick, intervalTime);
+    }
+  };
+  
+  // Handle tap tempo
+  const handleTapTempo = () => {
+    const now = Date.now();
+    
+    if (countingMode) {
+      // Add new tap
+      const newTaps = [...taps, now];
+      setTaps(newTaps);
+      
+      if (newTaps.length > 1) {
+        // Calculate BPM from taps
+        const differences = [];
+        for (let i = 1; i < newTaps.length; i++) {
+          differences.push(newTaps[i] - newTaps[i - 1]);
+        }
+        
+        const avgDifference = differences.reduce((a, b) => a + b, 0) / differences.length;
+        const calculatedTempo = Math.round(60000 / avgDifference);
+        
+        // Ensure calculated tempo is within reasonable range (40-240 BPM)
+        if (calculatedTempo >= 40 && calculatedTempo <= 240) {
+          setTempo(calculatedTempo);
+        }
+      }
+      
+      setTapCount(prevCount => prevCount + 1);
+    } else {
+      // Start counting mode
+      setCountingMode(true);
+      setTaps([now]);
+      setTapCount(1);
+      
+      // Auto exit counting mode after 5 seconds of inactivity
+      setTimeout(() => {
+        setCountingMode(false);
+        setTapCount(0);
+      }, 5000);
+    }
+  };
+  
+  // Handle time signature change
+  const handleTimeSignatureChange = (beats: number, value: number) => {
+    setTimeSignature({ beats, value });
+    beatsRef.current = 1;
+    setCurrentBeat(1);
+    
+    if (isPlaying) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+      
+      const intervalTime = 60000 / tempo;
+      intervalRef.current = setInterval(playClick, intervalTime);
+    }
+  };
+  
+  // Apply tempo preset
+  const applyTempoPreset = (bpm: number) => {
+    setTempo(bpm);
+    
+    if (isPlaying) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+      
+      const intervalTime = 60000 / bpm;
+      intervalRef.current = setInterval(playClick, intervalTime);
+    }
+  };
+  
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Volume2 className="h-5 w-5 text-gold" />
+          Tempo Finder
+        </CardTitle>
+        <CardDescription>
+          Set the tempo manually or tap to find it
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="flex flex-col items-center">
+          <div className="text-7xl font-bold mb-0">{tempo}</div>
+          <div className="text-lg text-muted-foreground mb-2">BPM</div>
+          
+          {/* Visual beat indicator */}
+          <div className="flex gap-1 mb-2">
+            {Array.from({ length: timeSignature.beats }).map((_, index) => (
+              <div 
+                key={index}
+                className={cn(
+                  "w-4 h-4 rounded-full transition-all duration-100",
+                  currentBeat === index + 1 && isPlaying
+                    ? "bg-gold scale-125"
+                    : "bg-muted"
+                )}
+                aria-label={`Beat ${index + 1}`}
+              />
+            ))}
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <div className="flex justify-between">
+            <span>40</span>
+            <span>240</span>
+          </div>
+          <Slider 
+            defaultValue={[tempo]} 
+            min={40} 
+            max={240} 
+            step={1} 
+            value={[tempo]}
+            onValueChange={(values) => handleTempoChange(values)}
+            className="my-4"
+            aria-label="Tempo slider"
+          />
+        </div>
+        
+        {/* Tempo presets */}
+        <div className="flex flex-wrap gap-2 justify-center">
+          {tempoPresets.map((preset) => (
+            <Button
+              key={preset.name}
+              variant="outline"
+              size="sm"
+              onClick={() => applyTempoPreset(preset.bpm)}
+              className="text-xs"
+              aria-label={`Set tempo to ${preset.name} (${preset.bpm} BPM)`}
+            >
+              {preset.name} ({preset.bpm})
+            </Button>
+          ))}
+        </div>
+        
+        <div className="flex justify-center gap-4">
+          <Button
+            onClick={togglePlay}
+            size="lg"
+            className={cn(
+              "flex items-center gap-2 w-1/3",
+              isPlaying ? "bg-destructive hover:bg-destructive/90" : "bg-gold hover:bg-gold/90"
+            )}
+            aria-label={isPlaying ? "Stop metronome" : "Start metronome"}
+          >
+            {isPlaying ? <Square className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            {isPlaying ? "Stop" : "Play"}
+          </Button>
+          
+          <Button
+            onClick={handleTapTempo}
+            variant="outline"
+            size="lg"
+            className={cn(
+              "border-2 w-1/3",
+              countingMode ? "border-gold" : ""
+            )}
+            aria-label="Tap tempo button"
+          >
+            Tap Tempo {tapCount > 0 && `(${tapCount})`}
+          </Button>
+        </div>
+        
+        <div className="flex flex-wrap items-center gap-4 mt-6">
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              min={40}
+              max={240}
+              value={tempo}
+              onChange={(e) => {
+                const val = parseInt(e.target.value);
+                if (val >= 40 && val <= 240) setTempo(val);
+              }}
+              className="w-24"
+              aria-label="Enter BPM manually"
+            />
+            <span className="text-sm text-muted-foreground">BPM</span>
+          </div>
+          
+          {/* Time signature selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Time:</span>
+            <div className="flex border rounded-md">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "h-8 rounded-l-md",
+                  timeSignature.beats === 3 ? "bg-muted" : ""
+                )}
+                onClick={() => handleTimeSignatureChange(3, 4)}
+                aria-label="Set 3/4 time signature"
+              >
+                3/4
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "h-8 rounded-none",
+                  timeSignature.beats === 4 ? "bg-muted" : ""
+                )}
+                onClick={() => handleTimeSignatureChange(4, 4)}
+                aria-label="Set 4/4 time signature"
+              >
+                4/4
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "h-8 rounded-none",
+                  timeSignature.beats === 6 ? "bg-muted" : ""
+                )}
+                onClick={() => handleTimeSignatureChange(6, 8)}
+                aria-label="Set 6/8 time signature"
+              >
+                6/8
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "h-8 rounded-r-md",
+                  timeSignature.beats === 5 ? "bg-muted" : ""
+                )}
+                onClick={() => handleTimeSignatureChange(5, 4)}
+                aria-label="Set 5/4 time signature"
+              >
+                5/4
+              </Button>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+      <CardFooter>
+        <p className="text-sm text-muted-foreground">
+          Tap the "Tap Tempo" button at a consistent rhythm to calculate BPM automatically
+        </p>
+      </CardFooter>
+    </Card>
   );
 };
 
