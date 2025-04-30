@@ -6,14 +6,45 @@ export const DURATIONS = {
   fast: 200,
   normal: 300,
   slow: 500,
+  extraSlow: 800
 };
 
-// Easing functions - using string names that Framer Motion supports
+// Easing functions
 export const EASINGS = {
-  standard: "easeInOut", // Changed from cubic-bezier
-  decelerate: "easeOut", // Changed from cubic-bezier
-  accelerate: "easeIn", // Changed from cubic-bezier
-  sharp: "easeInOut", // Changed from cubic-bezier
+  standard: 'cubic-bezier(0.4, 0.0, 0.2, 1)', // Standard - For most animations
+  decelerate: 'cubic-bezier(0.0, 0.0, 0.2, 1)', // Deceleration - Ending animations
+  accelerate: 'cubic-bezier(0.4, 0.0, 1, 1)',   // Acceleration - Starting animations
+  sharp: 'cubic-bezier(0.4, 0.0, 0.6, 1)',      // Sharp - Emphasis animations
+  smooth: 'cubic-bezier(0.25, 0.1, 0.25, 1)',   // Smooth - For gentle transitions
+  bouncy: 'cubic-bezier(0.2, -0.3, 0.2, 1.5)'   // Bouncy - For playful animations
+};
+
+// Common animation presets for framer-motion
+export const ANIMATION_PRESETS = {
+  fadeIn: {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+    transition: { duration: DURATIONS.normal / 1000, ease: EASINGS.standard }
+  },
+  slideUp: {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -20 },
+    transition: { duration: DURATIONS.normal / 1000, ease: EASINGS.smooth }
+  },
+  scaleIn: {
+    initial: { opacity: 0, scale: 0.9 },
+    animate: { opacity: 1, scale: 1 },
+    exit: { opacity: 0, scale: 0.95 },
+    transition: { duration: DURATIONS.fast / 1000, ease: EASINGS.decelerate }
+  },
+  slideInRight: {
+    initial: { opacity: 0, x: 30 },
+    animate: { opacity: 1, x: 0 },
+    exit: { opacity: 0, x: 30 },
+    transition: { duration: DURATIONS.normal / 1000, ease: EASINGS.smooth }
+  }
 };
 
 // Apply smooth page transitions
@@ -55,5 +86,39 @@ export const scrollToElement = (ref: RefObject<HTMLElement>) => {
       behavior: 'smooth',
       block: 'start',
     });
+  }
+};
+
+// Helper to ensure animations complete before dismissing
+export const waitForAnimationComplete = (duration: number = DURATIONS.normal): Promise<void> => {
+  return new Promise(resolve => setTimeout(resolve, duration));
+};
+
+// Store and retrieve user preferences
+export const userPreferences = {
+  save: (key: string, value: any): void => {
+    try {
+      localStorage.setItem(`rhythm-verse-${key}`, JSON.stringify(value));
+    } catch (error) {
+      console.error("Error saving preference:", error);
+    }
+  },
+  
+  load: <T>(key: string, defaultValue: T): T => {
+    try {
+      const stored = localStorage.getItem(`rhythm-verse-${key}`);
+      return stored ? JSON.parse(stored) : defaultValue;
+    } catch (error) {
+      console.error("Error loading preference:", error);
+      return defaultValue;
+    }
+  },
+  
+  remove: (key: string): void => {
+    try {
+      localStorage.removeItem(`rhythm-verse-${key}`);
+    } catch (error) {
+      console.error("Error removing preference:", error);
+    }
   }
 };
