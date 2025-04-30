@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useAnimation } from "framer-motion";
 import { userPreferences } from '@/lib/animation-utils';
