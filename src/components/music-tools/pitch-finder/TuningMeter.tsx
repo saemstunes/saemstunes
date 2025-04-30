@@ -1,8 +1,6 @@
-
-import React, { useRef } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Note } from './NoteDial';
-import { cn } from '@/lib/utils';
 
 interface TuningMeterProps {
   currentNote: Note | null;
@@ -18,10 +16,10 @@ const getNeedleRotation = (cents: number) => {
 const getCentsAccuracyColor = (cents: number) => {
   // Get absolute value of cents (distance from perfect pitch)
   const absCents = Math.abs(cents);
-  
+
   // Create a logarithmic scale for color mapping (more green for closer matches)
-  let opacity = Math.max(0.2, 1 - Math.log10(Math.max(1, absCents) / 5) * 0.4);
-  
+  let opacity = Math.max(0.5, 1 - Math.log10(Math.max(1, absCents) / 5) * 0.3);
+
   // Color gradient from red to green based on accuracy
   if (absCents < 5) return `rgba(0, 255, 0, ${opacity})`; // Perfect - Green
   if (absCents < 10) return `rgba(120, 255, 0, ${opacity})`; // Near perfect - Light green
@@ -33,71 +31,125 @@ const getCentsAccuracyColor = (cents: number) => {
   return `rgba(255, 0, 0, ${opacity})`; // Far off - Red
 };
 
-const TuningMeter: React.FC<TuningMeterProps> = ({ currentNote }) => {
-  const tuningMeterRef = useRef<HTMLDivElement>(null);
+// Convert cents value to display text
+const getCentsText = (cents: number) => {
+  const absCents = Math.abs(cents);
+  if (absCents < 5) return "Perfect";
+  if (absCents < 15) return cents < 0 ? "Slightly Flat" : "Slightly Sharp";
+  if (absCents < 30) return cents < 0 ? "Flat" : "Sharp";
+  return cents < 0 ? "Very Flat" : "Very Sharp";
+};
 
+const TuningMeter: React.FC<TuningMeterProps> = ({ currentNote }) => {
   if (!currentNote) return null;
 
   return (
-    <motion.div 
-      className="relative h-24 flex flex-col items-center justify-center"
-      ref={tuningMeterRef}
+    <motion.div
+      className="relative h-36 flex flex-col items-center justify-center space-y-2"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: 0.2 }}
+      exit={{ opacity: 0, y: 20 }}
+      transition={{ duration: 0.4, delay: 0.1 }}
     >
-      {/* Meter background */}
-      <div className="h-3 w-full max-w-md bg-black/20 rounded-full overflow-hidden relative">
-        {/* Center line */}
-        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 h-10 w-0.5 bg-gold"></div>
-        
-        {/* Markings */}
-        <div className="absolute top-3 left-0 w-full flex justify-between px-0">
-          <div className="h-3 w-0.5 bg-gold/50"></div>
-          <div className="h-2 w-0.5 bg-gold/40"></div>
-          <div className="h-2 w-0.5 bg-gold/40"></div>
-          <div className="h-3 w-0.5 bg-gold/50"></div>
-          <div className="h-2 w-0.5 bg-gold/40"></div>
-          <div className="h-2 w-0.5 bg-gold/40"></div>
-          <div className="h-3 w-0.5 bg-gold/50"></div>
-        </div>
-        
-        {/* Tuner needle */}
+      {/* Tuning status text */}
+      <motion.div 
+        className="text-center text-sm font-medium"
+        style={{ 
+          color: getCentsAccuracyColor(currentNote.cents),
+          textShadow: '0 0 8px rgba(0,0,0,0.2)'
+        }}
+        animate={{ opacity: [0.8, 1, 0.8] }}
+        transition={{ duration: 2, repeat: Infinity }}
+      >
+        {getCentsText(currentNote.cents)}
+      </motion.div>
+      
+      {/* Meter background - styled like the reference with center needle */}
+      <div className="h-16 w-full max-w-md bg-black/30 rounded-full overflow-hidden relative">
+        {/* Center marker */}
         <motion.div 
-          className="absolute top-0 left-1/2 -mt-1"
+          className="absolute top-0 left-1/2 transform -translate-x-1/2 h-16 w-0.5 bg-gold"
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        />
+
+        {/* Gradient background */}
+        <div 
+          className="absolute inset-0 opacity-20"
+          style={{
+            background: "linear-gradient(90deg, #FF0000 0%, #FFFF00 50%, #00FF00 100%)"
+          }}
+        />
+
+        {/* Markings */}
+        <div className="absolute top-0 left-0 w-full h-full flex justify-between px-0">
+          {/* Fine-tune markings to provide more visual cues */}
+          {[-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50].map((val, i) => (
+            <div 
+              key={i} 
+              className="h-3 w-0.5 absolute top-0"
+              style={{ 
+                left: `${((val + 50) / 100) * 100}%`,
+                background: val === 0 ? 'rgb(255, 215, 0)' : 'rgba(255, 215, 0, 0.5)',
+                height: val === 0 ? '12px' : val % 20 === 0 ? '8px' : '4px'
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Tuner needle */}
+        <motion.div
+          className="absolute top-1 left-1/2 h-14"
           initial={{ rotate: 0 }}
           animate={{ rotate: getNeedleRotation(currentNote.cents) }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
           style={{ transformOrigin: 'bottom center' }}
         >
-          <motion.div 
-            className="h-10 w-1 bg-primary rounded-t-full"
+          <motion.div
+            className="h-14 w-1 rounded-full"
             animate={{
               backgroundColor: getCentsAccuracyColor(currentNote.cents)
             }}
-          ></motion.div>
-          <motion.div 
-            className="w-3 h-3 rounded-full bg-primary absolute -top-1 left-1/2 transform -translate-x-1/2"
+          />
+          <motion.div
+            className="w-4 h-4 rounded-full absolute -top-1 left-1/2 transform -translate-x-1/2 border border-black/20"
             animate={{
-              backgroundColor: getCentsAccuracyColor(currentNote.cents)
+              backgroundColor: getCentsAccuracyColor(currentNote.cents),
+              boxShadow: [
+                `0 0 5px ${getCentsAccuracyColor(currentNote.cents)}`,
+                `0 0 10px ${getCentsAccuracyColor(currentNote.cents)}`,
+                `0 0 5px ${getCentsAccuracyColor(currentNote.cents)}`
+              ]
             }}
-          ></motion.div>
+            transition={{
+              boxShadow: {
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }
+            }}
+          />
         </motion.div>
-        
-        {/* Scale labels */}
-        <div className="flex justify-between px-1 mt-12 text-xs text-muted-foreground">
-          <span>-50</span>
-          <span>-25</span>
-          <span>0</span>
-          <span>+25</span>
-          <span>+50</span>
-        </div>
       </div>
-      
-      {/* Cents gradient bar */}
-      <div className="w-full max-w-md h-3 mt-2 rounded-full overflow-hidden">
-        <div className="w-full h-full bg-gradient-to-r from-red-500 via-yellow-400 to-green-500 opacity-70"></div>
+
+      {/* Cents scale */}
+      <div className="flex justify-between w-full max-w-md px-2 text-xs text-gold/70">
+        <span>-50</span>
+        <span>-25</span>
+        <span>0</span>
+        <span>+25</span>
+        <span>+50</span>
       </div>
+
+      {/* Cents value display */}
+      <motion.div 
+        className="text-center text-sm mt-1"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        style={{ color: getCentsAccuracyColor(currentNote.cents) }}
+      >
+        {currentNote.cents > 0 ? '+' : ''}{currentNote.cents} cents
+      </motion.div>
     </motion.div>
   );
 };
