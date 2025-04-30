@@ -10,6 +10,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import AdminLoginForm from "@/components/auth/AdminLoginForm";
 import Logo from "@/components/branding/Logo";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Google } from "lucide-react";
 
 const Auth = () => {
   const [activeTab, setActiveTab] = useState<string>("login");
@@ -55,6 +58,11 @@ const Auth = () => {
     setLastClickTime(currentTime);
   };
 
+  const handleGoogleSignIn = () => {
+    // This would normally call the Google Sign In method
+    console.log("Google sign in clicked");
+  };
+
   return (
     <MainLayout>
       <div className="flex flex-col sm:items-center justify-center min-h-[calc(100vh-80px)]">
@@ -85,6 +93,29 @@ const Auth = () => {
                   <TabsTrigger value="login">Sign In</TabsTrigger>
                   <TabsTrigger value="signup">Sign Up</TabsTrigger>
                 </TabsList>
+                
+                <div className="my-4">
+                  <Button 
+                    variant="outline" 
+                    className="w-full flex items-center gap-2 h-10"
+                    onClick={handleGoogleSignIn}
+                  >
+                    <Google className="h-4 w-4" />
+                    <span>Continue with Google</span>
+                  </Button>
+                  
+                  <div className="relative my-4">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-muted" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-card px-2 text-muted-foreground">
+                        or
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
                 <TabsContent value="login" className="mt-0">
                   <LoginForm />
                 </TabsContent>
