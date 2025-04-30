@@ -68,22 +68,14 @@ export const useMetronome = () => {
     }
   }, [tempo, isPlaying, visualFeedback, pendulumControls]);
   
-  const scheduleNote = (time: number, beat: number) => {
-    // Create oscillator
+  const scheduleNote = useCallback((time: number, beat: number) => {
+    // Create sound
     if (!audioContext.current) return;
     
-    const osc = audioContext.current.createOscillator();
-    const gainNode = audioContext.current.createGain();
+    // First beat gets accent
+    const isAccent = beat === 0;
     
-    // First beat of the measure gets a higher pitch
-    osc.frequency.value = beat === 0 ? 880 : 440;
-    
-    gainNode.gain.value = 0.5;
-    osc.connect(gainNode);
-    gainNode.connect(audioContext.current.destination);
-    
-    osc.start(time);
-    osc.stop(time + 0.1);
+    createOscillatorSound(audioContext.current, time, isAccent);
     
     // Update visual beat counter
     if (time <= audioContext.current.currentTime) {
@@ -91,24 +83,25 @@ export const useMetronome = () => {
     } else {
       scheduledNotes.current.push({ time, beat });
     }
-  };
+  }, [soundType, volume]);
   
-  const scheduler = () => {
+  const scheduler = useCallback(() => {
     if (!audioContext.current) return;
     
-    // Schedule notes ahead of time
+    // Look ahead 0.1 seconds to schedule notes
     while (nextNoteTime.current < audioContext.current.currentTime + 0.1) {
       const beatNumber = currentBeat % beatsPerMeasure;
       scheduleNote(nextNoteTime.current, beatNumber);
       
       // Calculate time for next note
-      const secondsPerBeat = 60.0 / tempo;
+      const secondsPerBeat = getBeatInterval();
       nextNoteTime.current += secondsPerBeat;
       setCurrentBeat((prev) => (prev + 1) % beatsPerMeasure);
     }
     
+    // Schedule next check in 25ms
     timerID.current = window.setTimeout(scheduler, 25);
-  };
+  }, [beatsPerMeasure, currentBeat, getBeatInterval, scheduleNote]);
   
   // Check scheduled notes and update the visual beat
   useEffect(() => {
@@ -129,14 +122,16 @@ export const useMetronome = () => {
         scheduledNotes.current = scheduledNotes.current.filter(note => note.time > now);
       }
       
-      requestAnimationFrame(checkScheduledNotes);
+      if (isPlaying) {
+        requestAnimationFrame(checkScheduledNotes);
+      }
     };
     
     const animationFrame = requestAnimationFrame(checkScheduledNotes);
     return () => cancelAnimationFrame(animationFrame);
   }, [isPlaying, visualFeedback]);
   
-  const startStop = () => {
+  const startStop = useCallback(() => {
     if (isPlaying) {
       // Stop the metronome
       if (timerID.current !== null) {
@@ -144,24 +139,32 @@ export const useMetronome = () => {
         timerID.current = null;
       }
       setIsPlaying(false);
+      scheduledNotes.current = []; // Clear pending notes
     } else {
-      // Start the metronome
-      if (audioContext.current!.state === 'suspended') {
-        audioContext.current!.resume();
+      // Initialize audio context if needed
+      if (!audioContext.current) {
+        audioContext.current = new (window.AudioContext || (window as any).webkitAudioContext)();
       }
       
+      // Resume context on iOS/Safari which might be suspended
+      if (audioContext.current.state === 'suspended') {
+        audioContext.current.resume();
+      }
+      
+      // Start the metronome
       setCurrentBeat(0);
-      nextNoteTime.current = audioContext.current!.currentTime;
+      nextNoteTime.current = audioContext.current.currentTime;
       scheduler();
       setIsPlaying(true);
     }
-  };
+  }, [isPlaying, scheduler]);
   
-  // Clean up on unmount
+  // Immediately stop on unmount
   useEffect(() => {
     return () => {
       if (timerID.current !== null) {
         clearTimeout(timerID.current);
+        timerID.current = null;
       }
     };
   }, []);
@@ -176,6 +179,9 @@ export const useMetronome = () => {
     setVisualFeedback,
     currentBeat,
     pendulumControls,
-    startStop
+    startStop,
+    soundType,
+    setSoundType,
+    volume,
+    setVolume
   };
-};
