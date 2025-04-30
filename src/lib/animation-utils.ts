@@ -8,12 +8,12 @@ export const DURATIONS = {
   slow: 500,
 };
 
-// Easing functions - using string names that Framer Motion supports
+// Easing functions
 export const EASINGS = {
-  standard: "easeInOut", // Changed from cubic-bezier
-  decelerate: "easeOut", // Changed from cubic-bezier
-  accelerate: "easeIn", // Changed from cubic-bezier
-  sharp: "easeInOut", // Changed from cubic-bezier
+  standard: 'cubic-bezier(0.4, 0.0, 0.2, 1)',
+  decelerate: 'cubic-bezier(0.0, 0.0, 0.2, 1)',
+  accelerate: 'cubic-bezier(0.4, 0.0, 1, 1)',
+  sharp: 'cubic-bezier(0.4, 0.0, 0.6, 1)',
 };
 
 // Apply smooth page transitions
