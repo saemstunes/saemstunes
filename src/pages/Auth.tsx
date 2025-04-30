@@ -1,5 +1,3 @@
-
-// Import from our icons file
 import { Flask } from "@/components/icons";
 import { useEffect, useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
@@ -10,12 +8,13 @@ import SignupForm from "@/components/auth/SignupForm";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import AdminLoginForm from "@/components/auth/AdminLoginForm";
+import Logo from "@/components/branding/Logo";
 
 const Auth = () => {
   const [activeTab, setActiveTab] = useState<string>("login");
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [logoClicks, setLogoClicks] = useState(0);
-  const [lastClickTime, setLastClickTime] = useState(0);
+  const [lastClickTime, setLastClickTime = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, login, signup } = useAuth();
@@ -65,10 +64,7 @@ const Auth = () => {
               onClick={handleLogoClick}
               aria-label="Logo"
             >
-              <Flask 
-                className="h-12 w-12 text-gold mx-auto mb-2" 
-                aria-hidden="true"
-              />
+              <Logo size="lg" className="mx-auto mb-2" />
             </div>
             <h1 className="text-3xl font-bold font-proxima">Welcome Back</h1>
             <p className="text-muted-foreground">
