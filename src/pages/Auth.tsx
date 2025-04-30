@@ -56,7 +56,7 @@ const Auth = () => {
   };
 
   return (
-    <MainLayout hideNavigation>
+    <MainLayout>
       <div className="flex flex-col sm:items-center justify-center min-h-[calc(100vh-80px)]">
         <div className="w-full sm:max-w-md">
           <div className="text-center mb-6">
@@ -88,15 +88,16 @@ const Auth = () => {
                   <TabsTrigger value="login">Sign In</TabsTrigger>
                   <TabsTrigger value="signup">Sign Up</TabsTrigger>
                 </TabsList>
+                <TabsContent value="login" className="mt-0">
+                  <LoginForm />
+                </TabsContent>
+                <TabsContent value="signup" className="mt-0">
+                  <SignupForm />
+                </TabsContent>
               </Tabs>
             </CardHeader>
             <CardContent>
-              <TabsContent value="login" className="mt-0">
-                <LoginForm />
-              </TabsContent>
-              <TabsContent value="signup" className="mt-0">
-                <SignupForm />
-              </TabsContent>
+              {/* Content is rendered by the TabsContent components above */}
             </CardContent>
             <CardFooter className="flex flex-col items-center space-y-2 border-t pt-5">
               <div className="text-sm text-muted-foreground text-center">
