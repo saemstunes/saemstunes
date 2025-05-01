@@ -10,11 +10,11 @@ const AnimatedBackground: React.FC = () => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
-      className="fixed inset-0 z-20 overflow-hidden pointer-events-none"
+      className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none"
     >
       {/* Animated gradient background */}
       <div 
-        className="absolute inset-0 bg-gradient-to-br dark:from-gray-900/50 dark:to-gray-800/50 from-gray-100/50 to-gray-200/50"
+        className="absolute inset-0 bg-gradient-to-br dark:from-gray-900/50 dark:to-gray-800/50 from-gray-100/50 to-gray-200/50 pointer-events-none"
         style={{ 
           backdropFilter: 'blur(8px)',
         }}
@@ -22,7 +22,7 @@ const AnimatedBackground: React.FC = () => {
       
       {/* Animated logo */}
       <motion.div
-        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none"
         animate={{
           scale: [1, 1.05, 1],
           opacity: [0.5, 0.6, 0.5],
