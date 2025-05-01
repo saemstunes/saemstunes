@@ -66,7 +66,7 @@ export default function ThemeToggle() {
               duration: 0.3,
               ease: "easeInOut",
               type: "tween",
-              stiffness: 50,
+              stiffness: 100,
               damping: 20,
             }}
             className="flex items-center justify-center"
@@ -84,7 +84,7 @@ export default function ThemeToggle() {
               duration: 0.3,
               ease: "easeInOut",
               type: "tween",
-              stiffness: 50,
+              stiffness: 100,
               damping: 20,
             }}
             className="flex items-center justify-center"
