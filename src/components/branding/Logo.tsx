@@ -10,7 +10,7 @@ interface LogoProps {
   linkClassName?: string;
   showText?: boolean;
   inMobileMenu?: boolean;
-  inSidebar?: boolean; // Add this new prop to identify sidebar usage
+  imageClassName?: string; // Added new prop for image-specific styling
 }
 
 const Logo = ({
@@ -20,17 +20,17 @@ const Logo = ({
   linkClassName,
   showText = true,
   inMobileMenu = false,
-  inSidebar = false // Default to false
+  imageClassName // New prop for image-specific styling
 }: LogoProps) => {
   const isMobile = useIsMobile();
   const [imageLoaded, setImageLoaded] = useState(false);
-  
+
   const sizeClasses = {
     sm: 'h-6 w-6',
     md: 'h-8 w-8',
     lg: 'h-10 w-10'
   };
-  
+
   const textSizeClasses = {
     sm: 'text-xs',
     md: isMobile ? 'text-xs' : 'text-xl', // Reduced text size for mobile
@@ -78,26 +78,18 @@ const Logo = ({
             srcSet={`${logoBasePath}.webp`} 
             type="image/webp" 
           />
-          
+
           {/* SVG version (best quality) */}
           <source 
             srcSet={`${logoBasePath}.svg`} 
             type="image/svg+xml" 
           />
-          
+
           {/* Fallback PNG version */}
           <img 
-            src={`/lovable-uploads/logo-desktop.png`}
+            src="/lovable-uploads/logo-desktop.png"
             alt="Saem's Tunes Logo" 
-            className={cn(
-              sizeClasses[size], 
-              // Remove mb-6 when in sidebar by not including it in the first place
-              className && !inSidebar ? className : null,
-              // If custom class includes mb-6 and we're in sidebar, apply all other classes except mb-6
-              inSidebar && className?.includes('mb-6') ? 
-                className.split(' ').filter(cls => cls !== 'mb-6').join(' ') : 
-                null
-            )} 
+            className={cn(sizeClasses[size], imageClassName, className)} 
             onLoad={() => setImageLoaded(true)}
             fetchPriority="high"
             decoding="async"
@@ -105,7 +97,7 @@ const Logo = ({
           />
         </picture>
       )}
-      
+
       {(variant === 'full' || variant === 'text') && showText && (
         <span className={cn(
           "logo-font font-bold", 
