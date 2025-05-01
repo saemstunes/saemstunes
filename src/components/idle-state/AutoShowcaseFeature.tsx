@@ -89,7 +89,8 @@ const AutoShowcaseFeature: React.FC<AutoShowcaseFeatureProps> = ({ path, onInter
 
   const currentFeature = features[currentHighlight];
 
-  const handleNavigate = () => {
+  const handleNavigate = (e: React.MouseEvent) => {
+    e.stopPropagation();
     onInteraction(); // Dismiss the idle state
     navigate(currentFeature.path);
   };
@@ -102,10 +103,10 @@ const AutoShowcaseFeature: React.FC<AutoShowcaseFeatureProps> = ({ path, onInter
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.5 }}
-        className="fixed inset-x-0 bottom-24 md:bottom-8 flex justify-center z-10 px-4"
+        className="fixed inset-x-0 bottom-24 md:bottom-8 flex justify-center px-4 pointer-events-none"
       >
         <motion.div 
-          className="bg-card/90 backdrop-blur-md border border-gold/20 rounded-lg shadow-xl p-4 max-w-md w-full"
+          className="bg-card/90 backdrop-blur-md border border-gold/20 rounded-lg shadow-xl p-4 max-w-md w-full pointer-events-auto"
           whileHover={{ scale: 1.02 }}
         >
           <div className="flex items-start gap-4">
@@ -120,7 +121,10 @@ const AutoShowcaseFeature: React.FC<AutoShowcaseFeatureProps> = ({ path, onInter
                   variant="ghost" 
                   size="icon"
                   className="h-6 w-6 rounded-full -mt-1 -mr-1"
-                  onClick={() => onInteraction()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onInteraction();
+                  }}
                 >
                   <X className="h-3 w-3" />
                 </Button>
