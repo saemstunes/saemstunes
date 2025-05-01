@@ -1,0 +1,4 @@
+/* styles/global.css */
+nav.flex.flex-col.gap-6 img.h-8.w-8.mb-6 {
+  margin-bottom: 0 !important;
+}
