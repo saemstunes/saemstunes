@@ -8,7 +8,7 @@ export default function ThemeToggle() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [isAnimating, setIsAnimating] = useState(false);
   const hasAnimatedRef = useRef(false); // Track if animation has run in this session
-  
+
   useEffect(() => {
     // Check if user has a theme preference in localStorage
     const savedTheme = localStorage.getItem("theme");
@@ -46,33 +46,6 @@ export default function ThemeToggle() {
     }, DURATIONS.normal);
   };
 
-  const iconVariants = {
-    initial: { scale: 0.8, opacity: 0, rotate: 0 },
-    animate: { 
-      scale: 1, 
-      opacity: 1, 
-      rotate: theme === "light" ? -180 : 180,
-      transition: { 
-        duration: DURATIONS.normal / 1000,
-        ease: EASINGS.standard
-      } 
-    },
-    exit: { 
-      scale: 0.8, 
-      opacity: 0, 
-      rotate: theme === "light" ? -360 : 360,
-      transition: { 
-        duration: DURATIONS.normal / 1000,
-        ease: EASINGS.standard
-      } 
-    },
-    hover: {
-      rotate: 360,
-      scale: 1.1,
-      transition: { duration: 0.6 }
-    }
-  };
-
   return (
     <Button 
       variant="outline" 
@@ -85,11 +58,16 @@ export default function ThemeToggle() {
         {theme === "light" ? (
           <motion.div
             key="moon"
-            variants={iconVariants}
-            initial={hasAnimatedRef.current ? "animate" : "initial"}
-            animate="animate"
-            exit="exit"
-            whileHover="hover"
+            initial={{ opacity: 0, rotate: 0, scale: 0.8 }}
+            animate={{ opacity: 1, rotate: 360, scale: 1 }}
+            exit={{ opacity: 0, rotate: -360, scale: 0.8 }}
+            whileHover={{ rotate: 360, scale: 1.1 }}
+            transition={{
+              duration: 0.8,
+              ease: "easeInOut",
+              type: "spring",
+              stiffness: 100,
+            }}
             className="flex items-center justify-center"
           >
             <Moon className="h-[1.2rem] w-[1.2rem]" />
@@ -97,11 +75,16 @@ export default function ThemeToggle() {
         ) : (
           <motion.div
             key="sun"
-            variants={iconVariants}
-            initial={hasAnimatedRef.current ? "animate" : "initial"}
-            animate="animate"
-            exit="exit"
-            whileHover="hover"
+            initial={{ opacity: 0, rotate: 0, scale: 0.8 }}
+            animate={{ opacity: 1, rotate: 360, scale: 1 }}
+            exit={{ opacity: 0, rotate: -360, scale: 0.8 }}
+            whileHover={{ rotate: 360, scale: 1.1 }}
+            transition={{
+              duration: 0.8,
+              ease: "easeInOut",
+              type: "spring",
+              stiffness: 100,
+            }}
             className="flex items-center justify-center"
           >
             <Sun className="h-[1.2rem] w-[1.2rem]" />
