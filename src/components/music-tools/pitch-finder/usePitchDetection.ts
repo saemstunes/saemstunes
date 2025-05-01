@@ -103,12 +103,12 @@ export const usePitchDetection = () => {
     
     // Find the lag with the highest correlation
     let maxCorrelation = -1;
-    let maxLag = -1;
+    let bestLag = -1;
     
     for (let lag = minLag; lag < correlations.length; lag++) {
       if (correlations[lag] > maxCorrelation) {
         maxCorrelation = correlations[lag];
-        maxLag = lag;
+        bestLag = lag;
       }
     }
     
