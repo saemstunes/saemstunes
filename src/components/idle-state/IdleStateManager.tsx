@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useIdleState } from '@/hooks/use-idle-state';
 import { AnimatePresence } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
@@ -18,6 +18,7 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
   const [factFetchAttempted, setFactFetchAttempted] = useState(false);
   const [currentFact, setCurrentFact] = useState('');
   const location = useLocation();
+  const idleWrapperRef = useRef<HTMLDivElement>(null);
   
   // Use our idle state hook with the improved configuration
   const { 
@@ -44,6 +45,49 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
     // Reset when user navigates to a different route
     resetActivationCount();
   }, [location.pathname, resetActivationCount]);
+
+  // Add touch event listeners to detect any user interaction with the screen
+  useEffect(() => {
+    const handleUserInteraction = () => {
+      if (isIdle) {
+        setShowIdleContent(false);
+        setFactFetchAttempted(false);
+      }
+    };
+
+    // Add event listeners for common user interactions
+    document.addEventListener('touchstart', handleUserInteraction, { passive: true });
+    document.addEventListener('mousedown', handleUserInteraction, { passive: true });
+    document.addEventListener('keydown', handleUserInteraction, { passive: true });
+    document.addEventListener('scroll', handleUserInteraction, { passive: true });
+
+    return () => {
+      // Clean up event listeners
+      document.removeEventListener('touchstart', handleUserInteraction);
+      document.removeEventListener('mousedown', handleUserInteraction);
+      document.removeEventListener('keydown', handleUserInteraction);
+      document.removeEventListener('scroll', handleUserInteraction);
+    };
+  }, [isIdle]);
+
+  // Detect clicks outside idle content
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      // If the idle wrapper exists and the click is not inside any idle component
+      // This will exit idle mode when clicking anywhere outside idle components
+      if (idleWrapperRef.current && !idleWrapperRef.current.contains(e.target as Node)) {
+        setShowIdleContent(false);
+      }
+    };
+
+    if (showIdleContent) {
+      document.addEventListener('mousedown', handleOutsideClick);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [showIdleContent]);
 
   // Decide which idle mode to display based on idle time and online status
   useEffect(() => {
@@ -76,25 +120,32 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
   }, [isIdle, showIdleContent, idleMode, isOnline, factFetchAttempted]);
   
   // Simulated fetch function for music facts
-  // In a real app, this would fetch from an API
   const fetchMusicFact = async () => {
     try {
       // Simulating API call with some predefined facts
       const facts = [
-        "The first piano was invented in Italy by Bartolomeo Cristofori around 1700.",
-        "Mozart wrote his first symphony at the age of eight.",
-        "The Beatles have sold over 600 million albums worldwide.",
-        "A standard guitar has 6 strings tuned to E, A, D, G, B, and E.",
-        "In 1952, John Cage composed '4′33″', which consists of 4 minutes and 33 seconds of silence.",
-        "The longest commercially released song is 'The Rise and Fall of Bossanova' at 13 hours, 23 minutes, and 32 seconds.",
-        "Beethoven composed many of his most famous works after becoming completely deaf.",
-        "The theremin is the only instrument played without physical contact.",
-        "The oldest known musical instrument is a flute carved from bone, estimated to be over 40,000 years old.",
-        "Michael Jackson's 'Thriller' is the best-selling album of all time with over 66 million copies sold.",
-        "Did you know? In Saem's Tunes, you can double-tap any music tool to open advanced settings.",
-        "Tip: Use the metronome's visual feedback to improve your rhythm.",
-        "Tip: You can adjust the pitch finder's sensitivity in the settings menu.",
-        "Tip: Save your favorite tools to your profile for quick access."
+        "The first piano was invented in Italy by Bartolomeo Cristofori around 1700",
+        "Mozart wrote his first symphony at the age of eight",
+        "The Beatles have sold over 600 million albums worldwide",
+        "A standard guitar has 6 strings tuned to E, A, D, G, B, and E",
+        "In 1952, John Cage composed '4′33″', which consists of 4 minutes and 33 seconds of silence",
+        "The longest commercially released song is 'The Rise and Fall of Bossanova' at 13 hours, 23 minutes, and 32 seconds",
+        "Beethoven composed many of his most famous works after becoming completely deaf",
+        "The theremin is the only instrument played without physical contact",
+        "The oldest known musical instrument is a flute carved from bone, estimated to be over 40,000 years old",
+        "Michael Jackson's 'Thriller' is the best-selling album of all time with over 66 million copies sold",
+        "Did you know? In Saem's Tunes, you can double-tap any music tool to open advanced settings",
+        "Tip: Use the metronome's visual feedback to improve your rhythm",
+        "Tip: You can adjust the pitch finder's sensitivity in the settings menu",
+        "Tip: Save your favorite tools to your profile for quick access",
+        "Did You Know: This app has some Easter eggs! Will you find them all? :)",
+        "Tip: Sign up to enjoy a side of the app you didn't know existed",
+        "Tip: Practice everyday! :)",
+        "The first recorded music performance took place around 3100 BCE in ancient Egypt",
+        "The vibrations of a cello closely mimic the range of the human voice",
+        "Studies show singing releases endorphins, instantly boosting your mood",
+        "Studies found that cows produce more milk when listening to calming classical music",
+        "Ancient Greek athletes trained to specific musical rhythms to boost stamina and coordination",
       ];
       
       const randomFact = facts[Math.floor(Math.random() * facts.length)];
@@ -111,7 +162,11 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
   return (
     <AnimatePresence>
       {showIdleContent && (
-        <>
+        <div 
+          ref={idleWrapperRef}
+          className="idle-state-wrapper fixed inset-0 pointer-events-auto"
+          style={{ zIndex: 50 }}
+        >
           <AnimatedBackground />
           
           {idleMode === 'fact' && (
@@ -134,7 +189,7 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
               onInteraction={() => setShowIdleContent(false)}
             />
           )}
-        </>
+        </div>
       )}
     </AnimatePresence>
   );
