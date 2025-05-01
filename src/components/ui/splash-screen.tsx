@@ -81,7 +81,7 @@ const SplashScreen = ({ loading = true, message = "Loading..." }: SplashScreenPr
 
   return (
     <motion.div
-      className="fixed inset-0 z-1 flex flex-col items-center justify-center bg-background"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background"
       style={{ pointerEvents: fadeOut ? 'none' : 'auto' }}
       initial="visible"
       animate={fadeOut ? "hidden" : "visible"}
