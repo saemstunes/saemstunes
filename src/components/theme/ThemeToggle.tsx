@@ -1,4 +1,3 @@
-
 import { Moon, Sun } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
@@ -48,7 +47,7 @@ export default function ThemeToggle() {
   };
 
   const iconVariants = {
-    initial: { scale: 0.5, opacity: 0, rotate: 0 },
+    initial: { scale: 0.8, opacity: 0, rotate: 0 },
     animate: { 
       scale: 1, 
       opacity: 1, 
@@ -59,13 +58,18 @@ export default function ThemeToggle() {
       } 
     },
     exit: { 
-      scale: 0.5, 
+      scale: 0.8, 
       opacity: 0, 
       rotate: theme === "light" ? -360 : 360,
       transition: { 
         duration: DURATIONS.normal / 1000,
         ease: EASINGS.standard
       } 
+    },
+    hover: {
+      rotate: 360,
+      scale: 1.1,
+      transition: { duration: 0.6 }
     }
   };
 
@@ -85,6 +89,7 @@ export default function ThemeToggle() {
             initial={hasAnimatedRef.current ? "animate" : "initial"}
             animate="animate"
             exit="exit"
+            whileHover="hover"
             className="flex items-center justify-center"
           >
             <Moon className="h-[1.2rem] w-[1.2rem]" />
@@ -96,6 +101,7 @@ export default function ThemeToggle() {
             initial={hasAnimatedRef.current ? "animate" : "initial"}
             animate="animate"
             exit="exit"
+            whileHover="hover"
             className="flex items-center justify-center"
           >
             <Sun className="h-[1.2rem] w-[1.2rem]" />
