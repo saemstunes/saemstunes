@@ -67,7 +67,7 @@ export default function ThemeToggle() {
               ease: "easeInOut",
               type: "spring",
               stiffness: 50,
-              damping: 70,
+              damping: 20,
             }}
             className="flex items-center justify-center"
           >
@@ -85,7 +85,7 @@ export default function ThemeToggle() {
               ease: "easeInOut",
               type: "spring",
               stiffness: 50,
-              damping: 70,
+              damping: 20,
             }}
             className="flex items-center justify-center"
           >
