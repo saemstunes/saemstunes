@@ -65,7 +65,7 @@ export default function ThemeToggle() {
             transition={{
               duration: 0.3,
               ease: "easeInOut",
-              type: "spring",
+              type: "tween",
               stiffness: 50,
               damping: 20,
             }}
@@ -83,7 +83,7 @@ export default function ThemeToggle() {
             transition={{
               duration: 0.3,
               ease: "easeInOut",
-              type: "spring",
+              type: "tween",
               stiffness: 50,
               damping: 20,
             }}
