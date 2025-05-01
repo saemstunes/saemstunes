@@ -1,145 +1,136 @@
-
-import React, { useState, useEffect } from 'react';
-import { cn } from '@/lib/utils';
-import { Loader2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { DURATIONS, EASINGS } from '@/lib/animation-utils';
+import React, { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { DURATIONS, EASINGS } from "@/lib/animation-utils";
 
 interface SplashScreenProps {
   loading?: boolean;
   message?: string;
 }
 
-const SplashScreen = ({ loading = true, message = "Loading..." }: SplashScreenProps) => {
+const SplashScreen = ({
+  loading = true,
+  message = "Loading...",
+}: SplashScreenProps) => {
   const [showSplash, setShowSplash] = useState(true);
-  
+
   useEffect(() => {
     if (!loading) {
-      // Wait for fade out before unmounting
-      const timer = setTimeout(() => {
+      // Allow time for fade-out before unmounting
+      const timeout = setTimeout(() => {
         setShowSplash(false);
-        document.body.style.overflow = "auto";
-      }, 500); // match the hidden variant transition duration
+      }, 500); // match hidden variant duration
 
-      return () => clearTimeout(timer);
-    } else {
-      document.body.style.overflow = "hidden";
+      return () => clearTimeout(timeout);
     }
   }, [loading]);
 
   const containerVariants = {
-    visible: { 
-      opacity: 1 
-    },
-    hidden: { 
+    visible: { opacity: 1 },
+    hidden: {
       opacity: 0,
-      transition: { 
+      transition: {
         duration: 0.5,
-        ease: EASINGS.decelerate
-      }
-    }
+        ease: EASINGS.decelerate,
+      },
+    },
   };
 
   const logoVariants = {
-    initial: { 
+    initial: {
       scale: 0.8,
       y: 20,
-      opacity: 0 
+      opacity: 0,
     },
-    animate: { 
+    animate: {
       scale: 1,
       y: 0,
       opacity: 1,
-      transition: { 
+      transition: {
         duration: 0.6,
-        ease: EASINGS.standard
-      }
-    }
+        ease: EASINGS.standard,
+      },
+    },
   };
 
   const titleVariants = {
-    initial: { 
+    initial: {
       opacity: 0,
-      y: 20 
+      y: 20,
     },
-    animate: { 
+    animate: {
       opacity: 1,
       y: 0,
-      transition: { 
+      transition: {
         delay: 0.2,
         duration: 0.5,
-        ease: EASINGS.standard
-      }
-    }
+        ease: EASINGS.standard,
+      },
+    },
   };
 
   const loaderVariants = {
-    initial: { 
+    initial: {
       opacity: 0,
     },
-    animate: { 
+    animate: {
       opacity: 1,
-      transition: { 
+      transition: {
         delay: 0.4,
         duration: 0.3,
-        ease: EASINGS.standard
-      }
-    }
+        ease: EASINGS.standard,
+      },
+    },
   };
 
   return (
     <AnimatePresence>
       {showSplash && (
-      <motion.div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background"
-      style={{ pointerEvents: fadeOut ? 'none' : 'auto' }}
-      initial="visible"
-      animate={fadeOut ? "hidden" : "visible"}
-      variants={containerVariants}
-      onAnimationComplete={() => {
-        if (fadeOut) {
-          document.body.style.overflow = "auto";
-        } else {
-          document.body.style.overflow = "hidden";
-        }
-      }}
-    >
-      <motion.div 
-        className="w-32 h-32 rounded-full bg-gold/20 flex items-center justify-center mb-8"
-        variants={logoVariants}
-        initial="initial"
-        animate="animate"
-      >
-        <img 
-          src="/lovable-uploads/logo-icon-lg.webp"
-          alt="Saem's Tunes" 
-          className="w-24 h-24"
-        />
-      </motion.div>
-      
-      <motion.div 
-        className="flex flex-col items-center"
-        variants={titleVariants}
-        initial="initial"
-        animate="animate"
-      >
-        <h1 className="text-3xl font-serif font-bold text-foreground mb-2">
-          Saem's <span className="text-gold">Tunes</span>
-        </h1>
-        
-        <motion.div 
-          className="flex items-center gap-2 text-muted-foreground"
-          variants={loaderVariants}
-          initial="initial"
-          animate="animate"
+        <motion.div
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background"
+          initial="visible"
+          animate={loading ? "visible" : "hidden"}
+          exit="hidden"
+          variants={containerVariants}
+          style={{ pointerEvents: loading ? "auto" : "none" }}
         >
-          <Loader2 className="h-4 w-4 animate-spin" />
-          <span>{message}</span>
+          <motion.div
+            className="w-32 h-32 rounded-full bg-gold/20 flex items-center justify-center mb-8"
+            variants={logoVariants}
+            initial="initial"
+            animate="animate"
+          >
+            <img
+              src="/lovable-uploads/logo-icon-lg.webp"
+              alt="Saem's Tunes"
+              className="w-24 h-24"
+            />
+          </motion.div>
+
+          <motion.div
+            className="flex flex-col items-center"
+            variants={titleVariants}
+            initial="initial"
+            animate="animate"
+          >
+            <h1 className="text-3xl font-serif font-bold text-foreground mb-2">
+              Saem's <span className="text-gold">Tunes</span>
+            </h1>
+
+            <motion.div
+              className="flex items-center gap-2 text-muted-foreground"
+              variants={loaderVariants}
+              initial="initial"
+              animate="animate"
+            >
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>{message}</span>
+            </motion.div>
+          </motion.div>
         </motion.div>
-      </motion.div>
-    </motion.div>
       )}
-      </AnimatePresence>
+    </AnimatePresence>
   );
 };
 
