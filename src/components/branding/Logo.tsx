@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -23,13 +22,13 @@ const Logo = ({
 }: LogoProps) => {
   const isMobile = useIsMobile();
   const [imageLoaded, setImageLoaded] = useState(false);
-  
+
   const sizeClasses = {
     sm: 'h-6 w-6',
     md: 'h-8 w-8',
     lg: 'h-10 w-10'
   };
-  
+
   const textSizeClasses = {
     sm: 'text-xs',
     md: isMobile ? 'text-xs' : 'text-xl', // Reduced text size for mobile
@@ -57,6 +56,32 @@ const Logo = ({
 
   // Get base path for logo
   const logoBasePath = `/lovable-uploads/${getLogoBaseName()}`;
+
+  useEffect(() => {
+    const updateLogoMargin = async () => {
+      const sidebarNav = document.querySelector('nav.flex.flex-col.gap-6');
+      const logo = sidebarNav?.querySelector('img.h-8.w-8.mb-6');
+
+      if (logo) {
+        // Set the margin-bottom style to 0 using !important
+        await setElementStyles(logo, { 'margin-bottom': '0 !important' });
+      }
+
+      const data = {
+        success: !!logo
+      };
+
+      console.log(data); // You can use this data as needed
+    };
+
+    updateLogoMargin();
+  }, []); // Empty dependency array to run this once when the component mounts
+
+  const setElementStyles = (element: HTMLElement, styles: { [key: string]: string }) => {
+    Object.entries(styles).forEach(([key, value]) => {
+      element.style.setProperty(key, value);
+    });
+  };
 
   return (
     <Link 
@@ -101,7 +126,7 @@ const Logo = ({
         <span className={cn(
           "logo-font font-bold", 
           textSizeClasses[size],
-          inMobileMenu ? "translate-y-0" : "", // Only apply transform when in mobile menu
+          inMobileMenu ? "translate-y-0" : "",
           "flex items-center self-center" // Ensure vertical centering
         )}>
           Saem's <span className="text-gold">Tunes</span>
