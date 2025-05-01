@@ -1,8 +1,8 @@
-import { Flask } from "@/components/icons";
+// Import the Logo component
+import Logo from "@/components/branding/Logo";
 import { cn } from "@/lib/utils";
 import React from "react";
 import { Link } from "react-router-dom";
-import Logo from "@/components/branding/Logo"; // Import the Logo component
 
 interface SidebarProps {
   children?: React.ReactNode;
@@ -35,11 +35,11 @@ interface SidebarHeaderProps {
 const SidebarHeader = ({ className, children }: SidebarHeaderProps) => {
   return (
     <div className={cn("flex items-center px-6 py-4", className)}>
-      {/* Replace the old Link and icon with the Logo component */}
+      {/* Using the Logo component with imageClassName to fix alignment */}
       <Logo 
         size="md" 
         variant="full" 
-        inSidebar={true} // Set inSidebar prop to true
+        imageClassName="mb-0" // Override margin-bottom to fix alignment
       />
       {children}
     </div>
