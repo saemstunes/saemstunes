@@ -48,11 +48,12 @@ const CategoryNavigation = () => {
 
   return (
     <div className="overflow-x-auto pb-2">
-      <NavigationMenu className="max-w-none w-full justify-start mb-6 z-[100]">
+      <NavigationMenu className="max-w-none w-full justify-start mb-6">
         <NavigationMenuList className="space-x-2">
           <NavigationMenuItem>
-            <NavigationMenuTrigger className="bg-muted/50 z-[100]">Instruments</NavigationMenuTrigger>
-            <NavigationMenuContent className="w-screen max-w-md z-[100]">
+            <NavigationMenuTrigger className="bg-muted/50">Instruments</NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <div className="w-screen max-w-md">
                 <ul className="grid w-full gap-3 p-4 md:grid-cols-2">
                   {["Piano", "Guitar", "Drums", "Violin", "Saxophone", "Flute", "Bass", "Trumpet"].map((item) => (
                     <li key={item}>
