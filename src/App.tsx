@@ -43,7 +43,6 @@ import AuthCallback from "./components/auth/AuthCallback";
 import UserDetails from "./pages/UserDetails";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
-import IdleStateManager from "./components/idle-state/IdleStateManager";
 
 const queryClient = new QueryClient();
 
@@ -66,8 +65,7 @@ const App = () => {
           <Toaster />
           <Sonner />
           <SplashScreen loading={loading} />
-          <BrowserRouter>
-            <IdleStateManager idleTime={60000} /> {/* Set to 60 seconds (1 minute) */}
+          <BrowserRouter>            
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/admin" element={<Admin />} />
