@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { DURATIONS, EASINGS } from '@/lib/animation-utils';
 
 interface SplashScreenProps {
@@ -11,11 +11,19 @@ interface SplashScreenProps {
 }
 
 const SplashScreen = ({ loading = true, message = "Loading..." }: SplashScreenProps) => {
-  const [fadeOut, setFadeOut] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
   
   useEffect(() => {
     if (!loading) {
-      setFadeOut(true);
+      // Wait for fade out before unmounting
+      const timer = setTimeout(() => {
+        setShowSplash(false);
+        document.body.style.overflow = "auto";
+      }, 500); // match the hidden variant transition duration
+
+      return () => clearTimeout(timer);
+    } else {
+      document.body.style.overflow = "hidden";
     }
   }, [loading]);
 
@@ -80,7 +88,9 @@ const SplashScreen = ({ loading = true, message = "Loading..." }: SplashScreenPr
   };
 
   return (
-    <motion.div
+    <AnimatePresence>
+      {showSplash && (
+      <motion.div
       className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background"
       style={{ pointerEvents: fadeOut ? 'none' : 'auto' }}
       initial="visible"
@@ -128,6 +138,8 @@ const SplashScreen = ({ loading = true, message = "Loading..." }: SplashScreenPr
         </motion.div>
       </motion.div>
     </motion.div>
+      )}
+      </AnimatePresence>
   );
 };
 
