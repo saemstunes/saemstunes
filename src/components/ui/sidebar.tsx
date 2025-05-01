@@ -1,5 +1,6 @@
-// Import the Logo component
-import Logo from "@/components/branding/Logo";
+
+// Import the correct icon
+import { Flask } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import React from "react";
 import { Link } from "react-router-dom";
@@ -24,7 +25,6 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
     );
   }
 );
-
 Sidebar.displayName = "Sidebar";
 
 interface SidebarHeaderProps {
@@ -35,12 +35,10 @@ interface SidebarHeaderProps {
 const SidebarHeader = ({ className, children }: SidebarHeaderProps) => {
   return (
     <div className={cn("flex items-center px-6 py-4", className)}>
-      {/* Using the Logo component with imageClassName to fix alignment */}
-      <Logo 
-        size="md" 
-        variant="full" 
-        imageClassName="mb-0" // Override margin-bottom to fix alignment
-      />
+      <Link to="/" className="flex items-center gap-2">
+        <Flask className="h-6 w-6 text-gold" />
+        <span className="font-bold text-lg font-proxima">Saem's Tunes</span>
+      </Link>
       {children}
     </div>
   );

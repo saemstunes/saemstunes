@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -10,7 +11,6 @@ interface LogoProps {
   linkClassName?: string;
   showText?: boolean;
   inMobileMenu?: boolean;
-  imageClassName?: string; // Added new prop for image-specific styling
 }
 
 const Logo = ({
@@ -19,18 +19,17 @@ const Logo = ({
   className,
   linkClassName,
   showText = true,
-  inMobileMenu = false,
-  imageClassName // New prop for image-specific styling
+  inMobileMenu = false
 }: LogoProps) => {
   const isMobile = useIsMobile();
   const [imageLoaded, setImageLoaded] = useState(false);
-
+  
   const sizeClasses = {
     sm: 'h-6 w-6',
     md: 'h-8 w-8',
     lg: 'h-10 w-10'
   };
-
+  
   const textSizeClasses = {
     sm: 'text-xs',
     md: isMobile ? 'text-xs' : 'text-xl', // Reduced text size for mobile
@@ -78,18 +77,18 @@ const Logo = ({
             srcSet={`${logoBasePath}.webp`} 
             type="image/webp" 
           />
-
+          
           {/* SVG version (best quality) */}
           <source 
             srcSet={`${logoBasePath}.svg`} 
             type="image/svg+xml" 
           />
-
+          
           {/* Fallback PNG version */}
           <img 
-            src="/lovable-uploads/logo-desktop.png"
+            src={`/lovable-uploads/logo-desktop.png`}
             alt="Saem's Tunes Logo" 
-            className={cn(sizeClasses[size], imageClassName, className)} 
+            className={cn(sizeClasses[size], className)} 
             onLoad={() => setImageLoaded(true)}
             fetchPriority="high"
             decoding="async"
@@ -97,7 +96,7 @@ const Logo = ({
           />
         </picture>
       )}
-
+      
       {(variant === 'full' || variant === 'text') && showText && (
         <span className={cn(
           "logo-font font-bold", 
