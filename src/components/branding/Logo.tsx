@@ -102,7 +102,7 @@ const Logo = ({
           "logo-font font-bold", 
           textSizeClasses[size],
           inMobileMenu ? "translate-y-0" : "", // Only apply transform when in mobile menu
-          "flex items-center self-center mb-6" // Ensure vertical centering
+          "flex items-center self-center" // Ensure vertical centering
         )}>
           Saem's <span className="text-gold">Tunes</span>
         </span>
