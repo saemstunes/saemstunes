@@ -63,7 +63,7 @@ export default function ThemeToggle() {
             exit={{ opacity: 0, rotate: -360, scale: 0.8 }}
             whileHover={{ rotate: 360, scale: 1.1 }}
             transition={{
-              duration: 0.8,
+              duration: 0.3,
               ease: "easeInOut",
               type: "spring",
               stiffness: 100,
@@ -80,7 +80,7 @@ export default function ThemeToggle() {
             exit={{ opacity: 0, rotate: -360, scale: 0.8 }}
             whileHover={{ rotate: 360, scale: 1.1 }}
             transition={{
-              duration: 0.8,
+              duration: 0.3,
               ease: "easeInOut",
               type: "spring",
               stiffness: 100,
