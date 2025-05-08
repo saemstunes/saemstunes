@@ -3,23 +3,29 @@ import React, { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
-import { Library as LibraryIcon, BookOpen, Bookmark, Clock, Music, GraduationCap } from "lucide-react";
+import { Library as LibraryIcon, BookOpen, Bookmark, Clock, Music, GraduationCap, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { mockVideos } from "@/data/mockData";
-import VideoCard from "@/components/videos/VideoCard";
+import VideoCardWrapper from "@/components/videos/VideoCardWrapper";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
+import MusicQuiz from "@/components/quiz/MusicQuiz";
+import ResourceCard, { Resource } from "@/components/resources/ResourceCard";
+import { useToast } from "@/hooks/use-toast";
 
 const Library = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("saved");
+  const { toast } = useToast();
 
   // Sample saved content data (would come from API in a real app)
   const savedVideos = mockVideos.slice(0, 4);
   const saemOfferings = mockVideos.slice(4, 8).map(video => ({...video, isExclusive: true}));
   
-  // Sample courses data with properly typed levels
+  // Sample courses data
   const courses = [
     {
       id: "course1",
@@ -27,7 +33,7 @@ const Library = () => {
       description: "Learn piano fundamentals from scratch",
       instructor: "Saem",
       duration: "8 weeks",
-      level: "beginner" as const, // Type assertion to match VideoContent's level type
+      level: "beginner",
       thumbnail: "/placeholder.svg",
       enrolled: true,
       progress: 35
@@ -38,7 +44,7 @@ const Library = () => {
       description: "Discover your unique voice and expand your range",
       instructor: "Lisa Wong",
       duration: "6 weeks",
-      level: "intermediate" as const,
+      level: "intermediate",
       thumbnail: "/placeholder.svg",
       enrolled: true,
       progress: 72
@@ -49,7 +55,7 @@ const Library = () => {
       description: "Learn to produce professional tracks from home",
       instructor: "James Rodriguez",
       duration: "10 weeks",
-      level: "beginner" as const,
+      level: "beginner",
       thumbnail: "/placeholder.svg",
       enrolled: false,
       progress: 0
@@ -60,10 +66,44 @@ const Library = () => {
       description: "Take your guitar skills to the next level",
       instructor: "Saem",
       duration: "12 weeks",
-      level: "advanced" as const,
+      level: "advanced",
       thumbnail: "/placeholder.svg",
       enrolled: false,
       progress: 0
+    }
+  ];
+  
+  // Sample offline resources
+  const offlineResources: Resource[] = [
+    {
+      id: "res1",
+      title: "Complete Guitar Chord Chart",
+      description: "A comprehensive chart of guitar chords for beginners to advanced players",
+      type: "chord_chart",
+      thumbnail: "/placeholder.svg",
+      fileSize: "2.4 MB",
+      dateAdded: "2 days ago",
+      tags: ["Guitar", "Chords", "Beginner"],
+      premium: false,
+      downloadUrl: "#",
+      views: 1245,
+      author: "Saem's Tunes",
+      offline: true
+    },
+    {
+      id: "res2",
+      title: "Piano Scales PDF Reference",
+      description: "All major and minor piano scales with fingering patterns",
+      type: "sheet_music",
+      thumbnail: "/placeholder.svg",
+      fileSize: "1.8 MB",
+      dateAdded: "1 week ago",
+      tags: ["Piano", "Scales", "Theory"],
+      premium: true,
+      downloadUrl: "#",
+      views: 789,
+      author: "Saem's Tunes",
+      offline: true
     }
   ];
   
@@ -77,13 +117,25 @@ const Library = () => {
         {description}
       </p>
       <Button 
-        onClick={() => window.location.href = "/discover"}
+        onClick={() => navigate("/discover")}
         className="bg-gold hover:bg-gold-dark text-white"
       >
         Explore Content
       </Button>
     </div>
   );
+
+  const handleExclusiveContent = (contentId) => {
+    // Redirect to payment page for premium content
+    navigate(`/payment?contentType=exclusive&contentId=${contentId}`);
+  };
+
+  const handleQuizComplete = (score, total) => {
+    toast({
+      title: "Quiz Completed",
+      description: `You scored ${score} out of ${total}! Keep learning and improving your music knowledge.`,
+    });
+  };
 
   const CourseCard = ({ course }) => (
     <Card className="overflow-hidden h-full flex flex-col">
@@ -127,6 +179,13 @@ const Library = () => {
       <div className="p-4 pt-0">
         <Button 
           className={cn("w-full", course.enrolled ? "bg-gold hover:bg-gold-dark" : "bg-muted-foreground")}
+          onClick={() => {
+            if (!course.enrolled) {
+              handleExclusiveContent(course.id);
+            } else {
+              navigate(`/learning-hub/${course.id}`);
+            }
+          }}
         >
           {course.enrolled ? "Continue Learning" : "Enroll Now"}
         </Button>
@@ -147,7 +206,7 @@ const Library = () => {
           {user && (
             <Button
               variant="outline"
-              onClick={() => window.location.href = "/discover"}
+              onClick={() => navigate("/discover")}
               className="hidden sm:flex"
             >
               <Music className="mr-2 h-4 w-4" />
@@ -156,8 +215,57 @@ const Library = () => {
           )}
         </div>
         
+        {/* Music Quiz Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <MusicQuiz onComplete={handleQuizComplete} />
+          </div>
+          <div className="space-y-4">
+            <Card className="h-full">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-xl font-proxima">Quiz Rankings</CardTitle>
+                  <Lightbulb className="h-5 w-5 text-gold" />
+                </div>
+                <CardDescription>See how you compare with others</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-gold text-white w-7 h-7 rounded-full flex items-center justify-center font-bold">1</div>
+                    <span>James K.</span>
+                  </div>
+                  <Badge>95%</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-zinc-400 text-white w-7 h-7 rounded-full flex items-center justify-center font-bold">2</div>
+                    <span>Maria T.</span>
+                  </div>
+                  <Badge>88%</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-amber-700 text-white w-7 h-7 rounded-full flex items-center justify-center font-bold">3</div>
+                    <span>David L.</span>
+                  </div>
+                  <Badge>82%</Badge>
+                </div>
+                <div className="pt-4 border-t">
+                  <Button variant="outline" className="w-full">
+                    View All Rankings
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+        
         {/* Featured Saem's content */}
-        <div className="relative rounded-lg overflow-hidden h-48 md:h-64 bg-gradient-to-r from-gold/70 to-brown/70 mb-8">
+        <div 
+          className="relative rounded-lg overflow-hidden h-48 md:h-64 bg-gradient-to-r from-gold/70 to-brown/70 mb-8 cursor-pointer"
+          onClick={() => handleExclusiveContent("master-class-guitar")}
+        >
           <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent z-10"></div>
           <img 
             src="/placeholder.svg" 
@@ -198,8 +306,47 @@ const Library = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {saemOfferings.map(video => (
-              <VideoCard key={video.id} video={video} isPremium={true} />
+              <div 
+                key={video.id} 
+                className="cursor-pointer"
+                onClick={() => handleExclusiveContent(video.id)}
+              >
+                <VideoCardWrapper key={video.id} video={video} isPremium={true} />
+              </div>
             ))}
+          </div>
+        </div>
+        
+        {/* Offline Resources Section */}
+        <div className="mb-8">
+          <h2 className="text-xl font-proxima font-semibold mb-4 flex items-center">
+            <BookOpen className="h-5 w-5 text-gold mr-2" />
+            Available Offline
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {offlineResources.map(resource => (
+              <ResourceCard 
+                key={resource.id} 
+                resource={resource} 
+                isBookmarked={true}
+                onBookmark={() => {
+                  toast({
+                    title: "Removed from offline storage",
+                    description: `${resource.title} is no longer available offline`,
+                  });
+                }}
+              />
+            ))}
+            <Card className="flex flex-col items-center justify-center p-8 border-dashed cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => navigate("/resources")}>
+              <div className="bg-gold/10 p-4 rounded-full mb-4">
+                <BookOpen className="h-6 w-6 text-gold" />
+              </div>
+              <h3 className="font-medium mb-2">Save More Resources</h3>
+              <p className="text-center text-sm text-muted-foreground">
+                Browse our library to download more resources for offline use
+              </p>
+            </Card>
           </div>
         </div>
         
@@ -227,7 +374,12 @@ const Library = () => {
             {savedVideos.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {savedVideos.map(video => (
-                  <VideoCard key={video.id} video={video} isPremium={false} />
+                  <VideoCardWrapper 
+                    key={video.id} 
+                    video={video}
+                    isPremium={video.isLocked}
+                    onClick={() => navigate(`/videos/${video.id}`)}
+                  />
                 ))}
               </div>
             ) : (
