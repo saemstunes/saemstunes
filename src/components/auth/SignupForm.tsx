@@ -34,7 +34,7 @@ export interface SignupFormProps {
 
 const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { signup } = useAuth();
+  const { signUp } = useAuth(); // Fixed: using signUp instead of signup to match AuthContext
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -52,7 +52,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
     setIsSubmitting(true);
     
     try {
-      await signup(data.email, data.password, data.name);
+      await signUp(data.email, data.password, data.name); // Fixed: using signUp instead of signup
       
       toast({
         title: "Account created!",
