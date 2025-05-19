@@ -22,8 +22,7 @@ const MetronomeVisual: React.FC<MetronomeVisualProps> = ({
   // Calculate the beat marker positions on a circle
   const beatMarkers = useMemo(() => {
     return Array.from({ length: beatsPerMeasure }).map((_, i) => {
-      // Calculate position on a circle - starting at the top (12 o'clock position)
-      // and moving clockwise
+      // Calculate position on a circle
       const angle = (Math.PI * 1.5) + (2 * Math.PI * i / beatsPerMeasure);
       const radius = 42; // Circle radius percentage
       
@@ -100,77 +99,30 @@ const MetronomeVisual: React.FC<MetronomeVisualProps> = ({
           <div className="absolute inset-0">
             {beatMarkers.map(({ top, left, beat }) => {
               const isActive = isPlaying && currentBeat === beat;
-              const isFirstBeat = beat === 0;
               
               return (
                 <motion.div 
                   key={beat}
-                  className="absolute rounded-full"
+                  className="absolute w-4 h-4 rounded-full"
                   style={{
                     top,
                     left,
-                    width: isFirstBeat ? '20px' : '16px',
-                    height: isFirstBeat ? '20px' : '16px',
                     transform: 'translate(-50%, -50%)',
-                    background: isActive 
-                      ? isFirstBeat ? "#FFD700" : "rgba(255, 215, 0, 0.8)" 
-                      : isFirstBeat ? "rgba(255, 215, 0, 0.5)" : "rgba(255, 215, 0, 0.3)",
-                    boxShadow: isActive 
-                      ? isFirstBeat ? "0 0 16px rgba(255, 215, 0, 1)" : "0 0 12px rgba(255, 215, 0, 0.9)" 
-                      : isFirstBeat ? "0 0 8px rgba(255, 215, 0, 0.3)" : "none"
+                    background: isActive ? "#FFD700" : "rgba(255, 215, 0, 0.3)",
+                    boxShadow: isActive ? "0 0 12px rgba(255, 215, 0, 0.9)" : "none"
                   }}
                   animate={{
                     scale: isActive ? [1, 1.4, 1] : 1,
-                    opacity: isActive ? [0.7, 1, 0.7] : isFirstBeat ? 0.9 : 0.7
+                    opacity: isActive ? [0.7, 1, 0.7] : 0.7
                   }}
                   transition={{
                     duration: isActive ? 0.2 : 0,
-                    ease: "easeOut"
+                    ease: "easeInOut"
                   }}
                 />
               );
             })}
-            
-            {/* Sequential beat highlight indicator - separate from the markers */}
-            {isPlaying && (
-              <motion.div
-                className="absolute rounded-full z-10"
-                style={{
-                  top: beatMarkers[currentBeat].top,
-                  left: beatMarkers[currentBeat].left,
-                  width: currentBeat === 0 ? '24px' : '20px',
-                  height: currentBeat === 0 ? '24px' : '20px',
-                  transform: 'translate(-50%, -50%)',
-                  background: "transparent",
-                  border: `2px solid ${currentBeat === 0 ? "#FFD700" : "rgba(255, 215, 0, 0.8)"}`,
-                  boxShadow: `0 0 ${currentBeat === 0 ? '20px' : '15px'} ${currentBeat === 0 ? 'rgba(255, 215, 0, 1)' : 'rgba(255, 215, 0, 0.9)'}`
-                }}
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: [0.8, 1.5, 0.8], opacity: [0, 1, 0] }}
-                transition={{ 
-                  duration: 60/tempo * 0.8, 
-                  ease: "easeOut",
-                  times: [0, 0.3, 1]
-                }}
-                key={`beat-${currentBeat}-${Date.now()}`} // Force re-render on beat change
-              />
-            )}
           </div>
-        )}
-        
-        {/* Beat connection line */}
-        {visualFeedback && isPlaying && beatsPerMeasure > 2 && (
-          <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }}>
-            <motion.circle
-              cx="50%"
-              cy="50%"
-              r="42%"
-              fill="none"
-              stroke="rgba(255, 215, 0, 0.15)"
-              strokeWidth="1"
-              strokeDasharray="2 4"
-            />
-          </svg>
         )}
         
         {/* Pendulum for visual feedback */}
@@ -196,27 +148,6 @@ const MetronomeVisual: React.FC<MetronomeVisualProps> = ({
             />
           </motion.div>
         )}
-        
-        {/* Tempo change indicator */}
-        <motion.div
-          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-full"
-          style={{ 
-            width: "100%", 
-            height: "100%", 
-            border: "2px solid rgba(255, 215, 0, 0.4)",
-            opacity: 0
-          }}
-          key={`tempo-change-${tempo}`}
-          animate={{ 
-            opacity: [0, 0.6, 0],
-            scale: [0.8, 1.1, 1]
-          }}
-          transition={{ 
-            duration: 0.6,
-            ease: "easeOut",
-            times: [0, 0.4, 1]
-          }}
-        />
       </div>
     </div>
   );

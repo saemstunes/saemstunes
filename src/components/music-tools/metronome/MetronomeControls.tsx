@@ -1,5 +1,5 @@
 // src/components/music-tools/metronome/MetronomeControls.tsx
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { PlayCircle, PauseCircle, Music, Plus, Minus } from "lucide-react";
@@ -32,13 +32,6 @@ const MetronomeControls: React.FC<MetronomeControlsProps> = ({
   setVisualFeedback,
   tapTempo
 }) => {
-  // State to track tempo changes for animations
-  const [prevTempo, setPrevTempo] = useState(tempo);
-  const [tempoChangeDirection, setTempoChangeDirection] = useState<'up' | 'down' | null>(null);
-
-  // Track previous beats per measure for animation
-  const [prevBeats, setPrevBeats] = useState(beatsPerMeasure);
-  
   // Tempo text labels based on BPM
   const getTempoLabel = () => {
     if (tempo < 60) return "Largo";
@@ -47,40 +40,6 @@ const MetronomeControls: React.FC<MetronomeControlsProps> = ({
     if (tempo < 120) return "Moderato";
     if (tempo < 168) return "Allegro";
     return "Presto";
-  };
-
-  // Handle tempo changes
-  useEffect(() => {
-    if (tempo !== prevTempo) {
-      setTempoChangeDirection(tempo > prevTempo ? 'up' : 'down');
-      setPrevTempo(tempo);
-      
-      // Reset direction after animation
-      const timer = setTimeout(() => {
-        setTempoChangeDirection(null);
-      }, 1000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [tempo, prevTempo]);
-
-  // Handle beats changes
-  useEffect(() => {
-    if (beatsPerMeasure !== prevBeats) {
-      setPrevBeats(beatsPerMeasure);
-    }
-  }, [beatsPerMeasure, prevBeats]);
-
-  // Handle tempo changes with increment/decrement
-  const handleTempoChange = (amount: number) => {
-    const newTempo = Math.max(40, Math.min(220, tempo + amount));
-    setTempo(newTempo);
-  };
-  
-  // Handle beats per measure change with animation
-  const handleBeatsChange = (newValue: string) => {
-    const newBeats = Number(newValue);
-    setBeatsPerMeasure(newBeats);
   };
 
   return (
@@ -93,87 +52,39 @@ const MetronomeControls: React.FC<MetronomeControlsProps> = ({
       {/* Tempo control section */}
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <motion.div
-            key={`tempo-label-${tempo}`}
-            initial={{ opacity: 0.7, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Label className="text-lg font-semibold">
-              <span className="text-gold">{tempo} BPM</span>
-              <span className="text-sm ml-2 text-muted-foreground">({getTempoLabel()})</span>
-            </Label>
-          </motion.div>
+          <Label className="text-lg font-semibold">
+            <span className="text-gold">{tempo} BPM</span>
+            <span className="text-sm ml-2 text-muted-foreground">({getTempoLabel()})</span>
+          </Label>
           <div className="flex gap-2">
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => handleTempoChange(-5)}
-              className="border-gold hover:bg-gold/10 hover:text-gold relative"
+              onClick={() => setTempo(Math.max(tempo - 5, 40))}
+              className="border-gold hover:bg-gold/10 hover:text-gold"
             >
               <Minus size={16} />
-              {tempoChangeDirection === 'down' && (
-                <motion.span 
-                  className="absolute -top-2 -right-2 rounded-full bg-gold text-black text-xs w-5 h-5 flex items-center justify-center"
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{ opacity: [0, 1, 0], scale: [0.5, 1, 1.2] }}
-                  transition={{ duration: 0.5 }}
-                >
-                  -5
-                </motion.span>
-              )}
             </Button>
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => handleTempoChange(5)}
-              className="border-gold hover:bg-gold/10 hover:text-gold relative"
+              onClick={() => setTempo(Math.min(tempo + 5, 220))}
+              className="border-gold hover:bg-gold/10 hover:text-gold"
             >
               <Plus size={16} />
-              {tempoChangeDirection === 'up' && (
-                <motion.span 
-                  className="absolute -top-2 -right-2 rounded-full bg-gold text-black text-xs w-5 h-5 flex items-center justify-center"
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{ opacity: [0, 1, 0], scale: [0.5, 1, 1.2] }}
-                  transition={{ duration: 0.5 }}
-                >
-                  +5
-                </motion.span>
-              )}
             </Button>
           </div>
         </div>
         
         {/* Tempo slider */}
-        <div className="relative">
-          <Slider
-            value={[tempo]}
-            min={40}
-            max={220}
-            step={1}
-            onValueChange={(value) => setTempo(value[0])}
-            className="py-4"
-          />
-          
-          {/* Tempo change indicator */}
-          {tempoChangeDirection && (
-            <motion.div 
-              className={cn(
-                "absolute h-1 rounded-full",
-                tempoChangeDirection === 'up' ? "bg-green-500" : "bg-amber-500"
-              )}
-              style={{ 
-                bottom: "20px", 
-                left: `${((prevTempo - 40) / 180) * 100}%`,
-                width: `${Math.abs(tempo - prevTempo) / 180 * 100}%`,
-                transformOrigin: tempoChangeDirection === 'up' ? 'left' : 'right'
-              }}
-              initial={{ scaleX: 0, opacity: 0 }}
-              animate={{ scaleX: 1, opacity: [0, 0.8, 0] }}
-              transition={{ duration: 0.6 }}
-            />
-          )}
-        </div>
+        <Slider
+          value={[tempo]}
+          min={40}
+          max={220}
+          step={1}
+          onValueChange={(value) => setTempo(value[0])}
+          className="py-4"
+        />
         
         {/* Tempo guide */}
         <div className="flex justify-between text-xs text-muted-foreground">
@@ -187,28 +98,21 @@ const MetronomeControls: React.FC<MetronomeControlsProps> = ({
       <div className="flex flex-wrap gap-6 items-center">
         <div className="space-y-1 flex-1 min-w-[120px]">
           <Label htmlFor="beats" className="text-sm">Beats per measure</Label>
-          <motion.div
-            key={`beats-select-${beatsPerMeasure}`}
-            initial={{ opacity: 0.8 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
+          <Select 
+            value={beatsPerMeasure.toString()} 
+            onValueChange={(value) => setBeatsPerMeasure(Number(value))}
           >
-            <Select 
-              value={beatsPerMeasure.toString()} 
-              onValueChange={handleBeatsChange}
-            >
-              <SelectTrigger id="beats" className="border-gold/30 bg-black/20">
-                <SelectValue placeholder="Beats" />
-              </SelectTrigger>
-              <SelectContent>
-                {[2, 3, 4, 5, 6, 7, 8, 9].map(num => (
-                  <SelectItem key={num} value={num.toString()}>
-                    {num} {num === 4 ? '(4/4)' : num === 3 ? '(3/4)' : num === 2 ? '(2/4)' : ''}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </motion.div>
+            <SelectTrigger id="beats" className="border-gold/30 bg-black/20">
+              <SelectValue placeholder="Beats" />
+            </SelectTrigger>
+            <SelectContent>
+              {[2, 3, 4, 5, 6, 7, 8, 9].map(num => (
+                <SelectItem key={num} value={num.toString()}>
+                  {num}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         
         <div className="space-y-1 flex-1 min-w-[120px]">
@@ -239,7 +143,7 @@ const MetronomeControls: React.FC<MetronomeControlsProps> = ({
           size="lg"
           onClick={startStop}
           className={cn(
-            "shadow-lg transition-colors duration-200",
+            "shadow-lg",
             isPlaying 
               ? "bg-red-500 hover:bg-red-600 shadow-red-500/20" 
               : "bg-gold hover:bg-gold/90 shadow-gold/20"
