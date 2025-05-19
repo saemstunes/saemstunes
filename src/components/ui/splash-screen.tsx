@@ -216,7 +216,7 @@ const SplashScreen = ({
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5, duration: 0.6 }}
             >
-              Creating music that glorifies Christ
+              Making music, representing Christ
             </motion.p>
 
             {/* Progress bar */}
