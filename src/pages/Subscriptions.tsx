@@ -183,7 +183,7 @@ const Subscriptions = () => {
                           <span>Total</span>
                           <span>
                             ${promoApplied 
-                              ? (parseFloat(selectedPlanDetails?.price || "0") * 0.9).toFixed(2) 
+                              ? (parseFloat(String(selectedPlanDetails?.price || "0")) * 0.9).toFixed(2) 
                               : selectedPlanDetails?.price}/month
                           </span>
                         </div>
@@ -305,12 +305,12 @@ const Subscriptions = () => {
                       key={plan.id}
                       className={cn(
                         "flex flex-col justify-between",
-                        plan.popular && "border-gold shadow-md",
+                        plan.isPopular && "border-gold shadow-md",
                         selectedPlan === plan.id && "ring-2 ring-gold"
                       )}
                     >
                       <CardHeader>
-                        {plan.popular && (
+                        {plan.isPopular && (
                           <div className="py-1 px-3 bg-gold/20 text-gold rounded-full text-xs font-medium w-fit mx-auto mb-2">
                             MOST POPULAR
                           </div>
@@ -319,7 +319,7 @@ const Subscriptions = () => {
                           {plan.name}
                         </CardTitle>
                         <CardDescription className="text-center">
-                          {plan.description}
+                          {plan.shortDescription}
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="text-center space-y-6">
@@ -328,9 +328,9 @@ const Subscriptions = () => {
                             ${plan.price}
                             <span className="text-muted-foreground text-sm font-normal">/month</span>
                           </p>
-                          {plan.discount && (
+                          {plan.annualDiscount && (
                             <p className="text-sm text-muted-foreground">
-                              Save ${plan.discount} annually
+                              Save ${plan.annualDiscount} annually
                             </p>
                           )}
                         </div>

@@ -35,7 +35,7 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
         <CardTitle className="text-xl font-proxima text-center">
           {plan.name}
         </CardTitle>
-        <CardDescription className="text-center">{plan.shortDescription}</CardDescription>
+        <CardDescription className="text-center">{plan.shortDescription || ""}</CardDescription>
       </CardHeader>
       <CardContent className="text-center space-y-6">
         <div className="space-y-2">

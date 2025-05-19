@@ -238,6 +238,8 @@ export interface SubscriptionPlan {
   interval: "month" | "quarter" | "year";
   features: string[];
   isPopular?: boolean;
+  shortDescription?: string;
+  annualDiscount?: number;
 }
 
 export const mockSubscriptionPlans: SubscriptionPlan[] = [
@@ -246,6 +248,7 @@ export const mockSubscriptionPlans: SubscriptionPlan[] = [
     name: "Basic",
     price: 9.99,
     interval: "month",
+    shortDescription: "Get started with essential features",
     features: [
       "Access to beginner lessons",
       "5 infographic downloads per month",
@@ -258,6 +261,8 @@ export const mockSubscriptionPlans: SubscriptionPlan[] = [
     name: "Premium",
     price: 19.99,
     interval: "month",
+    shortDescription: "Perfect for dedicated learners",
+    annualDiscount: 40,
     features: [
       "Access to all beginner and intermediate lessons",
       "Unlimited infographic downloads",
@@ -272,6 +277,8 @@ export const mockSubscriptionPlans: SubscriptionPlan[] = [
     name: "Professional",
     price: 39.99,
     interval: "month",
+    shortDescription: "For serious musicians and professionals",
+    annualDiscount: 80,
     features: [
       "Access to all lessons (including advanced)",
       "Unlimited infographic downloads",
