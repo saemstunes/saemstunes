@@ -1,4 +1,4 @@
-// src/components/auth/AdminLoginForm.tsx
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -26,10 +26,10 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 interface AdminLoginFormProps {
-  onClose: () => void;
+  onClose?: () => void;
 }
 
-const AdminLoginForm = ({ onClose }: AdminLoginFormProps) => {
+const AdminLoginForm = ({ onClose = () => {} }: AdminLoginFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();

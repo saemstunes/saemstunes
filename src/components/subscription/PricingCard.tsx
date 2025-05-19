@@ -27,7 +27,7 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
       )}
     >
       <CardHeader>
-        {plan.popular && (
+        {plan.isPopular && (
           <div className="py-1 px-3 bg-gold/20 text-gold rounded-full text-xs font-medium w-fit mx-auto mb-2">
             MOST POPULAR
           </div>
@@ -35,7 +35,7 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
         <CardTitle className="text-xl font-proxima text-center">
           {plan.name}
         </CardTitle>
-        <CardDescription className="text-center">{plan.description}</CardDescription>
+        <CardDescription className="text-center">{plan.shortDescription}</CardDescription>
       </CardHeader>
       <CardContent className="text-center space-y-6">
         <div className="space-y-2">
@@ -45,9 +45,9 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
               /month
             </span>
           </p>
-          {plan.discount && (
+          {plan.annualDiscount && (
             <p className="text-sm text-muted-foreground">
-              Save ${plan.discount} annually
+              Save ${plan.annualDiscount} annually
             </p>
           )}
         </div>

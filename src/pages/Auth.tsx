@@ -1,8 +1,8 @@
 
 import React, { useState } from "react";
-import { LoginForm } from "@/components/auth/LoginForm";
-import { SignupForm } from "@/components/auth/SignupForm";
-import { AdminLoginForm } from "@/components/auth/AdminLoginForm";
+import LoginForm from "@/components/auth/LoginForm";
+import SignupForm from "@/components/auth/SignupForm";
+import AdminLoginForm from "@/components/auth/AdminLoginForm";
 import { useSearchParams } from "react-router-dom";
 import Logo from "@/components/branding/Logo";
 
@@ -22,7 +22,7 @@ const Auth = () => {
           <h1 className="text-3xl md:text-4xl font-serif text-white font-bold mb-4">
             Welcome to Saem's Tunes
           </h1>
-          <p className="text-white/80 text-lg md:text-xl mb-6 whitespace-nowrap">Making music, representing Christ</p>
+          <p className="text-white/80 text-lg md:text-xl mb-6 whitespace-nowrap overflow-x-auto">Making music, representing Christ</p>
           <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-6">
             <h2 className="text-xl font-bold text-white mb-2">Why Join Us?</h2>
             <ul className="space-y-3">
