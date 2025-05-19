@@ -100,7 +100,7 @@ const SupportUs = () => {
                     <img 
                       src="/lovable-uploads/logo-icon-lg.webp" 
                       alt="Saem" 
-                      className="w-full h-full object-cover transform -translate-y-4"
+                      className="w-full h-full object-cover"
                     />
                   </div>
                 </div>
