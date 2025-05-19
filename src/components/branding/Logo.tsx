@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { motion } from 'framer-motion';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
@@ -11,6 +12,7 @@ interface LogoProps {
   linkClassName?: string;
   showText?: boolean;
   inMobileMenu?: boolean;
+  animated?: boolean;
 }
 
 const Logo = ({
@@ -19,7 +21,8 @@ const Logo = ({
   className,
   linkClassName,
   showText = true,
-  inMobileMenu = false
+  inMobileMenu = false,
+  animated = false
 }: LogoProps) => {
   const isMobile = useIsMobile();
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -27,13 +30,13 @@ const Logo = ({
   const sizeClasses = {
     sm: 'h-6 w-6',
     md: 'h-8 w-8',
-    lg: 'h-10 w-10'
+    lg: 'h-12 w-12' // Slightly larger for better proportion
   };
   
   const textSizeClasses = {
     sm: 'text-xs',
-    md: isMobile ? 'text-xs' : 'text-xl', // Reduced text size for mobile
-    lg: isMobile ? 'text-sm' : 'text-2xl'  // Reduced text size for mobile
+    md: isMobile ? 'text-sm' : 'text-xl', // Adjusted text size for mobile
+    lg: isMobile ? 'text-base' : 'text-2xl'  // Adjusted text size for mobile
   };
 
   // Determine the appropriate logo base name
@@ -58,10 +61,26 @@ const Logo = ({
   // Get base path for logo
   const logoBasePath = `/lovable-uploads/${getLogoBaseName()}`;
 
-  return (
+  // Animation variants
+  const containerVariants = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1, transition: { duration: 0.5 } }
+  };
+
+  const iconVariants = {
+    initial: { scale: 0.9, opacity: 0 },
+    animate: { scale: 1, opacity: 1, transition: { duration: 0.5 } }
+  };
+
+  const textVariants = {
+    initial: { opacity: 0, x: -5 },
+    animate: { opacity: 1, x: 0, transition: { delay: 0.2, duration: 0.5 } }
+  };
+
+  const LogoComponent = (
     <Link 
       to="/" 
-      className={cn("flex items-center gap-2 brand-logo", linkClassName)}
+      className={cn("flex items-center gap-3", linkClassName)} // Increased gap for better spacing
       onClick={(e) => {
         // If clicking while already on home page, scroll to top
         if (window.location.pathname === "/") {
@@ -71,37 +90,39 @@ const Logo = ({
       }}
     >
       {(variant === 'full' || variant === 'icon') && (
-        <picture>
-          {/* WebP version (most efficient) */}
-          <source 
-            srcSet={`${logoBasePath}.webp`} 
-            type="image/webp" 
-          />
-          
-          {/* SVG version (best quality) */}
-          <source 
-            srcSet={`${logoBasePath}.svg`} 
-            type="image/svg+xml" 
-          />
-          
-          {/* Fallback PNG version */}
-          <img 
-            src={`/lovable-uploads/logo-desktop.png`}
-            alt="Saem's Tunes Logo" 
-            className={cn(sizeClasses[size], className)} 
-            onLoad={() => setImageLoaded(true)}
-            fetchPriority="high"
-            decoding="async"
-            loading={variant === 'icon' && !isMobile ? "lazy" : "eager"}
-          />
-        </picture>
+        <div className={cn("flex-shrink-0", !imageLoaded && "bg-muted/30 animate-pulse rounded-full")}>
+          <picture>
+            {/* WebP version (most efficient) */}
+            <source 
+              srcSet={`${logoBasePath}.webp`} 
+              type="image/webp" 
+            />
+            
+            {/* SVG version (best quality) */}
+            <source 
+              srcSet={`${logoBasePath}.svg`} 
+              type="image/svg+xml" 
+            />
+            
+            {/* Fallback PNG version */}
+            <img 
+              src={`/lovable-uploads/logo-desktop.png`}
+              alt="Saem's Tunes Logo" 
+              className={cn(sizeClasses[size], className)} 
+              onLoad={() => setImageLoaded(true)}
+              fetchPriority="high"
+              decoding="async"
+              loading={variant === 'icon' && !isMobile ? "lazy" : "eager"}
+            />
+          </picture>
+        </div>
       )}
       
       {(variant === 'full' || variant === 'text') && showText && (
         <span className={cn(
-          "logo-font font-bold", 
+          "logo-font font-bold leading-none", // Added leading-none for better vertical alignment
           textSizeClasses[size],
-          inMobileMenu ? "translate-y-0" : "", // Only apply transform when in mobile menu
+          inMobileMenu ? "translate-y-0" : "",
           "flex items-center self-center" // Ensure vertical centering
         )}>
           Saem's <span className="text-gold">Tunes</span>
@@ -109,6 +130,31 @@ const Logo = ({
       )}
     </Link>
   );
+
+  if (animated) {
+    return (
+      <motion.div
+        variants={containerVariants}
+        initial="initial"
+        animate="animate"
+        className="flex items-center"
+      >
+        {(variant === 'full' || variant === 'icon') && (
+          <motion.div variants={iconVariants} className="flex-shrink-0">
+            {LogoComponent}
+          </motion.div>
+        )}
+        
+        {(variant === 'full' || variant === 'text') && showText && (
+          <motion.div variants={textVariants}>
+            {LogoComponent}
+          </motion.div>
+        )}
+      </motion.div>
+    );
+  }
+
+  return LogoComponent;
 };
 
 export default Logo;

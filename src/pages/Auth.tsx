@@ -1,29 +1,72 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import LoginForm from "@/components/auth/LoginForm";
 import SignupForm from "@/components/auth/SignupForm";
 import AdminLoginForm from "@/components/auth/AdminLoginForm";
 import { useSearchParams } from "react-router-dom";
 import Logo from "@/components/branding/Logo";
+import { FloatingBackButton } from "@/components/ui/floating-back-button";
+import { AnimatePresence, motion } from "framer-motion";
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
-  const initialForm = searchParams.get("signup") === "true" ? "signup" : "login";
+  const initialForm = searchParams.get("login") === "true" ? "login" : "signup";
   const [activeForm, setActiveForm] = useState<"login" | "signup" | "admin">(
-    (initialForm as "login" | "signup") || "login"
+    (initialForm as "login" | "signup") || "signup"
   );
+  const [adminTapCount, setAdminTapCount] = useState(0);
+  
+  // Reset admin tap count after a delay
+  useEffect(() => {
+    if (adminTapCount > 0) {
+      const timer = setTimeout(() => setAdminTapCount(0), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [adminTapCount]);
+  
+  // Handle secret admin section reveal
+  const handleAdminTapArea = () => {
+    setAdminTapCount(prev => {
+      const newCount = prev + 1;
+      if (newCount === 7) {
+        setActiveForm("admin");
+        return 0;
+      }
+      return newCount;
+    });
+  };
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* Logo and branding section */}
-      <div className="md:flex-1 bg-gradient-to-br from-gold to-brown p-8 md:p-12 flex flex-col justify-center">
+      <div 
+        className="md:flex-1 bg-gradient-to-br from-gold to-brown p-8 md:p-12 flex flex-col justify-center"
+        onClick={handleAdminTapArea}
+      >
         <div className="max-w-md mx-auto">
           <Logo variant="full" size="lg" className="mb-8" />
-          <h1 className="text-3xl md:text-4xl font-serif text-white font-bold mb-4">
+          <motion.h1 
+            className="text-3xl md:text-4xl font-serif text-white font-bold mb-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
             Welcome to Saem's Tunes
-          </h1>
-          <p className="text-white/80 text-lg md:text-xl mb-6 whitespace-nowrap overflow-x-auto">Making music, representing Christ</p>
-          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-6">
+          </motion.h1>
+          <motion.p 
+            className="text-white/80 text-lg md:text-xl mb-6 whitespace-nowrap overflow-x-auto"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+          >
+            Making music, representing Christ
+          </motion.p>
+          <motion.div 
+            className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-6"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+          >
             <h2 className="text-xl font-bold text-white mb-2">Why Join Us?</h2>
             <ul className="space-y-3">
               <li className="flex items-start">
@@ -84,12 +127,13 @@ const Auth = () => {
                 <span className="text-white/90">Supportive community of musicians and learners</span>
               </li>
             </ul>
-          </div>
+          </motion.div>
         </div>
       </div>
 
       {/* Auth forms section */}
-      <div className="md:flex-1 p-8 flex items-center justify-center">
+      <div className="md:flex-1 p-8 flex items-center justify-center relative">
+        <FloatingBackButton />
         <div className="max-w-md w-full">
           <div className="mb-8">
             <div className="flex border-b space-x-4">
@@ -113,22 +157,61 @@ const Auth = () => {
               >
                 Sign Up
               </button>
-              <button
-                onClick={() => setActiveForm("admin")}
-                className={`pb-2 px-2 ml-auto text-sm ${
-                  activeForm === "admin"
-                    ? "text-gold border-b-2 border-gold font-medium"
-                    : "text-muted-foreground"
-                }`}
-              >
-                Admin
-              </button>
+              <AnimatePresence>
+                {activeForm === "admin" && (
+                  <motion.button
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    onClick={() => setActiveForm("admin")}
+                    className={`pb-2 px-2 ml-auto text-sm ${
+                      activeForm === "admin"
+                        ? "text-gold border-b-2 border-gold font-medium"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    Admin
+                  </motion.button>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 
-          {activeForm === "login" && <LoginForm />}
-          {activeForm === "signup" && <SignupForm onSignupComplete={() => setActiveForm("login")} />}
-          {activeForm === "admin" && <AdminLoginForm />}
+          <AnimatePresence mode="wait">
+            {activeForm === "login" && (
+              <motion.div
+                key="login"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <LoginForm />
+              </motion.div>
+            )}
+            {activeForm === "signup" && (
+              <motion.div
+                key="signup"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <SignupForm onSignupComplete={() => setActiveForm("login")} />
+              </motion.div>
+            )}
+            {activeForm === "admin" && (
+              <motion.div
+                key="admin"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <AdminLoginForm />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>

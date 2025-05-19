@@ -31,6 +31,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { motion } from "framer-motion";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email"),
@@ -77,26 +78,42 @@ const LoginForm = () => {
   return (
     <Card className="w-full border-gold/20 shadow-lg">
       <CardHeader className="space-y-1">
-        <div className="flex justify-center mb-4">
+        <motion.div 
+          className="flex justify-center mb-4"
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
           <div className="bg-gold/10 p-3 rounded-full">
             <Music className="h-8 w-8 text-gold" />
           </div>
-        </div>
-        <CardTitle className="text-2xl text-center font-serif">
-          Welcome Back
-        </CardTitle>
-        <CardDescription className="text-center">
-          Enter your credentials to access your account
-        </CardDescription>
+        </motion.div>
+        <motion.div
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1, duration: 0.3 }}
+        >
+          <CardTitle className="text-2xl text-center font-serif">
+            Welcome Back
+          </CardTitle>
+          <CardDescription className="text-center">
+            Enter your credentials to access your account
+          </CardDescription>
+        </motion.div>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-4">
             {form.formState.errors.root && (
-              <div className="bg-destructive/10 text-destructive p-3 rounded-md flex items-center gap-2 text-sm">
+              <motion.div 
+                className="bg-destructive/10 text-destructive p-3 rounded-md flex items-center gap-2 text-sm"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+              >
                 <AlertCircle className="h-4 w-4" />
                 {form.formState.errors.root.message}
-              </div>
+              </motion.div>
             )}
             
             <FormField
