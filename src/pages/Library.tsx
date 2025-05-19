@@ -14,12 +14,16 @@ import { useNavigate } from "react-router-dom";
 import MusicQuiz from "@/components/quiz/MusicQuiz";
 import ResourceCard, { Resource } from "@/components/resources/ResourceCard";
 import { useToast } from "@/hooks/use-toast";
+import QuizSelection from "@/components/quiz/QuizSelection";
+import { Progress } from "@/components/ui/progress";
 
 const Library = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("saved");
   const { toast } = useToast();
+  const [activeQuizId, setActiveQuizId] = useState("music-theory-basics");
+  const [completedQuizIds, setCompletedQuizIds] = useState<string[]>([]);
 
   // Sample saved content data (would come from API in a real app)
   const savedVideos = mockVideos.slice(0, 4);
@@ -127,14 +131,38 @@ const Library = () => {
 
   const handleExclusiveContent = (contentId) => {
     // Redirect to payment page for premium content
-    navigate(`/payment?contentType=exclusive&contentId=${contentId}`);
+    navigate(`/subscriptions?contentType=exclusive&contentId=${contentId}`);
   };
 
-  const handleQuizComplete = (score, total) => {
+  const handleQuizComplete = (score: number, total: number) => {
     toast({
       title: "Quiz Completed",
       description: `You scored ${score} out of ${total}! Keep learning and improving your music knowledge.`,
     });
+    
+    // Add the quiz to completed quizzes
+    if (activeQuizId && !completedQuizIds.includes(activeQuizId)) {
+      setCompletedQuizIds([...completedQuizIds, activeQuizId]);
+    }
+    
+    // If not logged in, prompt to sign in to save progress
+    if (!user && score >= total * 0.7) {
+      setTimeout(() => {
+        toast({
+          title: "Great score! Sign in to save your progress",
+          description: "Create an account to track your quiz scores and unlock more content",
+          action: (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => navigate("/auth")}
+            >
+              Sign In
+            </Button>
+          ),
+        });
+      }, 1500);
+    }
   };
 
   const CourseCard = ({ course }) => (
@@ -221,43 +249,11 @@ const Library = () => {
             <MusicQuiz onComplete={handleQuizComplete} />
           </div>
           <div className="space-y-4">
-            <Card className="h-full">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl font-proxima">Quiz Rankings</CardTitle>
-                  <Lightbulb className="h-5 w-5 text-gold" />
-                </div>
-                <CardDescription>See how you compare with others</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-gold text-white w-7 h-7 rounded-full flex items-center justify-center font-bold">1</div>
-                    <span>James K.</span>
-                  </div>
-                  <Badge>95%</Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-zinc-400 text-white w-7 h-7 rounded-full flex items-center justify-center font-bold">2</div>
-                    <span>Maria T.</span>
-                  </div>
-                  <Badge>88%</Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-amber-700 text-white w-7 h-7 rounded-full flex items-center justify-center font-bold">3</div>
-                    <span>David L.</span>
-                  </div>
-                  <Badge>82%</Badge>
-                </div>
-                <div className="pt-4 border-t">
-                  <Button variant="outline" className="w-full">
-                    View All Rankings
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <QuizSelection 
+              onQuizSelect={setActiveQuizId} 
+              activeQuizId={activeQuizId}
+              completedQuizIds={completedQuizIds}
+            />
           </div>
         </div>
         

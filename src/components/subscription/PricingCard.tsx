@@ -1,72 +1,74 @@
 
-import { SubscriptionPlan } from "@/data/mockData";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import React from "react";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import { SubscriptionPlan } from "@/data/mockData";
 
 interface PricingCardProps {
   plan: SubscriptionPlan;
-  variant?: string;
+  variant?: "default" | "outline";
   className?: string;
 }
 
-const PricingCard = ({ plan }: PricingCardProps) => {
-  const { toast } = useToast();
-
-  const handleSubscribe = () => {
-    toast({
-      title: "Coming Soon",
-      description: "Subscription functionality will be available soon!",
-    });
-  };
-
+const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", className }) => {
+  const navigate = useNavigate();
+  
+  const isPrimary = variant === "default";
+  
   return (
-    <Card className={cn(
-      "relative transition-all duration-300",
-      plan.isPopular && "border-gold shadow-lg"
-    )}>
-      {plan.isPopular && (
-        <div className="absolute -top-3 left-0 right-0 flex justify-center">
-          <Badge className="bg-gold text-white">Most Popular</Badge>
-        </div>
+    <Card
+      className={cn(
+        "flex flex-col justify-between",
+        isPrimary && "border-gold shadow-lg shadow-gold/10",
+        className
       )}
-      
-      <CardHeader className={cn(
-        "pb-0 pt-6",
-        plan.isPopular && "pt-8"
-      )}>
-        <h3 className="text-2xl font-serif font-medium text-center">{plan.name}</h3>
-        <div className="mt-4 text-center">
-          <span className="text-3xl font-bold">${plan.price}</span>
-          <span className="text-muted-foreground">/{plan.interval}</span>
-        </div>
+    >
+      <CardHeader>
+        {plan.popular && (
+          <div className="py-1 px-3 bg-gold/20 text-gold rounded-full text-xs font-medium w-fit mx-auto mb-2">
+            MOST POPULAR
+          </div>
+        )}
+        <CardTitle className="text-xl font-proxima text-center">
+          {plan.name}
+        </CardTitle>
+        <CardDescription className="text-center">{plan.description}</CardDescription>
       </CardHeader>
-      
-      <CardContent className="pt-6">
-        <ul className="space-y-3">
-          {plan.features.map((feature, index) => (
-            <li key={index} className="flex items-start">
-              <div className="mr-2 mt-1 bg-gold/10 rounded-full p-0.5">
-                <Check className="h-4 w-4 text-gold" />
-              </div>
-              <span className="text-sm">{feature}</span>
-            </li>
-          ))}
-        </ul>
-      </CardContent>
-      
-      <CardFooter>
-        <Button 
-          className={cn(
-            "w-full",
-            plan.isPopular 
-              ? "bg-gold hover:bg-gold-dark text-white" 
-              : "bg-muted hover:bg-muted/80"
+      <CardContent className="text-center space-y-6">
+        <div className="space-y-2">
+          <p className="text-4xl font-bold">
+            ${plan.price}
+            <span className="text-muted-foreground text-sm font-normal">
+              /month
+            </span>
+          </p>
+          {plan.discount && (
+            <p className="text-sm text-muted-foreground">
+              Save ${plan.discount} annually
+            </p>
           )}
-          onClick={handleSubscribe}
+        </div>
+
+        <div className="space-y-2">
+          {plan.features.map((feature, index) => (
+            <div key={index} className="flex items-center">
+              <Check className="h-4 w-4 text-gold mr-2 shrink-0" />
+              <p className="text-sm text-left">{feature}</p>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+      <CardFooter>
+        <Button
+          className={cn("w-full", 
+            isPrimary 
+              ? "bg-gold hover:bg-gold/90 text-white font-medium" 
+              : "bg-muted/70 hover:bg-muted text-foreground dark:bg-muted/30 dark:hover:bg-muted/40 dark:text-foreground"
+          )}
+          onClick={() => navigate("/subscriptions")}
         >
           Subscribe Now
         </Button>

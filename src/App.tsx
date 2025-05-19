@@ -44,6 +44,7 @@ import UserDetails from "./pages/UserDetails";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import IdleStateManager from "./components/idle-state/IdleStateManager";
+import Subscriptions from "./pages/Subscriptions";
 
 const queryClient = new QueryClient();
 
@@ -99,6 +100,7 @@ const App = () => {
               <Route path="/services" element={<Services />} />
               <Route path="/payment" element={<Payment />} />
               <Route path="/payment-success" element={<PaymentSuccess />} />
+              <Route path="/subscriptions" element={<Subscriptions />} />
               <Route path="/music-tools" element={<MusicTools />} />
               
               {/* Protected Routes */}

@@ -1,104 +1,92 @@
 
-import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import MainLayout from '@/components/layout/MainLayout';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Check, Calendar, Download, Home, BookOpen } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import MainLayout from "@/components/layout/MainLayout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowRight, CheckCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const PaymentSuccess = () => {
-  const location = useLocation();
   const navigate = useNavigate();
-  const { service, total, transactionId } = location.state || {
-    service: { title: "Service" },
-    total: 0,
-    transactionId: "ST-12345678"
-  };
-
-  // Format date for receipt
-  const today = new Date();
-  const formattedDate = today.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-
+  const [countdown, setCountdown] = useState(5);
+  
+  // Auto redirect after 5 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          navigate("/library");
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, [navigate]);
+  
   return (
     <MainLayout>
-      <div className="max-w-2xl mx-auto py-12">
-        <div className="bg-green-50 dark:bg-green-900/20 rounded-full w-20 h-20 mx-auto flex items-center justify-center mb-6">
-          <Check className="h-10 w-10 text-green-600 dark:text-green-500" />
-        </div>
-        
-        <h1 className="text-3xl font-proxima font-bold text-center mb-2">Payment Successful</h1>
-        <p className="text-center text-muted-foreground mb-8">
-          Thank you for your purchase! Your transaction has been completed.
-        </p>
-        
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Receipt</CardTitle>
+      <div className="container max-w-lg mx-auto py-10 px-4">
+        <Card className="border-green-200">
+          <CardHeader className="text-center pb-2">
+            <div className="mx-auto my-4 bg-green-100 p-6 rounded-full w-24 h-24 flex items-center justify-center">
+              <CheckCircle className="w-12 h-12 text-green-600" />
+            </div>
+            <CardTitle className="text-2xl text-green-700 font-proxima">
+              Payment Successful!
+            </CardTitle>
+            <CardDescription>
+              Thank you for your subscription to Saem's Tunes.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="font-medium">{service.title}</h3>
-                <p className="text-sm text-muted-foreground">Transaction ID: {transactionId}</p>
-              </div>
-              <div className="text-right">
-                <p className="font-bold">${total}</p>
-                <p className="text-sm text-muted-foreground">{formattedDate}</p>
-              </div>
+          <CardContent className="text-center space-y-4">
+            <div>
+              <h3 className="text-lg font-medium">What's Next?</h3>
+              <p className="text-muted-foreground">
+                You now have full access to all premium content on Saem's Tunes.
+              </p>
             </div>
             
-            <Separator />
+            <div className="rounded-lg bg-muted/30 p-4">
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-start">
+                  <CheckCircle className="h-4 w-4 text-green-600 mt-1 mr-2 shrink-0" />
+                  <span>Access to premium video lessons</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-4 w-4 text-green-600 mt-1 mr-2 shrink-0" />
+                  <span>Downloadable resources and sheet music</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-4 w-4 text-green-600 mt-1 mr-2 shrink-0" />
+                  <span>Music quizzes and interactive learning tools</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-4 w-4 text-green-600 mt-1 mr-2 shrink-0" />
+                  <span>Community forums and discussion groups</span>
+                </li>
+              </ul>
+            </div>
             
-            <div className="bg-muted/50 p-4 rounded-md space-y-2">
-              <p className="text-sm font-medium">What's Next?</p>
-              {service.title.toLowerCase().includes('lesson') ? (
-                <div className="space-y-2">
-                  <p className="text-sm">Your lesson has been scheduled. You'll receive a confirmation email with all details shortly.</p>
-                  <div className="flex items-center text-sm text-gold">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    <span>Add to calendar</span>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-sm">
-                  Our team will contact you within 24 hours to coordinate your {service.title.toLowerCase()}.
-                </p>
-              )}
+            <div className="text-sm text-muted-foreground">
+              Your payment receipt has been sent to your email address.
             </div>
           </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button variant="outline" className="flex items-center">
-              <Download className="h-4 w-4 mr-2" />
-              Download Receipt
+          <CardFooter className="flex-col space-y-2">
+            <Button 
+              className="w-full bg-gold hover:bg-gold/90 text-white" 
+              onClick={() => navigate("/library")}
+            >
+              Explore Premium Content
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
-            <Button variant="outline" className="flex items-center" onClick={() => window.print()}>
-              Print
-            </Button>
+            <div className="text-sm text-muted-foreground text-center pt-2">
+              Redirecting in {countdown} seconds...
+            </div>
           </CardFooter>
         </Card>
-        
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button 
-            className="bg-gold hover:bg-gold-dark flex items-center"
-            onClick={() => navigate('/')}
-          >
-            <Home className="h-4 w-4 mr-2" />
-            Return to Home
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={() => navigate('/library')}
-            className="flex items-center"
-          >
-            <BookOpen className="h-4 w-4 mr-2" />
-            Explore Resources
-          </Button>
-        </div>
       </div>
     </MainLayout>
   );

@@ -25,7 +25,9 @@ import {
   Smartphone,
   PaintBucket,
   PanelLeft,
-  PanelRight
+  PanelRight,
+  Laptop,
+  ChevronDown
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -44,6 +46,11 @@ import { Separator } from "@/components/ui/separator";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const Settings = () => {
   const { toast } = useToast();
@@ -51,6 +58,7 @@ const Settings = () => {
   const navigate = useNavigate();
   const [currentTheme, setCurrentTheme] = useState<'gold' | 'teal'>('gold');
   const [brightness, setBrightness] = useState(100);
+  const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
   
   // Settings state
   const [notificationSettings, setNotificationSettings] = useState({
@@ -78,6 +86,8 @@ const Settings = () => {
     theme: "system",
     fontSize: "medium",
     highContrast: false,
+    sidebarDisplay: "expanded", // for desktop
+    mobileNavigation: "bottom", // for mobile
   });
 
   // Apply theme based on the selected theme color
@@ -180,6 +190,29 @@ const Settings = () => {
           <p className="text-muted-foreground">
             Manage your account settings and preferences.
           </p>
+        </div>
+        
+        <div className="flex gap-4 mb-4">
+          <div className="flex items-center bg-muted rounded-lg p-1">
+            <Button 
+              variant={viewMode === 'desktop' ? "default" : "ghost"}
+              size="sm"
+              className={viewMode === 'desktop' ? "bg-gold text-white" : ""}
+              onClick={() => setViewMode('desktop')}
+            >
+              <Laptop className="h-4 w-4 mr-1" />
+              Desktop
+            </Button>
+            <Button 
+              variant={viewMode === 'mobile' ? "default" : "ghost"}
+              size="sm"
+              className={viewMode === 'mobile' ? "bg-gold text-white" : ""}
+              onClick={() => setViewMode('mobile')}
+            >
+              <Smartphone className="h-4 w-4 mr-1" />
+              Mobile
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="notifications" className="space-y-4">
@@ -331,7 +364,7 @@ const Settings = () => {
                       <SelectTrigger id="profile-visibility">
                         <SelectValue placeholder="Who can see your profile" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent position="popper" className="w-full min-w-[200px] bg-background">
                         <SelectItem value="everyone">Everyone</SelectItem>
                         <SelectItem value="friends">Friends Only</SelectItem>
                         <SelectItem value="private">Private</SelectItem>
@@ -357,21 +390,44 @@ const Settings = () => {
                   
                   <div className="space-y-2">
                     <Label htmlFor="activity-visibility">Activity Visibility</Label>
-                    <Select 
-                      defaultValue={privacySettings.activityVisibility} 
-                      onValueChange={(value) => 
-                        setPrivacySettings({...privacySettings, activityVisibility: value})
-                      }
-                    >
-                      <SelectTrigger id="activity-visibility">
-                        <SelectValue placeholder="Who can see your activity" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="everyone">Everyone</SelectItem>
-                        <SelectItem value="friends">Friends Only</SelectItem>
-                        <SelectItem value="private">Private</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button 
+                          variant="outline"
+                          role="combobox"
+                          className="w-full justify-between"
+                        >
+                          {privacySettings.activityVisibility === "everyone" ? "Everyone" :
+                           privacySettings.activityVisibility === "friends" ? "Friends Only" : "Private"}
+                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0" align="start">
+                        <div className="bg-background w-full">
+                          <Button 
+                            variant="ghost" 
+                            className="w-full justify-start"
+                            onClick={() => setPrivacySettings({...privacySettings, activityVisibility: "everyone"})}
+                          >
+                            Everyone
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            className="w-full justify-start"
+                            onClick={() => setPrivacySettings({...privacySettings, activityVisibility: "friends"})}
+                          >
+                            Friends Only
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            className="w-full justify-start"
+                            onClick={() => setPrivacySettings({...privacySettings, activityVisibility: "private"})}
+                          >
+                            Private
+                          </Button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   
                   <Separator />
@@ -396,7 +452,7 @@ const Settings = () => {
               <CardFooter>
                 <Button 
                   variant="outline" 
-                  onClick={() => navigate("/privacy-policy")}
+                  onClick={() => navigate("/privacy")}
                   className="mr-auto"
                 >
                   <Shield className="mr-2 h-4 w-4" />
@@ -436,7 +492,6 @@ const Settings = () => {
                       onCheckedChange={(checked) => {
                         setSyncSettings({...syncSettings, googleCalendar: checked});
                         if (checked) {
-                          // This would normally trigger Google OAuth flow
                           toast({
                             title: "Google Calendar",
                             description: "You would be redirected to Google for authentication",
@@ -458,7 +513,6 @@ const Settings = () => {
                       onCheckedChange={(checked) => {
                         setSyncSettings({...syncSettings, iCloudCalendar: checked});
                         if (checked) {
-                          // This would normally trigger Apple OAuth flow
                           toast({
                             title: "iCloud Calendar",
                             description: "You would be redirected to Apple for authentication",
@@ -505,7 +559,7 @@ const Settings = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Monitor className="h-5 w-5" />
-                  Display Preferences
+                  Display Preferences ({viewMode === 'desktop' ? 'Desktop' : 'Mobile'})
                 </CardTitle>
                 <CardDescription>
                   Customize how Saem's Tunes looks and behaves.
@@ -586,41 +640,78 @@ const Settings = () => {
                 
                 <div className="space-y-2">
                   <Label htmlFor="language">Language</Label>
-                  <Select 
-                    defaultValue={displaySettings.language} 
-                    onValueChange={(value) => 
-                      setDisplaySettings({...displaySettings, language: value})
-                    }
-                  >
-                    <SelectTrigger id="language">
-                      <SelectValue placeholder="Select language" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="english">English</SelectItem>
-                      <SelectItem value="spanish">Español</SelectItem>
-                      <SelectItem value="french">Français</SelectItem>
-                      <SelectItem value="german">Deutsch</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button 
+                        variant="outline"
+                        role="combobox"
+                        className="w-full justify-between"
+                      >
+                        {displaySettings.language === "english" ? "English" : "Swahili"}
+                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0" align="start">
+                      <div className="bg-background w-full">
+                        <Button 
+                          variant="ghost" 
+                          className="w-full justify-start"
+                          onClick={() => setDisplaySettings({...displaySettings, language: "english"})}
+                        >
+                          English
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          className="w-full justify-start"
+                          onClick={() => setDisplaySettings({...displaySettings, language: "swahili"})}
+                        >
+                          Swahili
+                        </Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="font-size">Font Size</Label>
-                  <Select 
-                    defaultValue={displaySettings.fontSize} 
-                    onValueChange={(value) => 
-                      setDisplaySettings({...displaySettings, fontSize: value})
-                    }
-                  >
-                    <SelectTrigger id="font-size">
-                      <SelectValue placeholder="Select font size" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="small">Small</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="large">Large</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button 
+                        variant="outline"
+                        role="combobox"
+                        className="w-full justify-between"
+                      >
+                        {displaySettings.fontSize === "small" ? "Small" : 
+                         displaySettings.fontSize === "medium" ? "Medium" : "Large"}
+                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0" align="start">
+                      <div className="bg-background w-full">
+                        <Button 
+                          variant="ghost" 
+                          className="w-full justify-start"
+                          onClick={() => setDisplaySettings({...displaySettings, fontSize: "small"})}
+                        >
+                          Small
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          className="w-full justify-start"
+                          onClick={() => setDisplaySettings({...displaySettings, fontSize: "medium"})}
+                        >
+                          Medium
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          className="w-full justify-start"
+                          onClick={() => setDisplaySettings({...displaySettings, fontSize: "large"})}
+                        >
+                          Large
+                        </Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -641,24 +732,67 @@ const Settings = () => {
                 
                 <Separator />
                 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="sidebar-display">Sidebar Display</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Show or hide sidebar elements on desktop
-                    </p>
+                {viewMode === 'desktop' ? (
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="sidebar-display">Sidebar Display</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Show or hide sidebar elements on desktop
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant={displaySettings.sidebarDisplay === "collapsed" ? "default" : "outline"} 
+                        size="sm" 
+                        className="flex items-center gap-1"
+                        onClick={() => setDisplaySettings({...displaySettings, sidebarDisplay: "collapsed"})}
+                      >
+                        <PanelLeft className="h-4 w-4" />
+                        <span className="hidden sm:inline">Collapsed</span>
+                      </Button>
+                      <Button 
+                        variant={displaySettings.sidebarDisplay === "expanded" ? "default" : "outline"} 
+                        size="sm" 
+                        className="flex items-center gap-1"
+                        onClick={() => setDisplaySettings({...displaySettings, sidebarDisplay: "expanded"})}
+                      >
+                        <PanelRight className="h-4 w-4" />
+                        <span className="hidden sm:inline">Expanded</span>
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex items-center gap-1">
-                      <PanelLeft className="h-4 w-4" />
-                      <span className="hidden sm:inline">Collapsed</span>
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex items-center gap-1">
-                      <PanelRight className="h-4 w-4" />
-                      <span className="hidden sm:inline">Expanded</span>
-                    </Button>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Mobile Navigation</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Choose your preferred navigation style on mobile
+                      </p>
+                    </div>
+                    <RadioGroup 
+                      defaultValue={displaySettings.mobileNavigation} 
+                      onValueChange={(value) => 
+                        setDisplaySettings({...displaySettings, mobileNavigation: value})
+                      }
+                      className="flex gap-2"
+                    >
+                      <div className="flex items-center">
+                        <Label htmlFor="nav-bottom" className="flex items-center gap-1 px-3 py-1 border rounded-md">
+                          <RadioGroupItem value="bottom" id="nav-bottom" className="sr-only" />
+                          <Smartphone className="h-4 w-4" />
+                          <span className="text-sm">Bottom</span>
+                        </Label>
+                      </div>
+                      <div className="flex items-center">
+                        <Label htmlFor="nav-drawer" className="flex items-center gap-1 px-3 py-1 border rounded-md">
+                          <RadioGroupItem value="drawer" id="nav-drawer" className="sr-only" />
+                          <PanelLeft className="h-4 w-4" />
+                          <span className="text-sm">Drawer</span>
+                        </Label>
+                      </div>
+                    </RadioGroup>
                   </div>
-                </div>
+                )}
               </CardContent>
               <CardFooter>
                 <Button 
