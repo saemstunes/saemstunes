@@ -52,7 +52,8 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
     setIsSubmitting(true);
     
     try {
-      await signUp(data.email, data.password, data.name); // Fixed: using signUp instead of signup
+      // Setting the default role to "student" when signing up
+      await signUp(data.email, data.password, data.name, "student");
       
       toast({
         title: "Account created!",
