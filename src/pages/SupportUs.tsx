@@ -96,11 +96,11 @@ const SupportUs = () => {
             <CardContent>
               <div className="flex flex-col md:flex-row gap-6 items-center">
                 <div className="w-full md:w-1/4">
-                  <div className="aspect-square rounded-full overflow-hidden border-4 border-gold/20 mx-auto md:mx-0 max-w-[180px]">
+                  <div className="aspect-square rounded-full overflow-hidden border-4 border-gold/20 mx-auto md:mx-0 max-w-[180px] transform -translate-y-24">
                     <img 
                       src="/lovable-uploads/logo-icon-lg.webp" 
                       alt="Saem" 
-                      className="w-full h-full object-cover transform -translate-y-2"
+                      className="w-full h-full object-cover transform -translate-y-24"
                     />
                   </div>
                 </div>
