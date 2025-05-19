@@ -3,12 +3,29 @@ import React, { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { motion } from "framer-motion";
 import { pageTransition } from "@/lib/animation-utils";
-import { ArrowLeft, BookOpen, CheckCircle, ChevronDown, ChevronRight, FileText, Shield } from "lucide-react";
+import { ArrowLeft, BookOpen, CheckCircle, Shield, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Accordion, 
+  AccordionContent, 
+  AccordionItem, 
+  AccordionTrigger 
+} from "@/components/ui/accordion";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from "@/components/ui/tabs";
 
 const Terms = () => {
   const navigate = useNavigate();
@@ -138,6 +155,34 @@ const Terms = () => {
   const filteredSections = activeTab === "all" 
     ? sections 
     : sections.filter(section => section.category === activeTab);
+
+  // Custom Accordion Trigger with animated arrow
+  const CustomAccordionTrigger = ({ children, ...props }: React.ComponentProps<typeof AccordionTrigger>) => (
+    <AccordionTrigger {...props} className="py-4 group">
+      <div className="flex items-center">
+        <motion.span 
+          className="mr-2 flex h-6 w-6 items-center justify-center rounded-full bg-gold/10 text-gold group-data-[state=open]:rotate-90"
+          animate={{ rotate: props['data-state'] === 'open' ? 90 : 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <svg 
+            className="h-3 w-3" 
+            fill="none"
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth="2" 
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+        </motion.span>
+        {children}
+      </div>
+    </AccordionTrigger>
+  );
   
   return (
     <MainLayout>
@@ -198,14 +243,9 @@ const Terms = () => {
                     <Accordion type="single" collapsible className="w-full">
                       {filteredSections.map((section) => (
                         <AccordionItem key={section.id} value={section.id}>
-                          <AccordionTrigger className="py-4">
-                            <div className="flex items-center">
-                              <span className="mr-2 flex h-6 w-6 items-center justify-center rounded-full bg-gold/10 text-gold">
-                                <ChevronRight className="h-3 w-3" />
-                              </span>
-                              {section.title}
-                            </div>
-                          </AccordionTrigger>
+                          <CustomAccordionTrigger>
+                            {section.title}
+                          </CustomAccordionTrigger>
                           <AccordionContent>
                             <div className="pl-8 prose dark:prose-invert max-w-none text-muted-foreground">
                               <p>{section.content}</p>

@@ -5,15 +5,11 @@ import { motion } from "framer-motion";
 import { pageTransition } from "@/lib/animation-utils";
 import SearchBox from "@/components/discover/SearchBox";
 import FeaturedBanner from "@/components/discover/FeaturedBanner";
-import CategoryNavigation from "@/components/discover/CategoryNavigation";
 import ContentTabs from "@/components/discover/ContentTabs";
 import RecommendationSection from "@/components/discover/RecommendationSection";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 const Discover = () => {
   const [activeTab, setActiveTab] = useState("music");
-  const isMobile = useIsMobile();
 
   // Force dropdown menus to appear on top by adding a container with higher z-index
   useEffect(() => {
@@ -59,11 +55,6 @@ const Discover = () => {
         {/* Featured content banner */}
         <FeaturedBanner />
         
-        {/* Category Navigation - with increased z-index */}
-        <div className="relative z-20">
-          <CategoryNavigation />
-        </div>
-
         {/* Tabs content section */}
         <ContentTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 

@@ -27,29 +27,28 @@ const Logo = ({
   const isMobile = useIsMobile();
   const [imageLoaded, setImageLoaded] = useState(false);
   
+  // Define consistent dimensions for the logo icon
   const sizeClasses = {
     sm: 'h-6 w-6',
     md: 'h-8 w-8',
-    lg: 'h-12 w-12' // Slightly larger for better proportion
+    lg: 'h-12 w-12'
   };
   
   const textSizeClasses = {
     sm: 'text-xs',
-    md: isMobile ? 'text-sm' : 'text-xl', // Adjusted text size for mobile
-    lg: isMobile ? 'text-base' : 'text-2xl'  // Adjusted text size for mobile
+    md: isMobile ? 'text-sm' : 'text-xl',
+    lg: isMobile ? 'text-base' : 'text-2xl'
   };
 
   // Determine the appropriate logo base name
   const getLogoBaseName = () => {
     if (variant === 'icon') {
-      // For icon variant, use size-appropriate icons
       return isMobile
         ? 'logo-icon-sm'
         : size === 'lg'
           ? 'logo-icon-lg'
           : 'logo-icon-md';
     } else {
-      // For full variant, use size-appropriate full logos
       return isMobile
         ? 'logo-full-md'
         : size === 'lg'
@@ -69,7 +68,7 @@ const Logo = ({
 
   const iconVariants = {
     initial: { scale: 0.9, opacity: 0 },
-    animate: { scale: 1, opacity: 1, transition: { duration: 0.5 } }
+    animate: { scale: 1, opacity: 1, transition: { duration: 0.8, ease: "easeOut" } }
   };
 
   const textVariants = {
@@ -80,7 +79,7 @@ const Logo = ({
   const LogoComponent = (
     <Link 
       to="/" 
-      className={cn("flex items-center gap-3", linkClassName)} // Increased gap for better spacing
+      className={cn("flex items-center gap-2", linkClassName)} // Reduced gap for better spacing
       onClick={(e) => {
         // If clicking while already on home page, scroll to top
         if (window.location.pathname === "/") {
@@ -90,7 +89,7 @@ const Logo = ({
       }}
     >
       {(variant === 'full' || variant === 'icon') && (
-        <div className={cn("flex-shrink-0", !imageLoaded && "bg-muted/30 animate-pulse rounded-full")}>
+        <div className={cn(sizeClasses[size], "flex-shrink-0", !imageLoaded && "bg-muted/30 animate-pulse rounded-full")}>
           <picture>
             {/* WebP version (most efficient) */}
             <source 
@@ -108,7 +107,9 @@ const Logo = ({
             <img 
               src={`/lovable-uploads/logo-desktop.png`}
               alt="Saem's Tunes Logo" 
-              className={cn(sizeClasses[size], className)} 
+              width={size === 'lg' ? 48 : size === 'md' ? 32 : 24}
+              height={size === 'lg' ? 48 : size === 'md' ? 32 : 24}
+              className="w-full h-full object-contain"
               onLoad={() => setImageLoaded(true)}
               fetchPriority="high"
               decoding="async"
@@ -120,10 +121,10 @@ const Logo = ({
       
       {(variant === 'full' || variant === 'text') && showText && (
         <span className={cn(
-          "logo-font font-bold leading-none", // Added leading-none for better vertical alignment
+          "logo-font font-bold leading-tight", // Improved vertical alignment with leading-tight
           textSizeClasses[size],
           inMobileMenu ? "translate-y-0" : "",
-          "flex items-center self-center" // Ensure vertical centering
+          "flex items-center"
         )}>
           Saem's <span className="text-gold">Tunes</span>
         </span>
@@ -140,7 +141,10 @@ const Logo = ({
         className="flex items-center"
       >
         {(variant === 'full' || variant === 'icon') && (
-          <motion.div variants={iconVariants} className="flex-shrink-0">
+          <motion.div 
+            variants={iconVariants} 
+            className="flex-shrink-0"
+          >
             {LogoComponent}
           </motion.div>
         )}

@@ -40,7 +40,11 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-const LoginForm = () => {
+interface LoginFormProps {
+  onAdminTap?: () => void;
+}
+
+const LoginForm = ({ onAdminTap }: LoginFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login } = useAuth();
   const { toast } = useToast();
@@ -82,9 +86,10 @@ const LoginForm = () => {
           className="flex justify-center mb-4"
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.5 }}
+          onClick={onAdminTap}
         >
-          <div className="bg-gold/10 p-3 rounded-full">
+          <div className="bg-gold/10 p-3 rounded-full cursor-pointer">
             <Music className="h-8 w-8 text-gold" />
           </div>
         </motion.div>

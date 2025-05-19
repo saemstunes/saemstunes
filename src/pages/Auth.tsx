@@ -7,6 +7,7 @@ import { useSearchParams } from "react-router-dom";
 import Logo from "@/components/branding/Logo";
 import { FloatingBackButton } from "@/components/ui/floating-back-button";
 import { AnimatePresence, motion } from "framer-motion";
+import { Music } from "lucide-react";
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -41,7 +42,6 @@ const Auth = () => {
       {/* Logo and branding section */}
       <div 
         className="md:flex-1 bg-gradient-to-br from-gold to-brown p-8 md:p-12 flex flex-col justify-center"
-        onClick={handleAdminTapArea}
       >
         <div className="max-w-md mx-auto">
           <Logo variant="full" size="lg" className="mb-8" />
@@ -186,7 +186,7 @@ const Auth = () => {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
               >
-                <LoginForm />
+                <LoginForm onAdminTap={handleAdminTapArea} />
               </motion.div>
             )}
             {activeForm === "signup" && (
