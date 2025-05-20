@@ -108,7 +108,8 @@ const MetronomeVisual: React.FC<MetronomeVisualProps> = ({
                     top,
                     left,
                     transform: 'translate(-50%, -50%)',
-                    marginLeft: '-12px',
+                    marginLeft: '-10px',
+                    marginTop: '-4px',
                     background: isActive ? "#FFD700" : "rgba(255, 215, 0, 0.3)",
                     boxShadow: isActive ? "0 0 12px rgba(255, 215, 0, 0.9)" : "none"
                   }}
