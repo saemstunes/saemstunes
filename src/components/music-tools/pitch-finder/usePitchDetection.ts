@@ -113,7 +113,7 @@ export const usePitchDetection = () => {
     }
     
     // Convert lag to frequency (Hz)
-    const frequency = sampleRate / maxLag;
+    const frequency = bestLag > 0 ? sampleRate / bestLag : null;
     
     // Only return frequency if correlation is high enough
     if (maxCorrelation > 0.3 && frequency > 80 && frequency < 1500) {
