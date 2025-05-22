@@ -43,17 +43,17 @@ type FormData = z.infer<typeof formSchema>;
 
 interface LoginFormProps {
   onAdminTap?: () => void;
-  requireCaptcha?: boolean; // New prop to control captcha requirement
 }
 
-const LoginForm = ({ onAdminTap, requireCaptcha = true }: LoginFormProps) => {
+const LoginForm = ({ onAdminTap }: LoginFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [showCaptcha, setShowCaptcha] = useState(false);
   const { login } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const [captchaLoaded, setCaptchaLoaded] = useState(false);
   const captchaRef = useRef<HCaptcha>(null);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   
@@ -68,22 +68,30 @@ const LoginForm = ({ onAdminTap, requireCaptcha = true }: LoginFormProps) => {
     },
   });
 
-  // Check if we're on a page that should require captcha
-  const shouldRequireCaptcha = requireCaptcha && !location.pathname.includes('/verify');
-
+  // Check if we should show captcha based on failed attempts or specific conditions
   useEffect(() => {
-    // Set captcha as loaded if we don't require it
-    if (!shouldRequireCaptcha) {
-      setCaptchaLoaded(true);
-      setCaptchaToken("bypass"); // Set a bypass token
+    // Show captcha after 2 failed login attempts or if coming from verification
+    const shouldShowCaptcha = loginAttempts >= 2 || 
+      location.pathname === '/auth' || 
+      location.state?.requireCaptcha;
+    
+    setShowCaptcha(shouldShowCaptcha);
+  }, [loginAttempts, location]);
+
+  // Load login attempts from sessionStorage on component mount
+  useEffect(() => {
+    const storedAttempts = sessionStorage.getItem('loginAttempts');
+    if (storedAttempts) {
+      const attempts = parseInt(storedAttempts, 10);
+      setLoginAttempts(attempts);
     }
-  }, [shouldRequireCaptcha]);
+  }, []);
 
   const handleLogin = async (data: FormData) => {
     setIsSubmitting(true);
 
-    // Only check captcha if it's required
-    if (shouldRequireCaptcha && !captchaToken) {
+    // Only require captcha if it's being shown
+    if (showCaptcha && !captchaToken) {
       toast({
         title: "Verification required",
         description: "Please complete the captcha verification.",
@@ -95,28 +103,40 @@ const LoginForm = ({ onAdminTap, requireCaptcha = true }: LoginFormProps) => {
     }
 
     try {
-      // Pass captchaToken to login function (will be "bypass" if captcha not required)
-      await login(data.email, data.password, shouldRequireCaptcha ? captchaToken : null);
+      // Pass captchaToken to login function (null if captcha not required)
+      await login(data.email, data.password, captchaToken);
+      
+      // Reset login attempts on successful login
+      setLoginAttempts(0);
+      sessionStorage.removeItem('loginAttempts');
+      
       navigate(from);
     } catch (error) {
       console.error("Login failed:", error);
-      // Toast is already shown in the auth context
+      
+      // Increment login attempts and store in sessionStorage
+      const newAttempts = loginAttempts + 1;
+      setLoginAttempts(newAttempts);
+      sessionStorage.setItem('loginAttempts', newAttempts.toString());
+      
+      // Show error message
       form.setError("root", { 
         message: "Invalid email or password. Please try again." 
       });
       
-      // Reset captcha on error only if captcha is required
-      if (shouldRequireCaptcha) {
+      // Reset captcha on error if it was shown
+      if (showCaptcha) {
         captchaRef.current?.resetCaptcha();
         setCaptchaToken(null);
+      }
+      
+      // Show captcha after failed attempts
+      if (newAttempts >= 2) {
+        setShowCaptcha(true);
       }
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleCaptchaLoad = () => {
-    setCaptchaLoaded(true);
   };
 
   const handleCaptchaVerify = (token: string) => {
@@ -131,7 +151,7 @@ const LoginForm = ({ onAdminTap, requireCaptcha = true }: LoginFormProps) => {
     setCaptchaToken(null);
     toast({
       title: "Captcha Error",
-      description: "There was an error loading the captcha. Please refresh the page.",
+      description: "There was an error loading the captcha. Please try again.",
       variant: "destructive",
     });
   };
@@ -233,24 +253,42 @@ const LoginForm = ({ onAdminTap, requireCaptcha = true }: LoginFormProps) => {
               )}
             />
 
-            {/* Only render captcha if required */}
-            {shouldRequireCaptcha && (
-              <div className="flex justify-center my-4">
+            {/* Conditionally render captcha */}
+            {showCaptcha && (
+              <motion.div 
+                className="flex justify-center my-4"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+              >
                 <HCaptcha
                   sitekey="02409832-47f4-48c0-ac48-d98828b23724"
                   onVerify={handleCaptchaVerify}
                   onExpire={handleCaptchaExpire}
                   onError={handleCaptchaError}
-                  onLoad={handleCaptchaLoad}
                   ref={captchaRef}
                   theme="light"
                 />
-              </div>
+              </motion.div>
+            )}
+
+            {/* Show attempt warning */}
+            {loginAttempts > 0 && loginAttempts < 2 && (
+              <motion.div 
+                className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-3 rounded-md text-sm"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+              >
+                <AlertCircle className="h-4 w-4 inline mr-2" />
+                {loginAttempts === 1 ? "1 failed attempt. " : `${loginAttempts} failed attempts. `}
+                Captcha will be required after 2 failed attempts.
+              </motion.div>
             )}
 
             <Button
               type="submit"
-              disabled={isSubmitting || (shouldRequireCaptcha && !captchaToken)}
+              disabled={isSubmitting || (showCaptcha && !captchaToken)}
               className="w-full bg-gold hover:bg-gold/90 text-white"
             >
               {isSubmitting ? (
