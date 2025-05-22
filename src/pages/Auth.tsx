@@ -42,11 +42,12 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* Logo and branding section */}
-      <div 
-        className="md:flex-1 bg-gradient-to-br from-gold to-brown p-8 md:p-12 flex flex-col justify-center"
-      >
+      <div
+        className="relative md:flex-1 bg-gradient-to-br from-gold to-brown p-8 md:p-12 flex flex-col justify-center"
+        >
+
         {/* Custom Back Button for Desktop */}
-        <div className="absolute top-4 right-4 hidden md:block">
+        <div className="absolute top-4 left-4 block">
           <Button
             variant="ghost"
             size="icon"
