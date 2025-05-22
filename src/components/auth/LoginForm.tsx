@@ -1,5 +1,4 @@
-
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
@@ -44,15 +43,17 @@ type FormData = z.infer<typeof formSchema>;
 
 interface LoginFormProps {
   onAdminTap?: () => void;
+  requireCaptcha?: boolean; // New prop to control captcha requirement
 }
 
-const LoginForm = ({ onAdminTap }: LoginFormProps) => {
+const LoginForm = ({ onAdminTap, requireCaptcha = true }: LoginFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaLoaded, setCaptchaLoaded] = useState(false);
   const captchaRef = useRef<HCaptcha>(null);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   
@@ -67,10 +68,22 @@ const LoginForm = ({ onAdminTap }: LoginFormProps) => {
     },
   });
 
+  // Check if we're on a page that should require captcha
+  const shouldRequireCaptcha = requireCaptcha && !location.pathname.includes('/verify');
+
+  useEffect(() => {
+    // Set captcha as loaded if we don't require it
+    if (!shouldRequireCaptcha) {
+      setCaptchaLoaded(true);
+      setCaptchaToken("bypass"); // Set a bypass token
+    }
+  }, [shouldRequireCaptcha]);
+
   const handleLogin = async (data: FormData) => {
     setIsSubmitting(true);
 
-    if (!captchaToken) {
+    // Only check captcha if it's required
+    if (shouldRequireCaptcha && !captchaToken) {
       toast({
         title: "Verification required",
         description: "Please complete the captcha verification.",
@@ -82,8 +95,8 @@ const LoginForm = ({ onAdminTap }: LoginFormProps) => {
     }
 
     try {
-      // Pass captchaToken to login function
-      await login(data.email, data.password, captchaToken);
+      // Pass captchaToken to login function (will be "bypass" if captcha not required)
+      await login(data.email, data.password, shouldRequireCaptcha ? captchaToken : null);
       navigate(from);
     } catch (error) {
       console.error("Login failed:", error);
@@ -91,12 +104,36 @@ const LoginForm = ({ onAdminTap }: LoginFormProps) => {
       form.setError("root", { 
         message: "Invalid email or password. Please try again." 
       });
-      // Reset captcha on error
-      captchaRef.current?.resetCaptcha();
-      setCaptchaToken(null);
+      
+      // Reset captcha on error only if captcha is required
+      if (shouldRequireCaptcha) {
+        captchaRef.current?.resetCaptcha();
+        setCaptchaToken(null);
+      }
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleCaptchaLoad = () => {
+    setCaptchaLoaded(true);
+  };
+
+  const handleCaptchaVerify = (token: string) => {
+    setCaptchaToken(token);
+  };
+
+  const handleCaptchaExpire = () => {
+    setCaptchaToken(null);
+  };
+
+  const handleCaptchaError = () => {
+    setCaptchaToken(null);
+    toast({
+      title: "Captcha Error",
+      description: "There was an error loading the captcha. Please refresh the page.",
+      variant: "destructive",
+    });
   };
 
   if (showForgotPassword) {
@@ -196,20 +233,24 @@ const LoginForm = ({ onAdminTap }: LoginFormProps) => {
               )}
             />
 
-            <div className="flex justify-center my-4">
-              <HCaptcha
-                sitekey="02409832-47f4-48c0-ac48-d98828b23724"
-                onVerify={(token) => setCaptchaToken(token)}
-                onExpire={() => setCaptchaToken(null)}
-                onError={() => setCaptchaToken(null)}
-                ref={captchaRef}
-                theme="light"
-              />
-            </div>
+            {/* Only render captcha if required */}
+            {shouldRequireCaptcha && (
+              <div className="flex justify-center my-4">
+                <HCaptcha
+                  sitekey="02409832-47f4-48c0-ac48-d98828b23724"
+                  onVerify={handleCaptchaVerify}
+                  onExpire={handleCaptchaExpire}
+                  onError={handleCaptchaError}
+                  onLoad={handleCaptchaLoad}
+                  ref={captchaRef}
+                  theme="light"
+                />
+              </div>
+            )}
 
             <Button
               type="submit"
-              disabled={isSubmitting || !captchaToken}
+              disabled={isSubmitting || (shouldRequireCaptcha && !captchaToken)}
               className="w-full bg-gold hover:bg-gold/90 text-white"
             >
               {isSubmitting ? (
