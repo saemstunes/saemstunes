@@ -3,14 +3,16 @@ import React, { useState, useEffect } from "react";
 import LoginForm from "@/components/auth/LoginForm";
 import SignupForm from "@/components/auth/SignupForm";
 import AdminLoginForm from "@/components/auth/AdminLoginForm";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import Logo from "@/components/branding/Logo";
 import { FloatingBackButton } from "@/components/ui/floating-back-button";
 import { AnimatePresence, motion } from "framer-motion";
-import { Music } from "lucide-react";
+import { Music, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const initialForm = searchParams.get("login") === "true" ? "login" : "signup";
   const [activeForm, setActiveForm] = useState<"login" | "signup" | "admin">(
     (initialForm as "login" | "signup") || "signup"
@@ -43,6 +45,19 @@ const Auth = () => {
       <div 
         className="md:flex-1 bg-gradient-to-br from-gold to-brown p-8 md:p-12 flex flex-col justify-center"
       >
+        {/* Custom Back Button for Desktop */}
+        <div className="absolute top-4 right-4 hidden md:block">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-white hover:bg-white/20 transition-colors"
+            onClick={() => navigate(-1)}
+            aria-label="Go back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+        </div>
+
         <div className="max-w-md mx-auto">
           <Logo variant="full" size="lg" className="mb-8" />
           <motion.h1 
