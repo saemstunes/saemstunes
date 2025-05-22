@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import SocialLoginOptions from "./SocialLoginOptions";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -95,14 +96,14 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
       
       toast({
         title: "Account created!",
-        description: "You have successfully signed up.",
+        description: "Verification email sent. Please check your inbox.",
       });
       
-      if (onSignupComplete) {
-        onSignupComplete();
-      } else {
-        navigate("/");
-      }
+      // Redirect to verification waiting page instead of calling onSignupComplete
+      navigate("/verification-waiting", { 
+        state: { email: data.email }
+      });
+      
     } catch (error: any) {
       console.error("Signup error:", error);
       // Reset captcha on error
@@ -239,6 +240,8 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
             </Button>
           </form>
         </Form>
+
+        <SocialLoginOptions />
       </CardContent>
       <CardFooter className="flex flex-col gap-4 border-t pt-4">
         <div className="text-center text-sm">

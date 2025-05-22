@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/button";
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const initialForm = searchParams.get("login") === "true" ? "login" : "signup";
+  const initialForm = searchParams.get("tab") === "login" ? "login" : 
+                      searchParams.get("tab") === "signup" ? "signup" : "signup";
   const [activeForm, setActiveForm] = useState<"login" | "signup" | "admin">(
     (initialForm as "login" | "signup") || "signup"
   );
@@ -213,7 +214,7 @@ const Auth = () => {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
               >
-                <SignupForm onSignupComplete={() => setActiveForm("login")} />
+                <SignupForm />
               </motion.div>
             )}
             {activeForm === "admin" && (

@@ -32,6 +32,8 @@ import {
 } from "@/components/ui/form";
 import { motion } from "framer-motion";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
+import ForgotPasswordForm from "./ForgotPasswordForm";
+import SocialLoginOptions from "./SocialLoginOptions";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email"),
@@ -52,6 +54,7 @@ const LoginForm = ({ onAdminTap }: LoginFormProps) => {
   const location = useLocation();
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const captchaRef = useRef<HCaptcha>(null);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   
   // Get redirect path from location state or default to "/"
   const from = location.state?.from?.pathname || "/";
@@ -95,6 +98,12 @@ const LoginForm = ({ onAdminTap }: LoginFormProps) => {
       setIsSubmitting(false);
     }
   };
+
+  if (showForgotPassword) {
+    return (
+      <ForgotPasswordForm onCancel={() => setShowForgotPassword(false)} />
+    );
+  }
 
   return (
     <Card className="w-full border-gold/20 shadow-lg">
@@ -169,12 +178,7 @@ const LoginForm = ({ onAdminTap }: LoginFormProps) => {
                       size="sm"
                       className="text-xs text-gold hover:text-gold-dark px-0 h-auto"
                       type="button"
-                      onClick={() => {
-                        toast({
-                          title: "Reset Password",
-                          description: "This feature will be available soon!",
-                        });
-                      }}
+                      onClick={() => setShowForgotPassword(true)}
                     >
                       Forgot password?
                     </Button>
@@ -222,6 +226,10 @@ const LoginForm = ({ onAdminTap }: LoginFormProps) => {
             </Button>
           </form>
         </Form>
+
+        <div className="mt-4">
+          <SocialLoginOptions />
+        </div>
       </CardContent>
       <CardFooter className="flex flex-col gap-4 border-t pt-4">
         <div className="text-center text-sm">

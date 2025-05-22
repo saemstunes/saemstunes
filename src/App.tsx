@@ -13,6 +13,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Auth from "./pages/Auth"; 
+import VerificationWaiting from "./pages/VerificationWaiting";
 import Videos from "./pages/Videos";
 import VideoDetail from "./pages/VideoDetail";
 import Resources from "./pages/Resources";
@@ -75,6 +76,7 @@ const App = () => {
               <Route path="/login" element={<Auth />} />
               <Route path="/signup" element={<Auth />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/verification-waiting" element={<VerificationWaiting />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/unauthorized" element={<Unauthorized />} />
