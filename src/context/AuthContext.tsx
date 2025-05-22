@@ -18,7 +18,7 @@ export type UserRole = "student" | "adult" | "parent" | "teacher" | "admin";
 // Define the auth context type
 interface AuthContextType {
   user: User | null;
-  signUp: (email: string, password: string, name: string, role: UserRole) => Promise<void>;
+  signUp: (email: string, password: string, name: string, role: UserRole, captchaToken?: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   isAdmin: () => boolean;
@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
-  const signUp = async (email: string, password: string, name: string, role: UserRole) => {
+  const signUp = async (email: string, password: string, name: string, role: UserRole, captchaToken?: string) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -93,6 +93,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           avatar: "/lovable-uploads/avatar-1.png", // Default avatar
           subscribed: false,
         },
+        captchaToken: captchaToken,
       },
     });
 

@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Loader2, AlertCircle, UserPlus } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 import {
   Form,
   FormControl,
@@ -26,6 +27,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { motion } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -46,6 +48,8 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<HCaptcha>(null);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -58,11 +62,36 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
   });
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    if (!captchaToken) {
+      toast({
+        title: "Verification required",
+        description: "Please complete the captcha verification.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
-      // Setting the default role to "student" when signing up
-      await signUp(data.email, data.password, data.name, "student");
+      // Using Supabase directly with captcha token
+      const { error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            name: data.name,
+            role: "student",
+            avatar: "/lovable-uploads/avatar-1.png", // Default avatar
+            subscribed: false,
+          },
+          captchaToken,
+        },
+      });
+      
+      if (error) {
+        throw error;
+      }
       
       toast({
         title: "Account created!",
@@ -74,10 +103,14 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
       } else {
         navigate("/");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Signup error:", error);
+      // Reset captcha on error
+      captchaRef.current?.resetCaptcha();
+      setCaptchaToken(null);
+      
       form.setError("root", { 
-        message: "There was an error signing up. Please try again." 
+        message: error.message || "There was an error signing up. Please try again." 
       });
     } finally {
       setIsSubmitting(false);
@@ -181,10 +214,19 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
               )}
             />
             
+            <div className="flex justify-center my-4">
+              <HCaptcha
+                sitekey="0a20d02e-e2b3-4c71-9678-4c7a1e402caf"
+                onVerify={(token) => setCaptchaToken(token)}
+                ref={captchaRef}
+                theme="light"
+              />
+            </div>
+            
             <Button 
               type="submit" 
               className="w-full bg-gold hover:bg-gold/90 text-white"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !captchaToken}
             >
               {isSubmitting ? (
                 <>
