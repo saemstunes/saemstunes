@@ -47,7 +47,7 @@ const Auth = () => {
         >
 
         {/* Custom Back Button for Desktop */}
-        <div className="absolute top-4 left-4 block">
+        <div className="absolute top-4 right-4 block">
           <Button
             variant="ghost"
             size="icon"
