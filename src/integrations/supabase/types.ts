@@ -333,6 +333,7 @@ export type Database = {
           display_name: string | null
           first_name: string | null
           id: string
+          last_active: string | null
           last_name: string | null
           onboarding_complete: boolean | null
           parent_id: string | null
@@ -347,6 +348,7 @@ export type Database = {
           display_name?: string | null
           first_name?: string | null
           id: string
+          last_active?: string | null
           last_name?: string | null
           onboarding_complete?: boolean | null
           parent_id?: string | null
@@ -361,6 +363,7 @@ export type Database = {
           display_name?: string | null
           first_name?: string | null
           id?: string
+          last_active?: string | null
           last_name?: string | null
           onboarding_complete?: boolean | null
           parent_id?: string | null

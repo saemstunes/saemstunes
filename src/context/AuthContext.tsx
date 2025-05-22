@@ -19,7 +19,7 @@ export type UserRole = "student" | "adult" | "parent" | "teacher" | "admin";
 interface AuthContextType {
   user: User | null;
   signUp: (email: string, password: string, name: string, role: UserRole, captchaToken?: string) => Promise<void>;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, captchaToken?: string) => Promise<void>;
   logout: () => Promise<void>;
   isAdmin: () => boolean;
   checkPermission: (requiredRoles?: UserRole[]) => boolean;
@@ -102,10 +102,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, captchaToken?: string) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
+      options: {
+        captchaToken: captchaToken,
+      },
     });
 
     if (error) {

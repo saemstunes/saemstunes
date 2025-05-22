@@ -1,10 +1,9 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { 
   Music, 
   ArrowRight, 
@@ -32,6 +31,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { motion } from "framer-motion";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email"),
@@ -50,6 +50,8 @@ const LoginForm = ({ onAdminTap }: LoginFormProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<HCaptcha>(null);
   
   // Get redirect path from location state or default to "/"
   const from = location.state?.from?.pathname || "/";
@@ -65,8 +67,20 @@ const LoginForm = ({ onAdminTap }: LoginFormProps) => {
   const handleLogin = async (data: FormData) => {
     setIsSubmitting(true);
 
+    if (!captchaToken) {
+      toast({
+        title: "Verification required",
+        description: "Please complete the captcha verification.",
+        variant: "destructive",
+      });
+      form.setError("root", { message: "Please complete the CAPTCHA challenge." });
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
-      await login(data.email, data.password);
+      // Pass captchaToken to login function
+      await login(data.email, data.password, captchaToken);
       navigate(from);
     } catch (error) {
       console.error("Login failed:", error);
@@ -74,6 +88,9 @@ const LoginForm = ({ onAdminTap }: LoginFormProps) => {
       form.setError("root", { 
         message: "Invalid email or password. Please try again." 
       });
+      // Reset captcha on error
+      captchaRef.current?.resetCaptcha();
+      setCaptchaToken(null);
     } finally {
       setIsSubmitting(false);
     }
@@ -175,9 +192,20 @@ const LoginForm = ({ onAdminTap }: LoginFormProps) => {
               )}
             />
 
+            <div className="flex justify-center my-4">
+              <HCaptcha
+                sitekey="02409832-47f4-48c0-ac48-d98828b23724"
+                onVerify={(token) => setCaptchaToken(token)}
+                onExpire={() => setCaptchaToken(null)}
+                onError={() => setCaptchaToken(null)}
+                ref={captchaRef}
+                theme="light"
+              />
+            </div>
+
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !captchaToken}
               className="w-full bg-gold hover:bg-gold/90 text-white"
             >
               {isSubmitting ? (
