@@ -216,7 +216,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
             
             <div className="flex justify-center my-4">
               <HCaptcha
-                sitekey="0a20d02e-e2b3-4c71-9678-4c7a1e402caf"
+                sitekey="02409832-47f4-48c0-ac48-d98828b23724"
                 onVerify={(token) => setCaptchaToken(token)}
                 ref={captchaRef}
                 theme="light"
