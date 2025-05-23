@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Loader2, Music, Volume2, VolumeX } from "lucide-react";
+import { Loader2, Music } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { EASINGS } from "@/lib/animation-utils";
 
@@ -17,56 +17,9 @@ const SplashScreen = ({
   const [showSplash, setShowSplash] = useState(true);
   const [progress, setProgress] = useState(0);
   const [showMusicNotes, setShowMusicNotes] = useState(false);
-  const [audioMuted, setAudioMuted] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  // Initialize audio
-  useEffect(() => {
-    // Create audio element
-    audioRef.current = new Audio('/audio/splash-sound.mp3');
-    audioRef.current.loop = false;
-    audioRef.current.volume = 0.6; // 60% volume
-    audioRef.current.preload = 'auto';
-    
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
-  }, []);
-
-  // Play audio when splash shows
-  useEffect(() => {
-    if (loading && audioRef.current && !audioMuted) {
-      // Small delay to let the splash animation start
-      const audioTimeout = setTimeout(() => {
-        audioRef.current?.play().catch(e => {
-          console.log('Audio autoplay blocked:', e);
-          // Audio blocked by browser - that's ok, user can manually enable
-        });
-      }, 300);
-
-      return () => clearTimeout(audioTimeout);
-    }
-  }, [loading, audioMuted]);
 
   useEffect(() => {
     if (!loading) {
-      // Fade out audio when loading completes
-      if (audioRef.current && !audioRef.current.paused) {
-        const fadeOut = setInterval(() => {
-          if (audioRef.current && audioRef.current.volume > 0.1) {
-            audioRef.current.volume -= 0.1;
-          } else {
-            if (audioRef.current) {
-              audioRef.current.pause();
-            }
-            clearInterval(fadeOut);
-          }
-        }, 50);
-      }
-
       // Allow time for fade-out before unmounting
       const timeout = setTimeout(() => {
         setShowSplash(false);
@@ -102,21 +55,6 @@ const SplashScreen = ({
     }
   }, [loading, progress]);
 
-  // Toggle audio mute
-  const toggleAudio = () => {
-    setAudioMuted(!audioMuted);
-    if (audioRef.current) {
-      if (audioMuted) {
-        audioRef.current.volume = 0.6;
-        if (loading) {
-          audioRef.current.play().catch(e => console.log('Audio play failed:', e));
-        }
-      } else {
-        audioRef.current.pause();
-      }
-    }
-  };
-
   // Create an array of music notes with random positions for animation
   const musicNotes = Array.from({ length: 6 }, (_, i) => ({
     id: i,
@@ -141,23 +79,6 @@ const SplashScreen = ({
           }}
           style={{ pointerEvents: loading ? "auto" : "none" }}
         >
-          {/* Audio toggle button */}
-          <motion.button
-            className="absolute top-6 right-6 p-2 rounded-full bg-gold/10 hover:bg-gold/20 transition-colors z-20"
-            onClick={toggleAudio}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5 }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {audioMuted ? (
-              <VolumeX className="w-5 h-5 text-gold" />
-            ) : (
-              <Volume2 className="w-5 h-5 text-gold" />
-            )}
-          </motion.button>
-
           {/* Background gradient radial effect */}
           <div 
             className="absolute inset-0 bg-gradient-radial from-gold/5 via-background to-background" 
@@ -327,7 +248,7 @@ const SplashScreen = ({
             >
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
               <span>{message}</span>
-            </div>
+            </motion.div>
           </div>
         </motion.div>
       )}
