@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import LoginForm from "@/components/auth/LoginForm";
 import SignupForm from "@/components/auth/SignupForm";
 import AdminLoginForm from "@/components/auth/AdminLoginForm";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import Logo from "@/components/branding/Logo";
 import { FloatingBackButton } from "@/components/ui/floating-back-button";
 import { AnimatePresence, motion } from "framer-motion";
@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const initialForm = searchParams.get("tab") === "login" ? "login" : 
                       searchParams.get("tab") === "signup" ? "signup" : "signup";
@@ -33,49 +34,65 @@ const Auth = () => {
     }
   }, [adminTapCount]);
 
-  // Handle authentication errors from URL params
+  // Handle authentication errors from URL params and hash fragments
   useEffect(() => {
-    const error = searchParams.get("error");
-    const errorDescription = searchParams.get("error_description");
-    const provider = searchParams.get("provider");
-    
-    if (error) {
-      // Handle specific error cases
-      let errorMessage = errorDescription || "An authentication error occurred";
+    // Check for error params in both search params and hash fragment
+    const checkForErrors = () => {
+      // Parse the hash fragment if it exists
+      const hashParams = new URLSearchParams(location.hash.replace(/^#/, ''));
       
-      if (errorMessage.includes("Unverified email")) {
-        setAuthError(`Please verify your email address to continue.`);
+      const error = searchParams.get("error") || hashParams.get("error");
+      const errorDescription = searchParams.get("error_description") || hashParams.get("error_description");
+      const errorCode = searchParams.get("error_code") || hashParams.get("error_code");
+      const provider = searchParams.get("provider") || hashParams.get("provider") || "spotify";
+      
+      if (error) {
+        // Handle specific error cases
+        let errorMessage = errorDescription || "An authentication error occurred";
         
-        // For Spotify or other OAuth providers that require email verification
-        if (provider) {
+        // Handle provider email verification case specifically
+        if (errorCode === "provider_email_needs_verification" || 
+            errorMessage.includes("Unverified email")) {
+          
+          setAuthError(`Please verify your email address to continue.`);
+          
+          // Display toast notification for Spotify email verification
           toast({
-            title: `${provider.charAt(0).toUpperCase() + provider.slice(1)} Login Failed`,
+            title: `${provider.charAt(0).toUpperCase() + provider.slice(1)} Email Verification Required`,
+            description: "An email from Spotify just landed in your inbox. Please verify it to continue.",
+            variant: "default",
+            duration: 8000,
+          });
+          
+          // Extract email from error description if possible
+          let email = "";
+          if (errorDescription) {
+            const emailMatch = errorDescription.match(/email: ([^\s]+)/);
+            email = emailMatch ? emailMatch[1] : "";
+          }
+          
+          // Redirect to verification waiting page
+          navigate("/verification-waiting", {
+            state: { 
+              email,
+              provider,
+              verificationError: errorMessage
+            }
+          });
+          return;
+        } else {
+          setAuthError(errorMessage);
+          toast({
+            title: "Authentication Failed",
             description: errorMessage,
             variant: "destructive",
           });
-          
-          // If email info is available, redirect to verification waiting page
-          const email = searchParams.get("email");
-          if (email) {
-            navigate("/verification-waiting", {
-              state: { 
-                email,
-                provider,
-                verificationError: errorMessage
-              }
-            });
-          }
         }
-      } else {
-        setAuthError(errorMessage);
-        toast({
-          title: "Authentication Failed",
-          description: errorMessage,
-          variant: "destructive",
-        });
       }
-    }
-  }, [searchParams, toast, navigate]);
+    };
+    
+    checkForErrors();
+  }, [searchParams, location.hash, toast, navigate]);
   
   // Handle secret admin section reveal
   const handleAdminTapArea = () => {

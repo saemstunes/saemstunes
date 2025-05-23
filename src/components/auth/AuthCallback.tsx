@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,24 +18,29 @@ const AuthCallback = () => {
       const provider = searchParams.get("provider");
       const error = searchParams.get("error");
       const errorDescription = searchParams.get("error_description");
+      const errorCode = searchParams.get("error_code");
 
       // Handle error cases first
       if (error) {
         console.error("Auth error:", error, errorDescription);
         
         // Handle specific error cases
-        if (errorDescription?.includes("Unverified email")) {
+        if (errorCode === "provider_email_needs_verification" || 
+            errorDescription?.includes("Unverified email")) {
+          
           // Extract email from error description if possible
-          const emailMatch = errorDescription.match(/email: ([^\s]+)/);
+          const emailMatch = errorDescription?.match(/email: ([^\s]+)/);
           const email = emailMatch ? emailMatch[1] : "";
           
-          // Show toast and redirect to verification waiting page
+          // Show detailed toast notification for Spotify verification
           toast({
-            title: "Email verification required",
-            description: `Please verify your ${provider || ""} email address to continue.`,
-            variant: "destructive",
+            title: `${provider?.charAt(0).toUpperCase() + provider?.slice(1) || "Email"} Verification Required`,
+            description: "An email has been sent to your account. Please verify it to continue.",
+            variant: "default",
+            duration: 8000,
           });
           
+          // Redirect to verification waiting page with detailed info
           navigate("/verification-waiting", {
             state: {
               email,
@@ -47,7 +53,7 @@ const AuthCallback = () => {
         
         // For other errors, redirect to auth page with error
         setError(errorDescription || "Authentication failed");
-        navigate(`/auth?error=${encodeURIComponent(error)}&error_description=${encodeURIComponent(errorDescription || "")}&provider=${provider || ""}`, { replace: true });
+        navigate(`/auth?error=${encodeURIComponent(error)}&error_description=${encodeURIComponent(errorDescription || "")}&provider=${provider || ""}&error_code=${errorCode || ""}`, { replace: true });
         return;
       }
 
@@ -73,6 +79,7 @@ const AuthCallback = () => {
           toast({
             title: "Email verification required",
             description: "Please check your email and verify your account before logging in.",
+            duration: 8000,
           });
           
           navigate("/verification-waiting", {
