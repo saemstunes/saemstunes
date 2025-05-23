@@ -29,6 +29,7 @@ import {
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import SocialLoginOptions from "./SocialLoginOptions";
+import disposableDomains from "disposable-email-domains";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -62,12 +63,29 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
     },
   });
 
+  // Helper function to check if an email is from a disposable domain
+  const isDisposableEmail = (email: string): boolean => {
+    const domain = email.split("@")[1]?.toLowerCase();
+    return disposableDomains.includes(domain);
+  };
+
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     if (!captchaToken) {
       toast({
         title: "Verification required",
         description: "Please complete the captcha verification.",
         variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if the email is from a disposable domain
+    if (isDisposableEmail(data.email)) {
+      toast({
+        title: "Disposable email not allowed",
+        description: "Please use a valid personal or work email.",
+        variant: "destructive",
+        duration: 5000,
       });
       return;
     }
