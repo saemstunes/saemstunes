@@ -9,16 +9,21 @@ import { FloatingBackButton } from "@/components/ui/floating-back-button";
 import { AnimatePresence, motion } from "framer-motion";
 import { Music, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const initialForm = searchParams.get("tab") === "login" ? "login" : 
                       searchParams.get("tab") === "signup" ? "signup" : "signup";
   const [activeForm, setActiveForm] = useState<"login" | "signup" | "admin">(
     (initialForm as "login" | "signup") || "signup"
   );
   const [adminTapCount, setAdminTapCount] = useState(0);
+  const [authError, setAuthError] = useState<string | null>(null);
   
   // Reset admin tap count after a delay
   useEffect(() => {
@@ -27,6 +32,50 @@ const Auth = () => {
       return () => clearTimeout(timer);
     }
   }, [adminTapCount]);
+
+  // Handle authentication errors from URL params
+  useEffect(() => {
+    const error = searchParams.get("error");
+    const errorDescription = searchParams.get("error_description");
+    const provider = searchParams.get("provider");
+    
+    if (error) {
+      // Handle specific error cases
+      let errorMessage = errorDescription || "An authentication error occurred";
+      
+      if (errorMessage.includes("Unverified email")) {
+        setAuthError(`Please verify your email address to continue.`);
+        
+        // For Spotify or other OAuth providers that require email verification
+        if (provider) {
+          toast({
+            title: `${provider.charAt(0).toUpperCase() + provider.slice(1)} Login Failed`,
+            description: errorMessage,
+            variant: "destructive",
+          });
+          
+          // If email info is available, redirect to verification waiting page
+          const email = searchParams.get("email");
+          if (email) {
+            navigate("/verification-waiting", {
+              state: { 
+                email,
+                provider,
+                verificationError: errorMessage
+              }
+            });
+          }
+        }
+      } else {
+        setAuthError(errorMessage);
+        toast({
+          title: "Authentication Failed",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
+    }
+  }, [searchParams, toast, navigate]);
   
   // Handle secret admin section reveal
   const handleAdminTapArea = () => {
@@ -193,6 +242,26 @@ const Auth = () => {
               </AnimatePresence>
             </div>
           </div>
+
+          {/* Show authentication error if present */}
+          <AnimatePresence>
+            {authError && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="mb-4"
+              >
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Authentication Error</AlertTitle>
+                  <AlertDescription>
+                    {authError}
+                  </AlertDescription>
+                </Alert>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <AnimatePresence mode="wait">
             {activeForm === "login" && (

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, ArrowLeft, RefreshCw, AlertCircle, CheckCircle, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const VerificationWaiting = () => {
   const navigate = useNavigate();
@@ -15,6 +17,8 @@ const VerificationWaiting = () => {
   
   // Get email from location state
   const email = location.state?.email || "";
+  const provider = location.state?.provider || "";
+  const verificationError = location.state?.verificationError || "";
   
   const [isResending, setIsResending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
@@ -27,7 +31,16 @@ const VerificationWaiting = () => {
       navigate("/auth?tab=signup", { replace: true });
       return;
     }
-  }, [email, navigate]);
+
+    // Show toast if there's a verification error from OAuth provider
+    if (verificationError) {
+      toast({
+        title: "Email verification required",
+        description: verificationError,
+        variant: "destructive",
+      });
+    }
+  }, [email, navigate, verificationError, toast]);
 
   // Handle cooldown timer for resend button
   useEffect(() => {
@@ -209,6 +222,34 @@ const VerificationWaiting = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                 >
+                  {/* Show provider-specific message if applicable */}
+                  {provider && (
+                    <Alert className="mb-4 border-amber-200 bg-amber-50">
+                      <AlertCircle className="h-4 w-4 text-amber-500" />
+                      <AlertTitle className="text-amber-800">
+                        {provider === "spotify" ? "Spotify Email Verification" : `${provider} Email Verification`}
+                      </AlertTitle>
+                      <AlertDescription className="text-amber-700">
+                        {provider === "spotify" 
+                          ? "A verification email has been sent to your Spotify email address. You must verify this email before you can sign in with Spotify."
+                          : `A verification email has been sent to your ${provider} email address.`}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {/* Show custom error alert if provided */}
+                  {verificationError && !provider && (
+                    <Alert className="mb-4 border-red-200 bg-red-50">
+                      <AlertCircle className="h-4 w-4 text-red-500" />
+                      <AlertTitle className="text-red-800">
+                        Email Verification Required
+                      </AlertTitle>
+                      <AlertDescription className="text-red-700">
+                        {verificationError}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  
                   <div className="mb-6">
                     <p className="text-center mb-2">
                       We've sent a verification email to:
@@ -311,7 +352,4 @@ const VerificationWaiting = () => {
         </Card>
       </div>
     </div>
-  );
-};
-
-export default VerificationWaiting;
+  

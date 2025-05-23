@@ -331,7 +331,9 @@ export type Database = {
           bio: string | null
           created_at: string
           display_name: string | null
+          email: string | null
           first_name: string | null
+          full_name: string | null
           id: string
           last_active: string | null
           last_name: string | null
@@ -346,7 +348,9 @@ export type Database = {
           bio?: string | null
           created_at?: string
           display_name?: string | null
+          email?: string | null
           first_name?: string | null
+          full_name?: string | null
           id: string
           last_active?: string | null
           last_name?: string | null
@@ -361,7 +365,9 @@ export type Database = {
           bio?: string | null
           created_at?: string
           display_name?: string | null
+          email?: string | null
           first_name?: string | null
+          full_name?: string | null
           id?: string
           last_active?: string | null
           last_name?: string | null
@@ -660,7 +666,13 @@ export type Database = {
       payment_method: "mpesa" | "paypal" | "card" | "bank_transfer"
       subscription_status: "active" | "expired" | "canceled" | "pending"
       subscription_type: "free" | "basic" | "premium" | "enterprise"
-      user_role: "student" | "adult_learner" | "parent" | "tutor" | "admin"
+      user_role:
+        | "student"
+        | "adult_learner"
+        | "parent"
+        | "tutor"
+        | "admin"
+        | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -781,7 +793,14 @@ export const Constants = {
       payment_method: ["mpesa", "paypal", "card", "bank_transfer"],
       subscription_status: ["active", "expired", "canceled", "pending"],
       subscription_type: ["free", "basic", "premium", "enterprise"],
-      user_role: ["student", "adult_learner", "parent", "tutor", "admin"],
+      user_role: [
+        "student",
+        "adult_learner",
+        "parent",
+        "tutor",
+        "admin",
+        "user",
+      ],
     },
   },
 } as const
