@@ -225,48 +225,6 @@ const Dashboard = () => {
 const Index = () => {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-
-  // Handle auth errors in URL (especially from Spotify)
-  useEffect(() => {
-// Parse query parameters
-    const searchParams = new URLSearchParams(location.search);
-    // Parse hash parameters if they exist
-    const hashParams = new URLSearchParams(location.hash.replace(/^#/, ''));
-    
-    const error = searchParams.get("error") || hashParams.get("error");
-    const errorCode = searchParams.get("error_code") || hashParams.get("error_code");
-    const errorDescription = searchParams.get("error_description") || hashParams.get("error_description");
-    
-    // Check specifically for Spotify verification errors
-  if (error === "access_denied" &&
-        (errorCode === "provider_email_needs_verification" ||
-         errorDescription?.includes("Unverified email with spotify"))) {
-    
-      // Extract email from error description if possible
-      const emailMatch = errorDescription?.match(/email: ([^\s]+)/);
-      const email = emailMatch ? emailMatch[1] : "";
-      const provider = "spotify";
-  
-    // Show verification toast
-    toast({
-      title: "Spotify Email Verification Required",
-      description: "An email from Spotify just landed in your inbox. Please verify it to continue.",
-      duration: 8000,
-    });
-    
-    // Redirect to verification waiting page
-    navigate("/verification-waiting", {
-      state: {
-        email,
-        provider,
-        verificationError: errorDescription
-      }
-    });
-  }
-  }, [location, navigate, toast]);
 
   // Redirect to login if accessing protected dashboard areas
   useEffect(() => {
