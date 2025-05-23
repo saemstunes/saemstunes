@@ -1,7 +1,8 @@
+
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Note, NOTES } from './NoteDial';
 
-export const usePitchDetection = () => {
+export const usePitchDetection = (options = { cleanAudio: false }) => {
   const [isListening, setIsListening] = useState(false);
   const [currentNote, setCurrentNote] = useState<Note | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -12,11 +13,13 @@ export const usePitchDetection = () => {
   const animationRef = useRef<number | null>(null);
   const pitchBufferRef = useRef<number[]>([]);
   const lastNoteRef = useRef<Note | null>(null);
+  const lastUpdateTimeRef = useRef<number>(0);
   
   // Constants for pitch detection
   const BUFFER_SIZE = 5; // Size of buffer for smoothing pitch variations
   const STABILITY_THRESHOLD = 3; // Hz - Maximum pitch variance to consider it stable
   const MIN_AMPLITUDE = 0.01; // Minimum input signal amplitude to register
+  const UPDATE_INTERVAL = 50; // Only update state every 50ms to avoid performance issues
 
   // Function to convert frequency to note name, octave, and cents deviation
   const frequencyToNote = useCallback((frequency: number): Note => {
@@ -123,21 +126,65 @@ export const usePitchDetection = () => {
     return null;
   }, []);
 
+  // Check if this is a secure context (needed for microphone access)
+  const isSecureContext = useCallback(() => {
+    return typeof window !== 'undefined' && window.isSecureContext === true;
+  }, []);
+
+  // Check if browser supports getUserMedia
+  const isMicrophoneSupported = useCallback(() => {
+    return !!(navigator?.mediaDevices?.getUserMedia);
+  }, []);
+  
+  // Check if AudioContext is supported
+  const isAudioContextSupported = useCallback(() => {
+    return !!(window.AudioContext || (window as any).webkitAudioContext);
+  }, []);
+
   // Setup audio context and analyzer
   const setupAudio = async () => {
+    if (!isSecureContext()) {
+      setError('Microphone access requires a secure connection (HTTPS).');
+      return;
+    }
+
+    if (!isMicrophoneSupported()) {
+      setError('Your browser does not support microphone access.');
+      return;
+    }
+
+    if (!isAudioContextSupported()) {
+      setError('Your browser does not support audio processing.');
+      return;
+    }
+
     try {
       const context = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const analyzer = context.createAnalyser();
-      analyzer.fftSize = 8192;
       
+      // Critical for iOS - must resume context after creation
+      if (context.state === 'suspended') {
+        await context.resume();
+      }
+      
+      const analyzer = context.createAnalyser();
+      analyzer.fftSize = 8192; // Might need to be smaller on mobile, like 4096 or 2048
+      
+      console.log('Requesting microphone access...');
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
+        audio: options.cleanAudio ? {
+          // For better pitch accuracy, disable audio processing
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false
+        } : {
+          // For better voice quality, enable audio processing
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true
         }
       });
       
+      console.log('Microphone access granted, setting up audio processing');
       const micSource = context.createMediaStreamSource(stream);
       micSource.connect(analyzer);
       
@@ -152,6 +199,7 @@ export const usePitchDetection = () => {
       setPitch(null);
       pitchBufferRef.current = [];
       lastNoteRef.current = null;
+      lastUpdateTimeRef.current = 0;
       
       // Start the pitch detection loop
       startPitchDetection(analyzer, context.sampleRate);
@@ -165,6 +213,12 @@ export const usePitchDetection = () => {
           errorMessage = 'Microphone access denied. Please allow microphone access in your browser settings.';
         } else if (err.name === 'NotFoundError') {
           errorMessage = 'No microphone detected. Please connect a microphone and try again.';
+        } else if (err.name === 'NotReadableError' || err.name === 'AbortError') {
+          errorMessage = 'Could not access your microphone. It might be in use by another application.';
+        } else if (err.name === 'SecurityError') {
+          errorMessage = 'Microphone access not allowed in this context. Please use HTTPS.';
+        } else if (err.name === 'TypeError') {
+          errorMessage = 'Your browser does not fully support microphone access.';
         }
       }
       
@@ -177,16 +231,25 @@ export const usePitchDetection = () => {
     if (micStream) {
       micStream.getTracks().forEach(track => track.stop());
     }
+    
     if (animationRef.current !== null) {
       cancelAnimationFrame(animationRef.current);
       animationRef.current = null;
     }
+    
+    // Close AudioContext explicitly - important for mobile
+    if (audioContext) {
+      audioContext.close().catch(console.error);
+    }
+    
     setIsListening(false);
     setMicStream(null);
     setPitch(null);
     setCurrentNote(null);
     pitchBufferRef.current = [];
     lastNoteRef.current = null;
+    setAudioContext(null);
+    setAnalyser(null);
   };
 
   // Start the pitch detection loop
@@ -195,7 +258,20 @@ export const usePitchDetection = () => {
     const buffer = new Float32Array(bufferLength);
     
     const detectLoop = () => {
-      analyzer.getFloatTimeDomainData(buffer);
+      try {
+        // Try to use Float data if supported
+        analyzer.getFloatTimeDomainData(buffer);
+      } catch (e) {
+        // Fallback to byte data if float isn't supported (some older browsers)
+        console.log('Float time domain not supported, falling back to byte data');
+        const byteBuffer = new Uint8Array(bufferLength);
+        analyzer.getByteTimeDomainData(byteBuffer);
+        
+        // Convert byte data to float [-1.0, 1.0]
+        for (let i = 0; i < bufferLength; i++) {
+          buffer[i] = (byteBuffer[i] - 128) / 128;
+        }
+      }
       
       const detectedPitch = detectPitch(buffer, sampleRate);
       
@@ -218,15 +294,22 @@ export const usePitchDetection = () => {
             );
             
             if (isPitchStable) {
-              setPitch(averagePitch);
-              const detectedNote = frequencyToNote(averagePitch);
+              const now = Date.now();
               
-              // Update the note if it's new or significantly different
-              if (!lastNoteRef.current || 
-                  lastNoteRef.current.name !== detectedNote.name || 
-                  Math.abs(lastNoteRef.current.cents - detectedNote.cents) > 5) {
-                setCurrentNote(detectedNote);
-                lastNoteRef.current = detectedNote;
+              // Only update state every UPDATE_INTERVAL ms to avoid over-rendering
+              // Especially important on mobile devices
+              if (now - lastUpdateTimeRef.current > UPDATE_INTERVAL) {
+                lastUpdateTimeRef.current = now;
+                setPitch(averagePitch);
+                const detectedNote = frequencyToNote(averagePitch);
+                
+                // Update the note if it's new or significantly different
+                if (!lastNoteRef.current || 
+                    lastNoteRef.current.name !== detectedNote.name || 
+                    Math.abs(lastNoteRef.current.cents - detectedNote.cents) > 5) {
+                  setCurrentNote(detectedNote);
+                  lastNoteRef.current = detectedNote;
+                }
               }
             }
           }
@@ -248,16 +331,35 @@ export const usePitchDetection = () => {
   useEffect(() => {
     return () => {
       stopAudio();
-      if (audioContext) {
-        audioContext.close();
-      }
     };
   }, []);
 
-  const toggleListening = () => {
+  // Makes sure the audio context is resumed after a user gesture
+  // This is crucial for iOS and some Android browsers
+  const toggleListening = async () => {
     if (isListening) {
       stopAudio();
     } else {
+      // Check for existing context that may be suspended
+      if (audioContext && audioContext.state === 'suspended') {
+        try {
+          await audioContext.resume();
+          console.log('Resumed existing audio context');
+          // Start the pitch detection with existing context
+          if (analyser) {
+            setIsListening(true);
+            startPitchDetection(analyser, audioContext.sampleRate);
+            return;
+          }
+        } catch (err) {
+          console.error('Failed to resume AudioContext:', err);
+          // If resume fails, try completely new setup
+          setAudioContext(null);
+          setAnalyser(null);
+        }
+      }
+      
+      // Normal setup path
       setupAudio();
     }
   };
