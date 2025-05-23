@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -352,4 +351,7 @@ const VerificationWaiting = () => {
         </Card>
       </div>
     </div>
-  
+  );
+};
+
+export default VerificationWaiting;
