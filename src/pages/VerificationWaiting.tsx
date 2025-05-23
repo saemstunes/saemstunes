@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Mail, ArrowLeft, RefreshCw, AlertCircle, CheckCircle, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 
 const VerificationWaiting = () => {
   const navigate = useNavigate();
@@ -23,6 +25,9 @@ const VerificationWaiting = () => {
   const [cooldown, setCooldown] = useState(0);
   const [isVerified, setIsVerified] = useState(false);
   const [isCheckingVerification, setIsCheckingVerification] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<HCaptcha>(null);
+  const [showCaptcha, setShowCaptcha] = useState(false);
 
   // Redirect to auth if no email is provided
   useEffect(() => {
@@ -81,6 +86,11 @@ const VerificationWaiting = () => {
     return () => clearInterval(interval);
   }, [navigate, email, toast]);
 
+  const prepareForResend = () => {
+    if (cooldown > 0 || !email) return;
+    setShowCaptcha(true);
+  };
+
   const handleResendEmail = async () => {
     if (cooldown > 0 || !email) return;
     
@@ -89,6 +99,9 @@ const VerificationWaiting = () => {
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email: email,
+        options: {
+          captchaToken: captchaToken || undefined
+        }
       });
       
       if (error) throw error;
@@ -100,6 +113,13 @@ const VerificationWaiting = () => {
       
       // Set cooldown to 60 seconds
       setCooldown(60);
+      setShowCaptcha(false);
+      setCaptchaToken(null);
+      
+      // Reset the captcha
+      if (captchaRef.current) {
+        captchaRef.current.resetCaptcha();
+      }
     } catch (error: any) {
       let errorMessage = "Failed to resend verification email";
       
@@ -109,6 +129,12 @@ const VerificationWaiting = () => {
         setCooldown(300); // 5 minute cooldown for rate limit
       } else if (error.message?.includes("already registered")) {
         errorMessage = "This email is already registered. Try logging in instead.";
+      } else if (error.message?.includes("captcha")) {
+        errorMessage = "Captcha verification failed. Please try again.";
+        // Reset the captcha
+        if (captchaRef.current) {
+          captchaRef.current.resetCaptcha();
+        }
       }
       
       toast({
@@ -161,6 +187,16 @@ const VerificationWaiting = () => {
   const handleOpenEmailApp = () => {
     // Try to open default email app
     window.location.href = "mailto:";
+  };
+
+  const handleCaptchaVerify = (token: string) => {
+    setCaptchaToken(token);
+    // Automatically proceed with resend when captcha is verified
+    if (token) {
+      setTimeout(() => {
+        handleResendEmail();
+      }, 500);
+    }
   };
 
   // Don't render if no email
@@ -300,23 +336,43 @@ const VerificationWaiting = () => {
                       Open Email App
                     </Button>
                     
-                    <Button 
-                      variant="outline" 
-                      className="w-full flex items-center justify-center gap-2"
-                      onClick={handleResendEmail}
-                      disabled={isResending || cooldown > 0}
-                    >
-                      {isResending ? (
-                        <RefreshCw className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <RefreshCw className="h-4 w-4" />
-                      )}
-                      {cooldown > 0 ? (
-                        `Resend email (${cooldown}s)`
-                      ) : (
-                        "Resend verification email"
-                      )}
-                    </Button>
+                    {showCaptcha ? (
+                      <div className="flex flex-col items-center space-y-2">
+                        <div className="mt-2 mb-4 flex justify-center">
+                          <HCaptcha
+                            sitekey="02409832-47f4-48c0-ac48-d98828b23724"
+                            onVerify={handleCaptchaVerify}
+                            ref={captchaRef}
+                            theme="light"
+                          />
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => setShowCaptcha(false)}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button 
+                        variant="outline" 
+                        className="w-full flex items-center justify-center gap-2"
+                        onClick={prepareForResend}
+                        disabled={isResending || cooldown > 0}
+                      >
+                        {isResending ? (
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-4 w-4" />
+                        )}
+                        {cooldown > 0 ? (
+                          `Resend email (${cooldown}s)`
+                        ) : (
+                          "Resend verification email"
+                        )}
+                      </Button>
+                    )}
                     
                     {cooldown > 0 && (
                       <Progress 
