@@ -85,8 +85,8 @@ export const usePitchDetection = () => {
     const correlations: number[] = [];
     
     // Skip the first few samples where correlation is meaningless
-    const minLag = Math.floor(sampleRate / 1500); // Min frequency ~1500Hz
-    const maxLag = Math.floor(sampleRate / 80);   // Max frequency ~80Hz
+    const minLag = Math.floor(sampleRate / 5000); // Min frequency ~5000Hz
+    const maxLag = Math.floor(sampleRate / 60);   // Max frequency ~60Hz
     
     for (let lag = minLag; lag < maxLag; lag++) {
       let correlation = 0;
@@ -128,7 +128,7 @@ export const usePitchDetection = () => {
     try {
       const context = new (window.AudioContext || (window as any).webkitAudioContext)();
       const analyzer = context.createAnalyser();
-      analyzer.fftSize = 2048;
+      analyzer.fftSize = 8192;
       
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
