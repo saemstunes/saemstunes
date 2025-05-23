@@ -11,8 +11,6 @@ import { mockSubscriptionPlans } from "@/data/mockData";
 import PricingCard from "@/components/subscription/PricingCard";
 import { motion } from "framer-motion";
 import { pageTransition } from "@/lib/animation-utils";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
 
 const LandingPage = () => {
   const navigate = useNavigate();
