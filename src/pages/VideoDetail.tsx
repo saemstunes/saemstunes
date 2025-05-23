@@ -169,7 +169,7 @@ const VideoDetail = () => {
             This video is only available to premium subscribers. Upgrade your account to access all content.
           </p>
           <Button 
-            onClick={() => navigate("/subscription")}
+            onClick={() => navigate("/subscriptions")}
             className="mt-6 bg-gold hover:bg-gold-dark text-white"
           >
             Upgrade Now
