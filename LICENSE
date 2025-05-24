@@ -1,5 +1,5 @@
 
-MIT License
+# MIT License
 
 Copyright (c) 2025 Saem's Tunes
 
@@ -20,3 +20,181 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+## Scope of This MIT License
+
+This MIT License applies exclusively to the **core application framework** of Saem's Tunes, specifically including:
+
+### ✅ Covered Under MIT License:
+- **React/Vite Application Structure**: Core application architecture, routing, and component framework
+- **UI Components & Styling**: Basic UI components, Tailwind CSS configurations, and responsive design systems
+- **Database Schemas**: Supabase table structures, relationships, and basic query patterns
+- **Authentication Systems**: User registration, login, password reset, and session management
+- **API Endpoints**: RESTful API patterns, request/response handling, and basic CRUD operations
+- **Navigation & Routing**: React Router implementation, route guards, and navigation components
+- **Utility Functions**: Helper functions, validation logic, and common utilities
+- **Build Configuration**: Vite configuration, TypeScript setup, and development tooling
+
+### ❌ Explicitly EXCLUDED from MIT License:
+
+#### 1. Premium Features (Commercial License Required)
+Located in `/src/premium/` and protected repositories:
+- Advanced admin dashboards and analytics interfaces
+- Enterprise SSO integration and multi-tenant architecture
+- Subscription management and payment processing logic
+- Advanced reporting, insights, and learning analytics
+- Premium-only UI components and exclusive content delivery
+- Bulk user management and enterprise administration tools
+- Custom branding and white-label solutions
+- Advanced API rate limiting and enterprise integrations
+
+#### 2. Educational Content (CC BY-NC 4.0 License)
+Located in `/src/content/` and `/public/content/`:
+- Music theory charts, diagrams, and educational infographics
+- Video tutorials, lesson demonstrations, and instructional content
+- Audio samples, backing tracks, and practice materials
+- Sheet music, chord charts, and musical notation
+- Lesson plans, practice exercises, and curriculum materials
+- Educational illustrations, icons, and visual learning aids
+
+#### 3. Brand Assets (Trademark Protected)
+- "Saem's Tunes" name, wordmarks, and brand variations
+- Logo designs, brand imagery, and visual identity systems
+- Marketing materials, promotional copy, and commercial content
+- Color schemes, typography treatments, and brand styling guides
+- Domain names and associated web properties
+
+## Third-Party Dependencies
+
+All third-party dependencies and libraries maintain their original licenses. Refer to:
+- `package.json` for complete dependency listing
+- Individual package documentation for specific license terms
+- `node_modules/[package]/LICENSE` files for detailed license information
+
+## Repository Structure & License Boundaries
+
+```
+saemstunes-app/
+├── LICENSE (MIT - this file)
+├── LICENSE-CONTENT.md (CC BY-NC 4.0)
+├── TRADEMARK-NOTICE.md (Brand protection)
+├── COMMERCIAL-LICENSE.md (Premium features)
+├── src/
+│   ├── components/ (MIT - open source UI components)
+│   ├── pages/ (MIT - basic application pages)
+│   ├── hooks/ (MIT - reusable React hooks)
+│   ├── utils/ (MIT - utility functions)
+│   ├── integrations/ (MIT - basic integrations)
+│   ├── premium/ (Commercial - proprietary features)
+│   └── content/ (CC BY-NC 4.0 - educational materials)
+├── public/
+│   ├── content/ (CC BY-NC 4.0 - educational assets)
+│   └── branding/ (Trademark protected)
+└── docs/ (MIT - technical documentation)
+```
+
+## Contributing Guidelines
+
+By contributing to this project, you acknowledge and agree that:
+
+1. **Code Contributions**: Your contributions to MIT-licensed components will be licensed under the same MIT License
+2. **Content Contributions**: Educational content contributions will be licensed under CC BY-NC 4.0
+3. **Contributor License Agreement**: You may be required to sign a CLA for significant contributions
+4. **Intellectual Property**: You warrant that your contributions are original or properly licensed
+5. **No Premium Feature Contributions**: Community contributions to premium features require separate commercial agreements
+
+### How to Contribute:
+- Review our `CONTRIBUTING.md` for detailed guidelines
+- Check `CODE_OF_CONDUCT.md` for community standards
+- Open issues for bugs, feature requests, or discussions
+- Submit pull requests following our coding standards
+- Respect license boundaries when proposing changes
+
+## Fork and Derivative Work Guidelines
+
+If you fork this repository or create derivative works:
+
+### ✅ You May:
+- Fork and modify MIT-licensed components
+- Create derivative applications using the core framework
+- Distribute your modified version under MIT License terms
+- Use the open source components for commercial projects
+
+### ⚠️ You Must:
+- Remove or replace all "Saem's Tunes" branding from your derivative work
+- Comply with CC BY-NC 4.0 terms for any educational content you use
+- Maintain proper attribution to the original Saem's Tunes project
+- Include this license notice in all copies or substantial portions
+
+### ❌ You May Not:
+- Include premium features in your fork (separate licensing required)
+- Use "Saem's Tunes" branding or create confusingly similar names
+- Commercialize educational content without proper licensing
+- Claim official endorsement or affiliation with Saem's Tunes
+
+## Commercial Use and Enterprise Licensing
+
+### Open Source Commercial Use:
+The MIT-licensed components may be used commercially without restriction, including:
+- Building commercial music education applications
+- Offering software-as-a-service based on the core framework
+- Creating proprietary derivatives for internal business use
+- Integrating components into larger commercial products
+
+### Premium Feature Licensing:
+For access to premium features, advanced functionality, or enterprise support:
+- Review `COMMERCIAL-LICENSE.md` for pricing and terms
+- Contact sales@saemstunes.com for enterprise discussions
+- Consider partnership opportunities for significant commercial use
+- Explore white-label licensing for education institutions
+
+## Support and Community
+
+### Community Support (MIT License):
+- GitHub Issues for bug reports and feature requests
+- GitHub Discussions for community questions and ideas
+- Public documentation and tutorials
+- Community-driven support and knowledge sharing
+
+### Commercial Support (Premium License):
+- Priority email and phone support
+- Professional services and consulting
+- Custom development and integration assistance
+- Service level agreements and guaranteed response times
+
+## Legal Compliance and Edge Cases
+
+### International Use:
+- Export restrictions may apply to certain algorithms or encryption features
+- Comply with local data protection regulations (GDPR, CCPA, etc.)
+- Respect educational content licensing in your jurisdiction
+- Consider trademark implications when operating in different countries
+
+### Edge Case Scenarios:
+- **Academic Research**: Educational content use in academic settings generally permitted under CC BY-NC 4.0
+- **Non-Profit Organizations**: Contact us for potential licensing accommodations
+- **Government Use**: Special licensing terms may be available for public sector use
+- **Open Source Integration**: Ensure license compatibility when integrating with other open source projects
+
+### Liability and Warranty:
+As stated in the MIT License, the software is provided "AS IS" without warranty. This includes:
+- No guarantee of fitness for particular educational purposes
+- No warranty regarding compliance with accessibility standards
+- No liability for data loss or educational outcomes
+- Users assume responsibility for compliance with applicable regulations
+
+## Contact Information
+
+For licensing questions, clarifications, or commercial inquiries:
+
+- **General Questions**: hello@saemstunes.com
+- **Legal/Licensing**: legal@saemstunes.com  
+- **Commercial Sales**: sales@saemstunes.com
+- **GitHub Issues**: For public technical discussions
+- **Community Discord**: [Link to community server]
+
+---
+
+**Last Updated**: 2025-05-24
+
+*This MIT License is part of a comprehensive licensing strategy. Please review all related licensing documents for complete understanding of usage rights and restrictions.*
