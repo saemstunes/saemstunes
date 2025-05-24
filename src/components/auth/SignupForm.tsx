@@ -31,6 +31,22 @@ import { supabase } from "@/integrations/supabase/client";
 import SocialLoginOptions from "./SocialLoginOptions";
 import disposableDomains from "disposable-email-domains";
 
+// Additional disposable domains not in the package
+const additionalDisposableDomains = [
+  "temp-mail.org",
+  "10minutemail.com",
+  "guerrillamail.com",
+  "mailinator.com",
+  "throwaway.email",
+  "tempmail.email",
+  "yopmail.com",
+  "maildrop.cc",
+  "mohmal.com",
+  "tempmail.net"
+];
+
+const allDisposableDomains = [...disposableDomains, ...additionalDisposableDomains];
+
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email"),
@@ -63,10 +79,10 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
     },
   });
 
-  // Helper function to check if an email is from a disposable domain
+  // Enhanced helper function to check if an email is from a disposable domain
   const isDisposableEmail = (email: string): boolean => {
     const domain = email.split("@")[1]?.toLowerCase();
-    return disposableDomains.includes(domain);
+    return allDisposableDomains.includes(domain);
   };
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
@@ -83,7 +99,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
     if (isDisposableEmail(data.email)) {
       toast({
         title: "Disposable email not allowed",
-        description: "Please use a valid personal or work email.",
+        description: "Please use a valid personal or work email address.",
         variant: "destructive",
         duration: 5000,
       });
@@ -94,7 +110,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
     
     try {
       // Using Supabase directly with captcha token
-      const { error } = await supabase.auth.signUp({
+      const { data: signUpData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
@@ -105,28 +121,50 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
             subscribed: false,
           },
           captchaToken,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
       
       if (error) {
+        if (error.message.includes("already registered")) {
+          toast({
+            title: "Account exists",
+            description: "An account with this email already exists. Try signing in instead.",
+            variant: "destructive",
+          });
+          return;
+        }
         throw error;
       }
       
-      toast({
-        title: "Account created!",
-        description: "Verification email sent. Please check your inbox.",
-      });
-      
-      // Redirect to verification waiting page instead of calling onSignupComplete
-      navigate("/verification-waiting", { 
-        state: { email: data.email }
-      });
+      if (signUpData.user && !signUpData.session) {
+        toast({
+          title: "Account created!",
+          description: "Please check your email and click the verification link to complete your registration.",
+        });
+        // Redirect to verification waiting page instead of calling onSignupComplete
+        navigate("/verification-waiting", { 
+          state: { email: data.email }
+        });
+      } else if (signUpData.session) {
+        toast({
+          title: "Welcome!",
+          description: "Your account has been created successfully.",
+        });
+        navigate("/user-details");
+      }
       
     } catch (error: any) {
       console.error("Signup error:", error);
       // Reset captcha on error
       captchaRef.current?.resetCaptcha();
       setCaptchaToken(null);
+      
+      toast({
+        title: "Signup failed",
+        description: error.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
       
       form.setError("root", { 
         message: error.message || "There was an error signing up. Please try again." 
