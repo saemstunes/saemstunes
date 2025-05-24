@@ -122,48 +122,6 @@ export type Database = {
         }
         Relationships: []
       }
-      email_breach_checks: {
-        Row: {
-          breach_count: number | null
-          breaches: Json | null
-          checked_at: string | null
-          created_at: string | null
-          email: string
-          id: string
-          is_compromised: boolean
-          paste_count: number | null
-          pastes: Json | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          breach_count?: number | null
-          breaches?: Json | null
-          checked_at?: string | null
-          created_at?: string | null
-          email: string
-          id?: string
-          is_compromised?: boolean
-          paste_count?: number | null
-          pastes?: Json | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          breach_count?: number | null
-          breaches?: Json | null
-          checked_at?: string | null
-          created_at?: string | null
-          email?: string
-          id?: string
-          is_compromised?: boolean
-          paste_count?: number | null
-          pastes?: Json | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       favorites: {
         Row: {
           content_id: string
@@ -531,39 +489,6 @@ export type Database = {
         }
         Relationships: []
       }
-      security_events: {
-        Row: {
-          breach_count: number | null
-          created_at: string | null
-          email: string | null
-          event_type: string
-          id: string
-          metadata: Json | null
-          paste_count: number | null
-          user_id: string | null
-        }
-        Insert: {
-          breach_count?: number | null
-          created_at?: string | null
-          email?: string | null
-          event_type: string
-          id?: string
-          metadata?: Json | null
-          paste_count?: number | null
-          user_id?: string | null
-        }
-        Update: {
-          breach_count?: number | null
-          created_at?: string | null
-          email?: string | null
-          event_type?: string
-          id?: string
-          metadata?: Json | null
-          paste_count?: number | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       song_requests: {
         Row: {
           artist: string | null
@@ -728,56 +653,12 @@ export type Database = {
         }
         Relationships: []
       }
-      weak_passwords: {
-        Row: {
-          created_at: string | null
-          id: string
-          password_hash: string
-          pattern_type: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          password_hash: string
-          pattern_type: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          password_hash?: string
-          pattern_type?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      cleanup_old_breach_checks: {
-        Args: Record<PropertyKey, never> | { days_old?: number }
-        Returns: undefined
-      }
-      get_user_activity: {
-        Args: { target_user_id?: string; limit_records?: number }
-        Returns: {
-          activity_id: string
-          user_id: string
-          activity_type: string
-          activity_description: string
-          created_at: string
-          ip_address: unknown
-          user_agent: string
-        }[]
-      }
-      get_user_breach_summary: {
-        Args: Record<PropertyKey, never> | { target_user_id?: string }
-        Returns: undefined
-      }
-      validate_password_security: {
-        Args: { password: string }
-        Returns: Json
-      }
+      [_ in never]: never
     }
     Enums: {
       access_level: "free" | "basic" | "premium" | "private"
