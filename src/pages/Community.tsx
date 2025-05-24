@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +15,7 @@ import { BookOpen } from "lucide-react";
 import AudioSharingCard from "@/components/community/AudioSharingCard";
 import DirectMessaging from "@/components/community/DirectMessaging";
 import { useNavigate } from "react-router-dom";
+import SEOHead from "@/components/seo/SEOHead";
 
 // Mock audio tracks for audio sharing
 const AUDIO_TRACKS = [
@@ -57,6 +59,25 @@ const Community = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("discussions");
+  
+  // SEO schema for community page
+  const communitySchema = {
+    "@context": "https://schema.org",
+    "@type": "DiscussionForumPosting",
+    "headline": "Music Learning Community - Saem's Tunes",
+    "description": "Join our vibrant community of music learners and educators. Share recordings, discuss techniques, and collaborate with fellow musicians.",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Saem's Tunes",
+      "logo": "https://i.imgur.com/ltEen5M.png"
+    },
+    "keywords": "music community, music discussions, audio sharing, music collaboration, music learning",
+    "interactionStatistic": {
+      "@type": "InteractionCounter",
+      "interactionType": "https://schema.org/CommentAction",
+      "userInteractionCount": "89"
+    }
+  };
 
   // Sample community data
   const discussions = [
@@ -212,6 +233,13 @@ const Community = () => {
 
   return (
     <MainLayout>
+      <SEOHead 
+        title="Music Community | Saem's Tunes"
+        description="Join our vibrant music community. Share recordings, discuss techniques, and connect with fellow musicians and instructors."
+        keywords="music community, musician forum, audio sharing, music collaboration"
+        url="https://saemstunes.app/community"
+        structuredData={communitySchema}
+      />
       <div className="space-y-6 pb-24 md:pb-12">
         {isMobile ? (
           // Mobile Layout (Tab-based)

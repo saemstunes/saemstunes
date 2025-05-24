@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -11,6 +12,7 @@ import Metronome from "@/components/music-tools/Metronome";
 import ToolSuggestionForm from "@/components/music-tools/ToolSuggestionForm";
 import { motion } from "framer-motion";
 import { pageTransition } from "@/lib/animation-utils";
+import SEOHead from "@/components/seo/SEOHead";
 
 const MusicTools = () => {
   const [activeTab, setActiveTab] = useState("pitch-finder");
@@ -18,6 +20,28 @@ const MusicTools = () => {
   const [permissionState, setPermissionState] = useState({
     microphone: null, // null = not asked, true = granted, false = denied
   });
+
+  // SEO schema for music tools
+  const musicToolsSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Music Tools by Saem's Tunes",
+    "applicationCategory": "EducationalApplication, MusicApplication",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "operatingSystem": "Web Browser",
+    "description": "Free interactive music tools including pitch finder, metronome, and more to help musicians practice and improve their skills.",
+    "potentialAction": {
+      "@type": "UseAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "https://saemstunes.app/music-tools"
+      }
+    }
+  };
 
   const requestMicrophonePermission = async () => {
     try {
@@ -47,6 +71,13 @@ const MusicTools = () => {
 
   return (
     <MainLayout>
+      <SEOHead 
+        title="Music Tools - Pitch Finder, Metronome & More | Saem's Tunes"
+        description="Free interactive music tools to enhance your musical journey. Use our pitch finder, metronome, and other tools to improve your skills."
+        keywords="pitch finder, metronome, music tools, music practice, tuner app, music learning"
+        url="https://saemstunes.app/music-tools"
+        structuredData={musicToolsSchema}
+      />
       <motion.div 
         className="space-y-6 pb-24 md:pb-12"
         {...pageTransition}

@@ -5,25 +5,80 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>The Saem's Tunes App</title>
-    <meta name="description" content="Making Music, Representing Christ" />
+    <meta name="description" content="Making Music, Representing Christ - Tots to teens to adults: everyone's go-to music learning space!" />
     <meta name="author" content="Saem" />
+    <meta name="keywords" content="music learning, piano lessons, vocal training, guitar tutorials, music theory, online music education" />
 
-    <meta property="og:title" content="the-saemstunes-app" />
-    <meta property="og:description" content="Tots to teens to adults: everyone’s go-to music learning space!" />
+    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
+    <meta property="og:title" content="Saem's Tunes - Making Music, Representing Christ" />
+    <meta property="og:description" content="Tots to teens to adults: everyone's go-to music learning space!" />
     <meta property="og:image" content="https://i.imgur.com/ltEen5M.png" />
+    <meta property="og:url" content="https://saemstunes.app" />
+    <meta property="og:site_name" content="Saem's Tunes" />
 
+    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@saemstunes" />
+    <meta name="twitter:title" content="Saem's Tunes - Making Music, Representing Christ" />
+    <meta name="twitter:description" content="Tots to teens to adults: everyone's go-to music learning space!" />
     <meta name="twitter:image" content="https://i.imgur.com/ltEen5M.png" />
+
+    <!-- Favicon and App Icons -->
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <meta name="theme-color" content="#C9A66B" />
 
     <!-- Preload logo images -->
     <link rel="preload" href="/lovable-uploads/4fdafda9-d6df-439b-935a-055eaf0f63c5.png" as="image" fetchpriority="high" />
     <link rel="preload" href="/lovable-uploads/4fdafda9-d6df-439b-935a-055eaf0f63c5.webp" as="image" fetchpriority="high" />
+
+    <!-- Structured Data for Organization -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Saem's Tunes",
+        "url": "https://saemstunes.app",
+        "logo": "https://i.imgur.com/ltEen5M.png",
+        "description": "Making Music, Representing Christ - Online music learning platform for all ages",
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "contactType": "Customer Service",
+          "email": "saemstunes@gmail.com"
+        },
+        "sameAs": [
+          "https://instagram.com/saemstunes"
+        ]
+      }
+    </script>
+
+    <!-- Structured Data for WebApplication -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Saem's Tunes App",
+        "applicationCategory": "EducationalApplication, MusicApplication",
+        "operatingSystem": "Web Browser, Android",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
+
+    <!-- Security Headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+    <meta http-equiv="Cache-Control" content="max-age=86400">
   </head>
   
   <body>
-<div id="root"></div>
+    <div id="root"></div>
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>

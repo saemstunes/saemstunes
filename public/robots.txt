@@ -1,4 +1,6 @@
+
 User-agent: *
+Allow: /
 Disallow: /src/
 Disallow: /supabase/
 Disallow: /components.json
@@ -13,3 +15,34 @@ Disallow: /tailwind.config.ts
 Disallow: /postcss.config.js
 Disallow: /eslint.config.js
 Disallow: /About Saem's Tunes App.md
+Disallow: /admin
+Disallow: /profile
+Disallow: /settings
+Disallow: /user-details
+Disallow: /bookings
+Disallow: /notifications
+Disallow: /verification-waiting
+Disallow: /unauthorized
+Disallow: /auth/callback
+
+# Allow important pages for SEO
+Allow: /discover
+Allow: /videos
+Allow: /resources
+Allow: /learning-hub
+Allow: /community
+Allow: /library
+Allow: /music-tools
+Allow: /services
+Allow: /contact-us
+Allow: /support-us
+Allow: /follow-us
+Allow: /subscriptions
+Allow: /privacy
+Allow: /terms
+
+# Sitemap location
+Sitemap: https://saemstunes.app/sitemap.xml
+
+# Crawl delay (optional - be respectful to server resources)
+Crawl-delay: 1
