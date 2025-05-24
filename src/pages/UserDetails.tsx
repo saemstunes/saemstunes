@@ -1,206 +1,234 @@
 
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import MainLayout from '@/components/layout/MainLayout';
-import { useAuth } from '@/context/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Calendar, Mail, MapPin, PhoneCall, User } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
+import React, { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Music, User, Mail, Phone, Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
+
+interface UserDetailsForm {
+  firstName: string;
+  lastName: string;
+  phone: string;
+}
 
 const UserDetails = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSkipping, setIsSkipping] = useState(false);
   
-  if (!user) {
-    return (
-      <MainLayout>
-        <div className="text-center py-12">
-          <h2 className="text-2xl font-medium">Please log in to view your details</h2>
-          <Button onClick={() => navigate("/auth")} className="mt-4">
-            Go to Login
-          </Button>
-        </div>
-      </MainLayout>
-    );
-  }
+  const { register, handleSubmit, formState: { errors } } = useForm<UserDetailsForm>();
 
-  // Format registration date
-  const formattedDate = new Date().toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-  
+  useEffect(() => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+  }, [user, navigate]);
+
+  const onSubmit = async (data: UserDetailsForm) => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          first_name: data.firstName,
+          last_name: data.lastName,
+          phone: data.phone,
+          email: user.email,
+          full_name: `${data.firstName} ${data.lastName}`,
+          display_name: data.firstName,
+          onboarding_complete: true
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Profile updated!",
+        description: "Your information has been saved successfully.",
+      });
+      
+      navigate("/");
+    } catch (error: any) {
+      console.error("Profile update error:", error);
+      toast({
+        title: "Update failed",
+        description: error.message || "Could not update your profile. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSkip = async () => {
+    if (!user) return;
+    
+    setIsSkipping(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          email: user.email,
+          onboarding_complete: true
+        });
+
+      if (error) throw error;
+      navigate("/");
+    } catch (error: any) {
+      console.error("Skip onboarding error:", error);
+      navigate("/"); // Navigate anyway if there's an error
+    } finally {
+      setIsSkipping(false);
+    }
+  };
+
+  if (!user) return null;
+
   return (
-    <MainLayout>
-      <div className="space-y-6">
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => navigate('/profile')}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Profile
-          </Button>
-        </div>
-        
-        <h1 className="text-3xl font-serif font-bold">About {user.name}</h1>
-        
-        <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="activity">Account Activity</TabsTrigger>
-            <TabsTrigger value="preferences">Preferences</TabsTrigger>
-          </TabsList>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background to-muted/30">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md"
+      >
+        <Card className="border-gold/20 shadow-xl">
+          <CardHeader className="text-center space-y-4">
+            <div className="flex items-center justify-center space-x-2 mb-2">
+              <Music className="h-8 w-8 text-gold" />
+            </div>
+            <CardTitle className="text-2xl font-serif">Welcome to Saem's Tunes!</CardTitle>
+            <CardDescription>
+              Help us personalize your experience by sharing a few details about yourself.
+            </CardDescription>
+          </CardHeader>
           
-          <TabsContent value="overview" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>User Information</CardTitle>
-                <CardDescription>Personal details and account information</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-6">
-                  <Avatar className="h-24 w-24">
-                    <AvatarImage src={user.avatar} alt={user.name} />
-                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  
-                  <div className="space-y-1">
-                    <h2 className="text-2xl font-bold">{user.name}</h2>
-                    <p className="text-muted-foreground capitalize">{user.role}</p>
-                  </div>
-                </div>
+          <CardContent className="space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName" className="flex items-center space-x-2">
+                  <User className="h-4 w-4 text-gold" />
+                  <span>First Name</span>
+                </Label>
+                <Input
+                  id="firstName"
+                  placeholder="Enter your first name"
+                  {...register("firstName", {
+                    required: "First name is required",
+                    minLength: {
+                      value: 2,
+                      message: "First name must be at least 2 characters"
+                    }
+                  })}
+                  className={errors.firstName ? "border-red-500" : ""}
+                />
+                {errors.firstName && (
+                  <p className="text-sm text-red-500">{errors.firstName.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  placeholder="Enter your last name"
+                  {...register("lastName", {
+                    required: "Last name is required",
+                    minLength: {
+                      value: 2,
+                      message: "Last name must be at least 2 characters"
+                    }
+                  })}
+                  className={errors.lastName ? "border-red-500" : ""}
+                />
+                {errors.lastName && (
+                  <p className="text-sm text-red-500">{errors.lastName.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="flex items-center space-x-2">
+                  <Phone className="h-4 w-4 text-gold" />
+                  <span>Phone Number (Optional)</span>
+                </Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="Enter your phone number"
+                  {...register("phone", {
+                    pattern: {
+                      value: /^[\+]?[1-9][\d]{0,15}$/,
+                      message: "Please enter a valid phone number"
+                    }
+                  })}
+                  className={errors.phone ? "border-red-500" : ""}
+                />
+                {errors.phone && (
+                  <p className="text-sm text-red-500">{errors.phone.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-3 pt-4">
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gold hover:bg-gold/90"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Complete Setup"
+                  )}
+                </Button>
                 
-                <Separator />
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-primary/10 p-2 rounded-full">
-                      <Mail className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Email</p>
-                      <p>{user.email}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <div className="bg-primary/10 p-2 rounded-full">
-                      <User className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Username</p>
-                      <p>@{user.name.toLowerCase().replace(/\s+/g, '')}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <div className="bg-primary/10 p-2 rounded-full">
-                      <PhoneCall className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Phone</p>
-                      <p>Not provided</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <div className="bg-primary/10 p-2 rounded-full">
-                      <MapPin className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Location</p>
-                      <p>Not provided</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="activity" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Account Activity</CardTitle>
-                <CardDescription>Recent account activities and events</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-start border-b pb-4">
-                    <div className="flex items-start gap-3">
-                      <div className="bg-primary/10 p-2 rounded-full mt-1">
-                        <Calendar className="h-4 w-4 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Member Since</p>
-                        <p className="text-sm text-muted-foreground">{formattedDate}</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between items-start border-b pb-4">
-                    <div className="flex items-start gap-3">
-                      <div className="bg-primary/10 p-2 rounded-full mt-1">
-                        <Calendar className="h-4 w-4 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Last Login</p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between items-start border-b pb-4">
-                    <div className="flex items-start gap-3">
-                      <div className="bg-primary/10 p-2 rounded-full mt-1">
-                        <Calendar className="h-4 w-4 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Password Changed</p>
-                        <p className="text-sm text-muted-foreground">Never</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-start gap-3">
-                      <div className="bg-primary/10 p-2 rounded-full mt-1">
-                        <Calendar className="h-4 w-4 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Profile Updated</p>
-                        <p className="text-sm text-muted-foreground">Never</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="preferences" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Preferences</CardTitle>
-                <CardDescription>Customize your user experience</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-sm">
-                  Preferences will be available soon. Check back later for options to customize your learning experience.
-                </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </MainLayout>
+                <Button 
+                  type="button"
+                  variant="ghost" 
+                  className="w-full"
+                  onClick={handleSkip}
+                  disabled={isSkipping}
+                >
+                  {isSkipping ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Skipping...
+                    </>
+                  ) : (
+                    "Skip for now"
+                  )}
+                </Button>
+              </div>
+            </form>
+
+            <div className="text-xs text-center text-muted-foreground space-y-2">
+              <p>
+                <Mail className="h-3 w-3 inline mr-1" />
+                Email: {user.email}
+              </p>
+              <p>
+                This information helps us send you relevant updates and personalize your experience.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
   );
 };
 
