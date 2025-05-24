@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +13,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { BookOpen } from "lucide-react";
 import AudioSharingCard from "@/components/community/AudioSharingCard";
 import DirectMessaging from "@/components/community/DirectMessaging";
+import { useNavigate } from "react-router-dom";
 
 // Mock audio tracks for audio sharing
 const AUDIO_TRACKS = [
@@ -55,6 +55,7 @@ const AUDIO_TRACKS = [
 const Community = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("discussions");
 
   // Sample community data
@@ -211,344 +212,346 @@ const Community = () => {
 
   return (
     <MainLayout>
-      {isMobile ? (
-        // Mobile Layout (Tab-based)
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-serif font-bold">Community</h1>
-            <Button className="bg-gold hover:bg-gold-dark text-white">
-              <MessageCircle className="mr-2 h-4 w-4" />
-              New
-            </Button>
-          </div>
-          
-          <Tabs defaultValue="discussions" className="w-full" onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-5 mb-4">
-              <TabsTrigger value="discussions">
-                <MessageCircle className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Discussions</span>
-              </TabsTrigger>
-              <TabsTrigger value="audio">
-                <Headphones className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Audio</span>
-              </TabsTrigger>
-              <TabsTrigger value="events">
-                <Bell className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Events</span>
-              </TabsTrigger>
-              <TabsTrigger value="messages">
-                <MessageCircle className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Messages</span>
-              </TabsTrigger>
-              <TabsTrigger value="featured">
-                <Award className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Featured</span>
-              </TabsTrigger>
-            </TabsList>
+      <div className="space-y-6 pb-24 md:pb-12">
+        {isMobile ? (
+          // Mobile Layout (Tab-based)
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h1 className="text-3xl font-serif font-bold">Community</h1>
+              <Button className="bg-gold hover:bg-gold-dark text-white">
+                <MessageCircle className="mr-2 h-4 w-4" />
+                New
+              </Button>
+            </div>
             
-            <TabsContent value="discussions" className="pt-2">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <MessageCircle className="h-5 w-5 text-gold" />
-                    Recent Discussions
-                  </CardTitle>
-                  <CardDescription>
-                    Join conversations or start your own thread
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {discussions.map(discussion => (
-                      <DiscussionCard key={discussion.id} discussion={discussion} />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+            <Tabs defaultValue="discussions" className="w-full" onValueChange={setActiveTab}>
+              <TabsList className="grid grid-cols-5 mb-4">
+                <TabsTrigger value="discussions">
+                  <MessageCircle className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Discussions</span>
+                </TabsTrigger>
+                <TabsTrigger value="audio">
+                  <Headphones className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Audio</span>
+                </TabsTrigger>
+                <TabsTrigger value="events">
+                  <Bell className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Events</span>
+                </TabsTrigger>
+                <TabsTrigger value="messages">
+                  <MessageCircle className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Messages</span>
+                </TabsTrigger>
+                <TabsTrigger value="featured">
+                  <Award className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Featured</span>
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="discussions" className="pt-2">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <MessageCircle className="h-5 w-5 text-gold" />
+                      Recent Discussions
+                    </CardTitle>
+                    <CardDescription>
+                      Join conversations or start your own thread
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {discussions.map(discussion => (
+                        <DiscussionCard key={discussion.id} discussion={discussion} />
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-            <TabsContent value="audio" className="pt-2">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Headphones className="h-5 w-5 text-gold" />
-                    Shared Audio
-                  </CardTitle>
-                  <CardDescription>
-                    Listen to recordings shared by the community
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {AUDIO_TRACKS.map(track => (
-                      <AudioSharingCard key={track.id} track={track} />
-                    ))}
-                    
-                    <Separator className="my-4" />
-                    
-                    <div className="text-center">
-                      <Button className="bg-gold hover:bg-gold/90 text-white">
-                        Share Your Audio
-                      </Button>
+              <TabsContent value="audio" className="pt-2">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Headphones className="h-5 w-5 text-gold" />
+                      Shared Audio
+                    </CardTitle>
+                    <CardDescription>
+                      Listen to recordings shared by the community
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {AUDIO_TRACKS.map(track => (
+                        <AudioSharingCard key={track.id} track={track} />
+                      ))}
+                      
+                      <Separator className="my-4" />
+                      
+                      <div className="text-center">
+                        <Button className="bg-gold hover:bg-gold/90 text-white">
+                          Share Your Audio
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="messages" className="pt-2">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <MessageCircle className="h-5 w-5 text-gold" />
-                    Direct Messages
-                  </CardTitle>
-                  <CardDescription>
-                    Connect with other musicians
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <DirectMessaging />
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="events" className="pt-2">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Bell className="h-5 w-5 text-gold" />
-                    Upcoming Events
-                  </CardTitle>
-                  <CardDescription>
-                    Join virtual and in-person music events
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {events.map(event => (
-                      <EventCard key={event.id} event={event} />
-                    ))}
-                    
-                    <Separator className="my-4" />
-                    
-                    <div className="text-center">
-                      <Button className="bg-gold hover:bg-gold-dark text-white">
-                        Browse All Events
-                      </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="messages" className="pt-2">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <MessageCircle className="h-5 w-5 text-gold" />
+                      Direct Messages
+                    </CardTitle>
+                    <CardDescription>
+                      Connect with other musicians
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <DirectMessaging />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="events" className="pt-2">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Bell className="h-5 w-5 text-gold" />
+                      Upcoming Events
+                    </CardTitle>
+                    <CardDescription>
+                      Join virtual and in-person music events
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {events.map(event => (
+                        <EventCard key={event.id} event={event} />
+                      ))}
+                      
+                      <Separator className="my-4" />
+                      
+                      <div className="text-center">
+                        <Button className="bg-gold hover:bg-gold-dark text-white">
+                          Browse All Events
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="featured" className="pt-2">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Award className="h-5 w-5 text-gold" />
-                    Featured Artists
-                  </CardTitle>
-                  <CardDescription>
-                    Connect with talented musicians in our community
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {featuredArtists.map(artist => (
-                      <ArtistCard key={artist.id} artist={artist} />
-                    ))}
-                    
-                    <Separator className="my-4" />
-                    
-                    <div className="text-center">
-                      <Button variant="outline">
-                        View All Artists
-                      </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="featured" className="pt-2">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Award className="h-5 w-5 text-gold" />
+                      Featured Artists
+                    </CardTitle>
+                    <CardDescription>
+                      Connect with talented musicians in our community
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {featuredArtists.map(artist => (
+                        <ArtistCard key={artist.id} artist={artist} />
+                      ))}
+                      
+                      <Separator className="my-4" />
+                      
+                      <div className="text-center">
+                        <Button variant="outline">
+                          View All Artists
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-      ) : (
-        // Desktop Layout
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-serif font-bold">Community</h1>
-            <Button className="bg-gold hover:bg-gold-dark text-white">
-              <MessageCircle className="mr-2 h-4 w-4" />
-              New Discussion
-            </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Main content */}
-            <div className="md:col-span-2 space-y-6">
-              <Tabs defaultValue="discussions">
-                <TabsList>
-                  <TabsTrigger value="discussions">Discussions</TabsTrigger>
-                  <TabsTrigger value="audio">Shared Audio</TabsTrigger>
-                  <TabsTrigger value="messages">Direct Messages</TabsTrigger>
-                </TabsList>
+        ) : (
+          // Desktop Layout
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h1 className="text-3xl font-serif font-bold">Community</h1>
+              <Button className="bg-gold hover:bg-gold-dark text-white">
+                <MessageCircle className="mr-2 h-4 w-4" />
+                New Discussion
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Main content */}
+              <div className="md:col-span-2 space-y-6">
+                <Tabs defaultValue="discussions">
+                  <TabsList>
+                    <TabsTrigger value="discussions">Discussions</TabsTrigger>
+                    <TabsTrigger value="audio">Shared Audio</TabsTrigger>
+                    <TabsTrigger value="messages">Direct Messages</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="discussions" className="pt-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center">
+                          <MessageCircle className="mr-2 h-5 w-5" />
+                          Recent Discussions
+                        </CardTitle>
+                        <CardDescription>
+                          Join the conversation or start your own thread
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {discussions.map(discussion => (
+                            <DiscussionCard key={discussion.id} discussion={discussion} />
+                          ))}
+                        </div>
+                        
+                        <Button variant="outline" className="w-full mt-4">
+                          View All Discussions
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                  
+                  <TabsContent value="audio" className="pt-4">
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {AUDIO_TRACKS.map(track => (
+                        <AudioSharingCard key={track.id} track={track} />
+                      ))}
+                    </div>
+                    
+                    <Button className="w-full mt-6 bg-gold hover:bg-gold/90 text-white">
+                      Share Your Recording
+                    </Button>
+                  </TabsContent>
+                  
+                  <TabsContent value="messages" className="pt-4">
+                    <Card>
+                      <CardContent className="p-0">
+                        <DirectMessaging />
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
                 
-                <TabsContent value="discussions" className="pt-4">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center">
-                        <MessageCircle className="mr-2 h-5 w-5" />
-                        Recent Discussions
-                      </CardTitle>
-                      <CardDescription>
-                        Join the conversation or start your own thread
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {discussions.map(discussion => (
-                          <DiscussionCard key={discussion.id} discussion={discussion} />
-                        ))}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Music className="mr-2 h-5 w-5" />
+                      Student Showcases
+                    </CardTitle>
+                    <CardDescription>
+                      Recent performances and progress from fellow students
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div className="border border-border rounded-lg p-4 flex items-center">
+                        <div className="aspect-square w-24 h-24 bg-muted rounded-md flex items-center justify-center">
+                          <Video className="h-10 w-10 text-muted-foreground" />
+                        </div>
+                        <div className="ml-4">
+                          <h4 className="font-medium">First Piano Recital</h4>
+                          <p className="text-sm text-muted-foreground">By SarahKeys • 2 days ago</p>
+                          <p className="text-sm mt-1">Sharing my progress after 3 months of lessons!</p>
+                        </div>
                       </div>
                       
-                      <Button variant="outline" className="w-full mt-4">
-                        View All Discussions
+                      <Button variant="outline" className="w-full">
+                        View More Showcases
                       </Button>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                
-                <TabsContent value="audio" className="pt-4">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {AUDIO_TRACKS.map(track => (
-                      <AudioSharingCard key={track.id} track={track} />
-                    ))}
-                  </div>
-                  
-                  <Button className="w-full mt-6 bg-gold hover:bg-gold/90 text-white">
-                    Share Your Recording
-                  </Button>
-                </TabsContent>
-                
-                <TabsContent value="messages" className="pt-4">
-                  <Card>
-                    <CardContent className="p-0">
-                      <DirectMessaging />
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Music className="mr-2 h-5 w-5" />
-                    Student Showcases
-                  </CardTitle>
-                  <CardDescription>
-                    Recent performances and progress from fellow students
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="border border-border rounded-lg p-4 flex items-center">
-                      <div className="aspect-square w-24 h-24 bg-muted rounded-md flex items-center justify-center">
-                        <Video className="h-10 w-10 text-muted-foreground" />
-                      </div>
-                      <div className="ml-4">
-                        <h4 className="font-medium">First Piano Recital</h4>
-                        <p className="text-sm text-muted-foreground">By SarahKeys • 2 days ago</p>
-                        <p className="text-sm mt-1">Sharing my progress after 3 months of lessons!</p>
-                      </div>
                     </div>
-                    
-                    <Button variant="outline" className="w-full">
-                      View More Showcases
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-            
-            {/* Sidebar */}
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Bell className="mr-2 h-5 w-5" />
-                    Upcoming Events
-                  </CardTitle>
-                  <CardDescription>
-                    Join virtual and in-person music events
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {events.map(event => (
-                      <EventCard key={event.id} event={event} />
-                    ))}
-                    
-                    <Button variant="outline" size="sm" className="w-full">
-                      View All Events
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
               
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Award className="mr-2 h-5 w-5" />
-                    Featured Artists
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {featuredArtists.map(artist => (
-                      <ArtistCard key={artist.id} artist={artist} />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle>Learning Resources</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start text-left"
-                      onClick={() => window.location.href = "/learning-hub"}
-                    >
-                      <BookOpen className="h-4 w-4 mr-2" />
-                      Beginner Music Theory
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start text-left"
-                      onClick={() => window.location.href = "/learning-hub"}
-                    >
-                      <Music className="h-4 w-4 mr-2" />
-                      Instrument Guides
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start text-left" 
-                      onClick={() => window.location.href = "/learning-hub"}
-                    >
-                      <Heart className="h-4 w-4 mr-2" />
-                      Practice Tips
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Sidebar */}
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Bell className="mr-2 h-5 w-5" />
+                      Upcoming Events
+                    </CardTitle>
+                    <CardDescription>
+                      Join virtual and in-person music events
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {events.map(event => (
+                        <EventCard key={event.id} event={event} />
+                      ))}
+                      
+                      <Button variant="outline" size="sm" className="w-full">
+                        View All Events
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Award className="mr-2 h-5 w-5" />
+                      Featured Artists
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {featuredArtists.map(artist => (
+                        <ArtistCard key={artist.id} artist={artist} />
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Learning Resources</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start text-left"
+                        onClick={() => window.location.href = "/learning-hub"}
+                      >
+                        <BookOpen className="h-4 w-4 mr-2" />
+                        Beginner Music Theory
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start text-left"
+                        onClick={() => window.location.href = "/learning-hub"}
+                      >
+                        <Music className="h-4 w-4 mr-2" />
+                        Instrument Guides
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start text-left" 
+                        onClick={() => window.location.href = "/learning-hub"}
+                      >
+                        <Heart className="h-4 w-4 mr-2" />
+                        Practice Tips
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-      {/* Legal Links Footer */}
+        )}
+        
+        {/* Legal Links Footer */}
         <div className="flex justify-center space-x-4 pt-8 border-t">
           <Button
             variant="link"

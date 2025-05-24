@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -191,8 +190,8 @@ const MusicTools = () => {
             </div>
           </TabsContent>
         </Tabs>
-      </motion.div>
-      {/* Legal Links Footer */}
+
+        {/* Legal Links Footer */}
         <div className="flex justify-center space-x-4 pt-8 border-t">
           <Button
             variant="link"
@@ -212,7 +211,7 @@ const MusicTools = () => {
             Terms of Service
           </Button>
         </div>
-      </div>
+      </motion.div>
     </MainLayout>
   );
 };
