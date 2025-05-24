@@ -5,30 +5,26 @@ import { Mic, MicOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import NoteDial from "./pitch-finder/NoteDial";
 import TuningMeter from "./pitch-finder/TuningMeter";
-import usePitchDetection from "./pitch-finder/usePitchDetection";
+import { usePitchDetection } from "./pitch-finder/usePitchDetection";
 
 const PitchFinder: React.FC = () => {
   const { 
-    listening,
-    frequency, 
-    note, 
-    octave, 
+    isListening,
+    currentNote, 
     error,
-    cents,
-    startListening,
-    stopListening
+    toggleListening
   } = usePitchDetection();
   
   const [inTune, setInTune] = useState(false);
   
   // Check if the note is in tune (within 10 cents of perfect)
   useEffect(() => {
-    if (cents !== null) {
-      setInTune(Math.abs(cents) <= 10);
+    if (currentNote?.cents !== undefined) {
+      setInTune(Math.abs(currentNote.cents) <= 10);
     } else {
       setInTune(false);
     }
-  }, [cents]);
+  }, [currentNote]);
 
   return (
     <div className="space-y-4">
@@ -43,17 +39,14 @@ const PitchFinder: React.FC = () => {
           <div className="flex flex-col items-center justify-center space-y-6">
             {/* Note Dial */}
             <NoteDial 
-              note={note} 
-              octave={octave} 
-              cents={cents}
-              inTune={inTune}
+              currentNote={currentNote} 
+              isListening={isListening}
             />
 
             {/* Tuning Meter */}
             <div className="w-full max-w-md">
               <TuningMeter 
-                cents={cents} 
-                inTune={inTune}
+                currentNote={currentNote}
               />
             </div>
             
@@ -63,8 +56,8 @@ const PitchFinder: React.FC = () => {
               ) : (
                 <>
                   <p className="text-lg">
-                    {frequency ? (
-                      <span>Frequency: <span className="font-bold">{frequency.toFixed(2)} Hz</span></span>
+                    {currentNote?.frequency ? (
+                      <span>Frequency: <span className="font-bold">{currentNote.frequency.toFixed(2)} Hz</span></span>
                     ) : (
                       <span className="text-muted-foreground">No pitch detected</span>
                     )}
@@ -72,10 +65,10 @@ const PitchFinder: React.FC = () => {
                   
                   <div className="flex justify-center mt-4">
                     <Button 
-                      onClick={listening ? stopListening : startListening}
-                      className={`${listening ? 'bg-red-600 hover:bg-red-700' : 'bg-gold hover:bg-gold/90'} text-white`}
+                      onClick={toggleListening}
+                      className={`${isListening ? 'bg-red-600 hover:bg-red-700' : 'bg-gold hover:bg-gold/90'} text-white`}
                     >
-                      {listening ? (
+                      {isListening ? (
                         <>
                           <MicOff className="h-4 w-4 mr-2" />
                           Stop Listening
