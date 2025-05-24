@@ -411,6 +411,27 @@ const Library = () => {
             />
           </TabsContent>
         </Tabs>
+
+        {/* Legal Links Footer */}
+        <div className="flex justify-center space-x-4 pt-8 border-t">
+          <Button 
+            variant="link" 
+            size="sm"
+            onClick={() => navigate("/privacy")}
+            className="text-muted-foreground hover:text-gold"
+          >
+            Privacy Policy
+          </Button>
+          <span className="text-muted-foreground">•</span>
+          <Button 
+            variant="link" 
+            size="sm"
+            onClick={() => navigate("/terms")}
+            className="text-muted-foreground hover:text-gold"
+          >
+            Terms of Service
+          </Button>
+        </div>
       </div>
     </MainLayout>
   );
