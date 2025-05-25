@@ -24,15 +24,37 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      { auth: { persistSession: false } }
-    );
+    const authHeader = req.headers.get('Authorization');
+if (!authHeader) {
+  return new Response(JSON.stringify({ error: 'Missing Authorization header' }), {
+    status: 401,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+  });
+}
 
-    const authHeader = req.headers.get('Authorization')!;
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
+const supabaseClient = createClient(
+  Deno.env.get('SUPABASE_URL') ?? '',
+  Deno.env.get('SUPABASE_ANON_KEY') ?? '', // ✅ Use anon key, not service_role
+  {
+    global: {
+      headers: {
+        Authorization: authHeader
+      }
+    }
+  }
+);
+
+const {
+  data: { user },
+  error: userError
+} = await supabaseClient.auth.getUser();
+
+if (userError || !user) {
+  return new Response(JSON.stringify({ error: 'User not authenticated' }), {
+    status: 401,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+  });
+}
     
     if (userError || !user?.email) {
       throw new Error('User not authenticated');
