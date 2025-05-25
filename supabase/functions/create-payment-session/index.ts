@@ -4,66 +4,110 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
 };
-
-interface PaymentRequest {
-  orderType: 'subscription' | 'service' | 'product';
-  itemId: string;
-  itemName: string;
-  amount: number;
-  currency: string;
-  paymentMethod: 'paystack' | 'remitly' | 'mpesa';
-  successUrl?: string;
-  cancelUrl?: string;
-}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, {
+      headers: corsHeaders
+    });
   }
 
   try {
     const authHeader = req.headers.get('Authorization');
-if (!authHeader) {
-  return new Response(JSON.stringify({ error: 'Missing Authorization header' }), {
-    status: 401,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-  });
-}
-
-const supabaseClient = createClient(
-  Deno.env.get('SUPABASE_URL') ?? '',
-  Deno.env.get('SUPABASE_ANON_KEY') ?? '', // ✅ Use anon key, not service_role
-  {
-    global: {
-      headers: {
-        Authorization: authHeader
-      }
-    }
-  }
-);
-
-const {
-  data: { user },
-  error: userError
-} = await supabaseClient.auth.getUser();
-
-if (userError || !user) {
-  return new Response(JSON.stringify({ error: 'User not authenticated' }), {
-    status: 401,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-  });
-}
+    console.log('Auth header received:', authHeader ? 'Present' : 'Missing');
     
-    if (userError || !user?.email) {
-      throw new Error('User not authenticated');
+    if (!authHeader) {
+      console.error('No Authorization header found');
+      return new Response(JSON.stringify({
+        error: 'Missing Authorization header'
+      }), {
+        status: 401,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
     }
 
-    const { orderType, itemId, itemName, amount, currency, paymentMethod, successUrl, cancelUrl }: PaymentRequest = await req.json();
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '', 
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '', 
+      {
+        global: {
+          headers: {
+            Authorization: authHeader
+          }
+        }
+      }
+    );
 
-    console.log('Creating payment session for:', { orderType, itemId, paymentMethod, amount, currency });
+    console.log('Attempting to get user...');
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    
+    console.log('User lookup result:', {
+      hasUser: !!user,
+      userId: user?.id,
+      userEmail: user?.email,
+      error: userError?.message
+    });
 
+    if (userError || !user) {
+      console.error('User authentication failed:', userError);
+      return new Response(JSON.stringify({
+        error: 'User not authenticated',
+        details: userError?.message
+      }), {
+        status: 401,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+
+    if (!user?.email) {
+      console.error('User has no email');
+      return new Response(JSON.stringify({
+        error: 'User email not found'
+      }), {
+        status: 400,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+
+    console.log('Parsing request body...');
+    const requestBody = await req.json();
+    const { orderType, itemId, itemName, amount, currency, paymentMethod, successUrl, cancelUrl } = requestBody;
+
+    console.log('Request data:', {
+      orderType,
+      itemId,
+      paymentMethod,
+      amount,
+      currency,
+      hasSuccessUrl: !!successUrl
+    });
+
+    // Validate required fields
+    if (!orderType || !paymentMethod || !amount || !currency) {
+      console.error('Missing required fields');
+      return new Response(JSON.stringify({
+        error: 'Missing required fields: orderType, paymentMethod, amount, currency'
+      }), {
+        status: 400,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+
+    console.log('Creating order record...');
     // Create order record
     const { data: order, error: orderError } = await supabaseClient
       .from('orders')
@@ -80,22 +124,41 @@ if (userError || !user) {
       .select()
       .single();
 
-    if (orderError) throw new Error(`Failed to create order: ${orderError.message}`);
+    if (orderError) {
+      console.error('Order creation failed:', orderError);
+      return new Response(JSON.stringify({
+        error: `Failed to create order: ${orderError.message}`,
+        code: orderError.code,
+        details: orderError.details
+      }), {
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+
+    console.log('Order created successfully:', order.id);
 
     let sessionData;
-
     switch (paymentMethod) {
       case 'paystack': {
-        // Initialize Paystack transaction
+        console.log('Processing Paystack payment...');
+        const paystackKey = Deno.env.get('PAYSTACK_SECRET_KEY_TEST');
+        if (!paystackKey) {
+          throw new Error('Paystack secret key not configured');
+        }
+
         const paystackResponse = await fetch('https://api.paystack.co/transaction/initialize', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${Deno.env.get('PAYSTACK_SECRET_KEY_TEST')}`,
-            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${paystackKey}`,
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
             email: user.email,
-            amount: amount, // Paystack expects amount in kobo (cents equivalent)
+            amount: amount,
             currency: currency,
             reference: `ST_${order.id}`,
             callback_url: successUrl || `${req.headers.get('origin')}/payment-success`,
@@ -108,7 +171,8 @@ if (userError || !user) {
         });
 
         const paystackData = await paystackResponse.json();
-        
+        console.log('Paystack response:', paystackData);
+
         if (!paystackData.status) {
           throw new Error(`Paystack error: ${paystackData.message}`);
         }
@@ -120,14 +184,12 @@ if (userError || !user) {
         };
         break;
       }
-
       case 'remitly': {
-        // Create Remitly redirect with pre-filled recipient info
-        const recipientName = "Saem's Tunes"; // Your name
-        const recipientPhone = "+254798903373"; // Your M-Pesa number
-        const amountUSD = (amount / 100).toFixed(2); // Convert from cents to dollars
-        
-        // Remitly URL with pre-filled data
+        console.log('Processing Remitly payment...');
+        const recipientName = "Saem's Tunes";
+        const recipientPhone = "+254798903373";
+        const amountUSD = (amount / 100).toFixed(2);
+
         const remitlyUrl = `https://www.remitly.com/us/en/kenya/send-money?` +
           `amount=${amountUSD}&` +
           `recipient_name=${encodeURIComponent(recipientName)}&` +
@@ -142,54 +204,72 @@ if (userError || !user) {
         };
         break;
       }
-
       case 'mpesa': {
-        // M-Pesa STK Push integration would go here
-        // For now, returning a mock response
+        console.log('Processing M-Pesa payment...');
         sessionData = {
           sessionId: `mpesa_${Date.now()}`,
-          url: null, // M-Pesa uses STK push, no redirect URL
+          url: null,
           provider: 'mpesa',
           checkoutRequestId: `mock_checkout_request_id`
         };
         break;
       }
-
       default:
-        throw new Error('Unsupported payment method');
+        throw new Error(`Unsupported payment method: ${paymentMethod}`);
     }
 
-    // Store payment session
-    await supabaseClient
+    console.log('Storing payment session...');
+    const { error: sessionError } = await supabaseClient
       .from('payment_sessions')
       .insert({
         order_id: order.id,
         session_id: sessionData.sessionId,
         provider: paymentMethod,
         session_url: sessionData.url,
-        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
         metadata: sessionData
       });
 
-    console.log('Payment session created successfully:', sessionData);
+    if (sessionError) {
+      console.error('Payment session storage failed:', sessionError);
+      return new Response(JSON.stringify({
+        error: `Failed to store payment session: ${sessionError.message}`,
+        code: sessionError.code
+      }), {
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
 
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        orderId: order.id,
-        sessionData 
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    console.log('Payment session created successfully:', sessionData.sessionId);
+
+    return new Response(JSON.stringify({
+      success: true,
+      orderId: order.id,
+      sessionData
+    }), {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
+      }
+    });
 
   } catch (error) {
     console.error('Payment session creation error:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+    console.error('Error stack:', error.stack);
+    
+    return new Response(JSON.stringify({
+      error: error.message,
+      type: error.constructor.name
+    }), {
+      status: 500,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
       }
-    );
+    });
   }
 });
