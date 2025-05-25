@@ -101,7 +101,7 @@ serve(async (req) => {
 
       case 'remitly': {
         // Create Remitly redirect with pre-filled recipient info
-        const recipientName = "Saem's Tunes"; // Your name
+        const recipientName = "Samuel Muthomi"; // Your name
         const recipientPhone = "+254798903373"; // Your M-Pesa number
         const amountUSD = (amount / 100).toFixed(2); // Convert from cents to dollars
         
