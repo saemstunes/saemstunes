@@ -4,8 +4,5 @@ project_id = "uxyvhqtwkutstihtxdsv"
 [functions.create-payment-session]
 verify_jwt = true
 
-[functions.handle-paystack-webhook]
-verify_jwt = false
-
 [functions.handle-payment-webhook]
 verify_jwt = false

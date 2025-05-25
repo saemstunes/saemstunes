@@ -21,7 +21,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
   onClose,
   paymentRequest
 }) => {
-  const [selectedMethod, setSelectedMethod] = useState<'paystack' | 'remitly' | 'mpesa'>('paystack');
+  const [selectedMethod, setSelectedMethod] = useState<'stripe' | 'paypal' | 'mpesa'>('stripe');
   const { processPayment, isLoading } = usePayment();
 
   const handleProceed = async () => {
