@@ -9,7 +9,7 @@ export interface PaymentRequest {
   itemName: string;
   amount: number;
   currency?: string;
-  paymentMethod: 'stripe' | 'paypal' | 'mpesa';
+  paymentMethod: 'paystack' | 'remitly' | 'mpesa';
   successUrl?: string;
   cancelUrl?: string;
 }
@@ -63,11 +63,16 @@ export const usePayment = () => {
 
   const redirectToPayment = (sessionData: PaymentSession['sessionData']) => {
     if (sessionData.url) {
-      window.location.href = sessionData.url;
+      window.open(sessionData.url, '_blank');
     } else if (sessionData.provider === 'mpesa') {
       toast({
         title: "M-Pesa Payment",
         description: "Please check your phone for the M-Pesa payment prompt.",
+      });
+    } else if (sessionData.provider === 'remitly') {
+      toast({
+        title: "Remitly Transfer",
+        description: "Redirecting to Remitly for international transfer to M-Pesa...",
       });
     }
   };

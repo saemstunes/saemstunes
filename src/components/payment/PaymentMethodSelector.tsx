@@ -4,11 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { CreditCard, Smartphone, DollarSign } from "lucide-react";
+import { CreditCard, Smartphone, Globe, DollarSign } from "lucide-react";
 
 interface PaymentMethodSelectorProps {
-  selectedMethod: 'stripe' | 'paypal' | 'mpesa';
-  onMethodChange: (method: 'stripe' | 'paypal' | 'mpesa') => void;
+  selectedMethod: 'paystack' | 'remitly' | 'mpesa';
+  onMethodChange: (method: 'paystack' | 'remitly' | 'mpesa') => void;
   onProceed: () => void;
   isLoading?: boolean;
   amount: number;
@@ -32,23 +32,25 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
 
   const paymentMethods = [
     {
+      id: 'paystack' as const,
+      name: 'Card Payment',
+      description: 'Pay securely with your credit/debit card via Paystack',
+      icon: <CreditCard className="h-6 w-6 text-blue-600" />,
+      available: true
+    },
+    {
+      id: 'remitly' as const,
+      name: 'Remitly (US/Europe)',
+      description: 'International transfer to M-Pesa (Great rates: $1 = 130 KSh)',
+      icon: <Globe className="h-6 w-6 text-green-600" />,
+      available: currency === 'USD' || currency === 'EUR'
+    },
+    {
       id: 'mpesa' as const,
-      name: 'M-Pesa',
+      name: 'M-Pesa (Kenya)',
       description: 'Pay using M-Pesa mobile money',
       icon: <Smartphone className="h-6 w-6 text-green-600" />,
       available: currency === 'KES'
-    },
-    {
-      id: 'stripe' as const,
-      name: 'Credit/Debit Card',
-      description: 'Pay securely with your card',
-      icon: <CreditCard className="h-6 w-6 text-blue-600" />
-    },
-    {
-      id: 'paypal' as const,
-      name: 'PayPal',
-      description: 'Pay with your PayPal account',
-      icon: <DollarSign className="h-6 w-6 text-yellow-600" />
     }
   ];
 
@@ -61,6 +63,11 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
         <p className="text-center text-2xl font-bold text-gold">
           {formatAmount(amount, currency)}
         </p>
+        {currency === 'USD' && selectedMethod === 'remitly' && (
+          <p className="text-center text-sm text-muted-foreground">
+            Will arrive as ~KSh {(amount * 1.3).toLocaleString()} on M-Pesa
+          </p>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
         <RadioGroup
