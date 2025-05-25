@@ -281,6 +281,95 @@ export type Database = {
         }
         Relationships: []
       }
+      orders: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string | null
+          id: string
+          item_id: string
+          item_name: string
+          order_type: string
+          payment_metadata: Json | null
+          payment_method: string | null
+          payment_provider_id: string | null
+          status: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string | null
+          id?: string
+          item_id: string
+          item_name: string
+          order_type: string
+          payment_metadata?: Json | null
+          payment_method?: string | null
+          payment_provider_id?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string | null
+          id?: string
+          item_id?: string
+          item_name?: string
+          order_type?: string
+          payment_metadata?: Json | null
+          payment_method?: string | null
+          payment_provider_id?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      payment_sessions: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          metadata: Json | null
+          order_id: string | null
+          provider: string
+          session_id: string
+          session_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          order_id?: string | null
+          provider: string
+          session_id: string
+          session_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          order_id?: string | null
+          provider?: string
+          session_id?: string
+          session_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_sessions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number
@@ -288,6 +377,7 @@ export type Database = {
           created_at: string
           id: string
           method: Database["public"]["Enums"]["payment_method"]
+          order_id: string | null
           receipt_url: string | null
           reference: string | null
           status: string | null
@@ -301,6 +391,7 @@ export type Database = {
           created_at?: string
           id?: string
           method: Database["public"]["Enums"]["payment_method"]
+          order_id?: string | null
           receipt_url?: string | null
           reference?: string | null
           status?: string | null
@@ -314,6 +405,7 @@ export type Database = {
           created_at?: string
           id?: string
           method?: Database["public"]["Enums"]["payment_method"]
+          order_id?: string | null
           receipt_url?: string | null
           reference?: string | null
           status?: string | null
@@ -327,6 +419,13 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
         ]
@@ -601,6 +700,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          order_id: string | null
           payment_id: string | null
           status: Database["public"]["Enums"]["subscription_status"]
           type: Database["public"]["Enums"]["subscription_type"]
@@ -612,6 +712,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          order_id?: string | null
           payment_id?: string | null
           status?: Database["public"]["Enums"]["subscription_status"]
           type?: Database["public"]["Enums"]["subscription_type"]
@@ -623,6 +724,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          order_id?: string | null
           payment_id?: string | null
           status?: Database["public"]["Enums"]["subscription_status"]
           type?: Database["public"]["Enums"]["subscription_type"]
@@ -632,6 +734,13 @@ export type Database = {
           valid_until?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "subscriptions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "subscriptions_payment_id_fkey"
             columns: ["payment_id"]
