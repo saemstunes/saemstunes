@@ -1,7 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import Stripe from "https://esm.sh/stripe@14.21.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,7 +13,7 @@ interface PaymentRequest {
   itemName: string;
   amount: number;
   currency: string;
-  paymentMethod: 'stripe' | 'paypal' | 'mpesa';
+  paymentMethod: 'paystack' | 'remitly' | 'mpesa';
   successUrl?: string;
   cancelUrl?: string;
 }
@@ -41,6 +40,8 @@ serve(async (req) => {
 
     const { orderType, itemId, itemName, amount, currency, paymentMethod, successUrl, cancelUrl }: PaymentRequest = await req.json();
 
+    console.log('Creating payment session for:', { orderType, itemId, paymentMethod, amount, currency });
+
     // Create order record
     const { data: order, error: orderError } = await supabaseClient
       .from('orders')
@@ -62,55 +63,67 @@ serve(async (req) => {
     let sessionData;
 
     switch (paymentMethod) {
-      case 'stripe': {
-        const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', { apiVersion: '2023-10-16' });
-        
-        const session = await stripe.checkout.sessions.create({
-          mode: orderType === 'subscription' ? 'subscription' : 'payment',
-          payment_method_types: ['card'],
-          line_items: orderType === 'subscription' ? [{
-            price_data: {
-              currency: currency.toLowerCase(),
-              product_data: { name: itemName },
-              unit_amount: amount,
-              recurring: { interval: 'month' }
-            },
-            quantity: 1
-          }] : [{
-            price_data: {
-              currency: currency.toLowerCase(),
-              product_data: { name: itemName },
-              unit_amount: amount
-            },
-            quantity: 1
-          }],
-          success_url: successUrl || `${req.headers.get('origin')}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: cancelUrl || `${req.headers.get('origin')}/subscriptions`,
-          metadata: { orderId: order.id }
+      case 'paystack': {
+        // Initialize Paystack transaction
+        const paystackResponse = await fetch('https://api.paystack.co/transaction/initialize', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${Deno.env.get('PAYSTACK_SECRET_KEY_TEST')}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: user.email,
+            amount: amount, // Paystack expects amount in kobo (cents equivalent)
+            currency: currency,
+            reference: `ST_${order.id}`,
+            callback_url: successUrl || `${req.headers.get('origin')}/payment-success`,
+            metadata: {
+              orderId: order.id,
+              orderType: orderType,
+              itemName: itemName
+            }
+          })
         });
 
+        const paystackData = await paystackResponse.json();
+        
+        if (!paystackData.status) {
+          throw new Error(`Paystack error: ${paystackData.message}`);
+        }
+
         sessionData = {
-          sessionId: session.id,
-          url: session.url,
-          provider: 'stripe'
+          sessionId: paystackData.data.reference,
+          url: paystackData.data.authorization_url,
+          provider: 'paystack'
         };
         break;
       }
 
-      case 'paypal': {
-        // PayPal integration would go here
-        // For now, returning a mock response
+      case 'remitly': {
+        // Create Remitly redirect with pre-filled recipient info
+        const recipientName = "Samuel Muthomi"; // Your name
+        const recipientPhone = "+254798903373"; // Your M-Pesa number
+        const amountUSD = (amount / 100).toFixed(2); // Convert from cents to dollars
+        
+        // Remitly URL with pre-filled data
+        const remitlyUrl = `https://www.remitly.com/us/en/kenya/send-money?` +
+          `amount=${amountUSD}&` +
+          `recipient_name=${encodeURIComponent(recipientName)}&` +
+          `recipient_phone=${encodeURIComponent(recipientPhone)}&` +
+          `delivery_method=mobile_money&` +
+          `source=saems_tunes`;
+
         sessionData = {
-          sessionId: `paypal_${Date.now()}`,
-          url: `https://www.paypal.com/checkoutnow?token=mock_token`,
-          provider: 'paypal'
+          sessionId: `remitly_${Date.now()}`,
+          url: remitlyUrl,
+          provider: 'remitly'
         };
         break;
       }
 
       case 'mpesa': {
         // M-Pesa STK Push integration would go here
-        // This requires Safaricom's Daraja API
+        // For now, returning a mock response
         sessionData = {
           sessionId: `mpesa_${Date.now()}`,
           url: null, // M-Pesa uses STK push, no redirect URL
@@ -135,6 +148,8 @@ serve(async (req) => {
         expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
         metadata: sessionData
       });
+
+    console.log('Payment session created successfully:', sessionData);
 
     return new Response(
       JSON.stringify({ 
