@@ -1,9 +1,8 @@
-
 import React, { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
-import { Library as LibraryIcon, BookOpen, Bookmark, Clock, Music, GraduationCap, Lightbulb } from "lucide-react";
+import { Library as LibraryIcon, BookOpen, Bookmark, Clock, Music, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { mockVideos } from "@/data/mockData";
 import VideoCardWrapper from "@/components/videos/VideoCardWrapper";
@@ -11,19 +10,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
-import MusicQuiz from "@/components/quiz/MusicQuiz";
+import DynamicMusicQuiz from "@/components/quiz/DynamicMusicQuiz";
 import ResourceCard, { Resource } from "@/components/resources/ResourceCard";
 import { useToast } from "@/hooks/use-toast";
 import QuizSelection from "@/components/quiz/QuizSelection";
-import { Progress } from "@/components/ui/progress";
+import { useUserQuizProgress } from "@/hooks/useQuizzes";
 
 const Library = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("saved");
   const { toast } = useToast();
-  const [activeQuizId, setActiveQuizId] = useState("music-theory-basics");
-  const [completedQuizIds, setCompletedQuizIds] = useState<string[]>([]);
+  const [activeQuizId, setActiveQuizId] = useState<string>("");
+  const { getCompletedQuizIds, refetch: refetchProgress } = useUserQuizProgress();
 
   // Sample saved content data (would come from API in a real app)
   const savedVideos = mockVideos.slice(0, 4);
@@ -134,37 +133,6 @@ const Library = () => {
     navigate(`/subscriptions?contentType=exclusive&contentId=${contentId}`);
   };
 
-  const handleQuizComplete = (score: number, total: number) => {
-    toast({
-      title: "Quiz Completed",
-      description: `You scored ${score} out of ${total}! Keep learning and improving your music knowledge.`,
-    });
-    
-    // Add the quiz to completed quizzes
-    if (activeQuizId && !completedQuizIds.includes(activeQuizId)) {
-      setCompletedQuizIds([...completedQuizIds, activeQuizId]);
-    }
-    
-    // If not logged in, prompt to sign in to save progress
-    if (!user && score >= total * 0.7) {
-      setTimeout(() => {
-        toast({
-          title: "Great score! Sign in to save your progress",
-          description: "Create an account to track your quiz scores and unlock more content",
-          action: (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => navigate("/auth")}
-            >
-              Sign In
-            </Button>
-          ),
-        });
-      }, 1500);
-    }
-  };
-
   const CourseCard = ({ course }) => (
     <Card className="overflow-hidden h-full flex flex-col">
       <div className="relative aspect-video overflow-hidden">
@@ -220,7 +188,36 @@ const Library = () => {
       </div>
     </Card>
   );
-  
+
+  const handleQuizComplete = (score: number, total: number, quizId: string) => {
+    toast({
+      title: "Quiz Completed",
+      description: `You scored ${score} out of ${total}! Keep learning and improving your music knowledge.`,
+    });
+    
+    // Refresh user progress to update completed quizzes
+    refetchProgress();
+    
+    // If not logged in, prompt to sign in to save progress
+    if (!user && score >= total * 0.7) {
+      setTimeout(() => {
+        toast({
+          title: "Great score! Sign in to save your progress",
+          description: "Create an account to track your quiz scores and unlock more content",
+          action: (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => navigate("/auth")}
+            >
+              Sign In
+            </Button>
+          ),
+        });
+      }, 1500);
+    }
+  };
+
   return (
     <MainLayout>
       <div className="space-y-6">
@@ -246,13 +243,28 @@ const Library = () => {
         {/* Music Quiz Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <MusicQuiz onComplete={handleQuizComplete} />
+            {activeQuizId ? (
+              <DynamicMusicQuiz 
+                quizId={activeQuizId}
+                onComplete={handleQuizComplete} 
+              />
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Select a Quiz</CardTitle>
+                  <CardDescription>Choose a quiz from the selection panel to begin</CardDescription>
+                </CardHeader>
+                <CardContent className="text-center py-8">
+                  <p className="text-muted-foreground">Pick a quiz topic from the right to start testing your music knowledge!</p>
+                </CardContent>
+              </Card>
+            )}
           </div>
           <div className="space-y-4">
             <QuizSelection 
               onQuizSelect={setActiveQuizId} 
               activeQuizId={activeQuizId}
-              completedQuizIds={completedQuizIds}
+              completedQuizIds={getCompletedQuizIds()}
             />
           </div>
         </div>
