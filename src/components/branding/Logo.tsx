@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -7,13 +8,15 @@ interface LogoProps {
   size?: "sm" | "md" | "lg";
   className?: string;
   clickable?: boolean;
+  inMobileMenu?: boolean;
 }
 
 const Logo: React.FC<LogoProps> = ({ 
   variant = "icon", 
   size = "md", 
   className = "", 
-  clickable = true 
+  clickable = true,
+  inMobileMenu = false
 }) => {
   const navigate = useNavigate();
   
@@ -49,7 +52,7 @@ const Logo: React.FC<LogoProps> = ({
           src={config.src}
           alt="Saem's Tunes Logo"
           className={cn(config.width, config.height, "object-contain")}
-          fetchpriority="high"
+          fetchPriority="high"
         />
       </picture>
     </div>
