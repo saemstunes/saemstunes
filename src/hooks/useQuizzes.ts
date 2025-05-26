@@ -12,25 +12,24 @@ export const useQuizzes = () => {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
+
+  const loadQuizzes = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchQuizzes();
+      setQuizzes(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load quizzes');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadQuizzes = async () => {
-      try {
-        setLoading(true);
-        const data = await fetchQuizzes();
-        setQuizzes(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load quizzes');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadQuizzes();
   }, []);
 
-  return { quizzes, loading, error, refetch: () => loadQuizzes() };
+  return { quizzes, loading, error, refetch: loadQuizzes };
 };
 
 export const useUserQuizProgress = () => {
@@ -38,21 +37,21 @@ export const useUserQuizProgress = () => {
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
 
-  useEffect(() => {
-    const loadAttempts = async () => {
-      if (!user) return;
-      
-      try {
-        setLoading(true);
-        const data = await fetchUserQuizAttempts(user.id);
-        setAttempts(data);
-      } catch (err) {
-        console.error('Error loading quiz attempts:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadAttempts = async () => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
+      const data = await fetchUserQuizAttempts(user.id);
+      setAttempts(data);
+    } catch (err) {
+      console.error('Error loading quiz attempts:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadAttempts();
   }, [user]);
 
@@ -72,6 +71,6 @@ export const useUserQuizProgress = () => {
     loading, 
     getCompletedQuizIds, 
     getQuizScore,
-    refetch: () => loadAttempts()
+    refetch: loadAttempts
   };
 };

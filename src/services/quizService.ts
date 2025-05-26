@@ -1,6 +1,5 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/context/AuthContext";
 
 export interface QuizQuestion {
   id: string;
@@ -45,7 +44,11 @@ export const fetchQuizzes = async (): Promise<Quiz[]> => {
     throw error;
   }
 
-  return data || [];
+  // Parse the questions JSON field
+  return (data || []).map(quiz => ({
+    ...quiz,
+    questions: Array.isArray(quiz.questions) ? quiz.questions : JSON.parse(quiz.questions || '[]')
+  }));
 };
 
 export const fetchQuizById = async (quizId: string): Promise<Quiz | null> => {
@@ -60,7 +63,11 @@ export const fetchQuizById = async (quizId: string): Promise<Quiz | null> => {
     return null;
   }
 
-  return data;
+  // Parse the questions JSON field
+  return {
+    ...data,
+    questions: Array.isArray(data.questions) ? data.questions : JSON.parse(data.questions || '[]')
+  };
 };
 
 export const fetchQuizzesByCategory = async (category: string): Promise<Quiz[]> => {
@@ -75,7 +82,11 @@ export const fetchQuizzesByCategory = async (category: string): Promise<Quiz[]> 
     throw error;
   }
 
-  return data || [];
+  // Parse the questions JSON field
+  return (data || []).map(quiz => ({
+    ...quiz,
+    questions: Array.isArray(quiz.questions) ? quiz.questions : JSON.parse(quiz.questions || '[]')
+  }));
 };
 
 export const saveQuizAttempt = async (
@@ -102,7 +113,11 @@ export const saveQuizAttempt = async (
     return null;
   }
 
-  return data;
+  // Parse the answers JSON field
+  return {
+    ...data,
+    answers: typeof data.answers === 'object' ? data.answers : JSON.parse(data.answers || '{}')
+  };
 };
 
 export const fetchUserQuizAttempts = async (userId: string): Promise<QuizAttempt[]> => {
@@ -117,7 +132,11 @@ export const fetchUserQuizAttempts = async (userId: string): Promise<QuizAttempt
     return [];
   }
 
-  return data || [];
+  // Parse the answers JSON field
+  return (data || []).map(attempt => ({
+    ...attempt,
+    answers: typeof attempt.answers === 'object' ? attempt.answers : JSON.parse(attempt.answers || '{}')
+  }));
 };
 
 export const getQuizProgress = async (userId: string, quizId: string): Promise<QuizAttempt | null> => {
@@ -135,7 +154,13 @@ export const getQuizProgress = async (userId: string, quizId: string): Promise<Q
     return null;
   }
 
-  return data;
+  if (!data) return null;
+
+  // Parse the answers JSON field
+  return {
+    ...data,
+    answers: typeof data.answers === 'object' ? data.answers : JSON.parse(data.answers || '{}')
+  };
 };
 
 export const getDifficultyLabel = (difficulty: number): string => {
