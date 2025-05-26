@@ -75,7 +75,7 @@ const Library = () => {
       progress: 0
     }
   ];
-  
+
   // Sample offline resources
   const offlineResources: Resource[] = [
     {
@@ -109,7 +109,7 @@ const Library = () => {
       offline: true
     }
   ];
-  
+
   const EmptyState = ({ title, description, icon: Icon }) => (
     <div className="text-center py-16">
       <div className="bg-muted/30 rounded-full p-6 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
@@ -130,7 +130,7 @@ const Library = () => {
 
   const handleExclusiveContent = (contentId) => {
     // Redirect to payment page for premium content
-    navigate(`/subscriptions?contentType=exclusive&contentId=${contentId}`);
+    navigate(`/payment?contentType=exclusive&contentId=${contentId}`);
   };
 
   const CourseCard = ({ course }) => (
@@ -165,7 +165,7 @@ const Library = () => {
             </div>
             <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-gold" 
+                className="h-full bg-gold"
                 style={{ width: `${course.progress}%` }}
               ></div>
             </div>
@@ -194,10 +194,10 @@ const Library = () => {
       title: "Quiz Completed",
       description: `You scored ${score} out of ${total}! Keep learning and improving your music knowledge.`,
     });
-    
+
     // Refresh user progress to update completed quizzes
     refetchProgress();
-    
+
     // If not logged in, prompt to sign in to save progress
     if (!user && score >= total * 0.7) {
       setTimeout(() => {
@@ -206,7 +206,7 @@ const Library = () => {
           description: "Create an account to track your quiz scores and unlock more content",
           action: (
             <Button 
-              variant="outline" 
+              variant="outline"
               size="sm"
               onClick={() => navigate("/auth")}
             >
@@ -239,14 +239,14 @@ const Library = () => {
             </Button>
           )}
         </div>
-        
+
         {/* Music Quiz Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             {activeQuizId ? (
               <DynamicMusicQuiz 
                 quizId={activeQuizId}
-                onComplete={handleQuizComplete} 
+                onComplete={handleQuizComplete}
               />
             ) : (
               <Card>
@@ -262,13 +262,13 @@ const Library = () => {
           </div>
           <div className="space-y-4">
             <QuizSelection 
-              onQuizSelect={setActiveQuizId} 
+              onQuizSelect={setActiveQuizId}
               activeQuizId={activeQuizId}
               completedQuizIds={getCompletedQuizIds()}
             />
           </div>
         </div>
-        
+
         {/* Featured Saem's content */}
         <div 
           className="relative rounded-lg overflow-hidden h-48 md:h-64 bg-gradient-to-r from-gold/70 to-brown/70 mb-8 cursor-pointer"
@@ -276,9 +276,9 @@ const Library = () => {
         >
           <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent z-10"></div>
           <img 
-            src="/placeholder.svg" 
-            alt="Featured Saem's content" 
-            className="absolute inset-0 w-full h-full object-cover" 
+            src="/placeholder.svg"
+            alt="Featured Saem's content"
+            className="absolute inset-0 w-full h-full object-cover"
           />
           <div className="relative z-20 p-6 flex flex-col h-full justify-end">
             <div className="inline-block bg-gold text-white px-2 py-1 rounded-md text-xs mb-2 w-fit">
@@ -292,7 +292,7 @@ const Library = () => {
             </p>
           </div>
         </div>
-        
+
         {/* Music Courses Section */}
         <div className="mb-8">
           <h2 className="text-xl font-proxima font-semibold mb-4 flex items-center">
@@ -305,7 +305,7 @@ const Library = () => {
             ))}
           </div>
         </div>
-        
+
         {/* Saem's exclusive content */}
         <div className="mb-8">
           <h2 className="text-xl font-proxima font-semibold mb-4 flex items-center">
@@ -315,7 +315,7 @@ const Library = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {saemOfferings.map(video => (
               <div 
-                key={video.id} 
+                key={video.id}
                 className="cursor-pointer"
                 onClick={() => handleExclusiveContent(video.id)}
               >
@@ -324,7 +324,7 @@ const Library = () => {
             ))}
           </div>
         </div>
-        
+
         {/* Offline Resources Section */}
         <div className="mb-8">
           <h2 className="text-xl font-proxima font-semibold mb-4 flex items-center">
@@ -334,8 +334,8 @@ const Library = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {offlineResources.map(resource => (
               <ResourceCard 
-                key={resource.id} 
-                resource={resource} 
+                key={resource.id}
+                resource={resource}
                 isBookmarked={true}
                 onBookmark={() => {
                   toast({
@@ -357,7 +357,7 @@ const Library = () => {
             </Card>
           </div>
         </div>
-        
+
         <Tabs defaultValue="saved" className="w-full" onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-4">
             <TabsTrigger value="saved">
@@ -377,13 +377,13 @@ const Library = () => {
               <span className="hidden sm:inline">Playlists</span>
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="saved" className="pt-4">
             {savedVideos.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {savedVideos.map(video => (
                   <VideoCardWrapper 
-                    key={video.id} 
+                    key={video.id}
                     video={video}
                     isPremium={video.isLocked}
                     onClick={() => navigate(`/videos/${video.id}`)}
@@ -392,13 +392,13 @@ const Library = () => {
               </div>
             ) : (
               <EmptyState 
-                title="No Saved Content" 
+                title="No Saved Content"
                 description="Start saving videos, lessons, and resources to access them quickly in your library."
                 icon={Bookmark}
               />
             )}
           </TabsContent>
-          
+
           <TabsContent value="courses" className="pt-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {courses.filter(course => course.enrolled).map(course => (
@@ -406,18 +406,18 @@ const Library = () => {
               ))}
             </div>
           </TabsContent>
-          
+
           <TabsContent value="history" className="pt-4">
             <EmptyState 
-              title="No Viewing History" 
+              title="No Viewing History"
               description="Your recently watched Saem's content will appear here."
               icon={Clock}
             />
           </TabsContent>
-          
+
           <TabsContent value="playlists" className="pt-4">
             <EmptyState 
-              title="No Playlists" 
+              title="No Playlists"
               description="Create playlists to organize your favorite Saem's content."
               icon={LibraryIcon}
             />
@@ -427,7 +427,7 @@ const Library = () => {
         {/* Legal Links Footer */}
         <div className="flex justify-center space-x-4 pt-8 border-t">
           <Button 
-            variant="link" 
+            variant="link"
             size="sm"
             onClick={() => navigate("/privacy")}
             className="text-muted-foreground hover:text-gold"
@@ -436,7 +436,7 @@ const Library = () => {
           </Button>
           <span className="text-muted-foreground">•</span>
           <Button 
-            variant="link" 
+            variant="link"
             size="sm"
             onClick={() => navigate("/terms")}
             className="text-muted-foreground hover:text-gold"
