@@ -4,7 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/context/EnhancedAuthContext";
+import { AuthProvider } from "@/context/EnhancedAuthContext"; // Updated to consolidated context
+
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AuthCallback from "./components/auth/AuthCallback";
@@ -61,11 +62,13 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/verification-waiting" element={<VerificationWaiting />} />
+              
               <Route path="/profile" element={
                 <ProtectedRoute>
                   <Profile />
                 </ProtectedRoute>
               } />
+              
               <Route path="/subscriptions" element={<Subscriptions />} />
               <Route path="/videos" element={<Videos />} />
               <Route path="/videos/:id" element={<VideoDetail />} />
@@ -79,23 +82,28 @@ function App() {
               <Route path="/learning/:moduleId" element={<LearningModulePage />} />
               <Route path="/community" element={<Community />} />
               <Route path="/book-tutor" element={<BookTutor />} />
+
               <Route path="/bookings" element={
                 <ProtectedRoute>
                   <Bookings />
                 </ProtectedRoute>
               } />
+
               <Route path="/player" element={<Player />} />
               <Route path="/search" element={<Search />} />
+              
               <Route path="/settings" element={
                 <ProtectedRoute>
                   <Settings />
                 </ProtectedRoute>
               } />
+
               <Route path="/notifications" element={
                 <ProtectedRoute>
                   <Notifications />
                 </ProtectedRoute>
               } />
+
               <Route path="/payment" element={<Payment />} />
               <Route path="/payment-success" element={<PaymentSuccess />} />
               <Route path="/services" element={<Services />} />
@@ -104,16 +112,19 @@ function App() {
               <Route path="/follow" element={<FollowUs />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
+
               <Route path="/admin" element={
                 <ProtectedRoute adminOnly>
                   <Admin />
                 </ProtectedRoute>
               } />
+
               <Route path="/user-details" element={
                 <ProtectedRoute>
                   <UserDetails />
                 </ProtectedRoute>
               } />
+
               <Route path="/unauthorized" element={<Unauthorized />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
