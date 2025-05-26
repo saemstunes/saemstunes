@@ -9,14 +9,14 @@ export const DURATIONS = {
   extraSlow: 800
 };
 
-// Easing functions
+// Easing functions - Fixed format for Framer Motion
 export const EASINGS = {
-  standard: [0.4, 0.0, 0.2, 1],       // Standard - For most animations
-  decelerate: [0.0, 0.0, 0.2, 1],    // Deceleration - Ending animations
-  accelerate: [0.4, 0.0, 1, 1],      // Acceleration - Starting animations
-  sharp: [0.4, 0.0, 0.6, 1],         // Sharp - Emphasis animations
-  smooth: [0.25, 0.1, 0.25, 1],      // Smooth - For gentle transitions
-  bouncy: [0.2, -0.3, 0.2, 1.5]      // Bouncy - For playful animations
+  standard: [0.4, 0.0, 0.2, 1] as [number, number, number, number],       // Standard - For most animations
+  decelerate: [0.0, 0.0, 0.2, 1] as [number, number, number, number],    // Deceleration - Ending animations
+  accelerate: [0.4, 0.0, 1, 1] as [number, number, number, number],      // Acceleration - Starting animations
+  sharp: [0.4, 0.0, 0.6, 1] as [number, number, number, number],         // Sharp - Emphasis animations
+  smooth: [0.25, 0.1, 0.25, 1] as [number, number, number, number],      // Smooth - For gentle transitions
+  bouncy: [0.2, -0.3, 0.2, 1.5] as [number, number, number, number]      // Bouncy - For playful animations
 };
 
 // Common animation presets for framer-motion

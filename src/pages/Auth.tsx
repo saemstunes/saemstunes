@@ -44,9 +44,11 @@ const Auth = () => {
       const error = searchParams.get("error") || hashParams.get("error");
       const errorDescription = searchParams.get("error_description") || hashParams.get("error_description");
       const errorCode = searchParams.get("error_code") || hashParams.get("error_code");
-      const provider = searchParams.get("provider") || hashParams.get("provider") || "spotify";
+      const provider = searchParams.get("provider") || hashParams.get("provider") || "google";
       
       if (error) {
+        console.log("Auth error detected:", { error, errorDescription, errorCode, provider });
+        
         // Handle specific error cases
         let errorMessage = errorDescription || "An authentication error occurred";
         
@@ -56,10 +58,10 @@ const Auth = () => {
           
           setAuthError(`Please verify your email address to continue.`);
           
-          // Display toast notification for Spotify email verification
+          // Display toast notification for email verification
           toast({
             title: `${provider.charAt(0).toUpperCase() + provider.slice(1)} Email Verification Required`,
-            description: "An email from Spotify just landed in your inbox. Please verify it to continue.",
+            description: "An email has been sent to your account. Please verify it to continue.",
             variant: "default",
             duration: 8000,
           });
