@@ -16,7 +16,7 @@ export interface Quiz {
   difficulty: number;
   questions: QuizQuestion[];
   category: string;
-  access_level: 'free' | 'premium' | 'basic';
+  access_level: 'free' | 'premium' | 'basic' | 'private';
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -33,6 +33,34 @@ export interface QuizAttempt {
   updated_at: string;
 }
 
+const parseQuestions = (questions: any): QuizQuestion[] => {
+  if (Array.isArray(questions)) {
+    return questions;
+  }
+  if (typeof questions === 'string') {
+    try {
+      return JSON.parse(questions);
+    } catch {
+      return [];
+    }
+  }
+  return [];
+};
+
+const parseAnswers = (answers: any): Record<string, any> => {
+  if (typeof answers === 'object' && answers !== null) {
+    return answers;
+  }
+  if (typeof answers === 'string') {
+    try {
+      return JSON.parse(answers);
+    } catch {
+      return {};
+    }
+  }
+  return {};
+};
+
 export const fetchQuizzes = async (): Promise<Quiz[]> => {
   const { data, error } = await supabase
     .from('quizzes')
@@ -47,7 +75,7 @@ export const fetchQuizzes = async (): Promise<Quiz[]> => {
   // Parse the questions JSON field
   return (data || []).map(quiz => ({
     ...quiz,
-    questions: Array.isArray(quiz.questions) ? quiz.questions : JSON.parse(quiz.questions || '[]')
+    questions: parseQuestions(quiz.questions)
   }));
 };
 
@@ -66,7 +94,7 @@ export const fetchQuizById = async (quizId: string): Promise<Quiz | null> => {
   // Parse the questions JSON field
   return {
     ...data,
-    questions: Array.isArray(data.questions) ? data.questions : JSON.parse(data.questions || '[]')
+    questions: parseQuestions(data.questions)
   };
 };
 
@@ -85,7 +113,7 @@ export const fetchQuizzesByCategory = async (category: string): Promise<Quiz[]> 
   // Parse the questions JSON field
   return (data || []).map(quiz => ({
     ...quiz,
-    questions: Array.isArray(quiz.questions) ? quiz.questions : JSON.parse(quiz.questions || '[]')
+    questions: parseQuestions(quiz.questions)
   }));
 };
 
@@ -116,7 +144,7 @@ export const saveQuizAttempt = async (
   // Parse the answers JSON field
   return {
     ...data,
-    answers: typeof data.answers === 'object' ? data.answers : JSON.parse(data.answers || '{}')
+    answers: parseAnswers(data.answers)
   };
 };
 
@@ -135,7 +163,7 @@ export const fetchUserQuizAttempts = async (userId: string): Promise<QuizAttempt
   // Parse the answers JSON field
   return (data || []).map(attempt => ({
     ...attempt,
-    answers: typeof attempt.answers === 'object' ? attempt.answers : JSON.parse(attempt.answers || '{}')
+    answers: parseAnswers(attempt.answers)
   }));
 };
 
@@ -159,7 +187,7 @@ export const getQuizProgress = async (userId: string, quizId: string): Promise<Q
   // Parse the answers JSON field
   return {
     ...data,
-    answers: typeof data.answers === 'object' ? data.answers : JSON.parse(data.answers || '{}')
+    answers: parseAnswers(data.answers)
   };
 };
 
