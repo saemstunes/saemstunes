@@ -1,169 +1,244 @@
+// Updated AuthContext with support for extended user profiles, multiple providers, and compatibility aliases
 
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
-// Define the User interface since it's not exported from supabase types
-interface User {
+export type UserRole = 'student' | 'parent' | 'admin' | 'user' | 'adult_learner' | 'tutor';
+
+export interface UserProfile {
   id: string;
   email: string;
-  name: string;
+  full_name?: string;
+  display_name?: string;
+  first_name?: string;
+  last_name?: string;
+  avatar_url?: string;
+  bio?: string;
+  phone?: string;
   role: UserRole;
-  avatar: string;
-  subscribed: boolean;
+  onboarding_complete: boolean;
+  parent_id?: string;
+  created_at?: string;
+  updated_at?: string;
+  last_active?: string;
 }
 
-// Define the user roles
-export type UserRole = "student" | "adult" | "parent" | "teacher" | "admin";
-
-// Define the auth context type
 interface AuthContextType {
   user: User | null;
-  signUp: (email: string, password: string, name: string, role: UserRole, captchaToken?: string) => Promise<void>;
-  login: (email: string, password: string, captchaToken?: string) => Promise<void>;
+  profile: UserProfile | null;
+  session: Session | null;
+  loading: boolean;
+  isLoading: boolean;
+
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, userData?: Partial<UserProfile>) => Promise<void>;
+  signOut: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  signInWithSpotify: () => Promise<void>;
+
+  login: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string, userData?: any) => Promise<void>;
+  loginWithProvider: (provider: 'google' | 'spotify') => Promise<void>;
   logout: () => Promise<void>;
+
+  updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
+  updateUserProfile: (userUpdate: any) => void;
+  refreshProfile: () => Promise<void>;
+  completeOnboarding: () => Promise<void>;
+
   isAdmin: () => boolean;
   checkPermission: (requiredRoles?: UserRole[]) => boolean;
-  isLoading: boolean;
-  updateUserProfile: (userUpdate: User) => void;
 }
 
-// Create the auth context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Create a provider component
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Check for existing session
-    const checkUser = async () => {
-      setIsLoading(true);
-      const { data } = await supabase.auth.getSession();
-      
-      if (data.session?.user) {
-        // In a real app, you would fetch the user profile from your database
-        // For now, we'll create a mock user based on the auth data
-        setUser({
-          id: data.session.user.id,
-          email: data.session.user.email || "",
-          name: data.session.user.user_metadata?.name || "User",
-          role: (data.session.user.user_metadata?.role as UserRole) || "student",
-          avatar: data.session.user.user_metadata?.avatar || "/lovable-uploads/avatar-1.png",
-          subscribed: data.session.user.user_metadata?.subscribed || false,
-        });
-      }
-      
-      setIsLoading(false);
-    };
-
-    checkUser();
-
-    // Set up auth state change listener
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === "SIGNED_IN" && session) {
-          setUser({
-            id: session.user.id,
-            email: session.user.email || "",
-            name: session.user.user_metadata?.name || "User",
-            role: (session.user.user_metadata?.role as UserRole) || "student",
-            avatar: session.user.user_metadata?.avatar || "/lovable-uploads/avatar-1.png",
-            subscribed: session.user.user_metadata?.subscribed || false,
-          });
-        } else if (event === "SIGNED_OUT") {
-          setUser(null);
-        }
-      }
-    );
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
-
-  const signUp = async (email: string, password: string, name: string, role: UserRole, captchaToken?: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name,
-          role,
-          avatar: "/lovable-uploads/avatar-1.png", // Default avatar
-          subscribed: false,
-        },
-        captchaToken: captchaToken,
-      },
-    });
-
-    if (error) {
-      throw new Error(error.message);
-    }
-  };
-
-  const login = async (email: string, password: string, captchaToken?: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-      options: {
-        captchaToken: captchaToken,
-      },
-    });
-
-    if (error) {
-      throw new Error(error.message);
-    }
-  };
-
-  const logout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      throw new Error(error.message);
-    }
-    setUser(null);
-  };
-
-  const isAdmin = () => {
-    return user?.role === "admin";
-  };
-
-  const checkPermission = (requiredRoles?: UserRole[]) => {
-    if (!user) return false;
-    if (!requiredRoles || requiredRoles.length === 0) return true;
-    return requiredRoles.includes(user.role);
-  };
-
-  const updateUserProfile = (userUpdate: User) => {
-    // Update the local user state immediately for frontend display
-    setUser(userUpdate);
-    
-    // In a real app, you would also call an API to update the user in the database
-    console.log("User profile updated:", userUpdate);
-    
-    // Example of how you might update the user profile in Supabase
-    // await supabase.from('profiles').update({ avatar: userUpdate.avatar }).eq('id', user.id);
-  };
-  
-  const value = {
-    user,
-    signUp,
-    login,
-    logout,
-    isAdmin,
-    checkPermission,
-    isLoading,
-    updateUserProfile,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
-
-// Create a hook to use the auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+};
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  const mapUserRole = (role?: string): UserRole => {
+    switch (role?.toLowerCase()) {
+      case 'adult': return 'adult_learner';
+      case 'teacher': return 'tutor';
+      case 'student': return 'student';
+      case 'parent': return 'parent';
+      case 'admin': return 'admin';
+      default: return 'user';
+    }
+  };
+
+  const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+    if (error) {
+      console.error('Fetch profile error:', error);
+      return null;
+    }
+    return data as UserProfile;
+  };
+
+  const createProfile = async (user: User, additionalData?: Partial<UserProfile>): Promise<UserProfile | null> => {
+    const profileData: UserProfile = {
+      id: user.id,
+      email: user.email || '',
+      full_name: user.user_metadata?.name || additionalData?.full_name || '',
+      display_name: additionalData?.display_name || user.email?.split('@')[0] || '',
+      first_name: additionalData?.first_name || '',
+      last_name: additionalData?.last_name || '',
+      avatar_url: user.user_metadata?.avatar_url || additionalData?.avatar_url || '',
+      role: mapUserRole(additionalData?.role),
+      onboarding_complete: false,
+      ...additionalData,
+    };
+    const { data, error } = await supabase.from('profiles').insert([profileData]).select().single();
+    if (error) {
+      console.error('Create profile error:', error);
+      return null;
+    }
+    return data as UserProfile;
+  };
+
+  const syncOAuthProfile = async (user: User): Promise<UserProfile | null> => {
+    let userProfile = await fetchUserProfile(user.id);
+    if (!userProfile) {
+      userProfile = await createProfile(user);
+    }
+    return userProfile;
+  };
+
+  const refreshProfile = async () => {
+    if (user) {
+      const latest = await fetchUserProfile(user.id);
+      setProfile(latest);
+    }
+  };
+
+  useEffect(() => {
+    const { subscription } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setSession(session);
+      setUser(session?.user || null);
+      if (session?.user) {
+        const userProfile = await syncOAuthProfile(session.user);
+        setProfile(userProfile);
+      } else {
+        setProfile(null);
+      }
+      setLoading(false);
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setUser(session.user);
+        setSession(session);
+        syncOAuthProfile(session.user).then(setProfile);
+      } else {
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signIn = async (email: string, password: string) => {
+    const { error, data } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw new Error(error.message);
+    if (data.session) {
+      setUser(data.session.user);
+      setSession(data.session);
+      const userProfile = await syncOAuthProfile(data.session.user);
+      setProfile(userProfile);
+    }
+  };
+
+  const signUp = async (email: string, password: string, userData?: Partial<UserProfile>) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: userData },
+    });
+    if (error) throw new Error(error.message);
+    if (data.user) await createProfile(data.user, userData);
+  };
+
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw new Error(error.message);
+    setUser(null);
+    setProfile(null);
+    setSession(null);
+  };
+
+  const signInWithGoogle = async () => loginWithProvider('google');
+  const signInWithSpotify = async () => loginWithProvider('spotify');
+
+  const loginWithProvider = async (provider: 'google' | 'spotify') => {
+    const { error } = await supabase.auth.signInWithOAuth({ provider });
+    if (error) throw new Error(error.message);
+  };
+
+  const updateProfile = async (updates: Partial<UserProfile>) => {
+    if (!user) throw new Error('User not authenticated');
+    const { error } = await supabase.from('profiles').update(updates).eq('id', user.id);
+    if (error) throw new Error(error.message);
+    refreshProfile();
+  };
+
+  const completeOnboarding = async () => updateProfile({ onboarding_complete: true });
+  const updateUserProfile = (userUpdate: any) => setProfile((prev) => ({ ...prev, ...userUpdate }));
+  const isAdmin = () => profile?.role === 'admin';
+  const checkPermission = (requiredRoles?: UserRole[]) => {
+    if (!profile) return false;
+    return !requiredRoles || requiredRoles.includes(profile.role);
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        profile,
+        session,
+        loading,
+        isLoading: loading,
+        signIn,
+        signUp,
+        signOut,
+        signInWithGoogle,
+        signInWithSpotify,
+        login: signIn,
+        signup: signUp,
+        loginWithProvider,
+        logout: signOut,
+        updateProfile,
+        updateUserProfile,
+        refreshProfile,
+        completeOnboarding,
+        isAdmin,
+        checkPermission,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };
