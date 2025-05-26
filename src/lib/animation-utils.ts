@@ -19,8 +19,6 @@ export const EASINGS = {
   bouncy: [0.2, -0.3, 0.2, 1.5]      // Bouncy - For playful animations
 };
 
-};
-
 // Common animation presets for framer-motion
 export const ANIMATION_PRESETS = {
   fadeIn: {
