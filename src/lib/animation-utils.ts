@@ -11,12 +11,14 @@ export const DURATIONS = {
 
 // Easing functions
 export const EASINGS = {
-  standard: 'cubic-bezier(0.4, 0.0, 0.2, 1)', // Standard - For most animations
-  decelerate: 'cubic-bezier(0.0, 0.0, 0.2, 1)', // Deceleration - Ending animations
-  accelerate: 'cubic-bezier(0.4, 0.0, 1, 1)',   // Acceleration - Starting animations
-  sharp: 'cubic-bezier(0.4, 0.0, 0.6, 1)',      // Sharp - Emphasis animations
-  smooth: 'cubic-bezier(0.25, 0.1, 0.25, 1)',   // Smooth - For gentle transitions
-  bouncy: 'cubic-bezier(0.2, -0.3, 0.2, 1.5)'   // Bouncy - For playful animations
+  standard: [0.4, 0.0, 0.2, 1],       // Standard - For most animations
+  decelerate: [0.0, 0.0, 0.2, 1],    // Deceleration - Ending animations
+  accelerate: [0.4, 0.0, 1, 1],      // Acceleration - Starting animations
+  sharp: [0.4, 0.0, 0.6, 1],         // Sharp - Emphasis animations
+  smooth: [0.25, 0.1, 0.25, 1],      // Smooth - For gentle transitions
+  bouncy: [0.2, -0.3, 0.2, 1.5]      // Bouncy - For playful animations
+};
+
 };
 
 // Common animation presets for framer-motion
