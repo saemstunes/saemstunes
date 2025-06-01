@@ -449,7 +449,7 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
       ? "bg-card/80 backdrop-blur-md" 
       : "bg-transparent"
     )}>
-            <Logo size="lg" />
+            <Logo size="lg" className="scale-110" />
             <div className="flex flex-col leading-tight">
               <span className="text-brown-dark dark:text-gold-light font-bold text-lg font-nunito tracking-tighter">Saem's</span>
               <span className="text-gold-dark dark:text-gold font-bold text-lg font-nunito tracking-tighter">Tunes</span>
