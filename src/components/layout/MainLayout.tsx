@@ -264,7 +264,13 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
               </SheetTrigger>
               <SheetContent side="left" className="w-[280px] sm:w-[350px]">
                 <nav className="flex flex-col gap-6">
-                  <Logo size="md" className="mb-6" inMobileMenu={true} />
+                  <div className="flex items-center gap-3 ml-4">
+                    <Logo size="md" />
+                    <div className="flex flex-col leading-tight">
+                      <span className="text-yellow-500 font-bold text-base font-nunito">Saem's</span>
+                      <span className="text-amber-800 font-bold text-base font-nunito">Tunes</span>
+                    </div>
+                  </div>
 
                   {user && (
                     <>
@@ -438,12 +444,16 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
         {/* Desktop Sidebar - With transparent header */}
         <aside className="hidden lg:flex flex-col w-64 bg-card border-r border-border">
           <div className={cn(
-            "p-6 sticky top-0 z-40 transition-all duration-200",
-            isScrolled 
-              ? "bg-card/80 backdrop-blur-md" 
-              : "bg-transparent"
-          )}>
+      "p-6 sticky top-0 z-40 transition-all duration-200 flex items-center gap-3",
+      isScrolled 
+      ? "bg-card/80 backdrop-blur-md" 
+      : "bg-transparent"
+    )}>
             <Logo size="lg" />
+            <div className="flex flex-col leading-tight">
+              <span className="text-yellow-500 font-bold text-lg font-nunito">Saem's</span>
+              <span className="text-amber-800 font-bold text-lg font-nunito">Tunes</span>
+            </div>
           </div>
 
           {user && (
