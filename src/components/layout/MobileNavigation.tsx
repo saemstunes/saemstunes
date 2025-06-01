@@ -2,7 +2,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Home, Compass, Library, User, Bell, Users, Music, LogOut } from "lucide-react";
-import { useAuth } from "@/context/AuthContext"; // Updated to use the correct context
+import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 const MobileNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth(); // Updated to use correct context
+  const { user, logout } = useAuth();
   const { toast } = useToast();
   const hasNotifications = true;
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);

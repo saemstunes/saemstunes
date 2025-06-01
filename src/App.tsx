@@ -3,8 +3,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/context/AuthContext"; // Updated to consolidated context
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "@/context/AuthContext";
 
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -23,7 +23,6 @@ import LearningHub from "./pages/LearningHub";
 import LearningModulePage from "./pages/LearningModulePage";
 import Community from "./pages/Community";
 import BookTutor from "./pages/BookTutor";
-import Bookings from "./pages/Bookings";
 import Player from "./pages/Player";
 import Search from "./pages/Search";
 import Settings from "./pages/Settings";
@@ -36,11 +35,7 @@ import SupportUs from "./pages/SupportUs";
 import FollowUs from "./pages/FollowUs";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
-import Admin from "./pages/Admin";
-import UserDetails from "./pages/UserDetails";
 import VerificationWaiting from "./pages/VerificationWaiting";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 import Unauthorized from "./pages/Unauthorized";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -59,8 +54,14 @@ function App() {
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
+              
+              {/* Redirect all auth-related routes to /auth */}
+              <Route path="/login" element={<Navigate to="/auth?tab=login" replace />} />
+              <Route path="/signup" element={<Navigate to="/auth?tab=signup" replace />} />
+              <Route path="/signin" element={<Navigate to="/auth?tab=login" replace />} />
+              <Route path="/admin" element={<Navigate to="/auth" replace />} />
+              <Route path="/user-details" element={<Navigate to="/auth" replace />} />
+              
               <Route path="/verification-waiting" element={<VerificationWaiting />} />
               
               <Route path="/profile" element={
@@ -82,13 +83,6 @@ function App() {
               <Route path="/learning/:moduleId" element={<LearningModulePage />} />
               <Route path="/community" element={<Community />} />
               <Route path="/book-tutor" element={<BookTutor />} />
-
-              <Route path="/bookings" element={
-                <ProtectedRoute>
-                  <Bookings />
-                </ProtectedRoute>
-              } />
-
               <Route path="/player" element={<Player />} />
               <Route path="/search" element={<Search />} />
               
@@ -112,18 +106,6 @@ function App() {
               <Route path="/follow" element={<FollowUs />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
-
-              <Route path="/admin" element={
-                <ProtectedRoute adminOnly>
-                  <Admin />
-                </ProtectedRoute>
-              } />
-
-              <Route path="/user-details" element={
-                <ProtectedRoute>
-                  <UserDetails />
-                </ProtectedRoute>
-              } />
 
               <Route path="/unauthorized" element={<Unauthorized />} />
               <Route path="*" element={<NotFound />} />
