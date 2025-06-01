@@ -451,8 +451,8 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
     )}>
             <Logo size="lg" />
             <div className="flex flex-col leading-tight">
-              <span className="text-brown-dark dark:text-gold-light font-bold text-lg font-nunito tracking-tight">Saem's</span>
-              <span className="text-gold dark:text-gold-light font-bold text-lg font-nunito tracking-tight">Tunes</span>
+              <span className="text-brown-dark dark:text-gold-light font-bold text-lg font-nunito tracking-tighter">Saem's</span>
+              <span className="text-gold-dark dark:text-gold font-bold text-lg font-nunito tracking-tighter">Tunes</span>
             </div>
           </div>
 
