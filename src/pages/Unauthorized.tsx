@@ -128,7 +128,7 @@ const Unauthorized = () => {
             className="text-sm text-muted-foreground"
           >
             <p>Need help? <Button variant="link" className="p-0 h-auto text-gold" onClick={() => navigate("/contact")}>Contact Support</Button></p>
-          </div>
+          </motion.div>
         </div>
       </motion.div>
     </div>
