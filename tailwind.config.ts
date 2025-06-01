@@ -80,10 +80,11 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
+        nunito: ["Nunito", "sans-serif"],
         proxima: ["Proxima Nova", "sans-serif"],
         poppins: ["Poppins", "sans-serif"],
         serif: ["Playfair Display", "serif"],
-        sans: ["Poppins", "sans-serif"],
+        sans: ["Nunito", "sans-serif"],
       },
       keyframes: {
         "accordion-down": {
