@@ -16,12 +16,15 @@ interface InfographicCardProps {
 
 const InfographicCard = ({ infographic }: InfographicCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
-  const { user } = useAuth();
+  const { profile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleClick = () => {
-    if (infographic.isLocked && (!user || !user.subscribed)) {
+    // Check if user has access - using profile.role as proxy for subscription
+    const hasAccess = !infographic.isLocked || (profile && (profile.role === 'admin' || profile.role === 'tutor'));
+    
+    if (infographic.isLocked && !hasAccess) {
       toast({
         title: "Premium Content",
         description: "Please subscribe to access this resource.",
@@ -31,6 +34,9 @@ const InfographicCard = ({ infographic }: InfographicCardProps) => {
     }
     navigate(`/resources/${infographic.id}`);
   };
+
+  // Check if user has access to premium content
+  const hasAccess = !infographic.isLocked || (profile && (profile.role === 'admin' || profile.role === 'tutor'));
 
   return (
     <Card 
@@ -54,7 +60,7 @@ const InfographicCard = ({ infographic }: InfographicCardProps) => {
             className="h-14 w-14 rounded-full bg-black/50 backdrop-blur-sm hover:bg-gold hover:text-white transition-all"
             onClick={handleClick}
           >
-            {infographic.isLocked && (!user || !user.subscribed) ? (
+            {!hasAccess ? (
               <Lock className="h-6 w-6" />
             ) : (
               <Eye className="h-6 w-6" />
@@ -62,7 +68,7 @@ const InfographicCard = ({ infographic }: InfographicCardProps) => {
           </Button>
         </div>
         
-        {infographic.isLocked && (!user || !user.subscribed) && (
+        {!hasAccess && (
           <div className="absolute top-2 right-2">
             <Badge className="bg-gold text-white">Premium</Badge>
           </div>

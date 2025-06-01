@@ -106,7 +106,7 @@ const SplashScreen = ({
               animate={{ 
                 scale: 1, 
                 opacity: 1,
-                transition: { duration: 1, ease: EASINGS.emphasize }
+                transition: { duration: 1, ease: EASINGS.standard }
               }}
             >
               {/* Inner circular glow */}

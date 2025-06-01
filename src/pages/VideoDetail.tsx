@@ -10,7 +10,7 @@ import { ArrowLeft, Clock, Calendar, User, BookOpen, Lock } from "lucide-react";
 
 const VideoDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const { user } = useAuth();
+  const { profile } = useAuth();
   const navigate = useNavigate();
   
   const video = mockVideos.find((v) => v.id === id);
@@ -33,8 +33,8 @@ const VideoDetail = () => {
     );
   }
 
-  // Check if user can access video
-  const canAccessVideo = !video.isLocked || (user && user.subscribed);
+  // Check if user can access video - using profile.role as proxy for subscription
+  const canAccessVideo = !video.isLocked || (profile && (profile.role === 'admin' || profile.role === 'tutor'));
 
   return (
     <MainLayout>
@@ -118,7 +118,7 @@ const VideoDetail = () => {
                               alt={relatedVideo.title} 
                               className="object-cover w-full h-full" 
                             />
-                            {relatedVideo.isLocked && (!user || !user.subscribed) && (
+                            {relatedVideo.isLocked && (!profile || (profile.role !== 'admin' && profile.role !== 'tutor')) && (
                               <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                                 <Badge className="bg-gold text-white text-xs">Premium</Badge>
                               </div>

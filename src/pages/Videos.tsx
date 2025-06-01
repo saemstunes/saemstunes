@@ -15,7 +15,7 @@ import {
 import { Search } from "lucide-react";
 
 const Videos = () => {
-  const { user } = useAuth();
+  const { profile } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [levelFilter, setLevelFilter] = useState("all");
@@ -36,8 +36,8 @@ const Videos = () => {
     
     const matchesLevel = levelFilter === "all" || video.level === levelFilter;
 
-    // Show locked videos only if user is subscribed
-    const accessibleToUser = !video.isLocked || (user && user.subscribed);
+    // Show locked videos only if user has access (using profile.role as proxy for subscription)
+    const accessibleToUser = !video.isLocked || (profile && (profile.role === 'admin' || profile.role === 'tutor'));
     
     return matchesSearch && matchesCategory && matchesLevel && accessibleToUser;
   });

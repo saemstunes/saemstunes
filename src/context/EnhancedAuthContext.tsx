@@ -4,7 +4,8 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-export type UserRole = 'student' | 'adult' | 'parent' | 'teacher' | 'admin';
+// Use the same type as the database schema
+export type UserRole = 'student' | 'adult_learner' | 'parent' | 'tutor' | 'admin' | 'user';
 
 export interface UserProfile {
   id: string;
@@ -85,7 +86,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Profile should be created by trigger, but let's ensure it exists
         const { error: insertError } = await supabase
           .from('profiles')
-          .insert({
+          .upsert({
             id: user.id,
             email: user.email || '',
             full_name: user.user_metadata?.name || user.user_metadata?.full_name || user.email?.split('@')[0] || '',
@@ -100,7 +101,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       } else {
         // Update profile with latest OAuth data
-        const updates: Partial<UserProfile> = {};
+        const updates: Partial<Omit<UserProfile, 'id'>> = {};
         
         if (user.user_metadata?.avatar_url && user.user_metadata.avatar_url !== existingProfile.avatar_url) {
           updates.avatar_url = user.user_metadata.avatar_url;
@@ -296,7 +297,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const updateProfile = async (updates: Partial<UserProfile>) => {
+  const updateProfile = async (updates: Partial<Omit<UserProfile, 'id'>>) => {
     if (!user) throw new Error('No user logged in');
 
     try {

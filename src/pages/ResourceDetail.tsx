@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const ResourceDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const { user } = useAuth();
+  const { profile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -35,8 +35,8 @@ const ResourceDetail = () => {
     );
   }
 
-  // Check if user can access the resource
-  const canAccessResource = !infographic.isLocked || (user && user.subscribed);
+  // Check if user can access the resource - using profile.role as proxy for subscription
+  const canAccessResource = !infographic.isLocked || (profile && (profile.role === 'admin' || profile.role === 'tutor'));
 
   const handleDownload = () => {
     toast({
@@ -126,7 +126,7 @@ const ResourceDetail = () => {
                             alt={relatedResource.title} 
                             className="object-cover w-full h-full" 
                           />
-                          {relatedResource.isLocked && (!user || !user.subscribed) && (
+                          {relatedResource.isLocked && (!profile || (profile.role !== 'admin' && profile.role !== 'tutor')) && (
                             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                               <Badge className="bg-gold text-white text-xs">Premium</Badge>
                             </div>
