@@ -12,14 +12,14 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/context/EnhancedAuthContext";
+import { useAuth } from "@/context/AuthContext"; // Changed from EnhancedAuthContext
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth(); // Changed from isLoading to loading
   
   const initialForm = searchParams.get("tab") === "login" ? "login" : 
                       searchParams.get("tab") === "signup" ? "signup" : "signup";
@@ -31,10 +31,10 @@ const Auth = () => {
   
   // Redirect to home if already logged in
   useEffect(() => {
-    if (user && !isLoading) {
+    if (user && !loading) {
       navigate("/");
     }
-  }, [user, isLoading, navigate]);
+  }, [user, loading, navigate]);
   
   // Reset admin tap count after a delay
   useEffect(() => {
@@ -110,7 +110,7 @@ const Auth = () => {
     });
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

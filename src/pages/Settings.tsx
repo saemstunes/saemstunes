@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, UserRole } from "@/context/AuthContext";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +30,7 @@ const Settings = () => {
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState(profile?.phone || '');
   const [bio, setBio] = useState(profile?.bio || '');
-  const [role, setRole] = useState(profile?.role || 'student');
+  const [role, setRole] = useState<UserRole>(profile?.role || 'student');
 
   const handleSaveSettings = async () => {
     setIsSaving(true);
@@ -88,7 +89,7 @@ const Settings = () => {
                   <Label htmlFor="fullName">Full Name</Label>
                   <Input
                     id="fullName"
-                    value={profile?.full_name || profile?.display_name || ''}
+                    value={fullName}
                     placeholder="Enter your full name"
                     className="mt-1"
                     onChange={(e) => setFullName(e.target.value)}
@@ -99,7 +100,7 @@ const Settings = () => {
                   <Label htmlFor="displayName">Display Name</Label>
                   <Input
                     id="displayName"
-                    value={profile?.display_name || ''}
+                    value={displayName}
                     placeholder="Enter your display name"
                     className="mt-1"
                     onChange={(e) => setDisplayName(e.target.value)}
@@ -111,7 +112,7 @@ const Settings = () => {
                   <Input
                     id="email"
                     type="email"
-                    value={user?.email || ''}
+                    value={email}
                     placeholder="Enter your email"
                     className="mt-1"
                     disabled
@@ -123,7 +124,7 @@ const Settings = () => {
                   <Input
                     id="phone"
                     type="tel"
-                    value={profile?.phone || ''}
+                    value={phone}
                     placeholder="Enter your phone number"
                     className="mt-1"
                     onChange={(e) => setPhone(e.target.value)}
@@ -134,7 +135,7 @@ const Settings = () => {
                   <Label htmlFor="bio">Bio</Label>
                   <Textarea
                     id="bio"
-                    value={profile?.bio || ''}
+                    value={bio}
                     placeholder="Write a short bio about yourself"
                     className="mt-1"
                     onChange={(e) => setBio(e.target.value)}
@@ -143,7 +144,7 @@ const Settings = () => {
 
                 <div>
                   <Label htmlFor="role">Role</Label>
-                  <Select value={profile?.role || 'student'} onValueChange={setRole}>
+                  <Select value={role} onValueChange={(value: UserRole) => setRole(value)}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select your role" />
                     </SelectTrigger>
