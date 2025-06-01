@@ -883,13 +883,6 @@ export type Database = {
         Args: Record<PropertyKey, never> | { target_user_id?: string }
         Returns: undefined
       }
-      inspect_old_breach_checks: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          id: number
-          created_at: string
-        }[]
-      }
       validate_password_security: {
         Args: { password: string }
         Returns: Json

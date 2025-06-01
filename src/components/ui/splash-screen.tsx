@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Loader2, Music } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -55,27 +55,22 @@ const SplashScreen = ({
     }
   }, [loading, progress]);
 
-  // Create an array of music notes with random positions for animation - memoized for performance
-  const musicNotes = useMemo(() => 
-    Array.from({ length: 6 }, (_, i) => ({
-      id: i,
-      x: Math.random() * 80 - 40, // random position between -40% and 40% from center
-      y: -40 - Math.random() * 60, // start above the viewport
-      rotate: Math.random() * 360, // random rotation
-      scale: 0.5 + Math.random() * 0.5, // random size
-      duration: 3 + Math.random() * 2, // random animation duration
-      delay: i * 0.2, // stagger the animations
-    })), []
-  );
+  // Create an array of music notes with random positions for animation
+  const musicNotes = Array.from({ length: 6 }, (_, i) => ({
+    id: i,
+    x: Math.random() * 80 - 40, // random position between -40% and 40% from center
+    y: -40 - Math.random() * 60, // start above the viewport
+    rotate: Math.random() * 360, // random rotation
+    scale: 0.5 + Math.random() * 0.5, // random size
+    duration: 3 + Math.random() * 2, // random animation duration
+    delay: i * 0.2, // stagger the animations
+  }));
 
   return (
     <AnimatePresence>
       {showSplash && (
         <motion.div
-          className={cn(
-            "fixed inset-0 z-50 flex items-center justify-center",
-            loading ? "bg-background" : "bg-background/50"
-          )}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-background"
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
           exit={{ 
@@ -178,7 +173,7 @@ const SplashScreen = ({
                   transition={{
                     duration: note.duration,
                     delay: note.delay,
-                    ease: EASINGS.decelerate,
+                    ease: "easeOut",
                     repeat: Infinity,
                     repeatDelay: 3 + Math.random() * 5
                   }}
@@ -188,12 +183,12 @@ const SplashScreen = ({
               ))}
             </AnimatePresence>
 
-            {/* App Title with animation - Changed to Poppins font */}
+            {/* App Title with animation */}
             <motion.h1 
-              className="text-3xl font-sans font-bold text-foreground mt-8"
+              className="text-3xl font-serif font-bold text-foreground mt-8"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.6, ease: EASINGS.standard }}
+              transition={{ delay: 0.3, duration: 0.6 }}
             >
               Saem's <motion.span 
                 className="text-gold"
@@ -214,12 +209,12 @@ const SplashScreen = ({
               </motion.span>
             </motion.h1>
 
-            {/* Short inspirational tagline - Changed to Poppins font */}
+            {/* Short inspirational tagline */}
             <motion.p
-              className="text-muted-foreground mt-2 font-sans italic"
+              className="text-muted-foreground mt-2 font-serif italic"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.5, duration: 0.6, ease: EASINGS.standard }}
+              transition={{ delay: 0.5, duration: 0.6 }}
             >
               Making music, representing Christ
             </motion.p>
@@ -235,13 +230,10 @@ const SplashScreen = ({
               }}
             >
               <motion.div
-                className={cn(
-                  "h-full rounded-full",
-                  progress > 75 ? "bg-gradient-to-r from-gold via-gold-light to-gold" : "bg-gradient-to-r from-gold/60 via-gold to-gold/60"
-                )}
+                className="h-full bg-gradient-to-r from-gold/60 via-gold to-gold/60 rounded-full"
                 initial={{ width: "0%" }}
                 animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.4, ease: EASINGS.accelerate }}
+                transition={{ duration: 0.4 }}
               />
             </motion.div>
             

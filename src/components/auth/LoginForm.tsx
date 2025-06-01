@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -104,8 +103,8 @@ const LoginForm = ({ onAdminTap }: LoginFormProps) => {
     }
 
     try {
-      // Fixed: Remove the third argument (captchaToken) as login only expects email and password
-      await login(data.email, data.password);
+      // Pass captchaToken to login function (null if captcha not required)
+      await login(data.email, data.password, captchaToken);
       
       // Reset login attempts on successful login
       setLoginAttempts(0);

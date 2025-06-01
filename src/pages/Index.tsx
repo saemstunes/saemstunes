@@ -1,216 +1,250 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import MainLayout from "@/components/layout/MainLayout";
-import RecommendedContent from "@/components/dashboard/RecommendedContent";
-import { mockVideos, VideoContent } from "@/data/mockData";
-import VideoCard from "@/components/videos/VideoCard";
-import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { useToast } from "@/hooks/use-toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Button } from "@/components/ui/button";
+import { Music, Play, Users, Book, BookOpen, CalendarClock, ArrowRight } from "lucide-react";
+import MainLayout from "@/components/layout/MainLayout";
+import DashboardStats from "@/components/dashboard/DashboardStats";
+import RecommendedContent from "@/components/dashboard/RecommendedContent";
+import UpcomingBookings from "@/components/dashboard/UpcomingBookings";
+import { mockSubscriptionPlans } from "@/data/mockData";
+import PricingCard from "@/components/subscription/PricingCard";
+import { motion } from "framer-motion";
+import { pageTransition } from "@/lib/animation-utils";
+
+const LandingPage = () => {
+  const navigate = useNavigate();
+
+  const features = [
+    {
+      icon: <Music className="h-6 w-6 text-gold" />,
+      title: "Expert Tutoring",
+      description: "Learn from professional musicians with years of experience in teaching and performance."
+    },
+    {
+      icon: <Play className="h-6 w-6 text-gold" />,
+      title: "Video Lessons",
+      description: "Access our library of high-quality video tutorials covering various musical topics."
+    },
+    {
+      icon: <BookOpen className="h-6 w-6 text-gold" />,
+      title: "Resources",
+      description: "Download infographics, sheets, and learning materials to enhance your musical journey."
+    },
+    {
+      icon: <CalendarClock className="h-6 w-6 text-gold" />,
+      title: "Flexible Scheduling",
+      description: "Book lessons at times that work for you with our convenient scheduling system."
+    },
+  ];
+
+  // Updated variant and colors for better light mode contrast
+  const getSubscriptionPlanVariant = (index: number, plan: any) => {
+    if (index === 1) return "default"; // Middle plan is already good
+    
+    // Use light variant for side plans in light mode for better contrast
+    return "outline";
+  };
+
+  return (
+    <motion.div 
+      className="min-h-screen"
+      {...pageTransition}
+    >
+      {/* Hero Section */}
+      <section className="relative overflow-hidden py-20 px-6 md:py-32 text-center">
+        <div className="absolute inset-0 music-note-pattern opacity-10 z-0"></div>
+        <div className="relative z-10 max-w-3xl mx-auto">
+          <motion.h1 
+            className="text-4xl md:text-6xl font-serif font-bold"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            Unlock Your <span className="text-gold">Musical</span> Potential
+          </motion.h1>
+          <motion.p 
+            className="mt-6 text-lg text-muted-foreground"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            Saem's Tunes provides comprehensive music education with expert tutors, rich content, and a supportive community to help you grow as a musician.
+          </motion.p>
+          <motion.div 
+            className="mt-10 flex flex-col sm:flex-row gap-4 justify-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            <Button 
+              size="lg"
+              className="bg-gold hover:bg-gold-dark text-white"
+              onClick={() => navigate("/signup")}
+            >
+              Get Started
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+            <Button 
+              size="lg"
+              variant="outline"
+              onClick={() => navigate("/videos")}
+            >
+              Explore Lessons
+            </Button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-16 bg-muted/30">
+        <div className="container px-4">
+          <h2 className="text-3xl font-serif font-bold text-center mb-12">
+            Why Choose <span className="text-gold">Saem's Tunes</span>
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {features.map((feature, index) => (
+              <motion.div 
+                key={index} 
+                className="bg-card p-6 rounded-lg shadow-sm flex flex-col items-center text-center"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                whileHover={{ y: -5, transition: { duration: 0.3 } }}
+              >
+                <div className="bg-gold/10 p-3 rounded-full mb-4">
+                  {feature.icon}
+                </div>
+                <h3 className="text-lg font-medium mb-2">{feature.title}</h3>
+                <p className="text-muted-foreground">{feature.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section - Updated for better light mode contrast */}
+      <section className="py-16">
+        <div className="container px-4">
+          <h2 className="text-3xl font-serif font-bold text-center mb-4">
+            Subscription Plans
+          </h2>
+          <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
+            Choose a plan that works for you and start your musical journey today. All plans include access to our community and support.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {mockSubscriptionPlans.map((plan, index) => (
+              <motion.div
+                key={plan.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.2 }}
+                whileHover={{ y: -8, transition: { duration: 0.3 } }}
+              >
+                <PricingCard 
+                  plan={plan} 
+                  variant={getSubscriptionPlanVariant(index, plan)}
+                  className={index !== 1 ? "shadow-lg border-gold/40 dark:border-gold/20" : ""}
+                />
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16 bg-gold/10">
+        <div className="container px-4 text-center">
+          <motion.h2 
+            className="text-3xl font-serif font-bold mb-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            Ready to Start Your Musical Journey?
+          </motion.h2>
+          <motion.p 
+            className="text-muted-foreground mb-8 max-w-2xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            Join Saem's Tunes today and discover the joy of learning music with our expert tutors and comprehensive resources.
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            <Button 
+              size="lg"
+              className="bg-gold hover:bg-gold-dark text-white"
+              onClick={() => navigate("/signup")}
+            >
+              Sign Up Now
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </motion.div>
+        </div>
+      </section>
+    </motion.div>
+  );
+};
+
+const Dashboard = () => {
+  const { user } = useAuth();
+
+  if (!user) return null;
+
+  return (
+    <div className="space-y-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <h1 className="text-3xl font-serif font-bold">Welcome, {user.name}</h1>
+        <Button
+          className="bg-gold hover:bg-gold-dark text-white w-full md:w-auto"
+          onClick={() => window.location.href = "/bookings"}
+        >
+          <CalendarClock className="mr-2 h-5 w-5" />
+          Book a Session
+        </Button>
+      </div>
+
+      <DashboardStats role={user.role} />
+      <RecommendedContent />
+
+      <div className="mt-8">
+        <h2 className="text-xl font-serif font-semibold mb-4">Upcoming Sessions</h2>
+        <UpcomingBookings />
+      </div>
+    </div>
+  );
+};
 
 const Index = () => {
-  const { user, profile } = useAuth();
+  const { user, isLoading } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedRole, setSelectedRole] = useState<string | null>(null);
-  const [open, setOpen] = useState(false);
 
+  // Redirect to login if accessing protected dashboard areas
   useEffect(() => {
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 800);
-  }, []);
-
-  useEffect(() => {
-    if (selectedRole) {
-      localStorage.setItem("selectedRole", selectedRole);
-      toast({
-        title: "Role Selected",
-        description: `You have selected ${selectedRole} role.`,
-      });
-      navigate("/videos");
+    if (!isLoading && !user && window.location.pathname !== "/") {
+      navigate("/login");
     }
-  }, [selectedRole, navigate, toast]);
+  }, [user, isLoading, navigate]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <MainLayout>
-      <div>
-        <h1 className="text-3xl font-serif font-bold mb-6">
-          Welcome to Saem's Tunes
-        </h1>
-
-        {isLoading ? (
-          <div className="space-y-4">
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-64 w-full" />
-            <Skeleton className="h-96 w-full" />
-          </div>
-        ) : (
-          <>
-            {!profile ? (
-              <div className="text-center py-12">
-                <h2 className="text-2xl font-medium">
-                  Unlock Your Musical Potential
-                </h2>
-                <p className="text-muted-foreground mt-2">
-                  Join our community and start your musical journey today.
-                </p>
-                <Button onClick={() => navigate("/auth")} className="mt-4">
-                  Get Started
-                </Button>
-              </div>
-            ) : (
-              <div className="text-center bg-muted/30 rounded-lg p-6 mb-8">
-                <h2 className="text-xl font-serif font-bold mb-2">
-                  Welcome back, {profile.full_name || profile.display_name || 'there'}!
-                </h2>
-                <p className="text-muted-foreground mb-4">
-                  Continue your musical journey with personalized content
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Button 
-                    variant="outline" 
-                    className="border-gold text-gold hover:bg-gold hover:text-white"
-                    onClick={() => setSelectedRole(profile.role as 'student' | 'adult_learner' | 'tutor')}
-                  >
-                    My Learning Path
-                  </Button>
-                  <Button 
-                    onClick={() => navigate("/videos")}
-                    className="bg-gold hover:bg-gold-dark text-white"
-                  >
-                    Continue Learning
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            <RecommendedContent />
-
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle>Start Your Journey</CardTitle>
-                <CardDescription>
-                  Explore our curated learning paths designed for every musician.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Accordion type="single" collapsible>
-                  <AccordionItem value="beginner">
-                    <AccordionTrigger>Beginner</AccordionTrigger>
-                    <AccordionContent>
-                      <p className="mb-2">
-                        Perfect for those who are just starting out. Learn the
-                        fundamentals of music theory and basic techniques.
-                      </p>
-                      <Button
-                        onClick={() => {
-                          setSelectedRole("student");
-                          setOpen(true);
-                        }}
-                      >
-                        Explore Beginner Path
-                      </Button>
-                    </AccordionContent>
-                  </AccordionItem>
-                  <AccordionItem value="intermediate">
-                    <AccordionTrigger>Intermediate</AccordionTrigger>
-                    <AccordionContent>
-                      <p className="mb-2">
-                        Take your skills to the next level. Dive deeper into
-                        advanced techniques and explore different genres.
-                      </p>
-                      <Button
-                        onClick={() => {
-                          setSelectedRole("adult_learner");
-                          setOpen(true);
-                        }}
-                      >
-                        Explore Intermediate Path
-                      </Button>
-                    </AccordionContent>
-                  </AccordionItem>
-                  <AccordionItem value="advanced">
-                    <AccordionTrigger>Advanced</AccordionTrigger>
-                    <AccordionContent>
-                      <p className="mb-2">
-                        Challenge yourself with complex compositions and master
-                        your instrument. Ideal for experienced musicians.
-                      </p>
-                      <Button
-                        onClick={() => {
-                          setSelectedRole("tutor");
-                          setOpen(true);
-                        }}
-                      >
-                        Explore Advanced Path
-                      </Button>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              </CardContent>
-            </Card>
-          </>
-        )}
-      </div>
-
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Confirm Role</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to continue as a {selectedRole}?
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="role">Role</Label>
-              <RadioGroup
-                defaultValue={selectedRole || ""}
-                className="col-span-3"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="student" id="r1" />
-                  <Label htmlFor="r1">Student</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="adult_learner" id="r2" />
-                  <Label htmlFor="r2">Adult Learner</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="tutor" id="r3" />
-                  <Label htmlFor="r3">Tutor</Label>
-                </div>
-              </RadioGroup>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {user ? <Dashboard /> : <LandingPage />}
     </MainLayout>
   );
 };

@@ -7,20 +7,17 @@ import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import Logo from "@/components/branding/Logo";
 import { FloatingBackButton } from "@/components/ui/floating-back-button";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { Music, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/context/AuthContext"; // Changed from EnhancedAuthContext
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { user, loading } = useAuth(); // Changed from isLoading to loading
-  
   const initialForm = searchParams.get("tab") === "login" ? "login" : 
                       searchParams.get("tab") === "signup" ? "signup" : "signup";
   const [activeForm, setActiveForm] = useState<"login" | "signup" | "admin">(
@@ -28,13 +25,6 @@ const Auth = () => {
   );
   const [adminTapCount, setAdminTapCount] = useState(0);
   const [authError, setAuthError] = useState<string | null>(null);
-  
-  // Redirect to home if already logged in
-  useEffect(() => {
-    if (user && !loading) {
-      navigate("/");
-    }
-  }, [user, loading, navigate]);
   
   // Reset admin tap count after a delay
   useEffect(() => {
@@ -46,37 +36,44 @@ const Auth = () => {
 
   // Handle authentication errors from URL params and hash fragments
   useEffect(() => {
+    // Check for error params in both search params and hash fragment
     const checkForErrors = () => {
+      // Parse the hash fragment if it exists
       const hashParams = new URLSearchParams(location.hash.replace(/^#/, ''));
       
       const error = searchParams.get("error") || hashParams.get("error");
       const errorDescription = searchParams.get("error_description") || hashParams.get("error_description");
       const errorCode = searchParams.get("error_code") || hashParams.get("error_code");
-      const provider = searchParams.get("provider") || hashParams.get("provider") || "oauth";
+      const provider = searchParams.get("provider") || hashParams.get("provider") || "google";
       
       if (error) {
         console.log("Auth error detected:", { error, errorDescription, errorCode, provider });
         
+        // Handle specific error cases
         let errorMessage = errorDescription || "An authentication error occurred";
         
+        // Handle provider email verification case specifically
         if (errorCode === "provider_email_needs_verification" || 
             errorMessage.includes("Unverified email")) {
           
-          setAuthError(`Please verify your email address to continue with ${provider}.`);
+          setAuthError(`Please verify your email address to continue.`);
           
+          // Display toast notification for email verification
           toast({
             title: `${provider.charAt(0).toUpperCase() + provider.slice(1)} Email Verification Required`,
-            description: "Please verify your email address to continue.",
+            description: "An email has been sent to your account. Please verify it to continue.",
             variant: "default",
             duration: 8000,
           });
           
+          // Extract email from error description if possible
           let email = "";
           if (errorDescription) {
             const emailMatch = errorDescription.match(/email: ([^\s]+)/);
             email = emailMatch ? emailMatch[1] : "";
           }
           
+          // Redirect to verification waiting page
           navigate("/verification-waiting", {
             state: { 
               email,
@@ -99,6 +96,7 @@ const Auth = () => {
     checkForErrors();
   }, [searchParams, location.hash, toast, navigate]);
   
+  // Handle secret admin section reveal
   const handleAdminTapArea = () => {
     setAdminTapCount(prev => {
       const newCount = prev + 1;
@@ -110,21 +108,14 @@ const Auth = () => {
     });
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* Logo and branding section */}
-      <div className="relative md:flex-1 bg-gradient-to-br from-gold to-brown p-8 md:p-12 flex flex-col justify-center">
+      <div
+        className="relative md:flex-1 bg-gradient-to-br from-gold to-brown p-8 md:p-12 flex flex-col justify-center"
+        >
+
+        {/* Custom Back Button for Desktop */}
         <div className="absolute top-4 right-4 block">
           <Button
             variant="ghost"

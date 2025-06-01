@@ -1,29 +1,25 @@
 
 import { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext"; // Updated to use the correct context
+import { useAuth } from "@/context/AuthContext";
+import { UserRole } from "@/context/AuthContext";
 import { Loader2 } from "lucide-react";
-
-// Updated UserRole type to reflect latest roles in the database
-export type UserRole = 'student' | 'parent' | 'admin' | 'user' | 'adult_learner' | 'tutor';
 
 interface ProtectedRouteProps {
   children: ReactNode;
   requiredRoles?: UserRole[];
-  adminOnly?: boolean; // Added for compatibility with App.tsx
   redirectPath?: string;
 }
 
-const ProtectedRoute = ({
-  children,
+const ProtectedRoute = ({ 
+  children, 
   requiredRoles,
-  adminOnly = false,
   redirectPath = "/login"
 }: ProtectedRouteProps) => {
-  const { user, profile, loading } = useAuth(); // Updated to use correct context
+  const { user, isLoading } = useAuth();
   const location = useLocation();
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <Loader2 className="h-10 w-10 text-gold animate-spin mb-4" />
@@ -36,26 +32,8 @@ const ProtectedRoute = ({
     return <Navigate to={redirectPath} state={{ from: location }} replace />;
   }
 
-  // Admin-only protection
-  if (adminOnly && profile?.role !== 'admin') {
-    return (
-      <Navigate
-        to="/unauthorized"
-        state={{ from: location, requiredRoles: ['admin'] }}
-        replace
-      />
-    );
-  }
-
-  // Role-based protection
-  if (requiredRoles && profile && !requiredRoles.includes(profile.role)) {
-    return (
-      <Navigate
-        to="/unauthorized"
-        state={{ from: location, requiredRoles }}
-        replace
-      />
-    );
+  if (requiredRoles && !requiredRoles.includes(user.role)) {
+    return <Navigate to="/unauthorized" state={{ from: location, requiredRoles }} replace />;
   }
 
   return <>{children}</>;

@@ -10,19 +10,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
-import DynamicMusicQuiz from "@/components/quiz/DynamicMusicQuiz";
-import ResourceCard, { Resource } from "@/components/resources/ResourceCard";
-import { useToast } from "@/hooks/use-toast";
-import QuizSelection from "@/components/quiz/QuizSelection";
-import { useUserQuizProgress } from "@/hooks/useQuizzes";
 
 const Library = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("saved");
-  const { toast } = useToast();
-  const [activeQuizId, setActiveQuizId] = useState<string>("");
-  const { getCompletedQuizIds, refetch: refetchProgress } = useUserQuizProgress();
 
   // Sample saved content data (would come from API in a real app)
   const savedVideos = mockVideos.slice(0, 4);
@@ -76,40 +68,6 @@ const Library = () => {
     }
   ];
   
-  // Sample offline resources
-  const offlineResources: Resource[] = [
-    {
-      id: "res1",
-      title: "Complete Guitar Chord Chart",
-      description: "A comprehensive chart of guitar chords for beginners to advanced players",
-      type: "chord_chart",
-      thumbnail: "/placeholder.svg",
-      fileSize: "2.4 MB",
-      dateAdded: "2 days ago",
-      tags: ["Guitar", "Chords", "Beginner"],
-      premium: false,
-      downloadUrl: "#",
-      views: 1245,
-      author: "Saem's Tunes",
-      offline: true
-    },
-    {
-      id: "res2",
-      title: "Piano Scales PDF Reference",
-      description: "All major and minor piano scales with fingering patterns",
-      type: "sheet_music",
-      thumbnail: "/placeholder.svg",
-      fileSize: "1.8 MB",
-      dateAdded: "1 week ago",
-      tags: ["Piano", "Scales", "Theory"],
-      premium: true,
-      downloadUrl: "#",
-      views: 789,
-      author: "Saem's Tunes",
-      offline: true
-    }
-  ];
-  
   const EmptyState = ({ title, description, icon: Icon }) => (
     <div className="text-center py-16">
       <div className="bg-muted/30 rounded-full p-6 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
@@ -130,7 +88,7 @@ const Library = () => {
 
   const handleExclusiveContent = (contentId) => {
     // Redirect to payment page for premium content
-    navigate(`/subscriptions?contentType=exclusive&contentId=${contentId}`);
+    navigate(`/payment?contentType=exclusive&contentId=${contentId}`);
   };
 
   const CourseCard = ({ course }) => (
@@ -188,36 +146,7 @@ const Library = () => {
       </div>
     </Card>
   );
-
-  const handleQuizComplete = (score: number, total: number, quizId: string) => {
-    toast({
-      title: "Quiz Completed",
-      description: `You scored ${score} out of ${total}! Keep learning and improving your music knowledge.`,
-    });
-    
-    // Refresh user progress to update completed quizzes
-    refetchProgress();
-    
-    // If not logged in, prompt to sign in to save progress
-    if (!user && score >= total * 0.7) {
-      setTimeout(() => {
-        toast({
-          title: "Great score! Sign in to save your progress",
-          description: "Create an account to track your quiz scores and unlock more content",
-          action: (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => navigate("/auth")}
-            >
-              Sign In
-            </Button>
-          ),
-        });
-      }, 1500);
-    }
-  };
-
+  
   return (
     <MainLayout>
       <div className="space-y-6">
@@ -238,35 +167,6 @@ const Library = () => {
               Discover More
             </Button>
           )}
-        </div>
-        
-        {/* Music Quiz Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            {activeQuizId ? (
-              <DynamicMusicQuiz 
-                quizId={activeQuizId}
-                onComplete={handleQuizComplete} 
-              />
-            ) : (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Select a Quiz</CardTitle>
-                  <CardDescription>Choose a quiz from the selection panel to begin</CardDescription>
-                </CardHeader>
-                <CardContent className="text-center py-8">
-                  <p className="text-muted-foreground">Pick a quiz topic from the right to start testing your music knowledge!</p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-          <div className="space-y-4">
-            <QuizSelection 
-              onQuizSelect={setActiveQuizId} 
-              activeQuizId={activeQuizId}
-              completedQuizIds={getCompletedQuizIds()}
-            />
-          </div>
         </div>
         
         {/* Featured Saem's content */}
@@ -322,39 +222,6 @@ const Library = () => {
                 <VideoCardWrapper key={video.id} video={video} isPremium={true} />
               </div>
             ))}
-          </div>
-        </div>
-        
-        {/* Offline Resources Section */}
-        <div className="mb-8">
-          <h2 className="text-xl font-proxima font-semibold mb-4 flex items-center">
-            <BookOpen className="h-5 w-5 text-gold mr-2" />
-            Available Offline
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {offlineResources.map(resource => (
-              <ResourceCard 
-                key={resource.id} 
-                resource={resource} 
-                isBookmarked={true}
-                onBookmark={() => {
-                  toast({
-                    title: "Removed from offline storage",
-                    description: `${resource.title} is no longer available offline`,
-                  });
-                }}
-              />
-            ))}
-            <Card className="flex flex-col items-center justify-center p-8 border-dashed cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() => navigate("/resources")}>
-              <div className="bg-gold/10 p-4 rounded-full mb-4">
-                <BookOpen className="h-6 w-6 text-gold" />
-              </div>
-              <h3 className="font-medium mb-2">Save More Resources</h3>
-              <p className="text-center text-sm text-muted-foreground">
-                Browse our library to download more resources for offline use
-              </p>
-            </Card>
           </div>
         </div>
         
@@ -423,27 +290,6 @@ const Library = () => {
             />
           </TabsContent>
         </Tabs>
-
-        {/* Legal Links Footer */}
-        <div className="flex justify-center space-x-4 pt-8 border-t">
-          <Button 
-            variant="link" 
-            size="sm"
-            onClick={() => navigate("/privacy")}
-            className="text-muted-foreground hover:text-gold"
-          >
-            Privacy Policy
-          </Button>
-          <span className="text-muted-foreground">•</span>
-          <Button 
-            variant="link" 
-            size="sm"
-            onClick={() => navigate("/terms")}
-            className="text-muted-foreground hover:text-gold"
-          >
-            Terms of Service
-          </Button>
-        </div>
       </div>
     </MainLayout>
   );

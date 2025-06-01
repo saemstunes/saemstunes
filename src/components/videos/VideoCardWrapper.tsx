@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,13 +32,10 @@ const VideoCardWrapper: React.FC<VideoCardWrapperProps> = ({
   className
 }) => {
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
 
   const handleClick = () => {
-    // Check if user has access - using profile.role as proxy for subscription
-    const hasAccess = !isPremium && !video.isLocked || (profile && (profile.role === 'admin' || profile.role === 'tutor'));
-    
-    if ((isPremium || video.isLocked) && !hasAccess) {
+    if (isPremium && (!user || !user.subscribed)) {
       navigate("/subscriptions");
       return;
     }
@@ -52,7 +48,7 @@ const VideoCardWrapper: React.FC<VideoCardWrapperProps> = ({
   };
 
   const isLocked = isPremium || video.isLocked;
-  const canAccess = !isLocked || (profile && (profile.role === 'admin' || profile.role === 'tutor'));
+  const canAccess = !isLocked || (user && user.subscribed);
 
   return (
     <Card 

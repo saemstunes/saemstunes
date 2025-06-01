@@ -1,359 +1,455 @@
 
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
+import React, { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { 
-  Crown, 
-  Check, 
-  Star, 
-  Music, 
-  Users, 
-  VideoIcon,
-  BookOpen,
-  Award,
-  Sparkles,
-  ArrowLeft,
-  CreditCard
-} from "lucide-react";
-import { motion } from "framer-motion";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, ArrowRight, Check, CreditCard, Gift, RotateCcw, ShoppingBag } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { mockSubscriptionPlans } from "@/data/mockData";
+import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+interface PaymentMethod {
+  id: string;
+  name: string;
+  last4: string;
+  expiry: string;
+  type: "card" | "paypal" | "bank";
+  isDefault: boolean;
+}
+
+const samplePaymentMethods: PaymentMethod[] = [
+  {
+    id: "card1",
+    name: "Visa ending in 4242",
+    last4: "4242",
+    expiry: "09/25",
+    type: "card",
+    isDefault: true
+  },
+  {
+    id: "paypal1",
+    name: "PayPal",
+    last4: "",
+    expiry: "",
+    type: "paypal",
+    isDefault: false
+  }
+];
 
 const Subscriptions = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [activeTab, setActiveTab] = useState<"subscriptions" | "payments">("subscriptions");
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>(samplePaymentMethods);
+  const [selectedPlan, setSelectedPlan] = useState<string>(mockSubscriptionPlans[1].id); // Default to middle plan
+  const [promoCode, setPromoCode] = useState("");
+  const [promoApplied, setPromoApplied] = useState(false);
+  
+  const urlSearchParams = new URLSearchParams(location.search);
+  const contentType = urlSearchParams.get('contentType');
+  const contentId = urlSearchParams.get('contentId');
 
-  // Get the plan that was selected from the home page
-  const preSelectedPlan = location.state?.selectedPlan;
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>(samplePaymentMethods.find(pm => pm.isDefault)?.id || "");
 
-  useEffect(() => {
-    if (preSelectedPlan) {
-      setSelectedPlan(preSelectedPlan);
+  const toggleCheckout = (planId?: string) => {
+    if (planId) {
+      setSelectedPlan(planId);
     }
-  }, [preSelectedPlan]);
+    setIsCheckingOut(!isCheckingOut);
+  };
 
-  const subscriptionPlans = [
-    {
-      id: "basic",
-      name: "Basic",
-      price: "$9.99",
-      period: "per month",
-      description: "Perfect for beginners starting their musical journey",
-      icon: Music,
-      color: "from-blue-500 to-blue-600",
-      features: [
-        "Access to beginner tutorials",
-        "Basic music theory lessons",
-        "Community forum access",
-        "Monthly group sessions",
-        "Mobile app access"
-      ],
-      badge: null
-    },
-    {
-      id: "premium",
-      name: "Premium",
-      price: "$19.99",
-      period: "per month",
-      description: "Most popular choice for dedicated learners",
-      icon: Crown,
-      color: "from-gold to-yellow-600",
-      features: [
-        "Everything in Basic",
-        "1-on-1 tutor sessions (2/month)",
-        "Advanced video lessons",
-        "Personalized practice plans",
-        "Progress tracking & analytics",
-        "Priority support",
-        "Downloadable resources"
-      ],
-      badge: "Most Popular"
-    },
-    {
-      id: "pro",
-      name: "Professional",
-      price: "$39.99",
-      period: "per month",
-      description: "For serious musicians and professionals",
-      icon: Award,
-      color: "from-purple-500 to-purple-600",
-      features: [
-        "Everything in Premium",
-        "Unlimited 1-on-1 sessions",
-        "Master classes with experts",
-        "Custom curriculum design",
-        "Recording studio access",
-        "Performance opportunities",
-        "Certificate programs",
-        "Business music guidance"
-      ],
-      badge: "Best Value"
-    }
-  ];
-
-  const handleSubscribe = async (planId: string) => {
-    if (!user) {
-      navigate("/auth?tab=signup", { 
-        state: { returnTo: `/subscriptions`, selectedPlan: planId }
+  const applyPromoCode = () => {
+    if (promoCode.toLowerCase() === "saem50") {
+      setPromoApplied(true);
+      toast({
+        title: "Promo code applied!",
+        description: "You've received a 10% discount on your subscription.",
       });
-      return;
+    } else {
+      toast({
+        title: "Invalid promo code",
+        description: "The promo code you entered is not valid.",
+        variant: "destructive",
+      });
     }
+  };
 
-    setIsProcessing(true);
+  const handlePaymentSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     
-    try {
-      // Here you would integrate with your payment processor
-      // For now, we'll simulate the process
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      toast({
-        title: "Subscription Started!",
-        description: `Welcome to ${subscriptionPlans.find(p => p.id === planId)?.name} plan!`,
-      });
-      
-      navigate("/payment", { state: { plan: planId } });
-    } catch (error) {
-      toast({
-        title: "Subscription Failed",
-        description: "There was an issue processing your subscription. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsProcessing(false);
-    }
+    // Simulating a loading state
+    toast({
+      title: "Processing payment...",
+      description: "Please wait while we process your payment.",
+    });
+    
+    // Simulate API call with setTimeout
+    setTimeout(() => {
+      navigate("/payment-success");
+    }, 2000);
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
+  const selectedPlanDetails = mockSubscriptionPlans.find(p => p.id === selectedPlan);
 
-  const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
+  const handleAddPaymentMethod = () => {
+    navigate("/add-payment-method");
   };
-
+  
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <Button
-            variant="ghost"
-            className="mb-4"
+      <div className="space-y-6">
+        <div className="flex items-center">
+          <Button 
+            variant="ghost" 
             onClick={() => navigate(-1)}
+            className="mr-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
-          
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4">
-              Choose Your <span className="text-gold">Musical Journey</span>
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Unlock your potential with our comprehensive music education platform. 
-              Start with any plan and upgrade anytime.
+          <div>
+            <h1 className="text-3xl font-proxima font-bold">Subscriptions & Payments</h1>
+            <p className="text-muted-foreground">
+              Manage your subscriptions and payment methods
             </p>
-          </motion.div>
+          </div>
         </div>
-
-        {/* Subscription Cards */}
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
+  
+        {contentType && contentId && (
+          <Alert className="bg-gold/10 border-gold">
+            <ShoppingBag className="h-4 w-4 text-gold" />
+            <AlertTitle>Access Premium Content</AlertTitle>
+            <AlertDescription className="space-y-2">
+              <p>Subscribe to access {contentType === 'exclusive' ? 'exclusive content' : contentType}</p>
+              <Button size="sm" className="bg-gold hover:bg-gold/90 text-white mt-2" onClick={() => setActiveTab("subscriptions")}>
+                View Plans
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+  
+        <Tabs 
+          defaultValue={activeTab}
+          value={activeTab} 
+          onValueChange={(value) => setActiveTab(value as "subscriptions" | "payments")}
         >
-          {subscriptionPlans.map((plan, index) => {
-            const IconComponent = plan.icon;
-            const isSelected = selectedPlan === plan.id;
-            const isRecommended = plan.badge === "Most Popular";
-            
-            return (
-              <motion.div
-                key={plan.id}
-                variants={cardVariants}
-                className="relative"
-              >
-                {plan.badge && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
-                    <Badge 
-                      className={`${
-                        plan.badge === "Most Popular" 
-                          ? "bg-gold text-white" 
-                          : "bg-purple-500 text-white"
-                      } px-3 py-1`}
-                    >
-                      <Sparkles className="h-3 w-3 mr-1" />
-                      {plan.badge}
-                    </Badge>
-                  </div>
+          <TabsList className="grid grid-cols-2 w-full md:w-[400px]">
+            <TabsTrigger value="subscriptions">
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Subscriptions
+            </TabsTrigger>
+            <TabsTrigger value="payments">
+              <CreditCard className="h-4 w-4 mr-2" />
+              Payment Methods
+            </TabsTrigger>
+          </TabsList>
+  
+          <TabsContent value="subscriptions" className="mt-6 space-y-6">
+            {isCheckingOut ? (
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Complete Your Purchase</CardTitle>
+                    <CardDescription>Review your order details and checkout</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="rounded-lg border p-4">
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="font-medium">{selectedPlanDetails?.name} Subscription</span>
+                          <span>${selectedPlanDetails?.price}/month</span>
+                        </div>
+                        
+                        {promoApplied && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-green-600">Promo: SAEM50</span>
+                            <span className="text-green-600">-10%</span>
+                          </div>
+                        )}
+                        
+                        <div className="h-px bg-border my-2"></div>
+                        
+                        <div className="flex justify-between font-medium">
+                          <span>Total</span>
+                          <span>
+                            ${promoApplied 
+                              ? (parseFloat(String(selectedPlanDetails?.price || "0")) * 0.9).toFixed(2) 
+                              : selectedPlanDetails?.price}/month
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <form onSubmit={handlePaymentSubmit} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="payment-method">Payment Method</Label>
+                        <Select 
+                          value={selectedPaymentMethod} 
+                          onValueChange={setSelectedPaymentMethod}
+                        >
+                          <SelectTrigger id="payment-method">
+                            <SelectValue placeholder="Select payment method" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {paymentMethods.map(method => (
+                              <SelectItem key={method.id} value={method.id}>
+                                {method.name}
+                                {method.isDefault && " (Default)"}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          className="w-full mt-2"
+                          onClick={handleAddPaymentMethod}
+                        >
+                          Add New Payment Method
+                        </Button>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="promo">Promo Code</Label>
+                          {promoApplied && (
+                            <span className="text-xs text-green-600">Applied</span>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Input 
+                            id="promo" 
+                            value={promoCode}
+                            onChange={(e) => setPromoCode(e.target.value)}
+                            placeholder="Enter promo code"
+                            disabled={promoApplied}
+                          />
+                          <Button 
+                            type="button"
+                            variant="outline"
+                            onClick={applyPromoCode}
+                            disabled={promoApplied || !promoCode}
+                          >
+                            Apply
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <Alert className="bg-muted">
+                        <Gift className="h-4 w-4" />
+                        <AlertTitle>Subscription Benefits</AlertTitle>
+                        <AlertDescription>
+                          <ul className="list-disc list-inside space-y-1 text-sm mt-2">
+                            {selectedPlanDetails?.features.map((feature, index) => (
+                              <li key={index}>{feature}</li>
+                            ))}
+                          </ul>
+                        </AlertDescription>
+                      </Alert>
+                      
+                      <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3">
+                        <Button 
+                          type="button"
+                          variant="outline" 
+                          onClick={() => toggleCheckout()}
+                          className="flex-1"
+                        >
+                          Back to Plans
+                        </Button>
+                        <Button 
+                          type="submit"
+                          className="flex-1 bg-gold hover:bg-gold/90 text-white"
+                        >
+                          Complete Purchase
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                      </div>
+                    </form>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {!user && (
+                  <Alert>
+                    <AlertTitle>Sign in to manage subscriptions</AlertTitle>
+                    <AlertDescription>
+                      You need to be logged in to manage your subscriptions.
+                      <div className="flex gap-2 mt-2">
+                        <Button onClick={() => navigate("/auth")} size="sm">
+                          Sign In
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => navigate("/auth?signup=true")}>
+                          Create Account
+                        </Button>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
                 )}
                 
-                <Card 
-                  className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl ${
-                    isSelected 
-                      ? "ring-2 ring-gold shadow-lg transform scale-105" 
-                      : isRecommended 
-                        ? "border-gold/50 shadow-md" 
-                        : ""
-                  }`}
-                >
-                  {/* Background Gradient */}
-                  <div 
-                    className={`absolute top-0 left-0 right-0 h-32 bg-gradient-to-br ${plan.color} opacity-10`}
-                  />
+                <h2 className="text-2xl font-proxima font-semibold">Choose Your Plan</h2>
                   
-                  <CardHeader className="relative">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className={`p-3 rounded-full bg-gradient-to-br ${plan.color}`}>
-                        <IconComponent className="h-6 w-6 text-white" />
-                      </div>
-                      {isSelected && (
-                        <Badge variant="secondary" className="bg-gold/10 text-gold">
-                          Selected
-                        </Badge>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {mockSubscriptionPlans.map((plan, index) => (
+                    <Card 
+                      key={plan.id}
+                      className={cn(
+                        "flex flex-col justify-between",
+                        plan.isPopular && "border-gold shadow-md",
+                        selectedPlan === plan.id && "ring-2 ring-gold"
                       )}
-                    </div>
-                    
-                    <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
-                    <CardDescription className="text-sm">
-                      {plan.description}
-                    </CardDescription>
-                    
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-bold">{plan.price}</span>
-                      <span className="text-muted-foreground">/{plan.period.split(' ')[1]}</span>
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent>
-                    <ul className="space-y-3">
-                      {plan.features.map((feature, featureIndex) => (
-                        <li key={featureIndex} className="flex items-start gap-3">
-                          <div className="mt-0.5">
-                            <Check className="h-4 w-4 text-green-500" />
-                          </div>
-                          <span className="text-sm">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                  
-                  <CardFooter>
-                    <Button
-                      className={`w-full ${
-                        isRecommended 
-                          ? "bg-gold hover:bg-gold/90 text-white" 
-                          : ""
-                      }`}
-                      variant={isRecommended ? "default" : "outline"}
-                      onClick={() => handleSubscribe(plan.id)}
-                      disabled={isProcessing}
                     >
-                      {isProcessing ? (
-                        <>
-                          <CreditCard className="h-4 w-4 mr-2 animate-spin" />
-                          Processing...
-                        </>
-                      ) : (
-                        <>
-                          <CreditCard className="h-4 w-4 mr-2" />
-                          {user ? "Subscribe Now" : "Sign Up & Subscribe"}
-                        </>
+                      <CardHeader>
+                        {plan.isPopular && (
+                          <div className="py-1 px-3 bg-gold/20 text-gold rounded-full text-xs font-medium w-fit mx-auto mb-2">
+                            MOST POPULAR
+                          </div>
+                        )}
+                        <CardTitle className="text-xl text-center">
+                          {plan.name}
+                        </CardTitle>
+                        <CardDescription className="text-center">
+                          {plan.shortDescription}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="text-center space-y-6">
+                        <div>
+                          <p className="text-4xl font-bold">
+                            ${plan.price}
+                            <span className="text-muted-foreground text-sm font-normal">/month</span>
+                          </p>
+                          {plan.annualDiscount && (
+                            <p className="text-sm text-muted-foreground">
+                              Save ${plan.annualDiscount} annually
+                            </p>
+                          )}
+                        </div>
+                        <div className="space-y-2 text-left">
+                          {plan.features.map((feature, i) => (
+                            <div key={i} className="flex items-center">
+                              <Check className="h-4 w-4 text-gold mr-2 shrink-0" />
+                              <p className="text-sm">{feature}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                      <div className="p-6 pt-0">
+                        <Button
+                          className={cn(
+                            "w-full",
+                            index === 1 
+                              ? "bg-gold hover:bg-gold/90 text-white" 
+                              : "bg-muted/60 hover:bg-muted text-foreground dark:bg-muted/30 dark:hover:bg-muted/40"
+                          )}
+                          onClick={() => toggleCheckout(plan.id)}
+                        >
+                          {selectedPlan === plan.id ? "Selected" : "Subscribe Now"}
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+                
+                <div className="text-center max-w-2xl mx-auto">
+                  <h3 className="text-lg font-medium mb-2">Why subscribe to Saem's Tunes?</h3>
+                  <p className="text-muted-foreground">
+                    Get unlimited access to all premium lessons, one-on-one sessions with experienced 
+                    instructors, and exclusive content to accelerate your musical journey.
+                  </p>
+                </div>
+              </div>
+            )}
+          </TabsContent>
+  
+          <TabsContent value="payments" className="mt-6 space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Payment Methods</CardTitle>
+                <CardDescription>
+                  Manage your stored payment methods
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {paymentMethods.map((method) => (
+                  <div 
+                    key={method.id} 
+                    className="flex items-center justify-between border rounded-lg p-4"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={cn(
+                        "p-2 rounded-full",
+                        method.type === "card" ? "bg-blue-50" :
+                        method.type === "paypal" ? "bg-blue-100" : "bg-gray-100"
+                      )}>
+                        <CreditCard className={cn(
+                          "h-5 w-5",
+                          method.type === "card" ? "text-blue-500" :
+                          method.type === "paypal" ? "text-blue-600" : "text-gray-500"
+                        )} />
+                      </div>
+                      <div>
+                        <p className="font-medium">{method.name}</p>
+                        {method.expiry && (
+                          <p className="text-sm text-muted-foreground">Expires {method.expiry}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {method.isDefault && (
+                        <span className="text-xs bg-muted px-2 py-1 rounded">Default</span>
                       )}
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </motion.div>
-            );
-          })}
-        </motion.div>
-
-        {/* Features Comparison */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.6 }}
-          className="bg-muted/30 rounded-lg p-8 mb-8"
-        >
-          <h2 className="text-2xl font-bold text-center mb-6">Why Choose Saem's Tunes?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="text-center">
-              <VideoIcon className="h-8 w-8 text-gold mx-auto mb-3" />
-              <h3 className="font-semibold mb-2">Premium Content</h3>
-              <p className="text-sm text-muted-foreground">
-                High-quality video lessons from professional musicians
-              </p>
-            </div>
-            <div className="text-center">
-              <Users className="h-8 w-8 text-gold mx-auto mb-3" />
-              <h3 className="font-semibold mb-2">Expert Tutors</h3>
-              <p className="text-sm text-muted-foreground">
-                Learn from experienced instructors and industry professionals
-              </p>
-            </div>
-            <div className="text-center">
-              <BookOpen className="h-8 w-8 text-gold mx-auto mb-3" />
-              <h3 className="font-semibold mb-2">Structured Learning</h3>
-              <p className="text-sm text-muted-foreground">
-                Follow proven curriculums designed for all skill levels
-              </p>
-            </div>
-            <div className="text-center">
-              <Star className="h-8 w-8 text-gold mx-auto mb-3" />
-              <h3 className="font-semibold mb-2">Track Progress</h3>
-              <p className="text-sm text-muted-foreground">
-                Monitor your improvement with detailed analytics
-              </p>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* FAQ Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.6 }}
-          className="text-center"
-        >
-          <h2 className="text-2xl font-bold mb-4">Questions?</h2>
-          <p className="text-muted-foreground mb-6">
-            Our support team is here to help you choose the right plan
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="outline" onClick={() => navigate("/contact")}>
-              Contact Support
-            </Button>
-            <Button variant="outline" onClick={() => navigate("/terms")}>
-              View Terms
-            </Button>
-          </div>
-        </motion.div>
+                      <Button variant="ghost" size="sm">
+                        Edit
+                      </Button>
+                      <Button variant="ghost" size="sm">
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                
+                <Button variant="outline" className="w-full mt-4" onClick={handleAddPaymentMethod}>
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Add Payment Method
+                </Button>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Merchandise & Products</CardTitle>
+                <CardDescription>
+                  View your past purchases and orders
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="rounded-lg border border-dashed p-8 text-center">
+                  <ShoppingBag className="h-8 w-8 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="font-medium mb-2">No purchases yet</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Explore the store to find Saem's Tunes merchandise and products.
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => navigate("/store")}
+                  >
+                    Browse Store
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </MainLayout>
   );
