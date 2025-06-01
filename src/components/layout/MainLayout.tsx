@@ -262,94 +262,103 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
                   <span className="sr-only">Toggle menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[280px] sm:w-[350px]">
-                <nav className="flex flex-col gap-6">
-                  <div className="flex items-center gap-3 ml-4">
-                    <Logo size="md" />
-                    <div className="flex flex-col leading-tight">
-                      <span className="text-yellow-500 font-bold text-base font-nunito">Saem's</span>
-                      <span className="text-amber-800 font-bold text-base font-nunito">Tunes</span>
-                    </div>
-                  </div>
+              <SheetContent side="left" className="w-[280px] sm:w-[350px] flex flex-col p-0">
+  {/* Fixed Header */}
+  <div className="flex items-center justify-between p-4 border-b border-border bg-background sticky top-0 z-10">
+    <div className="flex items-center gap-3">
+      <Logo size="md" />
+      <div className="flex flex-col leading-tight">
+        <span className="text-yellow-500 font-bold text-base font-nunito">Saem's</span>
+        <span className="text-amber-800 font-bold text-base font-nunito">Tunes</span>
+      </div>
+    </div>
+    <Button
+      size="icon"
+      variant="ghost"
+      onClick={() => setIsMobileMenuOpen(false)}
+    >
+      <X className="h-5 w-5" />
+      <span className="sr-only">Close</span>
+    </Button>
+  </div>
 
-                  {user && (
-                    <>
-                      <div className="flex items-center gap-4 mb-4">
-                        <Avatar>
-                          <AvatarImage src={user.avatar} alt={user.name} />
-                          <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium">{user.name}</p>
-                          <p className="text-sm text-muted-foreground capitalize">{user.role}</p>
-                        </div>
-                      </div>
-                      <Separator className="mb-4" />
-                    </>
-                  )}
+  {/* Scrollable Content */}
+  <div className="flex-1 overflow-y-auto">
+    <nav className="flex flex-col gap-6 p-4">
+      {user && (
+        <>
+          <div className="flex items-center gap-4 mb-4">
+            <Avatar>
+              <AvatarImage src={user.avatar} alt={user.name} />
+              <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="font-medium">{user.name}</p>
+              <p className="text-sm text-muted-foreground capitalize">{user.role}</p>
+            </div>
+          </div>
+          <Separator className="mb-4" />
+        </>
+      )}
 
-                  {filteredNavigation.map((item) => (
-                    <Button
-                      key={item.name}
-                      variant="ghost"
-                      className={cn(
-                        "justify-start gap-4",
-                        isActive(item.href) &&
-                          "bg-muted font-medium text-foreground"
-                      )}
-                      onClick={() => handleNavigation(item.href)}
-                    >
-                      <item.icon className="h-5 w-5" />
-                      {item.name}
-                    </Button>
-                  ))}
+      {filteredNavigation.map((item) => (
+        <Button
+          key={item.name}
+          variant="ghost"
+          className={cn(
+            "justify-start gap-4",
+            isActive(item.href) &&
+              "bg-muted font-medium text-foreground"
+          )}
+          onClick={() => handleNavigation(item.href)}
+        >
+          <item.icon className="h-5 w-5" />
+          {item.name}
+        </Button>
+      ))}
 
-                  {user && (
-                    <Button
-                      variant="ghost"
-                      className="justify-start gap-4 text-destructive hover:text-destructive"
-                      onClick={() => {
-                        logout();
-                        setIsMobileMenuOpen(false);
-                        navigate("/");
-                      }}
-                    >
-                      <LogOut className="h-5 w-5" />
-                      Logout
-                    </Button>
-                  )}
+      {user && (
+        <Button
+          variant="ghost"
+          className="justify-start gap-4 text-destructive hover:text-destructive"
+          onClick={() => {
+            logout();
+            setIsMobileMenuOpen(false);
+            navigate("/");
+          }}
+        >
+          <LogOut className="h-5 w-5" />
+          Logout
+        </Button>
+      )}
 
-                  <Separator className="my-4" />
-                  
-                  <div className="flex flex-col gap-3">
-                    {socialLinks.map((item) => (
-                      <Button
-                        key={item.name}
-                        variant="ghost"
-                        size="sm"
-                        className="justify-start gap-3 text-muted-foreground hover:text-gold"
-                        onClick={() => handleNavigation(item.href)}
-                        aria-label={item.ariaLabel}
-                      >
-                        <item.icon className="h-4 w-4" />
-                        {item.name}
-                      </Button>
-                    ))}
-                  </div>
+      <Separator className="my-4" />
+      
+      <div className="flex flex-col gap-3">
+        {socialLinks.map((item) => (
+          <Button
+            key={item.name}
+            variant="ghost"
+            size="sm"
+            className="justify-start gap-3 text-muted-foreground hover:text-gold"
+            onClick={() => handleNavigation(item.href)}
+            aria-label={item.ariaLabel}
+          >
+            <item.icon className="h-4 w-4" />
+            {item.name}
+          </Button>
+        ))}
+      </div>
 
-                  <div className="mt-auto flex items-center justify-between">
-                    <ThemeToggle />
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <X className="h-5 w-5" />
-                      <span className="sr-only">Close</span>
-                    </Button>
-                  </div>
-                </nav>
-              </SheetContent>
+      {/* Footer content - now scrollable and with bottom padding to clear mobile nav */}
+      <Separator className="my-4" />
+      <div className="flex items-center justify-between pb-16">
+        <ThemeToggle />
+        <span className="text-xs text-muted-foreground">v1.0.0</span>
+      </div>
+    </nav>
+  </div>
+</SheetContent>
             </Sheet>
 
             <Logo size="md" className="ml-4" />
