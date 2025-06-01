@@ -1,6 +1,7 @@
+
 import { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/context/EnhancedAuthContext"; // Updated context
+import { useAuth } from "@/context/AuthContext"; // Updated to use the correct context
 import { Loader2 } from "lucide-react";
 
 // Updated UserRole type to reflect latest roles in the database
@@ -19,7 +20,7 @@ const ProtectedRoute = ({
   adminOnly = false,
   redirectPath = "/login"
 }: ProtectedRouteProps) => {
-  const { user, profile, loading } = useAuth(); // Updated from `isLoading` to `loading`, and added `profile`
+  const { user, profile, loading } = useAuth(); // Updated to use correct context
   const location = useLocation();
 
   if (loading) {
