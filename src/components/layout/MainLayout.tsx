@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
 import { Sidebar } from "@/components/layout/Sidebar";
-import { MobileNavigation } from "@/components/layout/MobileNavigation";
-import { MiniPlayer } from "@/components/player/MiniPlayer";
+import MobileNavigation from "@/components/layout/MobileNavigation";
+import MiniPlayer from "@/components/player/MiniPlayer";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import Logo from "@/components/branding/Logo";
@@ -47,7 +48,7 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
       {/* Header */}
       <header className="bg-background/90 backdrop-blur-md border-b border-border h-16 flex items-center justify-between px-4 z-40">
         <div className="flex items-center">
-          <Logo variant="compact" size="sm" className="mr-4" />
+          <Logo variant="icon" size="sm" className="mr-4" />
           <Button variant="ghost" size="icon" onClick={toggleSearchBar}>
             <Search className="h-5 w-5" />
           </Button>
@@ -84,7 +85,7 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* Brand */}
             <div className="space-y-4">
-              <Logo variant="compact" size="sm" />
+              <Logo variant="icon" size="sm" />
               <p className="text-sm text-muted-foreground">
                 Making music, representing Christ. Join our community of learners and grow your musical talents.
               </p>
