@@ -1,5 +1,3 @@
-// Updated AuthContext with support for extended user profiles, multiple providers, and compatibility aliases
-
 import React, {
   createContext,
   useContext,
@@ -136,7 +134,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   useEffect(() => {
-    const { subscription } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // Fixed: Extract subscription from the correct path
+    const { data: authData } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
       setUser(session?.user || null);
       if (session?.user) {
@@ -158,7 +157,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => authData.subscription.unsubscribe();
   }, []);
 
   const signIn = async (email: string, password: string) => {

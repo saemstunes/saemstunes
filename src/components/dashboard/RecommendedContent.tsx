@@ -7,19 +7,20 @@ import { Button } from "../ui/button";
 import { ArrowRight } from "lucide-react";
 
 const RecommendedContent = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
 
   // Function to get personalized recommendations based on user role
   const getRecommendedVideos = (): VideoContent[] => {
     // Filter videos - free videos for everyone, locked videos only for subscribers
+    // Note: Using profile instead of user.subscribed since subscribed is not a property of Supabase User
     let filteredVideos = mockVideos.filter(
-      (video) => !video.isLocked || (user && user.subscribed)
+      (video) => !video.isLocked || (profile && profile.role === 'admin') // Using role as a proxy for subscription
     );
 
     // Sort or filter based on user role
-    if (user) {
-      switch (user.role) {
+    if (profile) {
+      switch (profile.role) {
         case "student":
           // Prioritize beginner content for students
           filteredVideos.sort((a, b) => {
@@ -28,10 +29,10 @@ const RecommendedContent = () => {
             return 0;
           });
           break;
-        case "adult":
+        case "adult_learner":
           // Adults might be interested in all levels
           break;
-        case "teacher":
+        case "tutor":
           // Teachers might be interested in teaching methods
           filteredVideos = filteredVideos.filter(
             (video) => video.category === "Vocal Development" || video.level === "advanced"

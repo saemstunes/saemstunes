@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { VideoContent } from "@/data/mockData";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,17 +12,21 @@ import { useToast } from "@/hooks/use-toast";
 
 interface VideoCardProps {
   video: VideoContent & { isExclusive?: boolean };
-  isPremium?: boolean; // Make isPremium optional with a default value
+  isPremium?: boolean;
 }
 
 const VideoCard = ({ video, isPremium = false }: VideoCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleVideoClick = () => {
-    if (video.isLocked && (!user || !user.subscribed)) {
+    // Check if user has access to premium content
+    // Using profile.role as a proxy for subscription status since subscribed is not available on User type
+    const hasAccess = !video.isLocked || (profile && (profile.role === 'admin' || profile.role === 'tutor'));
+    
+    if (video.isLocked && !hasAccess) {
       toast({
         title: "Premium Content",
         description: "Please subscribe to access this video.",
@@ -31,6 +36,9 @@ const VideoCard = ({ video, isPremium = false }: VideoCardProps) => {
     }
     navigate(`/videos/${video.id}`);
   };
+
+  // Check if user has access to premium content
+  const hasAccess = !video.isLocked || (profile && (profile.role === 'admin' || profile.role === 'tutor'));
 
   return (
     <Card 
@@ -54,7 +62,7 @@ const VideoCard = ({ video, isPremium = false }: VideoCardProps) => {
             className="h-14 w-14 rounded-full bg-black/50 backdrop-blur-sm hover:bg-gold hover:text-white transition-all"
             onClick={handleVideoClick}
           >
-            {video.isLocked && (!user || !user.subscribed) ? (
+            {video.isLocked && !hasAccess ? (
               <Lock className="h-6 w-6" />
             ) : (
               <Play className="h-6 w-6" />
@@ -69,7 +77,7 @@ const VideoCard = ({ video, isPremium = false }: VideoCardProps) => {
           </Badge>
         </div>
         
-        {video.isLocked && (!user || !user.subscribed) && (
+        {video.isLocked && !hasAccess && (
           <div className="absolute top-2 right-2">
             <Badge className="bg-gold text-white">Premium</Badge>
           </div>

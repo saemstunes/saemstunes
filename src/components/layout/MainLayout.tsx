@@ -1,3 +1,4 @@
+
 import React, { ReactNode, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -76,7 +77,7 @@ interface MainLayoutProps {
 }
 
 const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
-  const { user, logout } = useAuth();
+  const { user, profile, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -146,43 +147,43 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
       name: "Home",
       href: "/",
       icon: Home,
-      roles: ["student", "adult", "parent", "teacher", "admin"],
+      roles: ["student", "adult_learner", "parent", "tutor", "admin"],
     },
     {
       name: "Discover",
       href: "/discover",
       icon: Video,
-      roles: ["student", "adult", "parent", "teacher", "admin"],
+      roles: ["student", "adult_learner", "parent", "tutor", "admin"],
     },
     {
       name: "Library",
       href: "/library",
       icon: BookOpen,
-      roles: ["student", "adult", "parent", "teacher", "admin"],
+      roles: ["student", "adult_learner", "parent", "tutor", "admin"],
     },
     {
       name: "Community",
       href: "/community",
       icon: Video,
-      roles: ["student", "adult", "parent", "teacher", "admin"],
+      roles: ["student", "adult_learner", "parent", "tutor", "admin"],
     },
     {
       name: "Music Tools",
       href: "/music-tools",
       icon: Music,
-      roles: ["student", "adult", "parent", "teacher", "admin"],
+      roles: ["student", "adult_learner", "parent", "tutor", "admin"],
     },
     {
       name: "Profile",
       href: "/profile",
       icon: User,
-      roles: ["student", "adult", "parent", "teacher", "admin"],
+      roles: ["student", "adult_learner", "parent", "tutor", "admin"],
     },
     {
       name: "Settings",
       href: "/settings",
       icon: Settings,
-      roles: ["student", "adult", "parent", "teacher", "admin"],
+      roles: ["student", "adult_learner", "parent", "tutor", "admin"],
     },
   ];
 
@@ -212,7 +213,7 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
   };
 
   const filteredNavigation = navigation.filter(
-    (item) => !user || (user && item.roles.includes(user.role))
+    (item) => !profile || (profile && item.roles.includes(profile.role))
   );
 
   const handleNavigation = (href: string) => {
@@ -266,16 +267,16 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
                 <nav className="flex flex-col gap-6">
                   <Logo size="md" className="mb-6" inMobileMenu={true} />
 
-                  {user && (
+                  {user && profile && (
                     <>
                       <div className="flex items-center gap-4 mb-4">
                         <Avatar>
-                          <AvatarImage src={user.avatar} alt={user.name} />
-                          <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                          <AvatarImage src={profile.avatar_url || ''} alt={profile.display_name || profile.full_name || 'User'} />
+                          <AvatarFallback>{(profile.display_name || profile.full_name || 'U').charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium">{user.name}</p>
-                          <p className="text-sm text-muted-foreground capitalize">{user.role}</p>
+                          <p className="font-medium">{profile.display_name || profile.full_name || 'User'}</p>
+                          <p className="text-sm text-muted-foreground capitalize">{profile.role}</p>
                         </div>
                       </div>
                       <Separator className="mb-4" />
@@ -375,22 +376,22 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
             
             <ThemeToggle />
             
-            {user ? (
+            {user && profile ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Avatar
                     className="cursor-pointer h-8 w-8"
                   >
-                    <AvatarImage src={user.avatar} alt={user.name} />
-                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                    <AvatarImage src={profile.avatar_url || ''} alt={profile.display_name || profile.full_name || 'User'} />
+                    <AvatarFallback>{(profile.display_name || profile.full_name || 'U').charAt(0)}</AvatarFallback>
                   </Avatar>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user.name}</p>
+                      <p className="text-sm font-medium leading-none">{profile.display_name || profile.full_name || 'User'}</p>
                       <p className="text-xs leading-none text-muted-foreground">
-                        {user.email}
+                        {profile.email}
                       </p>
                     </div>
                   </DropdownMenuLabel>
@@ -446,16 +447,16 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
             <Logo size="lg" />
           </div>
 
-          {user && (
+          {user && profile && (
             <>
               <div className="flex items-center gap-4 px-6 py-4">
                 <Avatar>
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                  <AvatarImage src={profile.avatar_url || ''} alt={profile.display_name || profile.full_name || 'User'} />
+                  <AvatarFallback>{(profile.display_name || profile.full_name || 'U').charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-medium">{user.name}</p>
-                  <p className="text-sm text-muted-foreground capitalize">{user.role}</p>
+                  <p className="font-medium">{profile.display_name || profile.full_name || 'User'}</p>
+                  <p className="text-sm text-muted-foreground capitalize">{profile.role}</p>
                 </div>
               </div>
               <Separator className="mb-4" />
