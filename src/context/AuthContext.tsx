@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User as SupabaseUser } from "@supabase/supabase-js";
@@ -46,10 +45,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(session);
         
         if (event === 'SIGNED_IN' && session?.user) {
-          // Defer profile fetching to avoid potential deadlocks
-          setTimeout(async () => {
-            await fetchUserProfile(session.user);
-          }, 0);
+          await fetchUserProfile(session.user);
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
         }
@@ -97,7 +93,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (error) {
         console.error('Error fetching profile:', error);
-        // If profile doesn't exist, create a basic user object from auth data
+        
+        // If profile doesn't exist, try to create one
+        if (error.code === 'PGRST116') { // No rows returned
+          console.log('Profile not found, creating new profile...');
+          await createUserProfile(authUser);
+          return;
+        }
+        
+        // If other error, create a basic user object from auth data
         setUser({
           id: authUser.id,
           email: authUser.email || "",
@@ -131,47 +135,124 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const signUp = async (email: string, password: string, name: string, role: UserRole, captchaToken?: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name,
-          full_name: name,
-          role,
-          avatar_url: "/lovable-uploads/avatar-1.png",
-        },
-        captchaToken: captchaToken,
-      },
-    });
+  const createUserProfile = async (authUser: SupabaseUser) => {
+    try {
+      const profileData = {
+        id: authUser.id,
+        email: authUser.email,
+        first_name: authUser.user_metadata?.name?.split(' ')[0] || '',
+        last_name: authUser.user_metadata?.name?.split(' ').slice(1).join(' ') || '',
+        display_name: authUser.user_metadata?.name || authUser.user_metadata?.full_name,
+        full_name: authUser.user_metadata?.name || authUser.user_metadata?.full_name,
+        role: (authUser.user_metadata?.role as UserRole) || "student",
+        avatar_url: authUser.user_metadata?.avatar_url || "/lovable-uploads/avatar-1.png",
+        onboarding_complete: false,
+      };
 
-    if (error) {
-      throw new Error(error.message);
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .insert(profileData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating profile:', error);
+        // Fallback to auth user data
+        setUser({
+          id: authUser.id,
+          email: authUser.email || "",
+          name: authUser.user_metadata?.name || "User",
+          role: (authUser.user_metadata?.role as UserRole) || "student",
+          avatar: authUser.user_metadata?.avatar_url || "/lovable-uploads/avatar-1.png",
+          subscribed: false,
+        });
+        return;
+      }
+
+      console.log('Profile created successfully:', profile);
+      
+      // Set user state with new profile
+      setUser({
+        id: profile.id,
+        email: profile.email || authUser.email || "",
+        name: profile.display_name || profile.full_name || "User",
+        role: profile.role as UserRole,
+        avatar: profile.avatar_url || "/lovable-uploads/avatar-1.png",
+        subscribed: false,
+      });
+    } catch (error) {
+      console.error('Error in createUserProfile:', error);
+    }
+  };
+
+  const signUp = async (email: string, password: string, name: string, role: UserRole, captchaToken?: string) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+            full_name: name,
+            role,
+            avatar_url: "/lovable-uploads/avatar-1.png",
+          },
+          captchaToken: captchaToken,
+        },
+      });
+
+      if (error) {
+        console.error('Signup error:', error);
+        throw new Error(error.message);
+      }
+
+      console.log('Signup successful:', data);
+      
+      // Profile will be created automatically when the SIGNED_IN event fires
+      // due to the auth state change listener
+      
+    } catch (error) {
+      console.error('Error in signUp:', error);
+      throw error;
     }
   };
 
   const login = async (email: string, password: string, captchaToken?: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-      options: {
-        captchaToken: captchaToken,
-      },
-    });
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+        options: {
+          captchaToken: captchaToken,
+        },
+      });
 
-    if (error) {
-      throw new Error(error.message);
+      if (error) {
+        console.error('Login error:', error);
+        throw new Error(error.message);
+      }
+
+      console.log('Login successful:', data);
+      
+    } catch (error) {
+      console.error('Error in login:', error);
+      throw error;
     }
   };
 
   const logout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      throw new Error(error.message);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Logout error:', error);
+        throw new Error(error.message);
+      }
+      setUser(null);
+      setSession(null);
+    } catch (error) {
+      console.error('Error in logout:', error);
+      throw error;
     }
-    setUser(null);
-    setSession(null);
   };
 
   const isAdmin = () => {
