@@ -1,8 +1,9 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Session, User as SupabaseUser } from "@supabase/supabase-js";
 
-// Define the User interface since it's not exported from supabase types
+// Define the User interface to match our profiles table
 interface User {
   id: string;
   email: string;
@@ -12,12 +13,13 @@ interface User {
   subscribed: boolean;
 }
 
-// Define the user roles
+// Define the user roles to match the database enum
 export type UserRole = "student" | "adult" | "parent" | "teacher" | "admin";
 
 // Define the auth context type
 interface AuthContextType {
   user: User | null;
+  session: Session | null;
   signUp: (email: string, password: string, name: string, role: UserRole, captchaToken?: string) => Promise<void>;
   login: (email: string, password: string, captchaToken?: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -33,54 +35,101 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Create a provider component
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing session
-    const checkUser = async () => {
-      setIsLoading(true);
-      const { data } = await supabase.auth.getSession();
-      
-      if (data.session?.user) {
-        // In a real app, you would fetch the user profile from your database
-        // For now, we'll create a mock user based on the auth data
-        setUser({
-          id: data.session.user.id,
-          email: data.session.user.email || "",
-          name: data.session.user.user_metadata?.name || "User",
-          role: (data.session.user.user_metadata?.role as UserRole) || "student",
-          avatar: data.session.user.user_metadata?.avatar || "/lovable-uploads/avatar-1.png",
-          subscribed: data.session.user.user_metadata?.subscribed || false,
-        });
-      }
-      
-      setIsLoading(false);
-    };
-
-    checkUser();
-
-    // Set up auth state change listener
-    const { data: authListener } = supabase.auth.onAuthStateChange(
+    // Set up auth state listener first
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === "SIGNED_IN" && session) {
-          setUser({
-            id: session.user.id,
-            email: session.user.email || "",
-            name: session.user.user_metadata?.name || "User",
-            role: (session.user.user_metadata?.role as UserRole) || "student",
-            avatar: session.user.user_metadata?.avatar || "/lovable-uploads/avatar-1.png",
-            subscribed: session.user.user_metadata?.subscribed || false,
-          });
-        } else if (event === "SIGNED_OUT") {
+        console.log('Auth state changed:', event, session);
+        setSession(session);
+        
+        if (event === 'SIGNED_IN' && session?.user) {
+          // Defer profile fetching to avoid potential deadlocks
+          setTimeout(async () => {
+            await fetchUserProfile(session.user);
+          }, 0);
+        } else if (event === 'SIGNED_OUT') {
           setUser(null);
         }
+        
+        setIsLoading(false);
       }
     );
 
+    // Then check for existing session
+    const getInitialSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Error getting session:', error);
+          setIsLoading(false);
+          return;
+        }
+        
+        if (session?.user) {
+          setSession(session);
+          await fetchUserProfile(session.user);
+        }
+      } catch (error) {
+        console.error('Error in getInitialSession:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getInitialSession();
+
     return () => {
-      authListener.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, []);
+
+  const fetchUserProfile = async (authUser: SupabaseUser) => {
+    try {
+      // Fetch user profile from profiles table
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        // If profile doesn't exist, create a basic user object from auth data
+        setUser({
+          id: authUser.id,
+          email: authUser.email || "",
+          name: authUser.user_metadata?.name || authUser.user_metadata?.full_name || "User",
+          role: (authUser.user_metadata?.role as UserRole) || "student",
+          avatar: authUser.user_metadata?.avatar_url || "/lovable-uploads/avatar-1.png",
+          subscribed: false,
+        });
+        return;
+      }
+
+      // Check for active subscription
+      const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', authUser.id)
+        .eq('status', 'active')
+        .gte('valid_until', new Date().toISOString())
+        .maybeSingle();
+
+      setUser({
+        id: profile.id,
+        email: profile.email || authUser.email || "",
+        name: profile.display_name || profile.full_name || profile.first_name || "User",
+        role: profile.role as UserRole,
+        avatar: profile.avatar_url || "/lovable-uploads/avatar-1.png",
+        subscribed: !!subscription,
+      });
+    } catch (error) {
+      console.error('Error in fetchUserProfile:', error);
+    }
+  };
 
   const signUp = async (email: string, password: string, name: string, role: UserRole, captchaToken?: string) => {
     const { error } = await supabase.auth.signUp({
@@ -89,9 +138,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       options: {
         data: {
           name,
+          full_name: name,
           role,
-          avatar: "/lovable-uploads/avatar-1.png", // Default avatar
-          subscribed: false,
+          avatar_url: "/lovable-uploads/avatar-1.png",
         },
         captchaToken: captchaToken,
       },
@@ -122,6 +171,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       throw new Error(error.message);
     }
     setUser(null);
+    setSession(null);
   };
 
   const isAdmin = () => {
@@ -134,19 +184,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return requiredRoles.includes(user.role);
   };
 
-  const updateUserProfile = (userUpdate: User) => {
+  const updateUserProfile = async (userUpdate: User) => {
     // Update the local user state immediately for frontend display
     setUser(userUpdate);
     
-    // In a real app, you would also call an API to update the user in the database
-    console.log("User profile updated:", userUpdate);
-    
-    // Example of how you might update the user profile in Supabase
-    // await supabase.from('profiles').update({ avatar: userUpdate.avatar }).eq('id', user.id);
+    try {
+      // Update the profile in the database
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          display_name: userUpdate.name,
+          avatar_url: userUpdate.avatar 
+        })
+        .eq('id', userUpdate.id);
+      
+      if (error) {
+        console.error('Error updating profile:', error);
+      }
+    } catch (error) {
+      console.error('Error in updateUserProfile:', error);
+    }
   };
   
   const value = {
     user,
+    session,
     signUp,
     login,
     logout,
