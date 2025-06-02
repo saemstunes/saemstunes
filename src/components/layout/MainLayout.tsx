@@ -457,21 +457,22 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
         {/* Desktop Sidebar - With transparent header */}
         <aside className="hidden lg:flex flex-col w-64 bg-card border-r border-border">
           <div className={cn(
-      "p-6 sticky top-0 z-40 transition-all duration-200 flex items-center gap-3",
-      isScrolled 
-      ? "bg-card/80 backdrop-blur-md" 
-      : "bg-transparent"
-    )}>
+            "p-6 sticky top-0 z-40 transition-all duration-200 flex items-center gap-3",
+            isScrolled 
+            ? "bg-card/80 backdrop-blur-md" 
+            : "bg-transparent"
+          )}>
             <div 
-  className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity" 
-  onClick={handleLogoClick}
->
-  <Logo size="lg" />
-  <div className="flex flex-col leading-tight">
-    <span className="text-brown-dark dark:text-gold-light font-bold text-lg font-nunito tracking-tighter">Saem's</span>
-    <span className="text-gold-dark dark:brown-light font-bold text-lg font-nunito tracking-tighter">Tunes</span>
-  </div>
-</div>
+              className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity" 
+              onClick={handleLogoClick}
+            >
+              <Logo size="lg" />
+              <div className="flex flex-col leading-tight">
+                <span className="text-brown-dark dark:text-gold-light font-bold text-lg font-nunito tracking-tighter">Saem's</span>
+                <span className="text-gold-dark dark:text-brown-light font-bold text-lg font-nunito tracking-tighter">Tunes</span>
+              </div>
+            </div>
+          </div>
 
           {user && (
             <>
