@@ -33,13 +33,8 @@ export default defineConfig(({ mode }) => ({
       }
     },
     target: 'esnext',
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true
-      }
-    }
+    minify: 'esbuild', // Changed from 'terser' to 'esbuild'
+    // Removed terserOptions since we're not using terser anymore
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom']
