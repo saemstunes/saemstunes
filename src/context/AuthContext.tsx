@@ -24,7 +24,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   signUp: (email: string, password: string, name: string, role: UserRole, captchaToken?: string) => Promise<void>;
-  login: (email: string, password: string, name: string, role: UserRole, captchaToken?: string) => Promise<void>;
+  login: (email: string, password: string, captchaToken?: string) => Promise<void>;
   logout: () => Promise<void>;
   isAdmin: () => boolean;
   checkPermission: (requiredRoles?: UserRole[]) => boolean;
@@ -178,6 +178,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const createUserProfile = async (authUser: SupabaseUser) => {
     try {
+      // Get the role from user metadata and map it to database role
+      const frontendRole = (authUser.user_metadata?.role as UserRole) || "student";
+      const databaseRole = mapFrontendRole(frontendRole);
+      
       // Create profile data that matches your database schema exactly
       const profileData = {
         id: authUser.id,
@@ -186,7 +190,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         last_name: authUser.user_metadata?.name?.split(' ').slice(1).join(' ') || '',
         display_name: authUser.user_metadata?.name || authUser.user_metadata?.full_name,
         full_name: authUser.user_metadata?.name || authUser.user_metadata?.full_name,
-        role: mapFrontendRole((authUser.user_metadata?.role as UserRole) || "student"),
+        role: databaseRole, // Use the mapped database role
         avatar_url: authUser.user_metadata?.avatar_url || "/lovable-uploads/avatar-1.png",
         onboarding_complete: false,
         // Add other fields that are in your profiles table
@@ -209,7 +213,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           id: authUser.id,
           email: authUser.email || "",
           name: authUser.user_metadata?.name || "User",
-          role: (authUser.user_metadata?.role as UserRole) || "student",
+          role: frontendRole,
           avatar: authUser.user_metadata?.avatar_url || "/lovable-uploads/avatar-1.png",
           subscribed: false,
         });
@@ -264,7 +268,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const login = async (email: string, password: string, name: string, role: UserRole, captchaToken?: string) => {
+  const login = async (email: string, password: string, captchaToken?: string) => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
