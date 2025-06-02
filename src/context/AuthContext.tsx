@@ -12,8 +12,11 @@ interface User {
   subscribed: boolean;
 }
 
-// Define the user roles to match the database enum
+// Define the user roles to match the frontend usage
 export type UserRole = "student" | "adult" | "parent" | "teacher" | "admin";
+
+// Define the database roles to match the database enum
+type DatabaseRole = "student" | "parent" | "admin" | "user" | "adult_learner" | "tutor";
 
 // Define the auth context type
 interface AuthContextType {
@@ -36,6 +39,43 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Map frontend role to database role
+  const mapFrontendRole = (frontendRole: UserRole): DatabaseRole => {
+    switch (frontendRole) {
+      case 'adult':
+        return 'adult_learner';
+      case 'teacher':
+        return 'tutor';
+      case 'student':
+        return 'student';
+      case 'parent':
+        return 'parent';
+      case 'admin':
+        return 'admin';
+      default:
+        return 'user'; // fallback
+    }
+  };
+
+  // Map database role to frontend role
+  const mapDatabaseRole = (dbRole: string): UserRole => {
+    switch (dbRole) {
+      case 'adult_learner':
+        return 'adult';
+      case 'tutor':
+        return 'teacher';
+      case 'student':
+        return 'student';
+      case 'parent':
+        return 'parent';
+      case 'admin':
+        return 'admin';
+      case 'user':
+      default:
+        return 'student'; // fallback to student for 'user' and unknown roles
+    }
+  };
 
   useEffect(() => {
     // Set up auth state listener first
@@ -122,12 +162,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .gte('valid_until', new Date().toISOString())
         .maybeSingle();
 
-      // Map database role to frontend role
-      const mapDatabaseRole = (dbRole: string): UserRole => {
-        if (dbRole === 'adult_learner') return 'adult';
-        return dbRole as UserRole;
-      };
-
       setUser({
         id: profile.id,
         email: profile.email || authUser.email || "",
@@ -143,12 +177,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const createUserProfile = async (authUser: SupabaseUser) => {
     try {
-      // Map frontend role to database role
-      const mapFrontendRole = (frontendRole: UserRole): string => {
-        if (frontendRole === 'adult') return 'adult_learner';
-        return frontendRole;
-      };
-
       const profileData = {
         id: authUser.id,
         email: authUser.email,
@@ -188,7 +216,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         id: profile.id,
         email: profile.email || authUser.email || "",
         name: profile.display_name || profile.full_name || "User",
-        role: profile.role === 'adult_learner' ? 'adult' : profile.role as UserRole,
+        role: mapDatabaseRole(profile.role),
         avatar: profile.avatar_url || "/lovable-uploads/avatar-1.png",
         subscribed: false,
       });
@@ -229,7 +257,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const login = async (email: string, password: string, captchaToken?: string) => {
+  const login = async (email: string, password: string, name: string, role: UserRole, captchaToken?: string) => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
