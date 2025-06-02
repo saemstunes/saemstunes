@@ -7,6 +7,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
 };
 
+// Helper logging function for enhanced debugging
+const logStep = (step: string, details?: any) => {
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  console.log(`[CREATE-PAYMENT-SESSION] ${step}${detailsStr}`);
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, {
@@ -15,13 +21,15 @@ serve(async (req) => {
   }
 
   try {
+    logStep("Function started");
+
     const authHeader = req.headers.get('Authorization');
-    console.log('Auth header received:', authHeader ? 'Present' : 'Missing');
-    
     if (!authHeader) {
-      console.error('No Authorization header found');
+      logStep("No Authorization header found");
       return new Response(JSON.stringify({
-        error: 'Missing Authorization header'
+        error: 'Authentication required',
+        message: 'Please sign in to proceed with payment. You need an account to purchase subscriptions and book classes.',
+        requiresAuth: true
       }), {
         status: 401,
         headers: {
@@ -43,10 +51,10 @@ serve(async (req) => {
       }
     );
 
-    console.log('Attempting to get user...');
+    logStep('Attempting to get user...');
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     
-    console.log('User lookup result:', {
+    logStep('User lookup result', {
       hasUser: !!user,
       userId: user?.id,
       userEmail: user?.email,
@@ -54,9 +62,11 @@ serve(async (req) => {
     });
 
     if (userError || !user) {
-      console.error('User authentication failed:', userError);
+      logStep('User authentication failed', userError);
       return new Response(JSON.stringify({
-        error: 'User not authenticated',
+        error: 'Authentication required',
+        message: 'Please sign in to proceed with payment. You need an account to purchase subscriptions and book classes.',
+        requiresAuth: true,
         details: userError?.message
       }), {
         status: 401,
@@ -68,9 +78,10 @@ serve(async (req) => {
     }
 
     if (!user?.email) {
-      console.error('User has no email');
+      logStep('User has no email');
       return new Response(JSON.stringify({
-        error: 'User email not found'
+        error: 'User email not found',
+        message: 'Your account needs a valid email address to process payments.'
       }), {
         status: 400,
         headers: {
@@ -80,22 +91,23 @@ serve(async (req) => {
       });
     }
 
-    console.log('Parsing request body...');
+    logStep('Parsing request body...');
     const requestBody = await req.json();
-    const { orderType, itemId, itemName, amount, currency, paymentMethod, successUrl, cancelUrl } = requestBody;
+    const { orderType, itemId, itemName, amount, currency, paymentMethod, successUrl, cancelUrl, userPhone } = requestBody;
 
-    console.log('Request data:', {
+    logStep('Request data', {
       orderType,
       itemId,
       paymentMethod,
       amount,
       currency,
-      hasSuccessUrl: !!successUrl
+      hasSuccessUrl: !!successUrl,
+      hasUserPhone: !!userPhone
     });
 
     // Validate required fields
     if (!orderType || !paymentMethod || !amount || !currency) {
-      console.error('Missing required fields');
+      logStep('Missing required fields');
       return new Response(JSON.stringify({
         error: 'Missing required fields: orderType, paymentMethod, amount, currency'
       }), {
@@ -107,7 +119,21 @@ serve(async (req) => {
       });
     }
 
-    console.log('Creating order record...');
+    // Validate phone number for M-Pesa
+    if (paymentMethod === 'mpesa' && !userPhone) {
+      return new Response(JSON.stringify({
+        error: 'Phone number required for M-Pesa payments',
+        message: 'Please provide your M-Pesa phone number to proceed with payment.'
+      }), {
+        status: 400,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+
+    logStep('Creating order record...');
     // Create order record
     const { data: order, error: orderError } = await supabaseClient
       .from('orders')
@@ -125,7 +151,7 @@ serve(async (req) => {
       .single();
 
     if (orderError) {
-      console.error('Order creation failed:', orderError);
+      logStep('Order creation failed', orderError);
       return new Response(JSON.stringify({
         error: `Failed to create order: ${orderError.message}`,
         code: orderError.code,
@@ -139,12 +165,12 @@ serve(async (req) => {
       });
     }
 
-    console.log('Order created successfully:', order.id);
+    logStep('Order created successfully', order.id);
 
     let sessionData;
     switch (paymentMethod) {
       case 'paystack': {
-        console.log('Processing Paystack payment...');
+        logStep('Processing Paystack payment...');
         const paystackKey = Deno.env.get('PAYSTACK_SECRET_KEY_TEST');
         if (!paystackKey) {
           throw new Error('Paystack secret key not configured');
@@ -171,7 +197,7 @@ serve(async (req) => {
         });
 
         const paystackData = await paystackResponse.json();
-        console.log('Paystack response:', paystackData);
+        logStep('Paystack response', paystackData);
 
         if (!paystackData.status) {
           throw new Error(`Paystack error: ${paystackData.message}`);
@@ -185,7 +211,7 @@ serve(async (req) => {
         break;
       }
       case 'remitly': {
-        console.log('Processing Remitly payment...');
+        logStep('Processing Remitly payment...');
         const recipientName = "Saem's Tunes";
         const recipientPhone = "+254798903373";
         const amountUSD = (amount / 100).toFixed(2);
@@ -205,12 +231,88 @@ serve(async (req) => {
         break;
       }
       case 'mpesa': {
-        console.log('Processing M-Pesa payment...');
+        logStep('Processing M-Pesa payment...');
+        
+        const consumerKey = Deno.env.get('MPESA_CONSUMER_KEY');
+        const consumerSecret = Deno.env.get('MPESA_CONSUMER_SECRET');
+        const passkey = Deno.env.get('MPESA_PASSKEY');
+        const shortcode = '174379'; // Sandbox shortcode
+        const callbackUrl = `${req.headers.get('origin')}/api/mpesa-callback`;
+
+        if (!consumerKey || !consumerSecret || !passkey) {
+          throw new Error('M-Pesa credentials not configured properly');
+        }
+
+        // Generate timestamp and password
+        const timestamp = new Date().toISOString().replace(/[-T:.Z]/g, '').slice(0, 14);
+        const password = btoa(shortcode + passkey + timestamp);
+
+        logStep('M-Pesa credentials prepared', { timestamp, shortcode });
+
+        // Step 1: Get access token
+        const auth = btoa(`${consumerKey}:${consumerSecret}`);
+        const tokenRes = await fetch('https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials', {
+          headers: {
+            Authorization: `Basic ${auth}`,
+          },
+        });
+
+        if (!tokenRes.ok) {
+          throw new Error(`Failed to get M-Pesa token: ${tokenRes.statusText}`);
+        }
+
+        const tokenData = await tokenRes.json();
+        const token = tokenData.access_token;
+        
+        if (!token) {
+          throw new Error('No access token received from M-Pesa');
+        }
+
+        logStep('M-Pesa token obtained', { tokenLength: token?.length });
+
+        // Step 2: Initiate STK Push
+        const stkPushData = {
+          BusinessShortCode: shortcode,
+          Password: password,
+          Timestamp: timestamp,
+          TransactionType: 'CustomerPayBillOnline',
+          Amount: Math.floor(amount / 100), // Convert from cents to shillings
+          PartyA: userPhone.replace(/\+/, ''), // Remove + if present
+          PartyB: shortcode,
+          PhoneNumber: userPhone.replace(/\+/, ''),
+          CallBackURL: callbackUrl,
+          AccountReference: `SaemsTunes_${order.id}`,
+          TransactionDesc: itemName || 'Saem Tunes Payment'
+        };
+
+        logStep('Initiating STK Push', stkPushData);
+
+        const stkRes = await fetch('https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(stkPushData)
+        });
+
+        if (!stkRes.ok) {
+          throw new Error(`M-Pesa STK Push failed: ${stkRes.statusText}`);
+        }
+
+        const stkData = await stkRes.json();
+        logStep('M-Pesa STK Push response', stkData);
+
+        if (stkData.ResponseCode !== '0') {
+          throw new Error(`M-Pesa STK Push error: ${stkData.ResponseDescription || 'Unknown error'}`);
+        }
+
         sessionData = {
-          sessionId: `mpesa_${Date.now()}`,
-          url: null,
+          sessionId: stkData.CheckoutRequestID,
+          url: null, // No redirect URL for M-Pesa
           provider: 'mpesa',
-          checkoutRequestId: `mock_checkout_request_id`
+          checkoutRequestId: stkData.CheckoutRequestID,
+          merchantRequestId: stkData.MerchantRequestID
         };
         break;
       }
@@ -218,7 +320,7 @@ serve(async (req) => {
         throw new Error(`Unsupported payment method: ${paymentMethod}`);
     }
 
-    console.log('Storing payment session...');
+    logStep('Storing payment session...');
     const { error: sessionError } = await supabaseClient
       .from('payment_sessions')
       .insert({
@@ -231,7 +333,7 @@ serve(async (req) => {
       });
 
     if (sessionError) {
-      console.error('Payment session storage failed:', sessionError);
+      logStep('Payment session storage failed', sessionError);
       return new Response(JSON.stringify({
         error: `Failed to store payment session: ${sessionError.message}`,
         code: sessionError.code
@@ -244,7 +346,7 @@ serve(async (req) => {
       });
     }
 
-    console.log('Payment session created successfully:', sessionData.sessionId);
+    logStep('Payment session created successfully', sessionData.sessionId);
 
     return new Response(JSON.stringify({
       success: true,
@@ -258,7 +360,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Payment session creation error:', error);
+    logStep('Payment session creation error', error);
     console.error('Error stack:', error.stack);
     
     return new Response(JSON.stringify({

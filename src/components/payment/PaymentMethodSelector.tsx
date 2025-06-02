@@ -1,16 +1,16 @@
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CreditCard, Smartphone, Globe, DollarSign } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Loader2, CreditCard, Smartphone, Globe } from "lucide-react";
 
 interface PaymentMethodSelectorProps {
   selectedMethod: 'paystack' | 'remitly' | 'mpesa';
   onMethodChange: (method: 'paystack' | 'remitly' | 'mpesa') => void;
-  onProceed: () => void;
-  isLoading?: boolean;
+  onProceed: (phoneNumber?: string) => void;
+  isLoading: boolean;
   amount: number;
   currency?: string;
 }
@@ -19,98 +19,174 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
   selectedMethod,
   onMethodChange,
   onProceed,
-  isLoading = false,
+  isLoading,
   amount,
   currency = 'USD'
 }) => {
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+
   const formatAmount = (amount: number, currency: string) => {
-    if (currency === 'KES') {
+    if (currency === 'USD') {
+      return `$${(amount / 100).toFixed(2)}`;
+    } else if (currency === 'KES') {
       return `KSh ${(amount / 100).toFixed(2)}`;
     }
-    return `$${(amount / 100).toFixed(2)}`;
+    return `${currency} ${(amount / 100).toFixed(2)}`;
   };
 
-  const paymentMethods = [
-    {
-      id: 'paystack' as const,
-      name: 'Card Payment',
-      description: 'Pay securely with your credit/debit card via Paystack',
-      icon: <CreditCard className="h-6 w-6 text-blue-600" />,
-      available: true
-    },
-    {
-      id: 'remitly' as const,
-      name: 'Remitly (US/Europe)',
-      description: 'International transfer to M-Pesa (Great rates: $1 = 130 KSh)',
-      icon: <Globe className="h-6 w-6 text-green-600" />,
-      available: currency === 'USD' || currency === 'EUR'
-    },
-    {
-      id: 'mpesa' as const,
-      name: 'M-Pesa (Kenya)',
-      description: 'Pay using M-Pesa mobile money',
-      icon: <Smartphone className="h-6 w-6 text-green-600" />,
-      available: currency === 'KES'
+  const validatePhoneNumber = (phone: string) => {
+    // Kenya phone number validation (254XXXXXXXXX)
+    const phoneRegex = /^254[0-9]{9}$/;
+    if (!phone) {
+      return 'Phone number is required for M-Pesa payments';
     }
-  ];
+    if (!phoneRegex.test(phone)) {
+      return 'Please enter a valid Kenyan phone number (254XXXXXXXXX)';
+    }
+    return '';
+  };
+
+  const handleProceed = () => {
+    if (selectedMethod === 'mpesa') {
+      const error = validatePhoneNumber(phoneNumber);
+      if (error) {
+        setPhoneError(error);
+        return;
+      }
+      onProceed(phoneNumber);
+    } else {
+      onProceed();
+    }
+  };
+
+  const handlePhoneChange = (value: string) => {
+    // Remove any non-numeric characters
+    const cleaned = value.replace(/\D/g, '');
+    
+    // Auto-format: if they start with 07, 01, etc., convert to 254
+    let formatted = cleaned;
+    if (cleaned.startsWith('0')) {
+      formatted = '254' + cleaned.substring(1);
+    } else if (cleaned.startsWith('7') || cleaned.startsWith('1')) {
+      formatted = '254' + cleaned;
+    }
+    
+    // Limit to 12 digits (254 + 9 digits)
+    if (formatted.length > 12) {
+      formatted = formatted.substring(0, 12);
+    }
+    
+    setPhoneNumber(formatted);
+    if (phoneError) {
+      setPhoneError('');
+    }
+  };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle className="text-center font-proxima">
-          Choose Payment Method
-        </CardTitle>
-        <p className="text-center text-2xl font-bold text-gold">
-          {formatAmount(amount, currency)}
+    <div className="space-y-6">
+      <div className="text-center p-4 bg-muted/50 rounded-lg">
+        <p className="text-lg font-semibold">
+          Total: {formatAmount(amount, currency)}
         </p>
-        {currency === 'USD' && selectedMethod === 'remitly' && (
-          <p className="text-center text-sm text-muted-foreground">
-            Will arrive as ~KSh {(amount * 1.3).toLocaleString()} on M-Pesa
-          </p>
-        )}
-      </CardHeader>
-      <CardContent className="space-y-4">
+      </div>
+
+      <div className="space-y-4">
+        <Label className="text-base font-medium">Select Payment Method</Label>
         <RadioGroup
           value={selectedMethod}
-          onValueChange={onMethodChange}
+          onValueChange={(value) => onMethodChange(value as any)}
           className="space-y-3"
         >
-          {paymentMethods
-            .filter(method => method.available !== false)
-            .map((method) => (
-            <div key={method.id} className="flex items-center space-x-3">
-              <RadioGroupItem
-                value={method.id}
-                id={method.id}
-                className="border-gold data-[state=checked]:bg-gold data-[state=checked]:border-gold"
-              />
-              <Label
-                htmlFor={method.id}
-                className="flex items-center space-x-3 cursor-pointer flex-1 p-3 rounded-lg border border-muted hover:border-gold transition-colors"
-              >
-                {method.icon}
-                <div>
-                  <p className="font-medium">{method.name}</p>
-                  <p className="text-sm text-muted-foreground">{method.description}</p>
-                </div>
-              </Label>
+          <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+            <RadioGroupItem value="paystack" id="paystack" />
+            <div className="flex items-center space-x-3 flex-1">
+              <CreditCard className="h-5 w-5 text-blue-600" />
+              <div>
+                <Label htmlFor="paystack" className="font-medium cursor-pointer">
+                  Paystack
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Pay with card, bank transfer, or mobile money
+                </p>
+              </div>
             </div>
-          ))}
+          </div>
+
+          <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+            <RadioGroupItem value="mpesa" id="mpesa" />
+            <div className="flex items-center space-x-3 flex-1">
+              <Smartphone className="h-5 w-5 text-green-600" />
+              <div>
+                <Label htmlFor="mpesa" className="font-medium cursor-pointer">
+                  M-Pesa
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Pay directly with M-Pesa STK Push
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+            <RadioGroupItem value="remitly" id="remitly" />
+            <div className="flex items-center space-x-3 flex-1">
+              <Globe className="h-5 w-5 text-purple-600" />
+              <div>
+                <Label htmlFor="remitly" className="font-medium cursor-pointer">
+                  Remitly
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  International transfer to M-Pesa
+                </p>
+              </div>
+            </div>
+          </div>
         </RadioGroup>
+      </div>
 
-        <Button
-          onClick={onProceed}
-          disabled={isLoading}
-          className="w-full bg-gold hover:bg-gold/90 text-white font-medium"
-        >
-          {isLoading ? "Processing..." : "Proceed to Payment"}
-        </Button>
+      {selectedMethod === 'mpesa' && (
+        <div className="space-y-2">
+          <Label htmlFor="phone">M-Pesa Phone Number</Label>
+          <Input
+            id="phone"
+            type="tel"
+            placeholder="254712345678"
+            value={phoneNumber}
+            onChange={(e) => handlePhoneChange(e.target.value)}
+            className={phoneError ? "border-red-500" : ""}
+          />
+          {phoneError && (
+            <p className="text-sm text-red-500">{phoneError}</p>
+          )}
+          <p className="text-xs text-muted-foreground">
+            Enter your phone number in the format 254XXXXXXXXX
+          </p>
+        </div>
+      )}
 
-        <p className="text-xs text-muted-foreground text-center">
-          Your payment is secured with industry-standard encryption
-        </p>
-      </CardContent>
-    </Card>
+      <Button
+        onClick={handleProceed}
+        disabled={isLoading}
+        className="w-full bg-gold hover:bg-gold/90"
+        size="lg"
+      >
+        {isLoading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Processing...
+          </>
+        ) : (
+          `Proceed to Pay ${formatAmount(amount, currency)}`
+        )}
+      </Button>
+
+      {selectedMethod === 'mpesa' && (
+        <div className="text-xs text-muted-foreground text-center">
+          You'll receive an STK Push notification on your phone to complete the payment
+        </div>
+      )}
+    </div>
   );
 };
 
