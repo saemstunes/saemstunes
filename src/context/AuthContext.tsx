@@ -15,7 +15,8 @@ interface User {
 // Define the user roles to match the frontend usage
 export type UserRole = "student" | "adult" | "parent" | "teacher" | "admin";
 
-// Define the database roles to match the database enum
+// Define the database roles to match the actual database enum
+// You need to replace these with your actual enum values from the database
 type DatabaseRole = "student" | "parent" | "admin" | "user" | "adult_learner" | "tutor";
 
 // Define the auth context type
@@ -177,6 +178,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const createUserProfile = async (authUser: SupabaseUser) => {
     try {
+      // Create profile data that matches your database schema exactly
       const profileData = {
         id: authUser.id,
         email: authUser.email,
@@ -187,6 +189,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         role: mapFrontendRole((authUser.user_metadata?.role as UserRole) || "student"),
         avatar_url: authUser.user_metadata?.avatar_url || "/lovable-uploads/avatar-1.png",
         onboarding_complete: false,
+        // Add other fields that are in your profiles table
+        phone: authUser.user_metadata?.phone || null,
+        bio: null,
+        parent_id: null,
+        last_active: new Date().toISOString(),
       };
 
       const { data: profile, error } = await supabase
