@@ -92,7 +92,7 @@ const MusicTools = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ToolSuggestionForm />
+                <ToolSuggestionForm adminEmail="admin@saemstunes.com" />
               </CardContent>
             </Card>
           </TabsContent>

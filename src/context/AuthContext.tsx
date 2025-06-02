@@ -20,7 +20,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   signUp: (email: string, password: string, name: string, role: UserRole, captchaToken?: string) => Promise<void>;
-  login: (email: string, password: string, captchaToken?: string) => Promise<void>;
+  login: (email: string, password: string, name: string, role: UserRole, captchaToken?: string) => Promise<void>;
   logout: () => Promise<void>;
   isAdmin: () => boolean;
   checkPermission: (requiredRoles?: UserRole[]) => boolean;
@@ -122,11 +122,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .gte('valid_until', new Date().toISOString())
         .maybeSingle();
 
+      // Map database role to frontend role
+      const mapDatabaseRole = (dbRole: string): UserRole => {
+        if (dbRole === 'adult_learner') return 'adult';
+        return dbRole as UserRole;
+      };
+
       setUser({
         id: profile.id,
         email: profile.email || authUser.email || "",
         name: profile.display_name || profile.full_name || profile.first_name || "User",
-        role: profile.role as UserRole,
+        role: mapDatabaseRole(profile.role),
         avatar: profile.avatar_url || "/lovable-uploads/avatar-1.png",
         subscribed: !!subscription,
       });
@@ -137,6 +143,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const createUserProfile = async (authUser: SupabaseUser) => {
     try {
+      // Map frontend role to database role
+      const mapFrontendRole = (frontendRole: UserRole): string => {
+        if (frontendRole === 'adult') return 'adult_learner';
+        return frontendRole;
+      };
+
       const profileData = {
         id: authUser.id,
         email: authUser.email,
@@ -144,7 +156,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         last_name: authUser.user_metadata?.name?.split(' ').slice(1).join(' ') || '',
         display_name: authUser.user_metadata?.name || authUser.user_metadata?.full_name,
         full_name: authUser.user_metadata?.name || authUser.user_metadata?.full_name,
-        role: (authUser.user_metadata?.role as UserRole) || "student",
+        role: mapFrontendRole((authUser.user_metadata?.role as UserRole) || "student"),
         avatar_url: authUser.user_metadata?.avatar_url || "/lovable-uploads/avatar-1.png",
         onboarding_complete: false,
       };
@@ -176,7 +188,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         id: profile.id,
         email: profile.email || authUser.email || "",
         name: profile.display_name || profile.full_name || "User",
-        role: profile.role as UserRole,
+        role: profile.role === 'adult_learner' ? 'adult' : profile.role as UserRole,
         avatar: profile.avatar_url || "/lovable-uploads/avatar-1.png",
         subscribed: false,
       });
