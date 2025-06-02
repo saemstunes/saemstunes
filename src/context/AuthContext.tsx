@@ -20,7 +20,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   signUp: (email: string, password: string, name: string, role: UserRole, captchaToken?: string) => Promise<void>;
-  login: (email: string, password: string, name: string, role: UserRole, captchaToken?: string) => Promise<void>;
+  login: (email: string, password: string, captchaToken?: string) => Promise<void>;
   logout: () => Promise<void>;
   isAdmin: () => boolean;
   checkPermission: (requiredRoles?: UserRole[]) => boolean;
