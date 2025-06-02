@@ -52,6 +52,7 @@ import {
 } from "@/components/ui/dialog";
 import { Library } from "lucide-react";
 
+
 // Custom TikTok icon as it's not available in lucide-react
 const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -86,6 +87,9 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
   const [backButtonPressCount, setBackButtonPressCount] = useState(0);
   const { toast } = useToast();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const handleLogoClick = () => { 
+    navigate('/'); 
+  };
 
   // Handle scroll effect for navbar
   useEffect(() => {
@@ -458,12 +462,16 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
       ? "bg-card/80 backdrop-blur-md" 
       : "bg-transparent"
     )}>
-            <Logo size="lg" />
-            <div className="flex flex-col leading-tight">
-              <span className="text-brown-dark dark:text-gold-light font-bold text-lg font-nunito tracking-tighter">Saem's</span>
-              <span className="text-gold-dark dark:brown-light font-bold text-lg font-nunito tracking-tighter">Tunes</span>
-            </div>
-          </div>
+            <div 
+  className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity" 
+  onClick={handleLogoClick}
+>
+  <Logo size="lg" />
+  <div className="flex flex-col leading-tight">
+    <span className="text-brown-dark dark:text-gold-light font-bold text-lg font-nunito tracking-tighter">Saem's</span>
+    <span className="text-gold-dark dark:brown-light font-bold text-lg font-nunito tracking-tighter">Tunes</span>
+  </div>
+</div>
 
           {user && (
             <>
