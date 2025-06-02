@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -40,12 +39,14 @@ import Services from "./pages/Services";
 import Payment from "./pages/Payment";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import MusicTools from "./pages/MusicTools";
-import AuthCallback from "./components/auth/AuthCallback";
+import AuthCallback from "@/components/auth/AuthCallback";
 import UserDetails from "./pages/UserDetails";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
-import IdleStateManager from "./components/idle-state/IdleStateManager";
+import IdleStateManager from "@/components/idle-state/IdleStateManager";
 import Subscriptions from "./pages/Subscriptions";
+import ComingSoon from "./pages/ComingSoon";
+import AdminUpload from "./components/admin/AdminUpload";
 
 const queryClient = new QueryClient();
 
@@ -69,7 +70,7 @@ const App = () => {
           <Sonner />
           <SplashScreen loading={loading} />
           <BrowserRouter>
-            <IdleStateManager idleTime={60000} /> {/* Set to 60 seconds (1 minute) */}
+            <IdleStateManager idleTime={60000} />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/admin" element={<Admin />} />
@@ -126,6 +127,8 @@ const App = () => {
                   <UserDetails />
                 </ProtectedRoute>
               } />
+              
+              <Route path="/coming-soon" element={<ComingSoon />} />
               
               <Route path="*" element={<NotFound />} />
             </Routes>

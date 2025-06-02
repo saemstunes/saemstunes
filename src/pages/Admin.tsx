@@ -1,5 +1,5 @@
 // src/pages/Admin.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { 
   Users, 
@@ -11,13 +11,15 @@ import {
   FileText,
   User,
   LogOut,
-  Search
+  Search,
+  Upload
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import Logo from "@/components/branding/Logo";
+import AdminUpload from "@/components/admin/AdminUpload";
 
 // Mock data for the dashboard
 const RECENT_USERS = [
@@ -45,18 +47,110 @@ const NAV_ITEMS = [
   { icon: Settings, label: "Settings", value: "settings" },
 ];
 
+// Admin credentials - stored as constants for this implementation
+const ADMIN_CREDENTIALS = {
+  username: 'saemstunes',
+  password: 'ilovetosing123'
+};
+
 const Admin = () => {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loginForm, setLoginForm] = useState({ username: '', password: '' });
+  const [loginError, setLoginError] = useState('');
+
+  // Check if user is authenticated on component mount
+  useEffect(() => {
+    const adminAuth = sessionStorage.getItem('adminAuth');
+    if (adminAuth === 'true') {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  const handleAdminLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
+
+    if (
+      loginForm.username === ADMIN_CREDENTIALS.username &&
+      loginForm.password === ADMIN_CREDENTIALS.password
+    ) {
+      setIsAuthenticated(true);
+      sessionStorage.setItem('adminAuth', 'true');
+    } else {
+      setLoginError('Invalid credentials. Please check your username and password.');
+    }
+  };
 
   const handleLogout = async () => {
     try {
-      await logout();
-      // Navigation will be handled by the auth context after logout
+      sessionStorage.removeItem('adminAuth');
+      setIsAuthenticated(false);
+      setLoginForm({ username: '', password: '' });
+      if (user) {
+        await logout();
+      }
     } catch (error) {
       console.error("Logout failed:", error);
     }
   };
+
+  // Show login form if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/30">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <Logo size="lg" />
+            </div>
+            <CardTitle className="text-2xl">Admin Access</CardTitle>
+            <CardDescription>
+              Enter your administrator credentials
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleAdminLogin} className="space-y-4">
+              {loginError && (
+                <div className="bg-destructive/10 text-destructive p-3 rounded-md text-sm">
+                  {loginError}
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  value={loginForm.username}
+                  onChange={(e) => setLoginForm(prev => ({ ...prev, username: e.target.value }))}
+                  placeholder="Enter username"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={loginForm.password}
+                  onChange={(e) => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
+                  placeholder="Enter password"
+                  required
+                />
+              </div>
+              <Button
+                type="submit"
+                className="w-full bg-gold hover:bg-gold/90 text-white"
+              >
+                Access Admin Panel
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-muted/30">
@@ -81,8 +175,8 @@ const Admin = () => {
             
             <div className="flex items-center gap-2">
               <div className="text-right hidden md:block">
-                <p className="text-sm font-medium">{user?.name}</p>
-                <p className="text-xs text-muted-foreground">Administrator</p>
+                <p className="text-sm font-medium">Administrator</p>
+                <p className="text-xs text-muted-foreground">Admin Panel</p>
               </div>
               <Button variant="ghost" size="icon" onClick={handleLogout}>
                 <LogOut className="h-5 w-5" />
@@ -97,7 +191,7 @@ const Admin = () => {
         {/* Sidebar */}
         <aside className="hidden md:block w-64 bg-background border-r p-4">
           <nav className="space-y-1">
-            {NAV_ITEMS.map((item) => (
+            {[...NAV_ITEMS, { icon: Upload, label: "Upload", value: "upload" }].map((item) => (
               <Button
                 key={item.value}
                 variant={activeTab === item.value ? "secondary" : "ghost"}
@@ -124,7 +218,7 @@ const Admin = () => {
         <div className="md:hidden w-full border-b bg-background">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="w-full overflow-x-auto justify-start py-1 h-auto">
-              {NAV_ITEMS.map((item) => (
+              {[...NAV_ITEMS, { icon: Upload, label: "Upload", value: "upload" }].map((item) => (
                 <TabsTrigger key={item.value} value={item.value} className="flex items-center gap-1">
                   <item.icon className="h-4 w-4" />
                   <span className="sr-only md:not-sr-only">{item.label}</span>
@@ -447,6 +541,16 @@ const Admin = () => {
                   </CardFooter>
                 </Card>
               </div>
+            </TabsContent>
+            
+            {/* Upload Tab */}
+            <TabsContent value="upload" className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-bold">Content Upload</h1>
+                <p className="text-sm text-muted-foreground">Upload new content to the platform</p>
+              </div>
+              
+              <AdminUpload />
             </TabsContent>
             
             {/* Placeholder for other tabs */}
