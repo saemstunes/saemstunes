@@ -10,13 +10,26 @@ export type DevicePermissionName =
   | "persistent-storage"
   | "midi";
 
-// Enhanced Android WebView detection
+// Enhanced Android WebView detection with proper type handling
 export const isAndroidWebView = (): boolean => {
   const userAgent = navigator.userAgent;
-  return userAgent.includes('SaemsTunesApp') || // Your custom user agent
-         userAgent.includes('wv') || // WebView indicator
-         (window.Android !== undefined) || // JavaScript interface
-         userAgent.includes('Android') && userAgent.includes('Version/');
+  
+  // Check for custom user agent
+  if (userAgent.includes('SaemsTunesApp')) return true;
+  
+  // Check for WebView indicator
+  if (userAgent.includes('wv')) return true;
+  
+  // Check for JavaScript interface with proper type handling
+  try {
+    return (window as any).Android !== undefined;
+  } catch {
+    // If accessing Android throws an error, it's not available
+    return false;
+  }
+  
+  // Check for standard Android WebView patterns
+  return userAgent.includes('Android') && userAgent.includes('Version/');
 };
 
 // PWA Detection Helper
