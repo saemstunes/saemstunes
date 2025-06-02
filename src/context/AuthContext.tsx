@@ -17,7 +17,7 @@ export type UserRole = "student" | "adult" | "parent" | "teacher" | "admin";
 
 // Define the database roles to match the actual database enum
 // You need to replace these with your actual enum values from the database
-type DatabaseRole = "student" | "parent" | "admin" | "user" | "adult_learner" | "tutor";
+type DatabaseRole = "student" | "adult_learner" | "parent" | "tutor" | "admin" | "user";
 
 // Define the auth context type
 interface AuthContextType {
