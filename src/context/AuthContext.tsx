@@ -63,7 +63,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   signUp: (email: string, password: string, name: string, role: UserRole, captchaToken?: string) => Promise<void>;
-  login: (email: string, password: string, name: string, role: UserRole, captchaToken?: string) => Promise<void>;
+  login: (email: string, password: string, captchaToken?: string) => Promise<void>; // Fixed: removed extra parameters
   logout: () => Promise<void>;
   isAdmin: () => boolean;
   checkPermission: (requiredRoles?: UserRole[]) => boolean;
@@ -168,21 +168,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       // Determine subscription tier from subscription type
       let subscriptionTier: SubscriptionTier = 'free';
-      if (subscription) {
-        switch (subscription.type) {
-          case 'basic':
-            subscriptionTier = 'basic';
-            break;
-          case 'premium':
-            subscriptionTier = 'premium';
-            break;
-          case 'professional':
-            subscriptionTier = 'professional';
-            break;
-          default:
-            subscriptionTier = 'free';
-        }
-      }
+if (subscription) {
+  switch (subscription.type) {
+    case 'basic':
+      subscriptionTier = 'basic';
+      break;
+    case 'premium':
+      subscriptionTier = 'premium';
+      break;
+    case 'enterprise': // Changed from 'professional' to 'enterprise'
+      subscriptionTier = 'enterprise';
+      break;
+    default:
+      subscriptionTier = 'free';
+  }
+}
 
       setUser({
         id: profile.id,
@@ -292,28 +292,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const login = async (email: string, password: string, captchaToken?: string) => {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-        options: {
-          captchaToken: captchaToken,
-        },
-      });
+ const login = async (email: string, password: string, captchaToken?: string) => {
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+      options: {
+        captchaToken: captchaToken,
+      },
+    });
 
-      if (error) {
-        console.error('Login error:', error);
-        throw new Error(error.message);
-      }
-
-      console.log('Login successful:', data);
-      
-    } catch (error) {
-      console.error('Error in login:', error);
-      throw error;
+    if (error) {
+      console.error('Login error:', error);
+      throw new Error(error.message);
     }
-  };
+
+    console.log('Login successful:', data);
+    
+  } catch (error) {
+    console.error('Error in login:', error);
+    throw error;
+  }
+};
 
   const logout = async () => {
     try {
