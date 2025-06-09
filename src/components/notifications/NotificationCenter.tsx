@@ -13,6 +13,8 @@ interface Notification {
   type: string;
   read: boolean;
   created_at: string;
+  user_id?: string;
+  visible_to?: string;
 }
 
 const NotificationCenter = () => {

@@ -14,13 +14,15 @@ import { canAccessContent } from "@/lib/contentAccess";
 import MainLayout from "@/components/layout/MainLayout";
 import { Helmet } from "react-helmet";
 
+type AccessLevel = 'free' | 'auth' | 'basic' | 'premium' | 'enterprise';
+
 interface Track {
   id: string;
   title: string;
   description: string;
   audio_path: string;
   cover_path?: string;
-  access_level: 'free' | 'auth' | 'basic' | 'premium' | 'enterprise';
+  access_level: AccessLevel;
   user_id: string;
   created_at: string;
   approved: boolean;
@@ -40,7 +42,7 @@ const MusicShowcase = () => {
   // Upload form state
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [accessLevel, setAccessLevel] = useState<'free' | 'auth' | 'basic' | 'premium' | 'enterprise'>('free');
+  const [accessLevel, setAccessLevel] = useState<AccessLevel>('free');
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -88,10 +90,16 @@ const MusicShowcase = () => {
 
       if (error) throw error;
       
-      // Filter tracks based on user access level
-      const accessibleTracks = data?.filter(track => 
+      // Filter tracks based on user access level and ensure proper typing
+      const tracksWithApproval = data?.map(track => ({
+        ...track,
+        approved: track.approved ?? true,
+        access_level: track.access_level as AccessLevel
+      })) || [];
+      
+      const accessibleTracks = tracksWithApproval.filter(track => 
         canAccessContent(track.access_level, user, user?.subscriptionTier)
-      ) || [];
+      );
       
       setTracks(accessibleTracks);
     } catch (error) {
@@ -248,7 +256,7 @@ const MusicShowcase = () => {
           title,
           description,
           user_email: user.email,
-          user_name: user.user_metadata?.name || 'Unknown User'
+          user_name: user.name || 'Unknown User'
         }
       });
 
@@ -344,7 +352,7 @@ const MusicShowcase = () => {
                     maxLength={500}
                   />
                   
-                  <Select value={accessLevel} onValueChange={(value: any) => setAccessLevel(value)}>
+                  <Select value={accessLevel} onValueChange={(value: AccessLevel) => setAccessLevel(value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Access level" />
                     </SelectTrigger>
@@ -517,7 +525,7 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
             <div className="flex items-center gap-2 mb-1">
               <h3 className="font-semibold text-lg">{track.title}</h3>
               {track.approved && (
-                <CheckCircle className="h-4 w-4 text-green-500" title="Verified track" />
+                <CheckCircle className="h-4 w-4 text-green-500" />
               )}
             </div>
             <p className="text-muted-foreground text-sm">
