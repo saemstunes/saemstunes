@@ -4,68 +4,184 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 export interface PaymentRequest {
-  amount: number;
-  currency: string;
-  itemName: string;
+  orderType: 'subscription' | 'service' | 'product';
   itemId: string;
-  orderType: string;
+  itemName: string;
+  amount: number;
+  currency?: string;
   paymentMethod: 'paystack' | 'remitly' | 'mpesa';
+  successUrl?: string;
+  cancelUrl?: string;
+  userPhone?: string; // Required for M-Pesa
+}
+
+export interface PaymentSession {
+  orderId: string;
+  sessionData: {
+    sessionId: string;
+    url?: string;
+    provider: string;
+    checkoutRequestId?: string;
+    merchantRequestId?: string;
+  };
 }
 
 export const usePayment = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const processPayment = async (paymentRequest: PaymentRequest) => {
+  const createPaymentSession = async (
+    request: PaymentRequest
+  ): Promise<PaymentSession | null> => {
     setIsLoading(true);
-    
+
     try {
-      console.log('Processing payment with:', paymentRequest);
-      
-      // Call the create-payment-session edge function with better error handling
-      const { data, error } = await supabase.functions.invoke('create-payment-session', {
-        body: {
-          amount: paymentRequest.amount,
-          currency: paymentRequest.currency,
-          item_name: paymentRequest.itemName,
-          item_id: paymentRequest.itemId,
-          order_type: paymentRequest.orderType,
-          payment_method: paymentRequest.paymentMethod
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        toast({
+          title: 'Authentication Required',
+          description:
+            'Please sign in to proceed with payment. You need an account to purchase subscriptions and book classes.',
+          variant: 'destructive',
+          duration: 6000,
+        });
+        return null;
+      }
+
+      if (request.paymentMethod === 'mpesa' && !request.userPhone) {
+        toast({
+          title: 'Phone Number Required',
+          description:
+            'Please provide your M-Pesa phone number to proceed with payment.',
+          variant: 'destructive',
+        });
+        return null;
+      }
+
+      const { data, error } = await supabase.functions.invoke(
+        'create-payment-session',
+        {
+          body: {
+            amount: request.amount,
+            currency: request.currency || 'USD',
+            item_name: request.itemName,
+            item_id: request.itemId,
+            order_type: request.orderType,
+            payment_method: request.paymentMethod,
+            success_url: request.successUrl,
+            cancel_url: request.cancelUrl,
+            user_phone: request.userPhone,
+          },
         }
-      });
+      );
 
       if (error) {
-        console.error('Payment session error:', error);
-        toast({
-          title: "Payment Error",
-          description: error.message || "Failed to create payment session",
-          variant: "destructive",
-        });
-        return;
+        if (
+          error.message?.includes('Authentication required') ||
+          error.message?.includes('requiresAuth')
+        ) {
+          toast({
+            title: 'Sign In Required',
+            description:
+              'Please sign in to your account to purchase subscriptions or book classes.',
+            variant: 'destructive',
+            duration: 8000,
+          });
+          return null;
+        }
+
+        throw error;
       }
 
-      if (data?.session_url) {
-        // Redirect to payment provider
-        window.location.href = data.session_url;
-      } else {
-        console.error('No session URL returned:', data);
+      if (data?.success) {
+        if (request.paymentMethod === 'mpesa') {
+          toast({
+            title: 'M-Pesa Payment Initiated',
+            description:
+              'Please check your phone for the M-Pesa payment prompt and enter your PIN to complete the payment.',
+            duration: 8000,
+          });
+        }
+
+        return {
+          orderId: data.orderId,
+          sessionData: data.sessionData,
+        };
+      }
+
+      throw new Error('Failed to create payment session');
+    } catch (error: any) {
+      console.error('Payment session creation failed:', error);
+
+      if (error.message?.includes('Phone number required')) {
         toast({
-          title: "Payment Error", 
-          description: "No payment URL received",
-          variant: "destructive",
+          title: 'Phone Number Required',
+          description:
+            'Please provide your M-Pesa phone number in the format 254XXXXXXXXX to proceed with payment.',
+          variant: 'destructive',
+        });
+      } else if (
+        error.message?.includes('Authentication required') ||
+        error.message?.includes('sign in')
+      ) {
+        toast({
+          title: 'Sign In Required',
+          description:
+            'Please sign in to your account to purchase subscriptions or book classes.',
+          variant: 'destructive',
+          duration: 6000,
+        });
+      } else {
+        toast({
+          title: 'Payment Error',
+          description:
+            error.message ||
+            'Failed to initialize payment. Please try again.',
+          variant: 'destructive',
         });
       }
-    } catch (error) {
-      console.error('Payment processing error:', error);
-      toast({
-        title: "Payment Error",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      });
+
+      return null;
     } finally {
       setIsLoading(false);
     }
   };
 
-  return { processPayment, isLoading };
+  const redirectToPayment = (sessionData: PaymentSession['sessionData']) => {
+    if (sessionData.url) {
+      window.open(sessionData.url, '_blank');
+    } else if (sessionData.provider === 'mpesa') {
+      toast({
+        title: 'M-Pesa Payment Initiated',
+        description:
+          'Please check your phone for the M-Pesa payment prompt. Enter your PIN to complete the payment.',
+        duration: 10000,
+      });
+    } else if (sessionData.provider === 'remitly') {
+      toast({
+        title: 'Remitly Transfer',
+        description:
+          'Redirecting to Remitly for international transfer to M-Pesa...',
+      });
+    }
+  };
+
+  const processPayment = async (request: PaymentRequest) => {
+    const session = await createPaymentSession(request);
+    if (session) {
+      redirectToPayment(session.sessionData);
+      return session;
+    }
+    return null;
+  };
+
+  return {
+    isLoading,
+    createPaymentSession,
+    redirectToPayment,
+    processPayment,
+  };
 };
