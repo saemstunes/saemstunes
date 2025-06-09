@@ -1,6 +1,6 @@
 
-export type AccessLevel = 'free' | 'auth' | 'basic' | 'premium' | 'professional';
-export type SubscriptionTier = 'free' | 'basic' | 'premium' | 'professional';
+export type AccessLevel = 'free' | 'auth' | 'basic' | 'premium' | 'enterprise';
+export type SubscriptionTier = 'free' | 'basic' | 'premium' | 'enterprise';
 
 export interface User {
   id: string;
@@ -25,8 +25,8 @@ export const getAccessLevelLabel = (level: AccessLevel): string => {
       return 'Basic';
     case 'premium':
       return 'Premium';
-    case 'professional':
-      return 'Professional';
+    case 'enterprise':
+      return 'Enterprise';
     default:
       return 'Unknown';
   }
@@ -42,7 +42,7 @@ export const getAccessLevelColor = (level: AccessLevel): string => {
       return 'bg-yellow-100 text-yellow-800';
     case 'premium':
       return 'bg-orange-100 text-orange-800';
-    case 'professional':
+    case 'enterprise':
       return 'bg-purple-100 text-purple-800';
     default:
       return 'bg-gray-100 text-gray-800';
@@ -65,11 +65,11 @@ export const canAccessContent = (
   }
 
   // Subscription content needs user to be signed in AND have appropriate subscription
-  if (contentAccessLevel === 'basic' || contentAccessLevel === 'premium' || contentAccessLevel === 'professional') {
+  if (contentAccessLevel === 'basic' || contentAccessLevel === 'premium' || contentAccessLevel === 'enterprise') {
     if (!user) return false;
 
     // Check subscription tier hierarchy
-    const tierHierarchy: SubscriptionTier[] = ['free', 'basic', 'premium', 'professional'];
+    const tierHierarchy: SubscriptionTier[] = ['free', 'basic', 'premium', 'enterprise'];
     const userTierIndex = tierHierarchy.indexOf(userSubscriptionTier);
     const requiredTierIndex = tierHierarchy.indexOf(contentAccessLevel as SubscriptionTier);
     

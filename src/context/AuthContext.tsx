@@ -176,8 +176,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           case 'premium':
             subscriptionTier = 'premium';
             break;
-          case 'professional': // Changed from 'enterprise' to 'professional'
-            subscriptionTier = 'professional';
+          case 'enterprise':
+            subscriptionTier = 'enterprise';
             break;
           default:
             subscriptionTier = 'free';
