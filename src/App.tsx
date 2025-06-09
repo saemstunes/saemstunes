@@ -47,7 +47,6 @@ import IdleStateManager from "@/components/idle-state/IdleStateManager";
 import Subscriptions from "./pages/Subscriptions";
 import ComingSoon from "./pages/ComingSoon";
 import AdminUpload from "./components/admin/AdminUpload";
-import MusicShowcase from "@/pages/MusicShowcase";
 
 const queryClient = new QueryClient();
 
@@ -91,7 +90,6 @@ const App = () => {
               <Route path="/discover" element={<Discover />} />
               <Route path="/library" element={<Library />} />
               <Route path="/community" element={<Community />} />
-              <Route path="/music-showcase" element={<MusicShowcase />} />
               <Route path="/player" element={<Player />} />
               <Route path="/learning-hub" element={<LearningHub />} />
               <Route path="/learning-hub/:id" element={<LearningModulePage />} />
