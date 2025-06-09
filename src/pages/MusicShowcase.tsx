@@ -308,7 +308,7 @@ const MusicShowcase = () => {
                       <SelectItem value="auth">Sign In Required</SelectItem>
                       <SelectItem value="basic">Basic Subscribers</SelectItem>
                       <SelectItem value="premium">Premium Subscribers</SelectItem>
-                      <SelectItem value="enterprise">Enterprise Only</SelectItem>
+                      <SelectItem value="professional">Professional Only</SelectItem>
                     </SelectContent>
                   </Select>
                   
