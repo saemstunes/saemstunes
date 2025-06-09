@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,11 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Upload, Play, Pause, Heart, MessageCircle, Music, CheckCircle, Clock } from "lucide-react";
 import AudioPlayer from "@/components/media/AudioPlayer";
-import { canAccessContent } from "@/lib/contentAccess";
+import { canAccessContent, AccessLevel } from "@/lib/contentAccess";
 import MainLayout from "@/components/layout/MainLayout";
 import { Helmet } from "react-helmet";
-
-type AccessLevel = 'free' | 'auth' | 'basic' | 'premium' | 'enterprise';
 
 interface Track {
   id: string;
@@ -91,13 +88,13 @@ const MusicShowcase = () => {
       if (error) throw error;
       
       // Filter tracks based on user access level and ensure proper typing
-      const tracksWithApproval = data?.map(track => ({
+      const tracksWithProperTypes = data?.map(track => ({
         ...track,
         approved: track.approved ?? true,
         access_level: track.access_level as AccessLevel
       })) || [];
       
-      const accessibleTracks = tracksWithApproval.filter(track => 
+      const accessibleTracks = tracksWithProperTypes.filter(track => 
         canAccessContent(track.access_level, user, user?.subscriptionTier)
       );
       
@@ -361,7 +358,7 @@ const MusicShowcase = () => {
                       <SelectItem value="auth">Sign In Required</SelectItem>
                       <SelectItem value="basic">Basic Subscribers</SelectItem>
                       <SelectItem value="premium">Premium Subscribers</SelectItem>
-                      <SelectItem value="enterprise">Enterprise Only</SelectItem>
+                      <SelectItem value="professional">Professional Only</SelectItem>
                     </SelectContent>
                   </Select>
                   
