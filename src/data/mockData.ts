@@ -1,4 +1,3 @@
-
 // Mock data for the app
 
 // Video content
@@ -14,6 +13,7 @@ export interface VideoContent {
   level: "beginner" | "intermediate" | "advanced";
   tags: string[];
   isLocked: boolean;
+  accessLevel: 'free' | 'auth' | 'basic' | 'premium' | 'professional';
 }
 
 export const mockVideos: VideoContent[] = [
@@ -29,6 +29,7 @@ export const mockVideos: VideoContent[] = [
     level: "beginner",
     tags: ["vocals", "warm-up", "technique"],
     isLocked: false,
+    accessLevel: 'free',
   },
   {
     id: "v2",
@@ -42,6 +43,7 @@ export const mockVideos: VideoContent[] = [
     level: "beginner",
     tags: ["piano", "scales", "technique"],
     isLocked: false,
+    accessLevel: 'free',
   },
   {
     id: "v3",
@@ -55,6 +57,7 @@ export const mockVideos: VideoContent[] = [
     level: "intermediate",
     tags: ["gospel", "choir", "arrangement"],
     isLocked: true,
+    accessLevel: 'auth',
   },
   {
     id: "v4",
@@ -68,6 +71,7 @@ export const mockVideos: VideoContent[] = [
     level: "advanced",
     tags: ["guitar", "fingerpicking", "technique"],
     isLocked: true,
+    accessLevel: 'basic',
   },
   {
     id: "v5",
@@ -81,6 +85,7 @@ export const mockVideos: VideoContent[] = [
     level: "intermediate",
     tags: ["theory", "key signatures", "composition"],
     isLocked: true,
+    accessLevel: 'premium',
   },
   {
     id: "v6",
@@ -94,6 +99,7 @@ export const mockVideos: VideoContent[] = [
     level: "intermediate",
     tags: ["rhythms", "cultural", "traditional"],
     isLocked: true,
+    accessLevel: 'professional',
   },
 ];
 
@@ -106,6 +112,7 @@ export interface Infographic {
   category: string;
   level: "beginner" | "intermediate" | "advanced";
   isLocked: boolean;
+  accessLevel: 'free' | 'auth' | 'basic' | 'premium' | 'professional';
 }
 
 export const mockInfographics: Infographic[] = [
@@ -117,6 +124,7 @@ export const mockInfographics: Infographic[] = [
     category: "Music Theory",
     level: "beginner",
     isLocked: false,
+    accessLevel: 'free',
   },
   {
     id: "i2",
@@ -126,6 +134,7 @@ export const mockInfographics: Infographic[] = [
     category: "Vocal Development",
     level: "intermediate",
     isLocked: false,
+    accessLevel: 'free',
   },
   {
     id: "i3",
@@ -135,6 +144,7 @@ export const mockInfographics: Infographic[] = [
     category: "Instruments",
     level: "beginner",
     isLocked: true,
+    accessLevel: 'auth',
   },
   {
     id: "i4",
@@ -144,6 +154,7 @@ export const mockInfographics: Infographic[] = [
     category: "Instruments",
     level: "beginner",
     isLocked: true,
+    accessLevel: 'basic',
   },
   {
     id: "i5",
@@ -153,6 +164,7 @@ export const mockInfographics: Infographic[] = [
     category: "Cultural Studies",
     level: "intermediate",
     isLocked: true,
+    accessLevel: 'premium',
   },
   {
     id: "i6",
@@ -162,6 +174,7 @@ export const mockInfographics: Infographic[] = [
     category: "Composition",
     level: "intermediate",
     isLocked: true,
+    accessLevel: 'professional',
   },
 ];
 
@@ -240,6 +253,7 @@ export interface SubscriptionPlan {
   isPopular?: boolean;
   shortDescription?: string;
   annualDiscount?: number;
+  tier: 'basic' | 'premium' | 'professional';
 }
 
 export const mockSubscriptionPlans: SubscriptionPlan[] = [
@@ -248,6 +262,7 @@ export const mockSubscriptionPlans: SubscriptionPlan[] = [
     name: "Basic",
     price: 9.99,
     interval: "month",
+    tier: 'basic',
     shortDescription: "Get started with essential features",
     features: [
       "Access to beginner lessons",
@@ -261,6 +276,7 @@ export const mockSubscriptionPlans: SubscriptionPlan[] = [
     name: "Premium",
     price: 19.99,
     interval: "month",
+    tier: 'premium',
     shortDescription: "Perfect for dedicated learners",
     annualDiscount: 40,
     features: [
@@ -277,6 +293,7 @@ export const mockSubscriptionPlans: SubscriptionPlan[] = [
     name: "Professional",
     price: 39.99,
     interval: "month",
+    tier: 'professional',
     shortDescription: "For serious musicians and professionals",
     annualDiscount: 80,
     features: [

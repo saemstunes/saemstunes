@@ -6,7 +6,8 @@ import { mockVideos } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Clock, Calendar, User, BookOpen, Lock } from "lucide-react";
+import { ArrowLeft, Clock, User, BookOpen, Lock } from "lucide-react";
+import { canAccessContent, getAccessLevelLabel } from "@/lib/contentAccess";
 
 const VideoDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -33,8 +34,9 @@ const VideoDetail = () => {
     );
   }
 
-  // Check if user can access video
-  const canAccessVideo = !video.isLocked || (user && user.subscribed);
+  // Check if user can access video using new access control system
+  const userSubscriptionTier = user?.subscriptionTier || 'free';
+  const canAccessVideo = canAccessContent(video.accessLevel, user, userSubscriptionTier);
 
   return (
     <MainLayout>
@@ -67,6 +69,11 @@ const VideoDetail = () => {
                   {video.level}
                 </Badge>
                 <Badge variant="outline">{video.category}</Badge>
+                {video.accessLevel !== 'free' && (
+                  <Badge className="bg-gold text-white">
+                    {getAccessLevelLabel(video.accessLevel)}
+                  </Badge>
+                )}
                 <div className="flex items-center text-sm text-muted-foreground ml-auto">
                   <Clock className="h-4 w-4 mr-1" />
                   {video.duration}
@@ -164,16 +171,33 @@ const VideoDetail = () => {
       ) : (
         <div className="text-center py-12 bg-muted rounded-lg">
           <Lock className="h-16 w-16 text-muted-foreground mx-auto" />
-          <h2 className="text-2xl font-medium mt-4">Premium Content</h2>
+          <h2 className="text-2xl font-medium mt-4">{getAccessLevelLabel(video.accessLevel)} Content</h2>
           <p className="text-muted-foreground mt-2 max-w-md mx-auto">
-            This video is only available to premium subscribers. Upgrade your account to access all content.
+            {video.accessLevel === 'auth' 
+              ? "Please sign in to access this content"
+              : user 
+                ? `${getAccessLevelLabel(video.accessLevel)} subscription required to access this content`
+                : `Please sign in and subscribe to ${getAccessLevelLabel(video.accessLevel)} to access this content`
+            }
           </p>
-          <Button 
-            onClick={() => navigate("/subscriptions")}
-            className="mt-6 bg-gold hover:bg-gold-dark text-white"
-          >
-            Upgrade Now
-          </Button>
+          <div className="flex gap-4 justify-center mt-6">
+            {!user && (
+              <Button 
+                onClick={() => navigate("/auth")}
+                className="bg-gold hover:bg-gold-dark text-white"
+              >
+                Sign In
+              </Button>
+            )}
+            {video.accessLevel !== 'auth' && (
+              <Button 
+                onClick={() => navigate("/subscriptions")}
+                className="bg-gold hover:bg-gold-dark text-white"
+              >
+                {user ? 'Upgrade Now' : 'Subscribe'}
+              </Button>
+            )}
+          </div>
         </div>
       )}
     </MainLayout>

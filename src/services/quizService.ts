@@ -1,12 +1,12 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { canAccessContent, type AccessLevel } from '@/lib/contentAccess';
 
 export interface QuizQuestion {
   id: string;
-  text: string;
+  question: string;
   options: string[];
   correctAnswer: number;
-  explanation: string;
+  explanation?: string;
 }
 
 export interface Quiz {
@@ -14,191 +14,122 @@ export interface Quiz {
   title: string;
   description: string;
   difficulty: number;
-  questions: QuizQuestion[];
   category: string;
-  access_level: 'free' | 'premium' | 'basic' | 'private';
-  created_by: string | null;
-  created_at: string;
-  updated_at: string;
+  questions: QuizQuestion[];
+  access_level: AccessLevel;
+  estimatedTime?: string;
 }
-
-export interface QuizAttempt {
-  id: string;
-  user_id: string;
-  quiz_id: string;
-  score: number | null;
-  answers: Record<string, any>;
-  completed: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-const parseQuestions = (questions: any): QuizQuestion[] => {
-  if (Array.isArray(questions)) {
-    return questions;
-  }
-  if (typeof questions === 'string') {
-    try {
-      return JSON.parse(questions);
-    } catch {
-      return [];
-    }
-  }
-  return [];
-};
-
-const parseAnswers = (answers: any): Record<string, any> => {
-  if (typeof answers === 'object' && answers !== null) {
-    return answers;
-  }
-  if (typeof answers === 'string') {
-    try {
-      return JSON.parse(answers);
-    } catch {
-      return {};
-    }
-  }
-  return {};
-};
-
-export const fetchQuizzes = async (): Promise<Quiz[]> => {
-  const { data, error } = await supabase
-    .from('quizzes')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching quizzes:', error.message);
-    throw error;
-  }
-
-  // Parse the questions JSON field
-  return (data || []).map(quiz => ({
-    ...quiz,
-    questions: parseQuestions(quiz.questions)
-  }));
-};
-
-export const fetchQuizById = async (quizId: string): Promise<Quiz | null> => {
-  const { data, error } = await supabase
-    .from('quizzes')
-    .select('*')
-    .eq('id', quizId)
-    .single();
-
-  if (error) {
-    console.error('Error fetching quiz:', error.message);
-    return null;
-  }
-
-  // Parse the questions JSON field
-  return {
-    ...data,
-    questions: parseQuestions(data.questions)
-  };
-};
-
-export const fetchQuizzesByCategory = async (category: string): Promise<Quiz[]> => {
-  const { data, error } = await supabase
-    .from('quizzes')
-    .select('*')
-    .eq('category', category)
-    .order('difficulty', { ascending: true });
-
-  if (error) {
-    console.error('Error fetching quizzes by category:', error.message);
-    throw error;
-  }
-
-  // Parse the questions JSON field
-  return (data || []).map(quiz => ({
-    ...quiz,
-    questions: parseQuestions(quiz.questions)
-  }));
-};
-
-export const saveQuizAttempt = async (
-  userId: string,
-  quizId: string,
-  score: number,
-  answers: Record<string, any>,
-  completed: boolean = true
-): Promise<QuizAttempt | null> => {
-  const { data, error } = await supabase
-    .from('quiz_attempts')
-    .insert({
-      user_id: userId,
-      quiz_id: quizId,
-      score,
-      answers,
-      completed
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error saving quiz attempt:', error.message);
-    return null;
-  }
-
-  // Parse the answers JSON field
-  return {
-    ...data,
-    answers: parseAnswers(data.answers)
-  };
-};
-
-export const fetchUserQuizAttempts = async (userId: string): Promise<QuizAttempt[]> => {
-  const { data, error } = await supabase
-    .from('quiz_attempts')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching user quiz attempts:', error.message);
-    return [];
-  }
-
-  // Parse the answers JSON field
-  return (data || []).map(attempt => ({
-    ...attempt,
-    answers: parseAnswers(attempt.answers)
-  }));
-};
-
-export const getQuizProgress = async (userId: string, quizId: string): Promise<QuizAttempt | null> => {
-  const { data, error } = await supabase
-    .from('quiz_attempts')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('quiz_id', quizId)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single();
-
-  if (error && error.code !== 'PGRST116') {
-    console.error('Error fetching quiz progress:', error.message);
-    return null;
-  }
-
-  if (!data) return null;
-
-  // Parse the answers JSON field
-  return {
-    ...data,
-    answers: parseAnswers(data.answers)
-  };
-};
 
 export const getDifficultyLabel = (difficulty: number): string => {
-  if (difficulty <= 3) return "Beginner";
-  if (difficulty <= 6) return "Intermediate";
-  return "Advanced";
+  if (difficulty <= 2) return 'Beginner';
+  if (difficulty <= 4) return 'Intermediate';
+  return 'Advanced';
 };
 
 export const getDifficultyColor = (difficulty: number): string => {
-  if (difficulty <= 3) return "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300";
-  if (difficulty <= 6) return "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300";
-  return "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300";
+  if (difficulty <= 2) return 'bg-green-100 text-green-800';
+  if (difficulty <= 4) return 'bg-yellow-100 text-yellow-800';
+  return 'bg-red-100 text-red-800';
+};
+
+// Mock quiz data with access levels
+export const mockQuizzes: Quiz[] = [
+  {
+    id: 'quiz-1',
+    title: 'Basic Music Theory',
+    description: 'Test your knowledge of fundamental music theory concepts',
+    difficulty: 1,
+    category: 'Music Theory',
+    access_level: 'free',
+    questions: [
+      {
+        id: 'q1',
+        question: 'How many notes are in a major scale?',
+        options: ['6', '7', '8', '12'],
+        correctAnswer: 1,
+        explanation: 'A major scale contains 7 distinct notes before repeating the octave.'
+      },
+      {
+        id: 'q2',
+        question: 'What is the interval between C and E?',
+        options: ['Major 2nd', 'Minor 3rd', 'Major 3rd', 'Perfect 4th'],
+        correctAnswer: 2,
+        explanation: 'C to E is a major third interval.'
+      }
+    ]
+  },
+  {
+    id: 'quiz-2',
+    title: 'Vocal Techniques',
+    description: 'Assess your understanding of vocal training methods',
+    difficulty: 2,
+    category: 'Vocal Development',
+    access_level: 'auth',
+    questions: [
+      {
+        id: 'q1',
+        question: 'What is the primary purpose of vocal warm-ups?',
+        options: ['Increase volume', 'Prepare vocal cords', 'Change pitch range', 'Improve rhythm'],
+        correctAnswer: 1,
+        explanation: 'Vocal warm-ups prepare the vocal cords for singing and prevent strain.'
+      }
+    ]
+  },
+  {
+    id: 'quiz-3',
+    title: 'Advanced Harmony',
+    description: 'Challenge your knowledge of complex harmonic concepts',
+    difficulty: 4,
+    category: 'Music Theory',
+    access_level: 'basic',
+    questions: [
+      {
+        id: 'q1',
+        question: 'What is a secondary dominant?',
+        options: ['V/V', 'ii/V', 'IV/V', 'vi/V'],
+        correctAnswer: 0,
+        explanation: 'A secondary dominant is the dominant chord of a scale degree other than the tonic.'
+      }
+    ]
+  },
+  {
+    id: 'quiz-4',
+    title: 'Professional Composition',
+    description: 'Master-level composition techniques and analysis',
+    difficulty: 5,
+    category: 'Composition',
+    access_level: 'premium',
+    questions: [
+      {
+        id: 'q1',
+        question: 'What compositional technique is primarily used in Bach\'s fugues?',
+        options: ['Sonata form', 'Counterpoint', 'Theme and variations', 'Rondo form'],
+        correctAnswer: 1,
+        explanation: 'Bach\'s fugues primarily use contrapuntal techniques with imitative polyphony.'
+      }
+    ]
+  },
+  {
+    id: 'quiz-5',
+    title: 'Music Industry Mastery',
+    description: 'Professional-level music business and industry knowledge',
+    difficulty: 5,
+    category: 'Music Business',
+    access_level: 'professional',
+    questions: [
+      {
+        id: 'q1',
+        question: 'What is the difference between mechanical and performance royalties?',
+        options: ['Nothing', 'Source of income', 'Payment frequency', 'Tax implications'],
+        correctAnswer: 1,
+        explanation: 'Mechanical royalties come from recordings/reproductions, while performance royalties come from public performances.'
+      }
+    ]
+  }
+];
+
+export const getAccessibleQuizzes = (user: any, userSubscriptionTier: string = 'free'): Quiz[] => {
+  return mockQuizzes.filter(quiz => 
+    canAccessContent(quiz.access_level, user, userSubscriptionTier as any)
+  );
 };
