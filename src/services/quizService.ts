@@ -105,7 +105,7 @@ export const mockQuizzes: Quiz[] = [
   },
   {
     id: 'quiz-4',
-    title: 'Professional Composition',
+    title: 'Advanced Composition',
     description: 'Master-level composition techniques and analysis',
     difficulty: 5,
     category: 'Composition',
@@ -123,10 +123,10 @@ export const mockQuizzes: Quiz[] = [
   {
     id: 'quiz-5',
     title: 'Music Industry Mastery',
-    description: 'Professional-level music business and industry knowledge',
+    description: 'Enterprise-level music business and industry knowledge',
     difficulty: 5,
     category: 'Music Business',
-    access_level: 'professional',
+    access_level: 'enterprise',
     questions: [
       {
         id: 'q1',

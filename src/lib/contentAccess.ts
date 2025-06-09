@@ -1,39 +1,90 @@
 
-export type AccessLevel = 'free' | 'auth' | 'basic' | 'premium' | 'professional';
-export type SubscriptionTier = 'free' | 'basic' | 'premium' | 'professional';
+// Define subscription tiers
+export type SubscriptionTier = 'free' | 'basic' | 'premium' | 'enterprise';
 
-export interface User {
-  id: string;
-  email?: string;
-  subscribed?: boolean;
-  subscriptionTier?: SubscriptionTier;
-}
+// Define access levels for content
+export type AccessLevel = 'free' | 'auth' | 'basic' | 'premium' | 'enterprise';
 
-export interface ContentItem {
-  id: string;
-  accessLevel: AccessLevel;
-  title: string;
-}
+// Check if user can access content based on access level and subscription
+export const canAccessContent = (
+  accessLevel: AccessLevel,
+  user: any,
+  userSubscriptionTier: SubscriptionTier = 'free'
+): boolean => {
+  // Free content is accessible to everyone
+  if (accessLevel === 'free') {
+    return true;
+  }
 
-export const getAccessLevelLabel = (level: AccessLevel): string => {
-  switch (level) {
+  // Auth content requires user to be logged in
+  if (accessLevel === 'auth') {
+    return !!user;
+  }
+
+  // Subscription-based content requires user to be logged in and have appropriate tier
+  if (!user) {
+    return false;
+  }
+
+  // Define tier hierarchy (higher numbers = higher access)
+  const tierHierarchy: Record<SubscriptionTier, number> = {
+    free: 0,
+    basic: 1,
+    premium: 2,
+    enterprise: 3,
+  };
+
+  const accessHierarchy: Record<AccessLevel, number> = {
+    free: 0,
+    auth: 0,
+    basic: 1,
+    premium: 2,
+    enterprise: 3,
+  };
+
+  const userTierLevel = tierHierarchy[userSubscriptionTier];
+  const requiredLevel = accessHierarchy[accessLevel];
+
+  return userTierLevel >= requiredLevel;
+};
+
+// Get upgrade message for locked content
+export const getUpgradeMessage = (accessLevel: AccessLevel): string => {
+  switch (accessLevel) {
+    case 'auth':
+      return 'Sign in to access this content';
+    case 'basic':
+      return 'Upgrade to Basic to unlock this content';
+    case 'premium':
+      return 'Upgrade to Premium to unlock this content';
+    case 'enterprise':
+      return 'Upgrade to Enterprise to unlock this content';
+    default:
+      return 'This content requires a subscription';
+  }
+};
+
+// Get access level label for display
+export const getAccessLevelLabel = (accessLevel: AccessLevel): string => {
+  switch (accessLevel) {
     case 'free':
       return 'Free';
     case 'auth':
-      return 'Sign In Required';
+      return 'Members Only';
     case 'basic':
       return 'Basic';
     case 'premium':
       return 'Premium';
-    case 'professional':
-      return 'Professional';
+    case 'enterprise':
+      return 'Enterprise';
     default:
       return 'Unknown';
   }
 };
 
-export const getAccessLevelColor = (level: AccessLevel): string => {
-  switch (level) {
+// Get access level color for badges
+export const getAccessLevelColor = (accessLevel: AccessLevel): string => {
+  switch (accessLevel) {
     case 'free':
       return 'bg-green-100 text-green-800';
     case 'auth':
@@ -41,60 +92,10 @@ export const getAccessLevelColor = (level: AccessLevel): string => {
     case 'basic':
       return 'bg-yellow-100 text-yellow-800';
     case 'premium':
-      return 'bg-orange-100 text-orange-800';
-    case 'professional':
       return 'bg-purple-100 text-purple-800';
+    case 'enterprise':
+      return 'bg-red-100 text-red-800';
     default:
       return 'bg-gray-100 text-gray-800';
   }
-};
-
-export const canAccessContent = (
-  contentAccessLevel: AccessLevel,
-  user: User | null,
-  userSubscriptionTier: SubscriptionTier = 'free'
-): boolean => {
-  // Free content is always accessible
-  if (contentAccessLevel === 'free') {
-    return true;
-  }
-
-  // Auth-required content needs user to be signed in
-  if (contentAccessLevel === 'auth') {
-    return user !== null;
-  }
-
-  // Subscription content needs user to be signed in AND have appropriate subscription
-  if (contentAccessLevel === 'basic' || contentAccessLevel === 'premium' || contentAccessLevel === 'professional') {
-    if (!user) return false;
-
-    // Check subscription tier hierarchy
-    const tierHierarchy: SubscriptionTier[] = ['free', 'basic', 'premium', 'professional'];
-    const userTierIndex = tierHierarchy.indexOf(userSubscriptionTier);
-    const requiredTierIndex = tierHierarchy.indexOf(contentAccessLevel as SubscriptionTier);
-    
-    return userTierIndex >= requiredTierIndex;
-  }
-
-  return false;
-};
-
-export const getContentAccessMessage = (
-  contentAccessLevel: AccessLevel,
-  user: User | null,
-  userSubscriptionTier: SubscriptionTier = 'free'
-): string => {
-  if (canAccessContent(contentAccessLevel, user, userSubscriptionTier)) {
-    return '';
-  }
-
-  if (contentAccessLevel === 'auth') {
-    return 'Please sign in to access this content';
-  }
-
-  if (!user) {
-    return `Please sign in and subscribe to ${getAccessLevelLabel(contentAccessLevel)} to access this content`;
-  }
-
-  return `${getAccessLevelLabel(contentAccessLevel)} subscription required to access this content`;
 };
