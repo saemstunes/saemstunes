@@ -88,20 +88,13 @@ const MusicShowcase = () => {
       if (error) throw error;
       
       // Filter tracks based on user access level and ensure proper typing
-      const typedTracks = (data || []).map(track => ({
-        id: track.id,
-        title: track.title,
-        description: track.description,
-        audio_path: track.audio_path,
-        cover_path: track.cover_path,
-        access_level: track.access_level as AccessLevel,
-        user_id: track.user_id,
-        created_at: track.created_at,
+      const tracksWithProperTypes = data?.map(track => ({
+        ...track,
         approved: track.approved ?? true,
-        profiles: track.profiles
-      })) as Track[];
+        access_level: track.access_level as AccessLevel
+      })) || [];
       
-      const accessibleTracks = typedTracks.filter(track => 
+      const accessibleTracks = tracksWithProperTypes.filter(track => 
         canAccessContent(track.access_level, user, user?.subscriptionTier)
       );
       

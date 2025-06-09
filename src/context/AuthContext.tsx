@@ -168,21 +168,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       // Determine subscription tier from subscription type
       let subscriptionTier: SubscriptionTier = 'free';
-      if (subscription) {
-        switch (subscription.type) {
-          case 'basic':
-            subscriptionTier = 'basic';
-            break;
-          case 'premium':
-            subscriptionTier = 'premium';
-            break;
-          case 'professional': // Changed from 'enterprise' to 'professional'
-            subscriptionTier = 'professional';
-            break;
-          default:
-            subscriptionTier = 'free';
-        }
-      }
+if (subscription) {
+  switch (subscription.type) {
+    case 'basic':
+      subscriptionTier = 'basic';
+      break;
+    case 'premium':
+      subscriptionTier = 'premium';
+      break;
+    case 'enterprise': // Changed from 'professional' to 'enterprise'
+      subscriptionTier = 'enterprise';
+      break;
+    default:
+      subscriptionTier = 'free';
+  }
+}
 
       setUser({
         id: profile.id,
