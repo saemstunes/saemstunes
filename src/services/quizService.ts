@@ -126,7 +126,7 @@ export const mockQuizzes: Quiz[] = [
     description: 'Professional-level music business and industry knowledge',
     difficulty: 5,
     category: 'Music Business',
-    access_level: 'enterprise',
+    access_level: 'professional',
     questions: [
       {
         id: 'q1',
