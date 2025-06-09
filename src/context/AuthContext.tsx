@@ -1,15 +1,17 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User as SupabaseUser } from "@supabase/supabase-js";
+import { SubscriptionTier } from "@/lib/contentAccess";
 
 // Define the User interface to match our profiles table
 interface User {
   id: string;
-  email: string;
+  email?: string;
   name: string;
   role: UserRole;
   avatar: string;
   subscribed: boolean;
+  subscriptionTier?: SubscriptionTier;
 }
 
 // Define the user roles to match the frontend usage
@@ -19,12 +21,49 @@ export type UserRole = "student" | "adult" | "parent" | "teacher" | "admin";
 // You need to replace these with your actual enum values from the database
 type DatabaseRole = "student" | "adult_learner" | "parent" | "tutor" | "admin" | "user";
 
+// Map frontend role to database role
+const mapFrontendRole = (frontendRole: UserRole): DatabaseRole => {
+  switch (frontendRole) {
+    case 'adult':
+      return 'adult_learner';
+    case 'teacher':
+      return 'tutor';
+    case 'student':
+      return 'student';
+    case 'parent':
+      return 'parent';
+    case 'admin':
+      return 'admin';
+    default:
+      return 'user'; // fallback
+  }
+};
+
+// Map database role to frontend role
+const mapDatabaseRole = (dbRole: string): UserRole => {
+  switch (dbRole) {
+    case 'adult_learner':
+      return 'adult';
+    case 'tutor':
+      return 'teacher';
+    case 'student':
+      return 'student';
+    case 'parent':
+      return 'parent';
+    case 'admin':
+      return 'admin';
+    case 'user':
+    default:
+      return 'student'; // fallback to student for 'user' and unknown roles
+  }
+};
+
 // Define the auth context type
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   signUp: (email: string, password: string, name: string, role: UserRole, captchaToken?: string) => Promise<void>;
-  login: (email: string, password: string, captchaToken?: string) => Promise<void>;
+  login: (email: string, password: string, name: string, role: UserRole, captchaToken?: string) => Promise<void>;
   logout: () => Promise<void>;
   isAdmin: () => boolean;
   checkPermission: (requiredRoles?: UserRole[]) => boolean;
@@ -40,43 +79,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  // Map frontend role to database role
-  const mapFrontendRole = (frontendRole: UserRole): DatabaseRole => {
-    switch (frontendRole) {
-      case 'adult':
-        return 'adult_learner';
-      case 'teacher':
-        return 'tutor';
-      case 'student':
-        return 'student';
-      case 'parent':
-        return 'parent';
-      case 'admin':
-        return 'admin';
-      default:
-        return 'user'; // fallback
-    }
-  };
-
-  // Map database role to frontend role
-  const mapDatabaseRole = (dbRole: string): UserRole => {
-    switch (dbRole) {
-      case 'adult_learner':
-        return 'adult';
-      case 'tutor':
-        return 'teacher';
-      case 'student':
-        return 'student';
-      case 'parent':
-        return 'parent';
-      case 'admin':
-        return 'admin';
-      case 'user':
-      default:
-        return 'student'; // fallback to student for 'user' and unknown roles
-    }
-  };
 
   useEffect(() => {
     // Set up auth state listener first
@@ -150,6 +152,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           role: (authUser.user_metadata?.role as UserRole) || "student",
           avatar: authUser.user_metadata?.avatar_url || "/lovable-uploads/avatar-1.png",
           subscribed: false,
+          subscriptionTier: 'free',
         });
         return;
       }
@@ -163,6 +166,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .gte('valid_until', new Date().toISOString())
         .maybeSingle();
 
+      // Determine subscription tier from subscription type
+      let subscriptionTier: SubscriptionTier = 'free';
+      if (subscription) {
+        switch (subscription.type) {
+          case 'basic':
+            subscriptionTier = 'basic';
+            break;
+          case 'premium':
+            subscriptionTier = 'premium';
+            break;
+          case 'professional':
+            subscriptionTier = 'professional';
+            break;
+          default:
+            subscriptionTier = 'free';
+        }
+      }
+
       setUser({
         id: profile.id,
         email: profile.email || authUser.email || "",
@@ -170,6 +191,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         role: mapDatabaseRole(profile.role),
         avatar: profile.avatar_url || "/lovable-uploads/avatar-1.png",
         subscribed: !!subscription,
+        subscriptionTier,
       });
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
@@ -216,6 +238,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           role: frontendRole,
           avatar: authUser.user_metadata?.avatar_url || "/lovable-uploads/avatar-1.png",
           subscribed: false,
+          subscriptionTier: 'free',
         });
         return;
       }
@@ -230,6 +253,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         role: mapDatabaseRole(profile.role),
         avatar: profile.avatar_url || "/lovable-uploads/avatar-1.png",
         subscribed: false,
+        subscriptionTier: 'free',
       });
     } catch (error) {
       console.error('Error in createUserProfile:', error);
