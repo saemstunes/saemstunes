@@ -6,7 +6,7 @@ import { mockVideos } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Clock, User, BookOpen, Lock } from "lucide-react";
+import { ArrowLeft, Clock, User, BookOpen, Lock, Calendar } from "lucide-react";
 import { canAccessContent, getAccessLevelLabel } from "@/lib/contentAccess";
 
 const VideoDetail = () => {

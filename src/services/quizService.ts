@@ -20,6 +20,17 @@ export interface Quiz {
   estimatedTime?: string;
 }
 
+export interface QuizAttempt {
+  id: string;
+  user_id: string;
+  quiz_id: string;
+  score: number;
+  answers: Record<number, number>;
+  completed: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export const getDifficultyLabel = (difficulty: number): string => {
   if (difficulty <= 2) return 'Beginner';
   if (difficulty <= 4) return 'Intermediate';
@@ -127,6 +138,51 @@ export const mockQuizzes: Quiz[] = [
     ]
   }
 ];
+
+// Mock functions that would normally interact with a backend
+export const fetchQuizzes = async (): Promise<Quiz[]> => {
+  // Simulate API call delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return mockQuizzes;
+};
+
+export const fetchQuizById = async (id: string): Promise<Quiz | null> => {
+  // Simulate API call delay
+  await new Promise(resolve => setTimeout(resolve, 300));
+  return mockQuizzes.find(quiz => quiz.id === id) || null;
+};
+
+export const fetchUserQuizAttempts = async (userId: string): Promise<QuizAttempt[]> => {
+  // Simulate API call delay
+  await new Promise(resolve => setTimeout(resolve, 400));
+  // Return mock attempts - in a real app this would fetch from database
+  return [];
+};
+
+export const saveQuizAttempt = async (
+  userId: string, 
+  quizId: string, 
+  score: number, 
+  answers: Record<number, number>, 
+  completed: boolean
+): Promise<QuizAttempt> => {
+  // Simulate API call delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  // In a real app, this would save to database and return the saved attempt
+  const attempt: QuizAttempt = {
+    id: `attempt-${Date.now()}`,
+    user_id: userId,
+    quiz_id: quizId,
+    score,
+    answers,
+    completed,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+  
+  return attempt;
+};
 
 export const getAccessibleQuizzes = (user: any, userSubscriptionTier: string = 'free'): Quiz[] => {
   return mockQuizzes.filter(quiz => 

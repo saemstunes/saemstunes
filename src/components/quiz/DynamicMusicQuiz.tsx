@@ -224,7 +224,7 @@ const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ quizId, onComplete 
         <div className="py-4">
           <h3 className="text-lg font-medium mb-4 flex items-start">
             <HelpCircle className="h-5 w-5 mr-2 mt-0.5 shrink-0 text-gold" />
-            {currentQuestion?.text}
+            {currentQuestion?.question}
           </h3>
           
           <div className="space-y-2 mt-6">
