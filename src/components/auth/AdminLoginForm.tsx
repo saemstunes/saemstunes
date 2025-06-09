@@ -44,36 +44,34 @@ const AdminLoginForm = ({ onClose = () => {} }: AdminLoginFormProps) => {
   });
 
   const handleAdminLogin = async (data: FormData) => {
-    setIsSubmitting(true);
+  setIsSubmitting(true);
 
-    try {
-      // First verify if admin code is correct
-      // In a real app, this would be a secure verification process
-      const isValidAdminCode = data.adminCode === "ST-ADMIN-2024"; // Replace with a secure method
-      
-      if (!isValidAdminCode) {
-        form.setError("adminCode", { 
-          message: "Invalid admin code" 
-        });
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Now attempt normal login - in a real system you'd have a separate admin login endpoint
-      await login(data.email, data.password);
-      
-      // After successful login, navigate to admin dashboard
-      navigate("/admin");
-      onClose();
-    } catch (error) {
-      console.error("Admin login failed:", error);
-      form.setError("root", { 
-        message: "Authentication failed. Please verify your credentials." 
+  try {
+    // First verify if admin code is correct
+    const isValidAdminCode = data.adminCode === "ST-ADMIN-2024";
+    
+    if (!isValidAdminCode) {
+      form.setError("adminCode", { 
+        message: "Invalid admin code" 
       });
-    } finally {
       setIsSubmitting(false);
+      return;
     }
-  };
+    
+    // Fixed: Remove extra parameters from login call
+    await login(data.email, data.password);
+    
+    navigate("/admin");
+    onClose();
+  } catch (error) {
+    console.error("Admin login failed:", error);
+    form.setError("root", { 
+      message: "Authentication failed. Please verify your credentials." 
+    });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <Form {...form}>
