@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,7 +22,6 @@ interface Track {
   access_level: AccessLevel;
   user_id: string;
   created_at: string;
-  approved: boolean;
   profiles?: {
     display_name: string;
     avatar_url: string;
@@ -48,22 +46,16 @@ const MusicShowcase = () => {
   useEffect(() => {
     fetchTracks();
     
-    // Set up realtime listener for approved tracks
+    // Set up realtime listener for tracks
     const channel = supabase
       .channel('tracks-changes')
       .on('postgres_changes', {
-        event: 'UPDATE',
+        event: 'INSERT',
         schema: 'public',
-        table: 'tracks',
-        filter: 'approved=eq.true'
+        table: 'tracks'
       }, (payload) => {
-        console.log('Track approved:', payload);
+        console.log('Track uploaded:', payload);
         fetchTracks(); // Refresh the list
-        
-        // Create notification for approved track
-        if (payload.new) {
-          createNotification(payload.new as Track);
-        }
       })
       .subscribe();
 
@@ -83,7 +75,6 @@ const MusicShowcase = () => {
             avatar_url
           )
         `)
-        .eq('approved', true) // Only show approved tracks
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -98,7 +89,6 @@ const MusicShowcase = () => {
         access_level: track.access_level as AccessLevel,
         user_id: track.user_id,
         created_at: track.created_at,
-        approved: track.approved ?? true,
         profiles: track.profiles
       })) as Track[];
       
@@ -116,24 +106,6 @@ const MusicShowcase = () => {
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const createNotification = async (track: Track) => {
-    try {
-      const visibleTo = track.access_level === 'free' ? 'all' : 
-                       track.access_level === 'auth' ? 'signed-in' :
-                       track.access_level;
-      
-      await supabase
-        .from('notifications')
-        .insert({
-          message: `🎵 New ${track.access_level} track: "${track.title}" has been uploaded!`,
-          visible_to: visibleTo,
-          type: 'new-track'
-        });
-    } catch (error) {
-      console.error('Error creating notification:', error);
     }
   };
 
@@ -200,25 +172,6 @@ const MusicShowcase = () => {
     setUploading(true);
 
     try {
-      // Call moderation edge function first
-      const { data: moderationResult, error: moderationError } = await supabase.functions
-        .invoke('moderate-upload', {
-          body: {
-            title,
-            description,
-            user_id: user.id
-          }
-        });
-
-      if (moderationError || !moderationResult?.approved) {
-        toast({
-          title: "Upload Rejected",
-          description: moderationResult?.reason || "Track did not pass moderation",
-          variant: "destructive",
-        });
-        return;
-      }
-
       // Upload audio file with sanitized filename
       const sanitizedAudioName = `${Date.now()}-${audioFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
       const { data: audioData, error: audioError } = await supabase.storage
@@ -239,7 +192,7 @@ const MusicShowcase = () => {
         coverPath = coverData.path;
       }
 
-      // Save track to database (pending approval)
+      // Save track to database
       const { error: dbError } = await supabase
         .from('tracks')
         .insert({
@@ -248,26 +201,14 @@ const MusicShowcase = () => {
           audio_path: audioData.path,
           cover_path: coverPath,
           access_level: accessLevel,
-          user_id: user.id,
-          approved: false // Pending admin approval
+          user_id: user.id
         });
 
       if (dbError) throw dbError;
 
-      // Send email notification to admin
-      await supabase.functions.invoke('send-admin-notification', {
-        body: {
-          type: 'track_upload',
-          title,
-          description,
-          user_email: user.email,
-          user_name: user.name || 'Unknown User'
-        }
-      });
-
       toast({
-        title: "Upload Submitted!",
-        description: "Your track has been submitted for review. You'll be notified once it's approved.",
+        title: "Upload Successful!",
+        description: "Your track has been uploaded successfully.",
       });
 
       // Reset form
@@ -277,6 +218,9 @@ const MusicShowcase = () => {
       setCoverFile(null);
       setAccessLevel('free');
       setShowUpload(false);
+      
+      // Refresh tracks
+      fetchTracks();
       
     } catch (error) {
       console.error('Upload error:', error);
@@ -338,9 +282,6 @@ const MusicShowcase = () => {
                     <Upload className="h-5 w-5" />
                     Upload Your Track
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Your track will be reviewed before being published to ensure quality and safety.
-                  </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <Input
@@ -397,12 +338,12 @@ const MusicShowcase = () => {
                       {uploading ? (
                         <>
                           <Clock className="h-4 w-4 mr-2 animate-spin" />
-                          Submitting...
+                          Uploading...
                         </>
                       ) : (
                         <>
                           <Upload className="h-4 w-4 mr-2" />
-                          Submit for Review
+                          Upload Track
                         </>
                       )}
                     </Button>
@@ -529,9 +470,6 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
               <h3 className="font-semibold text-lg">{track.title}</h3>
-              {track.approved && (
-                <CheckCircle className="h-4 w-4 text-green-500" />
-              )}
             </div>
             <p className="text-muted-foreground text-sm">
               by {track.profiles?.display_name || 'Unknown Artist'}
