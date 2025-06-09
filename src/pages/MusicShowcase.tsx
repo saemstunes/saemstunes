@@ -21,6 +21,7 @@ interface Track {
   cover_path?: string;
   access_level: AccessLevel;
   user_id: string;
+  approved: boolean;
   created_at: string;
   profiles?: {
     display_name: string;
