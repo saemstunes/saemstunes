@@ -254,6 +254,39 @@ export type Database = {
         }
         Relationships: []
       }
+      likes: {
+        Row: {
+          created_at: string | null
+          track_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          track_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          track_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "likes_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       news_feed: {
         Row: {
           author_id: string | null
@@ -280,6 +313,44 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          read: boolean | null
+          type: string | null
+          user_id: string | null
+          visible_to: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          read?: boolean | null
+          type?: string | null
+          user_id?: string | null
+          visible_to?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          read?: boolean | null
+          type?: string | null
+          user_id?: string | null
+          visible_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       orders: {
         Row: {
@@ -746,6 +817,47 @@ export type Database = {
             columns: ["payment_id"]
             isOneToOne: false
             referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tracks: {
+        Row: {
+          access_level: string | null
+          audio_path: string
+          cover_path: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          access_level?: string | null
+          audio_path: string
+          cover_path?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          access_level?: string | null
+          audio_path?: string
+          cover_path?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tracks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
