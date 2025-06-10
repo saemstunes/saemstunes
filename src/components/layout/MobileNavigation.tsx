@@ -82,9 +82,9 @@ const MobileNavigation = () => {
       public: true
     },
     {
-      name: "Community",
-      href: "/community",
-      icon: Users,
+      name: "Music Showcase", // Temporarily replacing Community
+      href: "/music-showcase",
+      icon: Music,
       public: true
     },
     {

@@ -177,6 +177,12 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
       roles: ["student", "adult", "parent", "teacher", "admin"],
     },
     {
+      name: "Music Showcase",
+      href: "/music-showcase",
+      icon: Music,
+      roles: ["student", "adult", "parent", "teacher", "admin"],
+    },
+    {
       name: "Profile",
       href: "/profile",
       icon: User,
