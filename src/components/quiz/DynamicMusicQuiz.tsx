@@ -243,12 +243,12 @@ const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ quizId, onComplete 
                 className={cn(
                   "w-full justify-start text-left p-4 h-auto",
                   selectedOption === index 
-                    ? index === currentQuestion.correctAnswer 
-                      ? "bg-green-500 hover:bg-green-600 text-white" 
-                      : "bg-red-500 hover:bg-red-600 text-white"
-                    : selectedOption !== null && index === currentQuestion.correctAnswer
-                      ? "bg-green-500 hover:bg-green-600 text-white"
-                      : ""
+                  ? index === currentQuestion.correctAnswer 
+                  ? "bg-green-500 dark:bg-green-600 hover:bg-green-600 dark:hover:bg-green-700 text-white" 
+                  : "bg-red-500 dark:bg-red-600 hover:bg-red-600 dark:hover:bg-red-700 text-white"
+                  : selectedOption !== null && index === currentQuestion.correctAnswer
+                  ? "bg-green-500 dark:bg-green-600 hover:bg-green-600 dark:hover:bg-green-700 text-white"
+                  : ""
                 )}
                 onClick={() => handleOptionSelect(index)}
                 disabled={isAnswered}
@@ -261,9 +261,13 @@ const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ quizId, onComplete 
         </div>
         
         {showExplanation && currentQuestion?.explanation && (
-          <Alert className={selectedOption === currentQuestion?.correctAnswer ? "bg-green-50 border-green-200" : "bg-amber-50 border-amber-200"}>
-            <BookOpen className={`h-5 w-5 ${selectedOption === currentQuestion?.correctAnswer ? "text-green-600" : "text-amber-600"}`} />
-            <AlertTitle>Explanation</AlertTitle>
+      <Alert className={selectedOption === currentQuestion?.correctAnswer 
+        ? "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800" 
+      : "bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800"}>
+        <BookOpen className={`h-5 w-5 ${selectedOption === currentQuestion?.correctAnswer 
+                                        ? "text-green-600 dark:text-green-400" 
+                                        : "text-amber-600 dark:text-amber-400"}`} />
+        <AlertTitle>Explanation</AlertTitle>
             <AlertDescription>
               {currentQuestion.explanation}
             </AlertDescription>
