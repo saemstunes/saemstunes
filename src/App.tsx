@@ -1,20 +1,20 @@
+
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from 'react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from "@/components/ui/tooltip"
-import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from '@/context/AuthContext';
-import HomePage from '@/pages/HomePage';
-import TracksPage from '@/pages/TracksPage';
-import AlbumsPage from '@/pages/AlbumsPage';
-import ArtistsPage from '@/pages/ArtistsPage';
-import ProfilePage from '@/pages/ProfilePage';
+import HomePage from '@/pages/Index';
+import TracksPage from '@/pages/Tracks';
+import AlbumsPage from '@/pages/Tracks';
+import ArtistsPage from '@/pages/Tracks';
+import ProfilePage from '@/pages/Profile';
 import AudioPlayerPage from '@/pages/AudioPlayer';
-import QuizzesPage from '@/pages/QuizzesPage';
+import QuizzesPage from '@/pages/MusicQuizPage';
 import MusicQuizPage from '@/pages/MusicQuizPage';
-import DynamicQuizPage from '@/pages/DynamicQuizPage';
-import NotFoundPage from '@/pages/NotFoundPage';
+import DynamicQuizPage from '@/pages/MusicQuizPage';
+import NotFoundPage from '@/pages/NotFound';
 import { AudioPlayerProvider } from '@/context/AudioPlayerContext';
 import GlobalMiniPlayer from '@/components/player/GlobalMiniPlayer';
 
