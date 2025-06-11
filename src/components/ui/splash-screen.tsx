@@ -70,16 +70,16 @@ const SplashScreen = ({
   // Memoized music notes - prevents recreation on every render
   const musicNotes = useMemo(() => {
     const musicIcons = [Music, Play, Headphones, Volume2];
-    return Array.from({ length: 8 }, (_, i) => ({
+    return Array.from({ length: 6 }, (_, i) => ({
       id: i,
       Icon: musicIcons[i % musicIcons.length],
-      x: (Math.random() - 0.5) * 100,
-      y: -60 - Math.random() * 40,
+      x: (Math.random() - 0.5) * 80, // Reduced spread
+      y: 20 + Math.random() * 30, // Start closer to center
       rotate: Math.random() * 360,
-      scale: 0.4 + Math.random() * 0.6,
-      duration: 4 + Math.random() * 3,
-      delay: i * 0.3,
-      opacity: 0.3 + Math.random() * 0.4,
+      scale: 0.6 + Math.random() * 0.4,
+      duration: 3 + Math.random() * 2,
+      delay: i * 0.5,
+      opacity: 0.4 + Math.random() * 0.3,
     }));
   }, []);
 
@@ -261,44 +261,49 @@ const SplashScreen = ({
             </motion.div>
 
             {/* Enhanced floating music elements */}
-            <AnimatePresence>
-              {showMusicNotes &&
-                musicNotes.map((note) => {
+            {showMusicNotes && (
+              <div className="absolute inset-0 pointer-events-none">
+                {musicNotes.map((note) => {
                   const IconComponent = note.Icon;
                   return (
                     <motion.div
                       key={note.id}
-                      className="absolute text-yellow-500"
+                      className="absolute text-yellow-500 top-1/2 left-1/2"
                       style={{
-                        filter: `drop-shadow(0 0 8px rgba(${THEME_COLORS.primaryRgb}, 0.5))`,
+                        filter: `drop-shadow(0 0 8px rgba(${THEME_COLORS.primaryRgb}, 0.6))`,
                       }}
                       initial={{
-                        x: `${note.x}%`,
-                        y: `${note.y}%`,
+                        x: `${note.x}px`,
+                        y: `${note.y}px`,
                         rotate: note.rotate,
                         scale: 0,
                         opacity: 0,
                       }}
                       animate={{
-                        y: "-150%",
-                        x: `${note.x + (Math.random() - 0.5) * 40}%`,
-                        scale: [0, note.scale, note.scale * 0.8, 0],
-                        opacity: [0, note.opacity, note.opacity * 0.5, 0],
-                        rotate: note.rotate + 180,
+                        y: [`${note.y}px`, `${note.y - 120}px`, `${note.y - 200}px`],
+                        x: [
+                          `${note.x}px`,
+                          `${note.x + (Math.random() - 0.5) * 60}px`,
+                          `${note.x + (Math.random() - 0.5) * 80}px`,
+                        ],
+                        scale: [0, note.scale, note.scale * 1.2, 0],
+                        opacity: [0, note.opacity, note.opacity * 0.8, 0],
+                        rotate: [note.rotate, note.rotate + 180, note.rotate + 360],
                       }}
                       transition={{
                         duration: note.duration,
                         delay: note.delay,
-                        ease: "easeOut",
+                        ease: [0.25, 0.46, 0.45, 0.94], // Custom easing
                         repeat: Infinity,
-                        repeatDelay: 4 + Math.random() * 3,
+                        repeatDelay: 2 + Math.random() * 2,
                       }}
                     >
-                      <IconComponent size={20} />
+                      <IconComponent size={24} />
                     </motion.div>
                   );
                 })}
-            </AnimatePresence>
+              </div>
+            )}
 
             {/* Enhanced app title */}
             <motion.div
