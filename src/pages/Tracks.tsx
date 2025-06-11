@@ -53,7 +53,7 @@ const Tracks = () => {
 
   // Sample data for demonstrations
   const featuredTrack = {
-    imageSrc: "/lovable-uploads/df415c9b-2546-4c87-9f13-b44439a1f4e4.png",
+    imageSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Cover%20Art/Salama%20ft.%20Simali%20-%20OFFICIAL%20COVER%20(2).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvQ292ZXIgQXJ0L1NhbGFtYSBmdC4gU2ltYWxpIC0gT0ZGSUNJQUwgQ09WRVIgKDIpLnBuZyIsImlhdCI6MTc0OTYwODU1OSwiZXhwIjoxNzUyMjAwNTU5fQ.-xwXalAM3kYBW5zMRFNCziIdbKEQMuUOB8UP76qTAMU",
     title: "Featured Track of the Week",
     artist: "Saem's Tunes ft. Evans Simali - Salama (DEMO)",
     plays: 1250,
