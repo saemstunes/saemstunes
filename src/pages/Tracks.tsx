@@ -58,7 +58,7 @@ const Tracks = () => {
     artist: "Saem's Tunes ft. Evans Simali - Salama (DEMO)",
     plays: 0,
     likes: 0,
-    audioSrc: "/audio/sample.mp3"
+    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Tracks/Salama%20ft.%20Simali%20(DEMO).mp3?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvVHJhY2tzL1NhbGFtYSBmdC4gU2ltYWxpIChERU1PKS5tcDMiLCJpYXQiOjE3NDk2MTU1NDIsImV4cCI6MTc1MjIwNzU0Mn0.kehGk3zwno3PEvRY8Z-lMqD3QNp027VFg-qKwfTXwO0"
   };
 
   const albumItems = [
