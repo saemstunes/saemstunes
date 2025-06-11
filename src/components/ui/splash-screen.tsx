@@ -40,7 +40,7 @@ const THEME_COLORS = {
   secondary: "#f59e0b", // Yellow-500
   background: {
     light: "white",
-    dark: "rgb(41, 27, 15)", // Dark brown
+    dark: "rgb(38, 17, 13)", // Dark brown
   },
 };
 
@@ -178,7 +178,7 @@ const SplashScreen = ({
     <AnimatePresence>
       {showSplash && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-white dark:bg-amber-950"
+         className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-white"
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
           exit={{
@@ -187,9 +187,16 @@ const SplashScreen = ({
             transition: { duration: 1, ease: EASINGS.decelerate },
           }}
           style={{
+            backgroundColor:
+              typeof window !== "undefined" &&
+              window.matchMedia &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "#26110D"
+              : "#fef3c7",
             pointerEvents: loading ? "auto" : "none",
           }}
-        >
+          >
+
           {/* Animated background elements */}
           <div className="absolute inset-0" aria-hidden="true">
             {glowOrbs.map((orb, index) => (
@@ -313,7 +320,7 @@ const SplashScreen = ({
               transition={{ delay: 0.4, duration: 0.8 }}
             >
               <h1 className="text-4xl font-bold mb-2">
-                <span style={{ color: '#26110D' }} className="dark:text-amber-50">Saem's</span>{" "}
+                <span style={{ color: '#26110D' }} className="dark:text-amber-100">Saem's</span>{" "}
                 <motion.span
                   className="text-yellow-600 dark:text-yellow-400"
                   animate={{
