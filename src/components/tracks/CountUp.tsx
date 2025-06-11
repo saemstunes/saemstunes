@@ -79,7 +79,7 @@ export default function CountUp({
         };
 
         const formattedNumber = Intl.NumberFormat("en-US", options).format(
-          latest.toFixed(0)
+          Number(latest.toFixed(0))
         );
 
         ref.current.textContent = separator
