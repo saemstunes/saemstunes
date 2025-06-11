@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { usePermissionRequest } from '@/lib/permissionsHelper';
+import { useAudioPlayer } from '@/context/AudioPlayerContext';
 
 interface AudioPlayerProps {
   src: string;
@@ -47,176 +48,77 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   showControls = true,
   compact = false
 }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(0.8);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [isRepeat, setIsRepeat] = useState(false);
   const [isShuffle, setIsShuffle] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const progressBarRef = useRef<HTMLDivElement | null>(null);
   const { toast } = useToast();
   const { requestPermissionWithFeedback } = usePermissionRequest();
+  const { state, playTrack, pauseTrack, resumeTrack, seek, setVolume, toggleMute } = useAudioPlayer();
 
-  // Initialize audio element
+  // Create track object
+  const track = {
+    id: src,
+    src,
+    name: title || 'Unknown Track',
+    artist: artist || 'Unknown Artist',
+    artwork,
+  };
+
+  const isCurrentTrack = state.currentTrack?.id === track.id;
+  const isPlaying = isCurrentTrack && state.isPlaying;
+  const currentTime = isCurrentTrack ? state.currentTime : 0;
+  const duration = isCurrentTrack ? state.duration : 0;
+
   useEffect(() => {
+    if (autoPlay && src) {
+      handlePlay();
+    }
+  }, [autoPlay, src]);
+
+  const handlePlay = async () => {
     try {
-      const audio = new Audio(src);
-      audioRef.current = audio;
-      
-      const setupAudio = async () => {
-        try {
-          if (autoPlay) {
-            const hasPermission = await requestPermissionWithFeedback('microphone', 'Audio playback');
-            if (hasPermission && audio.play) {
-              const playPromise = audio.play();
-              if (playPromise !== undefined) {
-                playPromise.then(() => {
-                  setIsPlaying(true);
-                }).catch(err => {
-                  console.error('Autoplay failed:', err);
-                  setIsPlaying(false);
-                });
-              }
-            }
-          }
-          
-          // Set up MediaSession API if supported
-          if ('mediaSession' in navigator) {
-            navigator.mediaSession.metadata = new MediaMetadata({
-              title: title || 'Unknown Track',
-              artist: artist || 'Unknown Artist',
-              artwork: [{ src: artwork, sizes: '512x512', type: 'image/png' }]
-            });
-            
-            navigator.mediaSession.setActionHandler('play', () => togglePlay());
-            navigator.mediaSession.setActionHandler('pause', () => togglePlay());
-          }
-          
-        } catch (err) {
-          console.error('Error setting up audio:', err);
-          setError('Failed to load audio file');
-          onError?.();
+      setIsLoading(true);
+      if (autoPlay) {
+        const hasPermission = await requestPermissionWithFeedback('microphone', 'Audio playback');
+        if (!hasPermission) {
+          setIsLoading(false);
+          return;
         }
-      };
-      
-      setupAudio();
-      
-      return () => {
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current.remove();
-        }
-      };
-    } catch (err) {
-      console.error('Error creating audio element:', err);
-      setError('Failed to initialize audio player');
-      onError?.();
-    }
-  }, [src, autoPlay, title, artist, artwork, onError]);
-
-  // Set up event listeners for the audio element
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    
-    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
-    const handleDurationChange = () => setDuration(audio.duration);
-    const handleEnded = () => {
-      setIsPlaying(false);
-      setCurrentTime(0);
-      if (isRepeat && audio.play) {
-        audio.currentTime = 0;
-        audio.play().catch(err => console.error('Error replaying audio:', err));
-        setIsPlaying(true);
-      } else if (onEnded) {
-        onEnded();
       }
-    };
-    const handleLoadedMetadata = () => {
-      setDuration(audio.duration);
-      setIsLoading(false);
-    };
-    const handleLoadedData = () => setIsLoading(false);
-    const handleError = () => {
-      setError('Error loading audio file');
-      setIsLoading(false);
+      
+      const startTime = isCurrentTrack ? state.lastPlayedTime : 0;
+      playTrack(track, startTime);
+    } catch (err) {
+      console.error('Error playing audio:', err);
+      setError('Failed to play audio');
       onError?.();
-    };
-    
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('durationchange', handleDurationChange);
-    audio.addEventListener('ended', handleEnded);
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-    audio.addEventListener('loadeddata', handleLoadedData);
-    audio.addEventListener('error', handleError);
-    
-    return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('durationchange', handleDurationChange);
-      audio.removeEventListener('ended', handleEnded);
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('loadeddata', handleLoadedData);
-      audio.removeEventListener('error', handleError);
-    };
-  }, [isRepeat, onEnded, onError]);
-  
-  // Update volume when it changes
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = isMuted ? 0 : volume;
+    } finally {
+      setIsLoading(false);
     }
-  }, [volume, isMuted]);
-  
+  };
+
   const togglePlay = async () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    
-    if (isPlaying) {
-      audio.pause();
-      setIsPlaying(false);
-      if ('mediaSession' in navigator) {
-        navigator.mediaSession.playbackState = 'paused';
+    if (isCurrentTrack) {
+      if (isPlaying) {
+        pauseTrack();
+      } else {
+        resumeTrack();
       }
     } else {
-      try {
-        await audio.play();
-        setIsPlaying(true);
-        if ('mediaSession' in navigator) {
-          navigator.mediaSession.playbackState = 'playing';
-        }
-      } catch (err) {
-        console.error('Error playing audio:', err);
-        toast({
-          title: 'Playback Error',
-          description: 'Failed to play audio. Please try again.',
-          variant: 'destructive',
-        });
-      }
+      await handlePlay();
     }
   };
   
   const handleProgressChange = (values: number[]) => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    
     const newTime = values[0];
-    audio.currentTime = newTime;
-    setCurrentTime(newTime);
+    seek(newTime);
   };
   
   const handleVolumeChange = (values: number[]) => {
     const newVolume = values[0];
     setVolume(newVolume);
-    setIsMuted(newVolume === 0);
-  };
-  
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
   };
   
   const toggleRepeat = () => {
@@ -300,7 +202,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       
       {/* Playback progress */}
       <div className="space-y-2">
-        <div className="relative" ref={progressBarRef}>
+        <div className="relative">
           <Slider 
             value={[currentTime]}
             max={duration || 100} 
@@ -377,13 +279,13 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
               size="icon" 
               onClick={toggleMute} 
               className="h-8 w-8"
-              title={isMuted ? "Unmute" : "Mute"}
+              title={state.isMuted ? "Unmute" : "Mute"}
             >
-              {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+              {state.isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
             </Button>
             
             <Slider
-              value={[isMuted ? 0 : volume]} 
+              value={[state.isMuted ? 0 : state.volume]} 
               min={0} 
               max={1} 
               step={0.01}
