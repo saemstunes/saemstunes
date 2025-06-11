@@ -40,7 +40,7 @@ const THEME_COLORS = {
   secondary: "#f59e0b", // Yellow-500
   background: {
     light: "white",
-    dark: "rgb(15, 23, 42)", // slate-900
+    dark: "rgb(41, 27, 15)", // Dark brown
   },
 };
 
@@ -178,7 +178,7 @@ const SplashScreen = ({
     <AnimatePresence>
       {showSplash && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-white dark:bg-slate-900"
+          className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-white dark:bg-amber-950"
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
           exit={{
@@ -236,7 +236,7 @@ const SplashScreen = ({
               />
 
               {/* Logo container */}
-              <div className="relative z-10 flex items-center justify-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-full p-6 border border-yellow-500/30">
+              <div className="relative z-10 flex items-center justify-center bg-white/80 dark:bg-amber-900/80 backdrop-blur-sm rounded-full p-6 border border-yellow-500/30">
                 <div className="w-20 h-20 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center shadow-2xl">
                   <Music className="w-10 h-10 text-white" />
                 </div>
@@ -307,7 +307,7 @@ const SplashScreen = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.8 }}
             >
-              <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-2">
+              <h1 className="text-4xl font-bold text-slate-900 dark:text-amber-50 mb-2">
                 Saem's{" "}
                 <motion.span
                   className="text-yellow-600 dark:text-yellow-400"
@@ -325,7 +325,7 @@ const SplashScreen = ({
               </h1>
 
               <motion.p
-                className="text-slate-600 dark:text-slate-300 text-lg font-light italic"
+                className="text-slate-600 dark:text-amber-200 text-lg font-light italic"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6, duration: 0.6 }}
@@ -343,7 +343,7 @@ const SplashScreen = ({
             >
               {/* Progress bar container */}
               <div className="relative mb-4" role="progressbar" aria-valuenow={progress} aria-valuemax={100}>
-                <div className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden backdrop-blur-sm">
+                <div className="w-full h-2 bg-slate-200 dark:bg-amber-900 rounded-full overflow-hidden backdrop-blur-sm">
                   <motion.div
                     className="h-full bg-gradient-to-r from-yellow-500 via-yellow-600 to-yellow-500 rounded-full relative"
                     initial={{ width: "0%" }}
@@ -362,7 +362,7 @@ const SplashScreen = ({
 
               {/* Dynamic loading message */}
               <motion.div
-                className="flex items-center justify-center text-slate-600 dark:text-slate-300 min-h-[24px]"
+                className="flex items-center justify-center text-slate-600 dark:text-amber-200 min-h-[24px]"
                 key={currentMessage}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -402,7 +402,7 @@ const SplashScreen = ({
 
           {/* Accessibility fallback */}
           <noscript>
-            <div className="fixed inset-0 bg-white dark:bg-slate-900 flex items-center justify-center text-slate-900 dark:text-white">
+            <div className="fixed inset-0 bg-white dark:bg-amber-950 flex items-center justify-center text-slate-900 dark:text-amber-50">
               <div className="text-center">
                 <h1 className="text-2xl font-bold mb-2">Saem's Tunes</h1>
                 <p>Loading your music...</p>
