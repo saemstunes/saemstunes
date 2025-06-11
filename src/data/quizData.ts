@@ -1,3 +1,4 @@
+
 export interface QuizQuestion {
   id: string;
   question: string;
@@ -102,62 +103,6 @@ export const quizzes: Quiz[] = [
         options: ["G major", "F major", "C major", "D major"],
         correctAnswer: 2,
         explanation: "C major scale contains only natural notes with no sharps or flats."
-      },
-      {
-        id: "13",
-        question: "What is the tonic note in the key of F major?",
-        options: ["F", "G", "C", "A"],
-        correctAnswer: 0,
-        explanation: "The tonic is the first degree of any scale, so in F major, F is the tonic."
-      },
-      {
-        id: "14",
-        question: "How many beats does a half note receive in 4/4 time?",
-        options: ["1", "2", "3", "4"],
-        correctAnswer: 1,
-        explanation: "A half note receives 2 beats in 4/4 time signature."
-      },
-      {
-        id: "15",
-        question: "What is the subdominant chord in any major key?",
-        options: ["I chord", "IV chord", "V chord", "vi chord"],
-        correctAnswer: 1,
-        explanation: "The subdominant is the IV chord, built on the 4th degree of the scale."
-      },
-      {
-        id: "16",
-        question: "Which clef is typically used for higher-pitched instruments?",
-        options: ["Bass clef", "Treble clef", "Alto clef", "Tenor clef"],
-        correctAnswer: 1,
-        explanation: "Treble clef is used for higher-pitched instruments and voices."
-      },
-      {
-        id: "17",
-        question: "What does 'allegro' mean in music terminology?",
-        options: ["Slow", "Fast", "Moderate", "Very slow"],
-        correctAnswer: 1,
-        explanation: "Allegro indicates a fast, lively tempo."
-      },
-      {
-        id: "18",
-        question: "In traditional African music, what does 'polyrhythm' refer to?",
-        options: ["One rhythm only", "Multiple rhythms played simultaneously", "No rhythm", "Silent rhythm"],
-        correctAnswer: 1,
-        explanation: "Polyrhythm is the simultaneous use of two or more conflicting rhythms."
-      },
-      {
-        id: "19",
-        question: "What is the leading tone in C major?",
-        options: ["B", "C", "D", "F"],
-        correctAnswer: 0,
-        explanation: "The leading tone is the 7th degree of the scale. In C major, that's B."
-      },
-      {
-        id: "20",
-        question: "Which interval has the ratio 2:1?",
-        options: ["Perfect 5th", "Perfect 4th", "Octave", "Major 3rd"],
-        correctAnswer: 2,
-        explanation: "An octave has a frequency ratio of 2:1, meaning the higher note vibrates twice as fast."
       }
     ]
   },

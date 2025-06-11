@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -135,7 +136,7 @@ const AudioPlayerPage = () => {
       .from('likes')
       .select('*')
       .eq('user_id', user.id)
-      .eq('track_id', String(trackData.id))
+      .eq('track_id', trackData.id)
       .single();
     
     setIsLiked(!!data);
@@ -148,7 +149,7 @@ const AudioPlayerPage = () => {
       .from('favorites')
       .select('*')
       .eq('user_id', user.id)
-      .eq('content_id', String(trackData.id))
+      .eq('content_id', trackData.id)
       .eq('content_type', 'track')
       .single();
     
@@ -172,7 +173,7 @@ const AudioPlayerPage = () => {
         .from('likes')
         .delete()
         .eq('user_id', user.id)
-        .eq('track_id', String(trackData.id));
+        .eq('track_id', trackData.id);
       setIsLiked(false);
       toast({
         title: "Removed from favorites",
@@ -181,7 +182,7 @@ const AudioPlayerPage = () => {
     } else {
       await supabase
         .from('likes')
-        .insert({ user_id: user.id, track_id: String(trackData.id) });
+        .insert({ user_id: user.id, track_id: trackData.id });
       setIsLiked(true);
       toast({
         title: "Added to favorites",
@@ -207,7 +208,7 @@ const AudioPlayerPage = () => {
         .from('favorites')
         .delete()
         .eq('user_id', user.id)
-        .eq('content_id', String(trackData.id))
+        .eq('content_id', trackData.id)
         .eq('content_type', 'track');
       setIsSaved(false);
       toast({
@@ -219,7 +220,7 @@ const AudioPlayerPage = () => {
         .from('favorites')
         .insert({ 
           user_id: user.id, 
-          content_id: String(trackData.id),
+          content_id: trackData.id,
           content_type: 'track'
         });
       setIsSaved(true);
