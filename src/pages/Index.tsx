@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -210,7 +211,7 @@ const Dashboard = () => {
         </Button>
       </div>
 
-      <DashboardStats role={user.role || 'user'} />
+      <DashboardStats role={user.role} />
 
       {/* Subscription Management for Authenticated Users */}
       <div className="bg-card border rounded-lg p-6">

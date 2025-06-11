@@ -24,10 +24,14 @@ const UpcomingBookings = ({ limit = 3 }: UpcomingBookingsProps) => {
       .filter((booking) => {
         const bookingDate = new Date(`${booking.date}T${booking.time}`);
         return (
-          // For regular users - find bookings they booked
-          (user.role === "user" && booking.studentId === user.id) ||
-          // For moderators and admins - they can see relevant bookings
-          (user.role === "moderator" && booking.tutorId === user.id) ||
+          // For students, parents, adults - find bookings they booked
+          ((user.role === "student" ||
+            user.role === "parent" ||
+            user.role === "adult") &&
+            booking.studentId === user.id) ||
+          // For teachers - find bookings they are teaching
+          (user.role === "teacher" &&
+            booking.tutorId === user.id) ||
           // Admins can see all bookings
           user.role === "admin"
         );

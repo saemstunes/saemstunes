@@ -1,18 +1,20 @@
-
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from '@/context/AuthContext';
-import HomePage from '@/pages/Index';
-import TracksPage from '@/pages/Tracks';
-import AlbumsPage from '@/pages/Tracks';
-import ArtistsPage from '@/pages/Tracks';
-import ProfilePage from '@/pages/Profile';
+import HomePage from '@/pages/HomePage';
+import TracksPage from '@/pages/TracksPage';
+import AlbumsPage from '@/pages/AlbumsPage';
+import ArtistsPage from '@/pages/ArtistsPage';
+import ProfilePage from '@/pages/ProfilePage';
 import AudioPlayerPage from '@/pages/AudioPlayer';
+import QuizzesPage from '@/pages/QuizzesPage';
 import MusicQuizPage from '@/pages/MusicQuizPage';
-import NotFoundPage from '@/pages/NotFound';
+import DynamicQuizPage from '@/pages/DynamicQuizPage';
+import NotFoundPage from '@/pages/NotFoundPage';
 import { AudioPlayerProvider } from '@/context/AudioPlayerContext';
 import GlobalMiniPlayer from '@/components/player/GlobalMiniPlayer';
 
@@ -38,9 +40,9 @@ function App() {
                   <Route path="/artists" element={<ArtistsPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
                   <Route path="/audio-player/:id" element={<AudioPlayerPage />} />
-                  <Route path="/quizzes" element={<MusicQuizPage />} />
+                  <Route path="/quizzes" element={<QuizzesPage />} />
                   <Route path="/music-quiz" element={<MusicQuizPage />} />
-                  <Route path="/dynamic-quiz/:quizId" element={<MusicQuizPage />} />
+                  <Route path="/dynamic-quiz/:quizId" element={<DynamicQuizPage />} />
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
                 <GlobalMiniPlayer />
