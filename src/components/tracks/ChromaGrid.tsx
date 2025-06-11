@@ -1,6 +1,7 @@
 
 import { useRef, useEffect } from "react";
 import { gsap } from "gsap";
+import { ResponsiveImage } from "@/components/ui/responsive-image";
 import "./ChromaGrid.css";
 
 interface ChromaGridItem {
@@ -18,8 +19,6 @@ interface ChromaGridProps {
   items?: ChromaGridItem[];
   className?: string;
   radius?: number;
-  columns?: number;
-  rows?: number;
   damping?: number;
   fadeOut?: number;
   ease?: string;
@@ -29,8 +28,6 @@ export const ChromaGrid = ({
   items,
   className = "",
   radius = 300,
-  columns = 3,
-  rows = 2,
   damping = 0.45,
   fadeOut = 0.6,
   ease = "power3.out",
@@ -165,38 +162,46 @@ export const ChromaGrid = ({
       style={
         {
           "--r": `${radius}px`,
-          "--cols": columns,
-          "--rows": rows,
         } as React.CSSProperties
       }
       onPointerMove={handleMove}
       onPointerLeave={handleLeave}
     >
-      {data.map((c, i) => (
-        <article
-          key={i}
-          className="chroma-card"
-          onMouseMove={handleCardMove}
-          onClick={() => handleCardClick(c.url)}
-          style={
-            {
-              "--card-border": c.borderColor || "transparent",
-              "--card-gradient": c.gradient,
-              cursor: c.url ? "pointer" : "default",
-            } as React.CSSProperties
-          }
-        >
-          <div className="chroma-img-wrapper">
-            <img src={c.image} alt={c.title} loading="lazy" />
-          </div>
-          <footer className="chroma-info">
-            <h3 className="name">{c.title}</h3>
-            {c.handle && <span className="handle">{c.handle}</span>}
-            <p className="role">{c.subtitle}</p>
-            {c.location && <span className="location">{c.location}</span>}
-          </footer>
-        </article>
-      ))}
+      <div className="chroma-items-container">
+        {data.slice(0, 6).map((c, i) => (
+          <article
+            key={i}
+            className="chroma-card"
+            onMouseMove={handleCardMove}
+            onClick={() => handleCardClick(c.url)}
+            style={
+              {
+                "--card-border": c.borderColor || "transparent",
+                "--card-gradient": c.gradient,
+                cursor: c.url ? "pointer" : "default",
+              } as React.CSSProperties
+            }
+          >
+            <div className="chroma-img-wrapper">
+              <ResponsiveImage 
+                src={c.image} 
+                alt={c.title}
+                width={260}
+                height={200}
+                mobileWidth={200}
+                mobileHeight={160}
+                className="w-full h-full object-cover rounded-lg"
+              />
+            </div>
+            <footer className="chroma-info">
+              <h3 className="name">{c.title}</h3>
+              {c.handle && <span className="handle">{c.handle}</span>}
+              <p className="role">{c.subtitle}</p>
+              {c.location && <span className="location">{c.location}</span>}
+            </footer>
+          </article>
+        ))}
+      </div>
       <div className="chroma-overlay" />
       <div ref={fadeRef} className="chroma-fade" />
     </div>

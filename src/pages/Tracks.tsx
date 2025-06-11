@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, Play, Pause, Heart, MessageCircle, Music, CheckCircle, Clock, Star, TrendingUp } from "lucide-react";
+import { Upload, Play, Pause, Heart, MessageCircle, Music, CheckCircle, Clock, Star, TrendingUp, Share } from "lucide-react";
 import AudioPlayer from "@/components/media/AudioPlayer";
 import { canAccessContent, AccessLevel } from "@/lib/contentAccess";
 import MainLayout from "@/components/layout/MainLayout";
@@ -17,6 +18,7 @@ import AnimatedList from "@/components/tracks/AnimatedList";
 import ChromaGrid from "@/components/tracks/ChromaGrid";
 import TiltedCard from "@/components/tracks/TiltedCard";
 import CountUp from "@/components/tracks/CountUp";
+import { ResponsiveImage } from "@/components/ui/responsive-image";
 import { useNavigate } from "react-router-dom";
 
 interface Track {
@@ -79,7 +81,7 @@ const Tracks = () => {
       gradient: "linear-gradient(180deg, #DF8142, #000)",
     },
     {
-      image: "https://i.imgur.com/LJQDADg.jpeg,
+      image: "https://i.imgur.com/LJQDADg.jpeg",
       title: "Ni Hai",
       subtitle: "Originals",
       handle: "@saemstunes, @kendinkonge",
@@ -448,34 +450,30 @@ const Tracks = () => {
                     <h2 className="text-2xl font-bold">Featured Track of the Week</h2>
                   </div>
                   
-                  <div className="grid md:grid-cols-2 gap-8 items-center">
-                    <div className="flex justify-center relative">
-                      <div className="hover:z-[9999] relative transition-all duration-300">
-                        <TiltedCard
-                          imageSrc={featuredTrack.imageSrc}
-                          altText="Featured Track Cover"
-                          captionText={featuredTrack.artist}
-                          containerHeight="400px"
-                          containerWidth="400px"
-                          imageHeight="400px"
-                          imageWidth="400px"
-                          rotateAmplitude={12}
-                          scaleOnHover={1.1}
-                          showMobileWarning={false}
-                          showTooltip={true}
+                  <div className="grid md:grid-cols-2 gap-6 lg:gap-8 items-center">
+                    <div className="flex justify-center relative order-2 md:order-1">
+                      <div className="hover:z-[9999] relative transition-all duration-300 w-full max-w-sm">
+                        <ResponsiveImage
+                          src={featuredTrack.imageSrc}
+                          alt="Featured Track Cover"
+                          width={400}
+                          height={400}
+                          mobileWidth={280}
+                          mobileHeight={280}
+                          className="w-full h-auto rounded-2xl shadow-2xl transform hover:scale-105 transition-transform duration-300"
                         />
                       </div>
                     </div>
                     
-                    <div className="space-y-4 md:pl-8">
+                    <div className="space-y-4 order-1 md:order-2 text-center md:text-left">
                       <h3 className="text-xl font-semibold">{featuredTrack.artist}</h3>
                       <p className="text-muted-foreground">
                         This week's featured track showcases exceptional musical artistry and creativity.
                       </p>
                       
-                      <div className="flex gap-8">
+                      <div className="flex gap-8 justify-center md:justify-start">
                         <div className="text-center">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 justify-center">
                             <Play className="h-4 w-4" />
                             <CountUp to={featuredTrack.plays} separator="," className="text-2xl font-bold text-gold" />
                           </div>
@@ -483,7 +481,7 @@ const Tracks = () => {
                         </div>
                         
                         <div className="text-center">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 justify-center">
                             <Heart className="h-4 w-4" />
                             <CountUp to={featuredTrack.likes} separator="," className="text-2xl font-bold text-gold" />
                           </div>
@@ -492,7 +490,7 @@ const Tracks = () => {
                       </div>
                       
                       <Button 
-                        className="bg-gold hover:bg-gold/90"
+                        className="bg-gold hover:bg-gold/90 w-full md:w-auto"
                         onClick={handlePlayNow}
                       >
                         <Play className="h-4 w-4 mr-2" />
@@ -544,7 +542,7 @@ const Tracks = () => {
                   <h2 className="text-2xl font-bold">Featured Albums</h2>
                 </div>
                 
-                <div style={{ height: '600px', position: 'relative' }}>
+                <div className="w-full overflow-hidden">
                   <ChromaGrid 
                     items={albumItems}
                     radius={300}
@@ -616,10 +614,13 @@ const Tracks = () => {
 const TrackCard = ({ track, user }: { track: Track; user: any }) => {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
+  const [saved, setSaved] = useState(false);
+  const { toast } = useToast();
   
   useEffect(() => {
     if (user) {
       checkIfLiked();
+      checkIfSaved();
       getLikeCount();
     }
   }, [user, track.id]);
@@ -637,6 +638,20 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
     setLiked(!!data);
   };
 
+  const checkIfSaved = async () => {
+    if (!user) return;
+    
+    const { data } = await supabase
+      .from('favorites')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('content_id', track.id)
+      .eq('content_type', 'track')
+      .single();
+    
+    setSaved(!!data);
+  };
+
   const getLikeCount = async () => {
     const { count } = await supabase
       .from('likes')
@@ -647,7 +662,14 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
   };
 
   const toggleLike = async () => {
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: "Sign In Required",
+        description: "Please sign in to like tracks",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (liked) {
       await supabase
@@ -657,12 +679,95 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
         .eq('track_id', track.id);
       setLiked(false);
       setLikeCount(prev => prev - 1);
+      toast({
+        title: "Removed from likes",
+        description: "Track removed from your liked songs",
+      });
     } else {
       await supabase
         .from('likes')
         .insert({ user_id: user.id, track_id: track.id });
       setLiked(true);
       setLikeCount(prev => prev + 1);
+      toast({
+        title: "Added to likes",
+        description: "Track added to your liked songs",
+      });
+    }
+  };
+
+  const toggleSave = async () => {
+    if (!user) {
+      toast({
+        title: "Sign In Required",
+        description: "Please sign in to save tracks",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (saved) {
+      await supabase
+        .from('favorites')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('content_id', track.id)
+        .eq('content_type', 'track');
+      setSaved(false);
+      toast({
+        title: "Removed from saved",
+        description: "Track removed from your saved songs",
+      });
+    } else {
+      await supabase
+        .from('favorites')
+        .insert({ 
+          user_id: user.id, 
+          content_id: track.id,
+          content_type: 'track'
+        });
+      setSaved(true);
+      toast({
+        title: "Added to saved",
+        description: "Track added to your saved songs",
+      });
+    }
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: `${track.title} by ${track.profiles?.display_name || 'Unknown Artist'}`,
+      text: `Listen to ${track.title} on Saem's Tunes`,
+      url: `${window.location.origin}/audio-player/${track.id}`,
+    };
+
+    try {
+      if (navigator.share && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        // Fallback to copying link
+        await navigator.clipboard.writeText(shareData.url);
+        toast({
+          title: "Link copied",
+          description: "Track link copied to clipboard",
+        });
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+      // Fallback to copying link
+      try {
+        await navigator.clipboard.writeText(shareData.url);
+        toast({
+          title: "Link copied",
+          description: "Track link copied to clipboard",
+        });
+      } catch (clipboardError) {
+        toast({
+          title: "Share failed",
+          description: "Unable to share or copy link",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -678,9 +783,13 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
         <div className="flex items-start gap-4 mb-4">
           <div className="h-12 w-12 rounded-full bg-gold/20 flex items-center justify-center">
             {track.profiles?.avatar_url ? (
-              <img 
+              <ResponsiveImage 
                 src={track.profiles.avatar_url} 
                 alt="Artist" 
+                width={48}
+                height={48}
+                mobileWidth={48}
+                mobileHeight={48}
                 className="h-12 w-12 rounded-full object-cover"
               />
             ) : (
@@ -701,10 +810,14 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
           </div>
           
           {coverUrl && (
-            <img 
+            <ResponsiveImage 
               src={coverUrl} 
               alt="Cover" 
-              className="h-16 w-16 rounded object-cover"
+              width={64}
+              height={64}
+              mobileWidth={48}
+              mobileHeight={48}
+              className="h-16 w-16 md:h-16 md:w-16 sm:h-12 sm:w-12 rounded object-cover"
             />
           )}
         </div>
@@ -721,22 +834,39 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
           </div>
         )}
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap">
           {user && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleLike}
-              className="flex items-center gap-2"
-            >
-              <Heart className={`h-4 w-4 ${liked ? 'fill-red-500 text-red-500' : ''}`} />
-              {likeCount}
-            </Button>
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleLike}
+                className="flex items-center gap-2"
+              >
+                <Heart className={`h-4 w-4 ${liked ? 'fill-red-500 text-red-500' : ''}`} />
+                {likeCount}
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleSave}
+                className="flex items-center gap-2"
+              >
+                <CheckCircle className={`h-4 w-4 ${saved ? 'fill-green-500 text-green-500' : ''}`} />
+                {saved ? 'Saved' : 'Save'}
+              </Button>
+            </>
           )}
           
-          <Button variant="ghost" size="sm" className="flex items-center gap-2">
-            <MessageCircle className="h-4 w-4" />
-            Comment
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="flex items-center gap-2"
+            onClick={handleShare}
+          >
+            <Share className="h-4 w-4" />
+            Share
           </Button>
           
           <span className="text-xs text-muted-foreground ml-auto">

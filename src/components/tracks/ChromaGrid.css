@@ -2,14 +2,12 @@
 .chroma-grid {
   position: relative;
   width: 100%;
-  height: 100%;
-  display: grid;
-  grid-template-columns: repeat(var(--cols, 3), 320px);
-  grid-auto-rows: auto;
+  height: 600px;
+  max-width: 100vw;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  max-width: 1200px;
-  margin: 0 auto;
   padding: 1rem;
   box-sizing: border-box;
 
@@ -18,19 +16,30 @@
   --r: 220px;
 }
 
-@media (max-width: 1124px) {
+@media (max-width: 768px) {
   .chroma-grid {
-    grid-template-columns: repeat(auto-fit, minmax(320px, 320px));
-    gap: 0.5rem;
+    height: 400px;
     padding: 0.5rem;
+    --r: 150px;
   }
 }
 
-@media (max-width: 480px) {
-  .chroma-grid {
-    grid-template-columns: 320px;
-    gap: 0.75rem;
-    padding: 1rem;
+.chroma-items-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: 900px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .chroma-items-container {
+    gap: 0.5rem;
+    max-width: 100%;
   }
 }
 
@@ -38,21 +47,40 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  width: 320px;
-  height: auto;
+  width: 280px;
+  height: 350px;
   border-radius: 20px;
   overflow: hidden;
   border: 1px solid hsl(var(--border));
-  transition: border-color 0.3s ease;
+  transition: all 0.3s ease;
   background: var(--card-gradient);
+  cursor: pointer;
 
   --mouse-x: 50%;
   --mouse-y: 50%;
   --spotlight-color: rgba(255, 255, 255, 0.1);
 }
 
+@media (max-width: 768px) {
+  .chroma-card {
+    width: 240px;
+    height: 300px;
+    border-radius: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .chroma-card {
+    width: 200px;
+    height: 260px;
+    border-radius: 12px;
+  }
+}
+
 .chroma-card:hover {
   border-color: var(--card-border);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
 .chroma-card::before {
@@ -100,9 +128,46 @@
   grid-template-columns: 1fr auto;
   row-gap: 0.25rem;
   column-gap: 0.75rem;
+  min-height: 80px;
+}
+
+@media (max-width: 768px) {
+  .chroma-info {
+    padding: 0.5rem 0.75rem;
+    min-height: 70px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .chroma-info {
+    padding: 0.5rem;
+    min-height: 60px;
+    font-size: 0.85rem;
+  }
+}
+
+.chroma-info .name {
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.2;
+  grid-column: 1 / -1;
 }
 
 .chroma-info .role,
 .chroma-info .handle {
   color: hsl(var(--muted-foreground));
+  font-size: 0.875rem;
+  line-height: 1.2;
+}
+
+@media (max-width: 480px) {
+  .chroma-info .name {
+    font-size: 0.9rem;
+  }
+  
+  .chroma-info .role,
+  .chroma-info .handle {
+    font-size: 0.8rem;
+  }
 }

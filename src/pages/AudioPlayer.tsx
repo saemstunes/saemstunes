@@ -3,26 +3,28 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Slider } from '@/components/ui/slider';
 import { 
-  Play, 
-  Pause, 
-  SkipBack, 
-  SkipForward, 
-  Volume2, 
-  VolumeX,
-  Shuffle,
-  Repeat,
   ArrowLeft,
   Heart,
-  Share2,
-  MoreHorizontal
+  Share,
+  MoreHorizontal,
+  Download,
+  Plus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import MainLayout from '@/components/layout/MainLayout';
 import { Helmet } from 'react-helmet';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import AudioPlayer from '@/components/media/AudioPlayer';
+import { ResponsiveImage } from '@/components/ui/responsive-image';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface AudioTrack {
   id: string | number;
@@ -38,41 +40,238 @@ const AudioPlayerPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isLiked, setIsLiked] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const [audioError, setAudioError] = useState(false);
+  const [trackData, setTrackData] = useState<AudioTrack | null>(null);
+  const [loading, setLoading] = useState(true);
   
-  // Get track data from navigation state or use default
-  const trackData = location.state?.track || {
-    id: 1,
-    src: '/audio/sample.mp3',
-    name: 'Sample Track',
-    artist: 'Sample Artist',
-    artwork: '/lovable-uploads/df415c9b-2546-4c87-9f13-b44439a1f4e4.png',
-    album: 'Sample Album'
+  useEffect(() => {
+    // Check if track data is passed via navigation state
+    if (location.state?.track) {
+      setTrackData(location.state.track);
+      setLoading(false);
+    } else if (id) {
+      // Fetch track data from database
+      fetchTrackData(id);
+    } else {
+      // Use default track data
+      setTrackData({
+        id: 1,
+        src: '/audio/sample.mp3',
+        name: 'Sample Track',
+        artist: 'Sample Artist',
+        artwork: '/lovable-uploads/df415c9b-2546-4c87-9f13-b44439a1f4e4.png',
+        album: 'Sample Album'
+      });
+      setLoading(false);
+    }
+  }, [id, location.state]);
+
+  useEffect(() => {
+    if (user && trackData) {
+      checkIfLiked();
+      checkIfSaved();
+    }
+  }, [user, trackData]);
+
+  const fetchTrackData = async (trackId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('tracks')
+        .select(`
+          *,
+          profiles:user_id (
+            display_name,
+            avatar_url
+          )
+        `)
+        .eq('id', trackId)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        const audioUrl = data.audio_path ? 
+          supabase.storage.from('tracks').getPublicUrl(data.audio_path).data.publicUrl : '';
+        
+        const coverUrl = data.cover_path ? 
+          supabase.storage.from('tracks').getPublicUrl(data.cover_path).data.publicUrl : '';
+
+        setTrackData({
+          id: data.id,
+          src: audioUrl,
+          name: data.title,
+          artist: data.profiles?.display_name || 'Unknown Artist',
+          artwork: coverUrl || '/placeholder.svg',
+          album: 'Single'
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching track:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load track data",
+        variant: "destructive",
+      });
+      // Fallback to default data
+      setTrackData({
+        id: 1,
+        src: '/audio/sample.mp3',
+        name: 'Sample Track',
+        artist: 'Sample Artist',
+        artwork: '/placeholder.svg',
+        album: 'Sample Album'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const toggleLike = () => {
-    setIsLiked(!isLiked);
+  const checkIfLiked = async () => {
+    if (!user || !trackData) return;
+    
+    const { data } = await supabase
+      .from('likes')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('track_id', trackData.id)
+      .single();
+    
+    setIsLiked(!!data);
+  };
+
+  const checkIfSaved = async () => {
+    if (!user || !trackData) return;
+    
+    const { data } = await supabase
+      .from('favorites')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('content_id', trackData.id)
+      .eq('content_type', 'track')
+      .single();
+    
+    setIsSaved(!!data);
+  };
+
+  const toggleLike = async () => {
+    if (!user) {
+      toast({
+        title: "Sign In Required",
+        description: "Please sign in to like tracks",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!trackData) return;
+    
+    if (isLiked) {
+      await supabase
+        .from('likes')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('track_id', trackData.id);
+      setIsLiked(false);
+      toast({
+        title: "Removed from favorites",
+        description: "Track removed from your favorites",
+      });
+    } else {
+      await supabase
+        .from('likes')
+        .insert({ user_id: user.id, track_id: trackData.id });
+      setIsLiked(true);
+      toast({
+        title: "Added to favorites",
+        description: "Track added to your favorites",
+      });
+    }
+  };
+
+  const toggleSave = async () => {
+    if (!user) {
+      toast({
+        title: "Sign In Required",
+        description: "Please sign in to save tracks",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!trackData) return;
+    
+    if (isSaved) {
+      await supabase
+        .from('favorites')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('content_id', trackData.id)
+        .eq('content_type', 'track');
+      setIsSaved(false);
+      toast({
+        title: "Removed from saved",
+        description: "Track removed from your saved songs",
+      });
+    } else {
+      await supabase
+        .from('favorites')
+        .insert({ 
+          user_id: user.id, 
+          content_id: trackData.id,
+          content_type: 'track'
+        });
+      setIsSaved(true);
+      toast({
+        title: "Added to saved",
+        description: "Track added to your saved songs",
+      });
+    }
+  };
+
+  const handleShare = async () => {
+    if (!trackData) return;
+
+    const shareData = {
+      title: `${trackData.name} by ${trackData.artist}`,
+      text: `Listen to ${trackData.name} on Saem's Tunes`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareData.url);
+        toast({
+          title: "Link copied",
+          description: "Track link copied to clipboard",
+        });
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+      toast({
+        title: "Share failed",
+        description: "Unable to share track",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDownload = () => {
     toast({
-      title: isLiked ? "Removed from favorites" : "Added to favorites",
-      description: `Track ${isLiked ? 'removed from' : 'added to'} your favorites`,
+      title: "Download feature",
+      description: "Download functionality will be available for premium users",
     });
   };
 
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: `${trackData.name} by ${trackData.artist}`,
-        text: `Listen to ${trackData.name} on Saem's Tunes`,
-        url: window.location.href,
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast({
-        title: "Link copied",
-        description: "Track link copied to clipboard",
-      });
-    }
+  const handleAddToPlaylist = () => {
+    toast({
+      title: "Add to playlist",
+      description: "Playlist functionality coming soon",
+    });
   };
 
   // Handle audio errors
@@ -84,6 +283,34 @@ const AudioPlayerPage = () => {
       variant: "destructive",
     });
   };
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background flex items-center justify-center">
+          <div className="text-center">
+            <div className="h-8 w-8 rounded-full border-2 border-t-transparent border-gold animate-spin mx-auto mb-4"></div>
+            <p>Loading track...</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (!trackData) {
+    return (
+      <MainLayout>
+        <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold mb-4">Track not found</h2>
+            <Button onClick={() => navigate('/tracks')}>
+              Back to Tracks
+            </Button>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <>
@@ -109,16 +336,20 @@ const AudioPlayerPage = () => {
             </div>
 
             <Card className="overflow-hidden bg-gradient-to-b from-card to-card/80 border-gold/20 shadow-2xl">
-              <CardContent className="p-8">
+              <CardContent className="p-6 md:p-8">
                 {/* Album Artwork and Info */}
-                <div className="flex flex-col lg:flex-row gap-8 mb-8">
+                <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mb-8">
                   {/* Artwork */}
                   <div className="flex-shrink-0 mx-auto lg:mx-0">
                     <div className="relative group">
-                      <img
-                        src={trackData.artwork}
+                      <ResponsiveImage
+                        src={trackData.artwork || '/placeholder.svg'}
                         alt={trackData.name}
-                        className="w-80 h-80 rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300"
+                        width={320}
+                        height={320}
+                        mobileWidth={280}
+                        mobileHeight={280}
+                        className="w-80 h-80 md:w-80 md:h-80 sm:w-72 sm:h-72 rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                       <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
@@ -127,15 +358,15 @@ const AudioPlayerPage = () => {
                   {/* Track Info */}
                   <div className="flex flex-col justify-center space-y-6 flex-1 text-center lg:text-left">
                     <div>
-                      <h2 className="text-4xl font-bold mb-3 text-foreground">{trackData.name}</h2>
-                      <p className="text-2xl text-muted-foreground mb-2">{trackData.artist}</p>
+                      <h2 className="text-3xl md:text-4xl font-bold mb-3 text-foreground">{trackData.name}</h2>
+                      <p className="text-xl md:text-2xl text-muted-foreground mb-2">{trackData.artist}</p>
                       {trackData.album && (
                         <p className="text-lg text-muted-foreground/80">{trackData.album}</p>
                       )}
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex items-center justify-center lg:justify-start gap-4">
+                    <div className="flex items-center justify-center lg:justify-start gap-4 flex-wrap">
                       <Button
                         variant="ghost"
                         size="icon"
@@ -154,16 +385,34 @@ const AudioPlayerPage = () => {
                         onClick={handleShare}
                         className="h-12 w-12 text-muted-foreground hover:text-foreground"
                       >
-                        <Share2 className="h-6 w-6" />
+                        <Share className="h-6 w-6" />
                       </Button>
                       
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-12 w-12 text-muted-foreground hover:text-foreground"
-                      >
-                        <MoreHorizontal className="h-6 w-6" />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-12 w-12 text-muted-foreground hover:text-foreground"
+                          >
+                            <MoreHorizontal className="h-6 w-6" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={toggleSave}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            {isSaved ? 'Remove from saved' : 'Save track'}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={handleAddToPlaylist}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add to playlist
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={handleDownload}>
+                            <Download className="mr-2 h-4 w-4" />
+                            Download
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                 </div>
