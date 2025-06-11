@@ -79,7 +79,7 @@ const SplashScreen = ({
       scale: 0.6 + Math.random() * 0.4,
       duration: 3 + Math.random() * 2,
       delay: i * 0.5,
-      opacity: 0.4 + Math.random() * 0.3,
+      opacity: 0.5, // Fixed 50% opacity
     }));
   }, []);
 
@@ -262,7 +262,7 @@ const SplashScreen = ({
 
             {/* Enhanced floating music elements */}
             {showMusicNotes && (
-              <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute inset-0 pointer-events-none z-0">
                 {musicNotes.map((note) => {
                   const IconComponent = note.Icon;
                   return (
@@ -274,13 +274,13 @@ const SplashScreen = ({
                       }}
                       initial={{
                         x: `${note.x}px`,
-                        y: `${note.y}px`,
+                        y: `${note.y + 150}px`, // Start lower to avoid text area
                         rotate: note.rotate,
                         scale: 0,
                         opacity: 0,
                       }}
                       animate={{
-                        y: [`${note.y}px`, `${note.y - 120}px`, `${note.y - 200}px`],
+                        y: [`${note.y + 150}px`, `${note.y + 50}px`, `${note.y - 100}px`],
                         x: [
                           `${note.x}px`,
                           `${note.x + (Math.random() - 0.5) * 60}px`,
@@ -307,13 +307,13 @@ const SplashScreen = ({
 
             {/* Enhanced app title */}
             <motion.div
-              className="text-center mb-6"
+              className="text-center mb-6 relative z-10"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.8 }}
             >
-              <h1 className="text-4xl font-bold text-slate-900 dark:text-amber-50 mb-2">
-                Saem's{" "}
+              <h1 className="text-4xl font-bold mb-2">
+                <span style={{ color: '#26110D' }} className="dark:text-amber-50">Saem's</span>{" "}
                 <motion.span
                   className="text-yellow-600 dark:text-yellow-400"
                   animate={{
