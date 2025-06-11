@@ -20,19 +20,19 @@ const RecommendedContent = () => {
     // Sort or filter based on user role
     if (user) {
       switch (user.role) {
-        case "student":
-          // Prioritize beginner content for students
+        case "user":
+          // Prioritize beginner content for regular users
           filteredVideos.sort((a, b) => {
             if (a.level === "beginner" && b.level !== "beginner") return -1;
             if (a.level !== "beginner" && b.level === "beginner") return 1;
             return 0;
           });
           break;
-        case "adult":
-          // Adults might be interested in all levels
+        case "moderator":
+          // Moderators might be interested in all levels
           break;
-        case "teacher":
-          // Teachers might be interested in teaching methods
+        case "admin":
+          // Admins might be interested in teaching methods
           filteredVideos = filteredVideos.filter(
             (video) => video.category === "Vocal Development" || video.level === "advanced"
           );

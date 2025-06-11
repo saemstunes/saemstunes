@@ -47,7 +47,7 @@ const Bookings = () => {
           <TabsList className="mb-6">
             <TabsTrigger value="tutors">Find Tutors</TabsTrigger>
             <TabsTrigger value="upcoming">Upcoming Sessions</TabsTrigger>
-            {user && (user.role === "teacher" || user.role === "admin") && (
+            {user && (user.role === "moderator" || user.role === "admin") && (
               <TabsTrigger value="manage">Manage Sessions</TabsTrigger>
             )}
           </TabsList>
@@ -100,12 +100,12 @@ const Bookings = () => {
             <UpcomingBookings limit={10} />
           </TabsContent>
           
-          {user && (user.role === "teacher" || user.role === "admin") && (
+          {user && (user.role === "moderator" || user.role === "admin") && (
             <TabsContent value="manage">
               <div className="text-center py-12 bg-muted rounded-lg">
                 <h3 className="text-lg font-medium">Session Management</h3>
                 <p className="text-muted-foreground mt-2">
-                  Teacher and admin session management will be available soon.
+                  Moderator and admin session management will be available soon.
                 </p>
               </div>
             </TabsContent>
