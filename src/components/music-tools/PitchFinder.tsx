@@ -33,10 +33,10 @@ const PitchFinder = () => {
         <CardHeader className="bg-gradient-to-r from-gold/10 to-transparent border-b border-gold/10 pb-4">
           <CardTitle className="flex items-center space-x-2 text-xl md:text-2xl">
             <Music className="h-6 w-6 text-gold" />
-            <span>Saem's Pitch Tuner</span>
+            <span>Get That Note Right</span>
           </CardTitle>
           <CardDescription>
-            Professional-grade pitch detection for musicians
+            We made our own professional-grade pitch detection for musicians. Test it out now!
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6 pt-6 relative">
