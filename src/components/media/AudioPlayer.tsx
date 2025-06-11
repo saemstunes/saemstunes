@@ -23,6 +23,7 @@ interface AudioPlayerProps {
   artwork?: string;
   autoPlay?: boolean;
   onEnded?: () => void;
+  onError?: () => void;
   className?: string;
   showControls?: boolean;
   compact?: boolean;
@@ -41,6 +42,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   artwork = '/placeholder.svg',
   autoPlay = false,
   onEnded,
+  onError,
   className,
   showControls = true,
   compact = false
@@ -62,53 +64,60 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
   // Initialize audio element
   useEffect(() => {
-    const audio = new Audio(src);
-    audioRef.current = audio;
-    
-    const setupAudio = async () => {
-      try {
-        if (autoPlay) {
-          const hasPermission = await requestPermissionWithFeedback('microphone', 'Audio playback');
-          if (hasPermission && audio.play) {
-            const playPromise = audio.play();
-            if (playPromise !== undefined) {
-              playPromise.then(() => {
-                setIsPlaying(true);
-              }).catch(err => {
-                console.error('Autoplay failed:', err);
-                setIsPlaying(false);
-              });
+    try {
+      const audio = new Audio(src);
+      audioRef.current = audio;
+      
+      const setupAudio = async () => {
+        try {
+          if (autoPlay) {
+            const hasPermission = await requestPermissionWithFeedback('microphone', 'Audio playback');
+            if (hasPermission && audio.play) {
+              const playPromise = audio.play();
+              if (playPromise !== undefined) {
+                playPromise.then(() => {
+                  setIsPlaying(true);
+                }).catch(err => {
+                  console.error('Autoplay failed:', err);
+                  setIsPlaying(false);
+                });
+              }
             }
           }
-        }
-        
-        // Set up MediaSession API if supported
-        if ('mediaSession' in navigator) {
-          navigator.mediaSession.metadata = new MediaMetadata({
-            title: title || 'Unknown Track',
-            artist: artist || 'Unknown Artist',
-            artwork: [{ src: artwork, sizes: '512x512', type: 'image/png' }]
-          });
           
-          navigator.mediaSession.setActionHandler('play', () => togglePlay());
-          navigator.mediaSession.setActionHandler('pause', () => togglePlay());
+          // Set up MediaSession API if supported
+          if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+              title: title || 'Unknown Track',
+              artist: artist || 'Unknown Artist',
+              artwork: [{ src: artwork, sizes: '512x512', type: 'image/png' }]
+            });
+            
+            navigator.mediaSession.setActionHandler('play', () => togglePlay());
+            navigator.mediaSession.setActionHandler('pause', () => togglePlay());
+          }
+          
+        } catch (err) {
+          console.error('Error setting up audio:', err);
+          setError('Failed to load audio file');
+          onError?.();
         }
-        
-      } catch (err) {
-        console.error('Error setting up audio:', err);
-        setError('Failed to load audio file');
-      }
-    };
-    
-    setupAudio();
-    
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.remove();
-      }
-    };
-  }, [src]);
+      };
+      
+      setupAudio();
+      
+      return () => {
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.remove();
+        }
+      };
+    } catch (err) {
+      console.error('Error creating audio element:', err);
+      setError('Failed to initialize audio player');
+      onError?.();
+    }
+  }, [src, autoPlay, title, artist, artwork, onError]);
 
   // Set up event listeners for the audio element
   useEffect(() => {
@@ -136,6 +145,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     const handleError = () => {
       setError('Error loading audio file');
       setIsLoading(false);
+      onError?.();
     };
     
     audio.addEventListener('timeupdate', handleTimeUpdate);
@@ -153,7 +163,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       audio.removeEventListener('loadeddata', handleLoadedData);
       audio.removeEventListener('error', handleError);
     };
-  }, [isRepeat, onEnded]);
+  }, [isRepeat, onEnded, onError]);
   
   // Update volume when it changes
   useEffect(() => {
