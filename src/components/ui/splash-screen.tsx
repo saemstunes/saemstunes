@@ -40,7 +40,7 @@ const THEME_COLORS = {
   secondary: "#f59e0b", // Yellow-500
   background: {
     light: "white",
-    dark: "rgb(38, 17, 13)", // Dark brown
+    dark: "rgb(41, 27, 15)", // Dark brown
   },
 };
 
@@ -79,7 +79,7 @@ const SplashScreen = ({
       scale: 0.6 + Math.random() * 0.4,
       duration: 3 + Math.random() * 2,
       delay: i * 0.5,
-      opacity: 0.5, // Fixed 50% opacity
+      opacity: 0.4 + Math.random() * 0.3,
     }));
   }, []);
 
@@ -178,7 +178,7 @@ const SplashScreen = ({
     <AnimatePresence>
       {showSplash && (
         <motion.div
-         className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-white"
+          className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-white dark:bg-amber-950"
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
           exit={{
@@ -187,16 +187,9 @@ const SplashScreen = ({
             transition: { duration: 1, ease: EASINGS.decelerate },
           }}
           style={{
-            backgroundColor:
-              typeof window !== "undefined" &&
-              window.matchMedia &&
-              window.matchMedia("(prefers-color-scheme: dark)").matches
-              ? "#26110D"
-              : "#fef3c7",
             pointerEvents: loading ? "auto" : "none",
           }}
-          >
-
+        >
           {/* Animated background elements */}
           <div className="absolute inset-0" aria-hidden="true">
             {glowOrbs.map((orb, index) => (
@@ -269,7 +262,7 @@ const SplashScreen = ({
 
             {/* Enhanced floating music elements */}
             {showMusicNotes && (
-              <div className="absolute inset-0 pointer-events-none z-0">
+              <div className="absolute inset-0 pointer-events-none">
                 {musicNotes.map((note) => {
                   const IconComponent = note.Icon;
                   return (
@@ -281,13 +274,13 @@ const SplashScreen = ({
                       }}
                       initial={{
                         x: `${note.x}px`,
-                        y: `${note.y + 150}px`, // Start lower to avoid text area
+                        y: `${note.y}px`,
                         rotate: note.rotate,
                         scale: 0,
                         opacity: 0,
                       }}
                       animate={{
-                        y: [`${note.y + 150}px`, `${note.y + 50}px`, `${note.y - 100}px`],
+                        y: [`${note.y}px`, `${note.y - 120}px`, `${note.y - 200}px`],
                         x: [
                           `${note.x}px`,
                           `${note.x + (Math.random() - 0.5) * 60}px`,
@@ -314,13 +307,13 @@ const SplashScreen = ({
 
             {/* Enhanced app title */}
             <motion.div
-              className="text-center mb-6 relative z-10"
+              className="text-center mb-6"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.8 }}
             >
-              <h1 className="text-4xl font-bold mb-2">
-                <span style={{ color: '#26110D' }} className="dark:text-amber-100">Saem's</span>{" "}
+              <h1 className="text-4xl font-bold text-slate-900 dark:text-amber-50 mb-2">
+                Saem's{" "}
                 <motion.span
                   className="text-yellow-600 dark:text-yellow-400"
                   animate={{
