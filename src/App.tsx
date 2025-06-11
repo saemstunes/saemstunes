@@ -11,9 +11,7 @@ import AlbumsPage from '@/pages/Tracks';
 import ArtistsPage from '@/pages/Tracks';
 import ProfilePage from '@/pages/Profile';
 import AudioPlayerPage from '@/pages/AudioPlayer';
-import QuizzesPage from '@/pages/MusicQuizPage';
 import MusicQuizPage from '@/pages/MusicQuizPage';
-import DynamicQuizPage from '@/pages/MusicQuizPage';
 import NotFoundPage from '@/pages/NotFound';
 import { AudioPlayerProvider } from '@/context/AudioPlayerContext';
 import GlobalMiniPlayer from '@/components/player/GlobalMiniPlayer';
@@ -40,9 +38,9 @@ function App() {
                   <Route path="/artists" element={<ArtistsPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
                   <Route path="/audio-player/:id" element={<AudioPlayerPage />} />
-                  <Route path="/quizzes" element={<QuizzesPage />} />
+                  <Route path="/quizzes" element={<MusicQuizPage />} />
                   <Route path="/music-quiz" element={<MusicQuizPage />} />
-                  <Route path="/dynamic-quiz/:quizId" element={<DynamicQuizPage />} />
+                  <Route path="/dynamic-quiz/:quizId" element={<MusicQuizPage />} />
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
                 <GlobalMiniPlayer />
