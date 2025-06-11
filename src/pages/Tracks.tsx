@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +17,7 @@ import AnimatedList from "@/components/tracks/AnimatedList";
 import ChromaGrid from "@/components/tracks/ChromaGrid";
 import TiltedCard from "@/components/tracks/TiltedCard";
 import CountUp from "@/components/tracks/CountUp";
+import { useNavigate } from "react-router-dom";
 
 interface Track {
   id: string;
@@ -53,11 +53,12 @@ const Tracks = () => {
 
   // Sample data for demonstrations
   const featuredTrack = {
-    imageSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Cover%20Art/Salama%20ft.%20Simali%20-%20OFFICIAL%20COVER%20(2).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvQ292ZXIgQXJ0L1NhbGFtYSBmdC4gU2ltYWxpIC0gT0ZGSUNJQUwgQ09WRVIgKDIpLnBuZyIsImlhdCI6MTc0OTYwNDYzMSwiZXhwIjoxNzUyMTk2NjMxfQ.ijn-LuGU4-cDZk_Gvbt5hDdDPixE23Oj_XS5cyvLis0",
+    imageSrc: "/lovable-uploads/df415c9b-2546-4c87-9f13-b44439a1f4e4.png",
     title: "Featured Track of the Week",
     artist: "Saem's Tunes ft. Evans Simali - Salama (DEMO)",
-    plays: 0,
-    likes: 0
+    plays: 1250,
+    likes: 89,
+    audioSrc: "/audio/sample.mp3"
   };
 
   const albumItems = [
@@ -97,6 +98,8 @@ const Tracks = () => {
     "Indie Rock Mix",
     "Electronic Dreams"
   ];
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchTracks();
@@ -289,6 +292,21 @@ const Tracks = () => {
     }
   };
 
+  const handlePlayNow = () => {
+    navigate('/audio-player/featured', {
+      state: {
+        track: {
+          id: 'featured',
+          src: featuredTrack.audioSrc,
+          name: 'Salama (DEMO)',
+          artist: 'Saem\'s Tunes ft. Evans Simali',
+          artwork: featuredTrack.imageSrc,
+          album: 'Demo Singles'
+        }
+      }
+    });
+  };
+
   if (loading) {
     return (
       <MainLayout>
@@ -431,23 +449,25 @@ const Tracks = () => {
                   </div>
                   
                   <div className="grid md:grid-cols-2 gap-8 items-center">
-                    <div className="flex justify-center">
-                      <TiltedCard
-                        imageSrc={featuredTrack.imageSrc}
-                        altText="Featured Track Cover"
-                        captionText={featuredTrack.artist}
-                        containerHeight="400px"
-                        containerWidth="400px"
-                        imageHeight="400px"
-                        imageWidth="400px"
-                        rotateAmplitude={12}
-                        scaleOnHover={1.1}
-                        showMobileWarning={false}
-                        showTooltip={true}
-                      />
+                    <div className="flex justify-center relative">
+                      <div className="hover:z-[9999] relative transition-all duration-300">
+                        <TiltedCard
+                          imageSrc={featuredTrack.imageSrc}
+                          altText="Featured Track Cover"
+                          captionText={featuredTrack.artist}
+                          containerHeight="400px"
+                          containerWidth="400px"
+                          imageHeight="400px"
+                          imageWidth="400px"
+                          rotateAmplitude={12}
+                          scaleOnHover={1.1}
+                          showMobileWarning={false}
+                          showTooltip={true}
+                        />
+                      </div>
                     </div>
                     
-                    <div className="space-y-4">
+                    <div className="space-y-4 md:pl-8">
                       <h3 className="text-xl font-semibold">{featuredTrack.artist}</h3>
                       <p className="text-muted-foreground">
                         This week's featured track showcases exceptional musical artistry and creativity.
@@ -471,7 +491,10 @@ const Tracks = () => {
                         </div>
                       </div>
                       
-                      <Button className="bg-gold hover:bg-gold/90">
+                      <Button 
+                        className="bg-gold hover:bg-gold/90"
+                        onClick={handlePlayNow}
+                      >
                         <Play className="h-4 w-4 mr-2" />
                         Play Now
                       </Button>

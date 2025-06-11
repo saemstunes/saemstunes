@@ -48,6 +48,7 @@ import Subscriptions from "./pages/Subscriptions";
 import ComingSoon from "./pages/ComingSoon";
 import AdminUpload from "./components/admin/AdminUpload";
 import Tracks from "@/pages/Tracks";
+import AudioPlayer from "./pages/AudioPlayer";
 
 const queryClient = new QueryClient();
 
@@ -133,6 +134,7 @@ const App = () => {
               
               <Route path="/coming-soon" element={<ComingSoon />} />
               
+              <Route path="/audio-player/:id" element={<AudioPlayer />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
