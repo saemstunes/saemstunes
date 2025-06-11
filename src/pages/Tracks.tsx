@@ -56,41 +56,41 @@ const Tracks = () => {
     imageSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Cover%20Art/Salama%20ft.%20Simali%20-%20OFFICIAL%20COVER%20(2).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvQ292ZXIgQXJ0L1NhbGFtYSBmdC4gU2ltYWxpIC0gT0ZGSUNJQUwgQ09WRVIgKDIpLnBuZyIsImlhdCI6MTc0OTYwODU1OSwiZXhwIjoxNzUyMjAwNTU5fQ.-xwXalAM3kYBW5zMRFNCziIdbKEQMuUOB8UP76qTAMU",
     title: "Featured Track of the Week",
     artist: "Saem's Tunes ft. Evans Simali - Salama (DEMO)",
-    plays: 1250,
-    likes: 89,
+    plays: 0,
+    likes: 0,
     audioSrc: "/audio/sample.mp3"
   };
 
   const albumItems = [
     {
-      image: "https://picsum.photos/400/400?random=1",
-      title: "Midnight Echoes",
-      subtitle: "Electronic Album",
-      handle: "@synthwave",
-      borderColor: "#3B82F6",
-      gradient: "linear-gradient(145deg, #3B82F6, #000)",
+      image: "https://i.imgur.com/HW2rxFd.jpeg",
+      title: "Pale Ulipo",
+      subtitle: "Full Cover",
+      handle: "@saemstunes",
+      borderColor: "#5A270F",
+      gradient: "linear-gradient(145deg, #5A270F, #000)",
     },
     {
-      image: "https://picsum.photos/400/400?random=2", 
-      title: "Jazz Fusion",
-      subtitle: "Contemporary Jazz",
-      handle: "@jazzmaster",
-      borderColor: "#10B981",
-      gradient: "linear-gradient(180deg, #10B981, #000)",
+      image: "https://i.imgur.com/6yr8BpG.jpeg", 
+      title: "I Need You More",
+      subtitle: "Acoustic Cover",
+      handle: "@saemstunes",
+      borderColor: "#DF8142",
+      gradient: "linear-gradient(180deg, #DF8142, #000)",
     },
     {
-      image: "https://picsum.photos/400/400?random=3",
-      title: "Rock Anthology",
-      subtitle: "Classic Rock",
-      handle: "@rocklegend",
-      borderColor: "#F59E0B",
-      gradient: "linear-gradient(165deg, #F59E0B, #000)",
+      image: "https://i.imgur.com/LJQDADg.jpeg,
+      title: "Ni Hai",
+      subtitle: "Originals",
+      handle: "@saemstunes, @kendinkonge",
+      borderColor: "#EEB38C",
+      gradient: "linear-gradient(165deg, #EEB38C, #000)",
     }
   ];
 
   const playlistTracks = [
-    "Lo-Fi Chill Beats",
-    "Study Music Playlist", 
+    "African Gospel",
+    "Christian Afrobeats", 
     "Morning Coffee Jazz",
     "Workout Motivation",
     "Late Night Vibes",
@@ -388,7 +388,7 @@ const Tracks = () => {
                     <label className="text-sm font-medium">Audio File * (Max 10MB)</label>
                     <Input
                       type="file"
-                      accept="audio/mp3,audio/wav,audio/mpeg,audio/m4a"
+                      accept="audio/mp3,audio/wav,audio/mpeg,audio/m4a,audio/aac"
                       onChange={(e) => setAudioFile(e.target.files?.[0] || null)}
                     />
                   </div>
