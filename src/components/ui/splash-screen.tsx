@@ -1,255 +1,414 @@
-
-import React, { useState, useEffect } from "react";
-import { cn } from "@/lib/utils";
-import { Loader2, Music } from "lucide-react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { Loader2, Music, Play, Headphones, Volume2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { EASINGS } from "@/lib/animation-utils";
+
+// Animation easings - centralized configuration
+const EASINGS = {
+  standard: [0.4, 0.0, 0.2, 1],
+  decelerate: [0.0, 0.0, 0.2, 1],
+  accelerate: [0.4, 0.0, 1, 1],
+};
+
+// Animation configurations - extracted for reusability
+const ANIMATION_CONFIGS = {
+  pulseRing: {
+    duration: 3,
+    ease: "easeOut",
+    repeat: Infinity,
+  },
+  glowEffect: {
+    duration: 2.5,
+    repeat: Infinity,
+    repeatType: "reverse" as const,
+  },
+  logoRotation: {
+    rotate: { duration: 20, repeat: Infinity, ease: "linear" },
+    boxShadow: { duration: 3, repeat: Infinity, repeatType: "reverse" as const },
+  },
+  progressShine: {
+    duration: 1.5,
+    repeat: Infinity,
+    repeatDelay: 2,
+    ease: "easeInOut",
+  },
+};
+
+// Theme colors - centralized for maintainability
+const THEME_COLORS = {
+  primary: "#d4af37", // Gold
+  primaryRgb: "212, 175, 55",
+  secondary: "#f59e0b", // Yellow-500
+  background: {
+    light: "white",
+    dark: "rgb(15, 23, 42)", // slate-900
+  },
+};
 
 interface SplashScreenProps {
   loading?: boolean;
   message?: string;
+  onFinish?: () => void;
 }
 
 const SplashScreen = ({
   loading = true,
-  message = "Loading...",
+  message = "Loading your music...",
+  onFinish,
 }: SplashScreenProps) => {
   const [showSplash, setShowSplash] = useState(true);
   const [progress, setProgress] = useState(0);
   const [showMusicNotes, setShowMusicNotes] = useState(false);
+  const [currentMessage, setCurrentMessage] = useState(0);
 
+  const loadingMessages = [
+    "Tuning the instruments...",
+    "Setting up the stage...",
+    "Loading your music...",
+    "Almost ready to play...",
+  ];
+
+  // Memoized music notes - prevents recreation on every render
+  const musicNotes = useMemo(() => {
+    const musicIcons = [Music, Play, Headphones, Volume2];
+    return Array.from({ length: 8 }, (_, i) => ({
+      id: i,
+      Icon: musicIcons[i % musicIcons.length],
+      x: (Math.random() - 0.5) * 100,
+      y: -60 - Math.random() * 40,
+      rotate: Math.random() * 360,
+      scale: 0.4 + Math.random() * 0.6,
+      duration: 4 + Math.random() * 3,
+      delay: i * 0.3,
+      opacity: 0.3 + Math.random() * 0.4,
+    }));
+  }, []);
+
+  // Memoized glow orbs configuration
+  const glowOrbs = useMemo(() => [
+    {
+      size: "w-32 h-32",
+      position: "translate(-80px, -60px)",
+      animation: { scale: [1, 1.3, 1], opacity: [0.1, 0.3, 0.1] },
+      duration: 4,
+      delay: 0,
+    },
+    {
+      size: "w-24 h-24",
+      position: "translate(70px, 50px)",
+      animation: { scale: [1.2, 1, 1.2], opacity: [0.15, 0.05, 0.15] },
+      duration: 5,
+      delay: 1,
+    },
+    {
+      size: "w-20 h-20",
+      position: "translate(0px, -90px)",
+      animation: { scale: [1, 1.4, 1], opacity: [0.08, 0.25, 0.08] },
+      duration: 6,
+      delay: 2,
+    },
+  ], []);
+
+  // Handle splash screen exit
+  const handleSplashExit = useCallback(() => {
+    setShowSplash(false);
+    onFinish?.();
+  }, [onFinish]);
+
+  // Splash screen lifecycle
   useEffect(() => {
     if (!loading) {
-      // Allow time for fade-out before unmounting
-      const timeout = setTimeout(() => {
-        setShowSplash(false);
-      }, 1000);
-
+      const timeout = setTimeout(handleSplashExit, 1200);
       return () => clearTimeout(timeout);
     } else {
-      // Show music notes after a brief delay
       const notesTimeout = setTimeout(() => {
         setShowMusicNotes(true);
-      }, 600);
-      
+      }, 800);
       return () => clearTimeout(notesTimeout);
     }
-  }, [loading]);
+  }, [loading, handleSplashExit]);
 
-  // Simulate loading progress
+  // Message cycling
   useEffect(() => {
-    if (loading && progress < 100) {
-      const interval = setInterval(() => {
-        setProgress((prev) => {
-          const increment = Math.random() * 15;
-          const newProgress = Math.min(prev + increment, 100);
-          return newProgress > 80 ? Math.min(newProgress, 95) : newProgress;
-        });
-      }, 200);
+    if (!loading) return;
+    
+    const interval = setInterval(() => {
+      setCurrentMessage((prev) => (prev + 1) % loadingMessages.length);
+    }, 1500);
+    
+    return () => clearInterval(interval);
+  }, [loading, loadingMessages.length]);
 
-      return () => clearInterval(interval);
-    }
-
+  // Simplified progress simulation
+  useEffect(() => {
     if (!loading) {
       setProgress(100);
+      return;
     }
-  }, [loading, progress]);
 
-  // Create an array of music notes with random positions for animation
-  const musicNotes = Array.from({ length: 6 }, (_, i) => ({
-    id: i,
-    x: Math.random() * 80 - 40, // random position between -40% and 40% from center
-    y: -40 - Math.random() * 60, // start above the viewport
-    rotate: Math.random() * 360, // random rotation
-    scale: 0.5 + Math.random() * 0.5, // random size
-    duration: 3 + Math.random() * 2, // random animation duration
-    delay: i * 0.2, // stagger the animations
-  }));
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        const increment = Math.random() * 12 + 3;
+        // Cap at 90% while loading, allow 100% when complete
+        return Math.min(prev + increment, 90);
+      });
+    }, 200);
+
+    return () => clearInterval(interval);
+  }, [loading]);
+
+  // Optimized glow orb component
+  const GlowOrb = ({ orb, index }: { orb: typeof glowOrbs[0]; index: number }) => (
+    <motion.div
+      className={`absolute top-1/2 left-1/2 ${orb.size} rounded-full -translate-x-1/2 -translate-y-1/2`}
+      style={{
+        background: `radial-gradient(circle, ${THEME_COLORS.primary} 0%, transparent 70%)`,
+        transform: `translate(-50%, -50%) ${orb.position}`,
+      }}
+      animate={orb.animation}
+      transition={{
+        duration: orb.duration,
+        repeat: Infinity,
+        ease: "easeInOut",
+        delay: orb.delay,
+      }}
+    />
+  );
 
   return (
     <AnimatePresence>
       {showSplash && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-background"
+          className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-white dark:bg-slate-900"
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
-          exit={{ 
+          exit={{
             opacity: 0,
-            transition: { duration: 0.8, ease: EASINGS.decelerate }
+            scale: 1.05,
+            transition: { duration: 1, ease: EASINGS.decelerate },
           }}
-          style={{ pointerEvents: loading ? "auto" : "none" }}
+          style={{
+            pointerEvents: loading ? "auto" : "none",
+          }}
         >
-          {/* Background gradient radial effect */}
-          <div 
-            className="absolute inset-0 bg-gradient-radial from-gold/5 via-background to-background" 
-          />
-          
-          {/* Subtle cross pattern overlay */}
-          <div 
-            className="absolute inset-0 opacity-5"
-            style={{ 
-              backgroundImage: 'linear-gradient(to right, var(--gold) 1px, transparent 1px), linear-gradient(to bottom, var(--gold) 1px, transparent 1px)',
-              backgroundSize: '40px 40px',
-            }}
-          />
-          
-          <div className="flex flex-col items-center justify-center p-8 max-w-md w-full relative z-10">
-            {/* Animated logo container */}
+          {/* Animated background elements */}
+          <div className="absolute inset-0" aria-hidden="true">
+            {glowOrbs.map((orb, index) => (
+              <GlowOrb key={index} orb={orb} index={index} />
+            ))}
+          </div>
+
+          <div className="flex flex-col items-center justify-center p-8 max-w-lg w-full relative z-10">
+            {/* Enhanced logo container */}
             <motion.div
-              className="relative"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ 
-                scale: 1, 
+              className="relative mb-8"
+              initial={{ scale: 0.8, opacity: 0, y: 20 }}
+              animate={{
+                scale: 1,
                 opacity: 1,
-                transition: { duration: 1, ease: EASINGS.standard }
+                y: 0,
+                transition: { duration: 1.2, ease: EASINGS.standard },
               }}
+              aria-label="Saem's Tunes Logo"
             >
-              {/* Inner circular glow */}
-              <motion.div 
-                className="absolute -inset-4 rounded-full"
-                animate={{ 
+              {/* Outer glow ring */}
+              <motion.div
+                className="absolute -inset-8 rounded-full border border-yellow-500/20"
+                animate={{
+                  rotate: 360,
                   boxShadow: [
-                    "0 0 20px 0px rgba(212, 175, 55, 0.2)",
-                    "0 0 40px 10px rgba(212, 175, 55, 0.3)",
-                    "0 0 20px 0px rgba(212, 175, 55, 0.2)"
-                  ]
+                    `0 0 30px 5px rgba(${THEME_COLORS.primaryRgb}, 0.1)`,
+                    `0 0 60px 15px rgba(${THEME_COLORS.primaryRgb}, 0.2)`,
+                    `0 0 30px 5px rgba(${THEME_COLORS.primaryRgb}, 0.1)`,
+                  ],
                 }}
-                transition={{ 
-                  duration: 3, 
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                  ease: "easeInOut" 
-                }}
+                transition={ANIMATION_CONFIGS.logoRotation}
               />
-              
-              {/* Logo with custom shadow */}
-              <div className="relative z-10 flex items-center justify-center">
-                <img
-                  src="/lovable-uploads/logo-icon-lg.webp"
-                  alt="Saem's Tunes"
-                  className="w-24 h-24 drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]"
-                />
+
+              {/* Inner rotating border */}
+              <motion.div
+                className="absolute -inset-6 rounded-full"
+                style={{
+                  background: `conic-gradient(from 0deg, transparent, ${THEME_COLORS.primary}, transparent, ${THEME_COLORS.primary}, transparent)`,
+                  mask: "radial-gradient(circle, transparent 70%, black 71%, black 100%)",
+                }}
+                animate={{ rotate: -360 }}
+                transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+              />
+
+              {/* Logo container */}
+              <div className="relative z-10 flex items-center justify-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-full p-6 border border-yellow-500/30">
+                <div className="w-20 h-20 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center shadow-2xl">
+                  <Music className="w-10 h-10 text-white" />
+                </div>
               </div>
-              
-              {/* Pulsing circles */}
-              {[1, 2, 3].map((i) => (
+
+              {/* Multiple pulsing circles */}
+              {[1, 2, 3, 4].map((i) => (
                 <motion.div
                   key={`pulse-${i}`}
-                  className="absolute inset-0 rounded-full border border-gold/30"
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ 
-                    scale: [0.8, 1.6, 1.8],
-                    opacity: [0.7, 0.3, 0]
+                  className="absolute inset-0 rounded-full border border-yellow-500/20"
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{
+                    scale: [0.9, 1.8, 2.2],
+                    opacity: [0.6, 0.2, 0],
                   }}
                   transition={{
-                    duration: 2.5,
-                    delay: i * 0.5,
-                    repeat: Infinity,
-                    ease: "easeOut"
+                    ...ANIMATION_CONFIGS.pulseRing,
+                    delay: i * 0.4,
                   }}
                 />
               ))}
             </motion.div>
 
-            {/* Floating music notes animations */}
+            {/* Enhanced floating music elements */}
             <AnimatePresence>
-              {showMusicNotes && musicNotes.map((note) => (
-                <motion.div
-                  key={note.id}
-                  className="absolute text-gold/70"
-                  initial={{ 
-                    x: `${note.x}%`, 
-                    y: `${note.y}%`, 
-                    rotate: note.rotate, 
-                    scale: 0,
-                    opacity: 0 
-                  }}
-                  animate={{ 
-                    y: "-120%",
-                    scale: note.scale,
-                    opacity: [0, 0.7, 0] 
-                  }}
-                  exit={{ opacity: 0 }}
-                  transition={{
-                    duration: note.duration,
-                    delay: note.delay,
-                    ease: "easeOut",
-                    repeat: Infinity,
-                    repeatDelay: 3 + Math.random() * 5
-                  }}
-                >
-                  <Music size={24} />
-                </motion.div>
-              ))}
+              {showMusicNotes &&
+                musicNotes.map((note) => {
+                  const IconComponent = note.Icon;
+                  return (
+                    <motion.div
+                      key={note.id}
+                      className="absolute text-yellow-500"
+                      style={{
+                        filter: `drop-shadow(0 0 8px rgba(${THEME_COLORS.primaryRgb}, 0.5))`,
+                      }}
+                      initial={{
+                        x: `${note.x}%`,
+                        y: `${note.y}%`,
+                        rotate: note.rotate,
+                        scale: 0,
+                        opacity: 0,
+                      }}
+                      animate={{
+                        y: "-150%",
+                        x: `${note.x + (Math.random() - 0.5) * 40}%`,
+                        scale: [0, note.scale, note.scale * 0.8, 0],
+                        opacity: [0, note.opacity, note.opacity * 0.5, 0],
+                        rotate: note.rotate + 180,
+                      }}
+                      transition={{
+                        duration: note.duration,
+                        delay: note.delay,
+                        ease: "easeOut",
+                        repeat: Infinity,
+                        repeatDelay: 4 + Math.random() * 3,
+                      }}
+                    >
+                      <IconComponent size={20} />
+                    </motion.div>
+                  );
+                })}
             </AnimatePresence>
 
-            {/* App Title with animation */}
-            <motion.h1 
-              className="text-3xl font-serif font-bold text-foreground mt-8"
+            {/* Enhanced app title */}
+            <motion.div
+              className="text-center mb-6"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.8 }}
+            >
+              <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-2">
+                Saem's{" "}
+                <motion.span
+                  className="text-yellow-600 dark:text-yellow-400"
+                  animate={{
+                    filter: [
+                      `drop-shadow(0 0 5px rgba(${THEME_COLORS.primaryRgb}, 0.5))`,
+                      `drop-shadow(0 0 15px rgba(${THEME_COLORS.primaryRgb}, 0.8))`,
+                      `drop-shadow(0 0 5px rgba(${THEME_COLORS.primaryRgb}, 0.5))`,
+                    ],
+                  }}
+                  transition={ANIMATION_CONFIGS.glowEffect}
+                >
+                  Tunes
+                </motion.span>
+              </h1>
+
+              <motion.p
+                className="text-slate-600 dark:text-slate-300 text-lg font-light italic"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6, duration: 0.6 }}
+              >
+                Making music, representing Christ
+              </motion.p>
+            </motion.div>
+
+            {/* Enhanced progress section */}
+            <motion.div
+              className="w-full max-w-xs"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.6 }}
+              transition={{ delay: 0.8, duration: 0.6 }}
             >
-              Saem's <motion.span 
-                className="text-gold"
-                animate={{ 
-                  textShadow: [
-                    "0 0 5px rgba(212, 175, 55, 0.5)",
-                    "0 0 15px rgba(212, 175, 55, 0.8)",
-                    "0 0 5px rgba(212, 175, 55, 0.5)"
-                  ]
-                }}
-                transition={{ 
-                  duration: 2.5, 
-                  repeat: Infinity, 
-                  repeatType: "reverse" 
-                }}
-              >
-                Tunes
-              </motion.span>
-            </motion.h1>
+              {/* Progress bar container */}
+              <div className="relative mb-4" role="progressbar" aria-valuenow={progress} aria-valuemax={100}>
+                <div className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden backdrop-blur-sm">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-yellow-500 via-yellow-600 to-yellow-500 rounded-full relative"
+                    initial={{ width: "0%" }}
+                    animate={{ width: `${progress}%` }}
+                    transition={{ duration: 0.3, ease: EASINGS.standard }}
+                  >
+                    {/* Animated shine effect */}
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                      animate={{ x: ["-100%", "100%"] }}
+                      transition={ANIMATION_CONFIGS.progressShine}
+                    />
+                  </motion.div>
+                </div>
+              </div>
 
-            {/* Short inspirational tagline */}
-            <motion.p
-              className="text-muted-foreground mt-2 font-serif italic"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5, duration: 0.6 }}
-            >
-              Making music, representing Christ
-            </motion.p>
-
-            {/* Progress bar */}
-            <motion.div 
-              className="w-48 h-1 bg-muted/30 rounded-full overflow-hidden mt-6"
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ 
-                width: "12rem", 
-                opacity: 1,
-                transition: { delay: 0.4, duration: 0.6 }
-              }}
-            >
+              {/* Dynamic loading message */}
               <motion.div
-                className="h-full bg-gradient-to-r from-gold/60 via-gold to-gold/60 rounded-full"
-                initial={{ width: "0%" }}
-                animate={{ width: `${progress}%` }}
+                className="flex items-center justify-center text-slate-600 dark:text-slate-300 min-h-[24px]"
+                key={currentMessage}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.4 }}
-              />
+                role="status"
+                aria-live="polite"
+              >
+                <Loader2 className="h-4 w-4 animate-spin mr-3 text-yellow-600 dark:text-yellow-400" />
+                <span className="text-sm">
+                  {loading ? loadingMessages[currentMessage] : "Ready!"}
+                </span>
+              </motion.div>
             </motion.div>
-            
-            {/* Loading message */}
-            <motion.div 
-              className="flex items-center mt-4 text-muted-foreground"
-              initial={{ opacity: 0 }}
-              animate={{ 
-                opacity: 1,
-                transition: { delay: 0.5, duration: 0.5 }
-              }}
-            >
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              <span>{message}</span>
-            </motion.div>
+
+            {/* Completion celebration */}
+            {!loading && (
+              <motion.div
+                className="absolute inset-0 flex items-center justify-center"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2, duration: 0.6 }}
+              >
+                <motion.div
+                  className="text-yellow-600 dark:text-yellow-400 text-6xl"
+                  animate={{
+                    scale: [1, 1.2, 1],
+                    rotate: [0, 10, -10, 0],
+                  }}
+                  transition={{ duration: 0.6 }}
+                >
+                  ♪
+                </motion.div>
+              </motion.div>
+            )}
           </div>
+
+          {/* Accessibility fallback */}
+          <noscript>
+            <div className="fixed inset-0 bg-white dark:bg-slate-900 flex items-center justify-center text-slate-900 dark:text-white">
+              <div className="text-center">
+                <h1 className="text-2xl font-bold mb-2">Saem's Tunes</h1>
+                <p>Loading your music...</p>
+              </div>
+            </div>
+          </noscript>
         </motion.div>
       )}
     </AnimatePresence>
