@@ -46,11 +46,9 @@ const Profile = () => {
   };
 
   const roleMapping: Record<UserRole, string> = {
-    student: "Student",
-    adult: "Adult Learner",
-    parent: "Parent/Guardian",
-    teacher: "Teacher",
+    user: "User",
     admin: "Administrator",
+    moderator: "Moderator",
   };
 
   // Find the user's current subscription plan
@@ -90,7 +88,7 @@ const Profile = () => {
                       onClick={() => setAvatarEditorOpen(true)}
                     >
                       <AvatarImage src={user.avatar} alt={user.name} />
-                      <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                      <AvatarFallback>{user.name?.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <Button 
                       variant="link" 
@@ -142,7 +140,7 @@ const Profile = () => {
                   <Label htmlFor="role">Account Type</Label>
                   <Input
                     id="role"
-                    value={roleMapping[user.role] || user.role}
+                    value={user.role ? roleMapping[user.role] : 'User'}
                     disabled
                   />
                 </div>
@@ -257,7 +255,7 @@ const Profile = () => {
       {/* Avatar editor dialog */}
       <AvatarEditor 
         currentAvatar={user.avatar}
-        username={user.name}
+        username={user.name || 'User'}
         onSave={handleAvatarSave}
         open={avatarEditorOpen}
         onOpenChange={setAvatarEditorOpen}

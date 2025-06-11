@@ -20,6 +20,7 @@ export interface ExtendedUser extends User {
   avatar?: string;
   subscribed?: boolean;
   subscriptionTier?: SubscriptionTier;
+  role?: UserRole;
 }
 
 interface AuthContextProps {
@@ -31,7 +32,7 @@ interface AuthContextProps {
   signUp: (email: string, password?: string) => Promise<void>;
   updateUser: (data: any) => Promise<void>;
   subscription: UserSubscription | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, captchaToken?: string | null) => Promise<void>;
   logout: () => Promise<void>;
   updateUserProfile: (data: any) => Promise<void>;
 }
@@ -69,7 +70,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
           avatar: session.user.user_metadata?.avatar_url || '',
           subscribed: true, // Default for now
-          subscriptionTier: 'professional' as SubscriptionTier
+          subscriptionTier: 'professional' as SubscriptionTier,
+          role: 'user' as UserRole
         };
         setUser(extendedUser);
       } else {
@@ -89,7 +91,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
             avatar: session.user.user_metadata?.avatar_url || '',
             subscribed: true,
-            subscriptionTier: 'professional' as SubscriptionTier
+            subscriptionTier: 'professional' as SubscriptionTier,
+            role: 'user' as UserRole
           };
           setUser(extendedUser);
         } else {
@@ -130,7 +133,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, captchaToken?: string | null) => {
     try {
       setIsLoading(true);
       const { error } = await supabase.auth.signInWithPassword({ email, password });

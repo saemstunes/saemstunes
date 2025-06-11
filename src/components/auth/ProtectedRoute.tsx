@@ -32,7 +32,7 @@ const ProtectedRoute = ({
     return <Navigate to={redirectPath} state={{ from: location }} replace />;
   }
 
-  if (requiredRoles && !requiredRoles.includes(user.role)) {
+  if (requiredRoles && user.role && !requiredRoles.includes(user.role)) {
     return <Navigate to="/unauthorized" state={{ from: location, requiredRoles }} replace />;
   }
 
