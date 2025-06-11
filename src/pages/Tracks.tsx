@@ -53,11 +53,11 @@ const Tracks = () => {
 
   // Sample data for demonstrations
   const featuredTrack = {
-    imageSrc: "https://i.scdn.co/image/ab67616d0000b273d9985092cd88bffd97653b58",
+    imageSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Cover%20Art/Salama%20ft.%20Simali%20-%20OFFICIAL%20COVER%20(2).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvQ292ZXIgQXJ0L1NhbGFtYSBmdC4gU2ltYWxpIC0gT0ZGSUNJQUwgQ09WRVIgKDIpLnBuZyIsImlhdCI6MTc0OTYwNDYzMSwiZXhwIjoxNzUyMTk2NjMxfQ.ijn-LuGU4-cDZk_Gvbt5hDdDPixE23Oj_XS5cyvLis0",
     title: "Featured Track of the Week",
-    artist: "Kendrick Lamar - GNX",
-    plays: 125847,
-    likes: 15234
+    artist: "Saem's Tunes ft. Evans Simali - Salama (DEMO)",
+    plays: 0,
+    likes: 0
   };
 
   const albumItems = [
