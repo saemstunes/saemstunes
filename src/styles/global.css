@@ -1,4 +1,84 @@
+
 /* styles/global.css */
 nav.flex.flex-col.gap-6 img.h-8.w-8.mb-6 {
   margin-bottom: 0 !important;
+}
+
+/* Prevent horizontal overflow globally */
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Make all images responsive by default */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Ensure containers don't exceed viewport width */
+.container {
+  max-width: 100%;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Fix video and media containers */
+.video-container,
+.media-container {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+}
+
+.video-container iframe,
+.video-container video,
+.media-container iframe,
+.media-container video {
+  width: 100%;
+  height: 100%;
+}
+
+/* Responsive grid layouts */
+.grid-responsive {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  width: 100%;
+}
+
+/* Ensure all flex containers wrap properly */
+.flex-responsive {
+  flex-wrap: wrap;
+}
+
+/* Fix for ChromaGrid and similar components */
+.chroma-grid {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Mobile specific adjustments */
+@media (max-width: 768px) {
+  .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  
+  .grid-responsive {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+}
+
+/* Desktop specific adjustments */
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
 }
