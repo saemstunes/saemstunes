@@ -53,6 +53,7 @@ declare module "@supabase/supabase-js" {
     avatar?: string;
     subscribed?: boolean;
     subscriptionTier?: SubscriptionTier;
+    role?: UserRole;
   }
 }
 
@@ -78,6 +79,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           avatar: session.user.user_metadata?.avatar_url || '/placeholder.svg',
           subscribed: true, // Mock value
           subscriptionTier: 'professional' as SubscriptionTier,
+          role: UserRole.USER,
         };
         setUser(extendedUser);
       } else {
@@ -98,6 +100,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             avatar: session.user.user_metadata?.avatar_url || '/placeholder.svg',
             subscribed: true,
             subscriptionTier: 'professional' as SubscriptionTier,
+            role: UserRole.USER,
           };
           setUser(extendedUser);
         } else {

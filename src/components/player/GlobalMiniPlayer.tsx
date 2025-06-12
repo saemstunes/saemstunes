@@ -133,7 +133,7 @@ const GlobalMiniPlayer: React.FC = () => {
             step={0.1}
             onValueChange={handleProgressChange}
             className={cn("h-1", state.error && "opacity-50")}
-            disabled={state.error || state.isLoading || state.duration === 0}
+            disabled={Boolean(state.error) || state.isLoading || state.duration === 0}
           />
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>{formatTime(state.currentTime)}</span>
