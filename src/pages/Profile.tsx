@@ -58,7 +58,11 @@ const Profile = () => {
   const roleLabels: Record<UserRole, string> = {
     [UserRole.USER]: 'Member',
     [UserRole.ADMIN]: 'Administrator',
-    [UserRole.MODERATOR]: 'Moderator'
+    [UserRole.MODERATOR]: 'Moderator',
+    [UserRole.STUDENT]: 'Student',
+    [UserRole.TEACHER]: 'Teacher',
+    [UserRole.PARENT]: 'Parent',
+    [UserRole.ADULT]: 'Adult'
   };
 
   return (

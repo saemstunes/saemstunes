@@ -16,7 +16,11 @@ import { supabase } from "@/integrations/supabase/client";
 export enum UserRole {
   USER = 'user',
   ADMIN = 'admin',
-  MODERATOR = 'moderator'
+  MODERATOR = 'moderator',
+  STUDENT = 'student',
+  TEACHER = 'teacher',
+  PARENT = 'parent',
+  ADULT = 'adult'
 }
 
 interface AuthContextProps {

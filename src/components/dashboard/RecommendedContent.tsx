@@ -1,5 +1,6 @@
 
 import { useAuth } from "@/context/AuthContext";
+import { UserRole } from "@/context/AuthContext";
 import { mockVideos, VideoContent } from "@/data/mockData";
 import VideoCard from "../videos/VideoCard";
 import { useNavigate } from "react-router-dom";
@@ -20,7 +21,7 @@ const RecommendedContent = () => {
     // Sort or filter based on user role
     if (user) {
       switch (user.role) {
-        case "student":
+        case UserRole.STUDENT:
           // Prioritize beginner content for students
           filteredVideos.sort((a, b) => {
             if (a.level === "beginner" && b.level !== "beginner") return -1;
@@ -28,10 +29,10 @@ const RecommendedContent = () => {
             return 0;
           });
           break;
-        case "adult":
+        case UserRole.ADULT:
           // Adults might be interested in all levels
           break;
-        case "teacher":
+        case UserRole.TEACHER:
           // Teachers might be interested in teaching methods
           filteredVideos = filteredVideos.filter(
             (video) => video.category === "Vocal Development" || video.level === "advanced"
