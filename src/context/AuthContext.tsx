@@ -1,17 +1,7 @@
 
-import React, {
-  createContext,
-  useState,
-  useEffect,
-  useContext,
-  ReactNode,
-} from "react";
-import {
-  Session,
-  User as SupabaseUser,
-  AuthChangeEvent,
-} from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { User } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
 export enum UserRole {
   USER = 'user',
@@ -23,180 +13,113 @@ export enum UserRole {
   ADULT = 'adult'
 }
 
-export interface ExtendedUser extends SupabaseUser {
+export interface ExtendedUser extends User {
   name?: string;
   avatar?: string;
   subscribed?: boolean;
-  subscriptionTier?: SubscriptionTier;
+  subscriptionTier?: 'free' | 'premium' | 'pro';
   role?: UserRole;
 }
 
 interface AuthContextProps {
-  session: Session | null;
   user: ExtendedUser | null;
+  isAuthenticated: boolean;
   isLoading: boolean;
-  signIn: (email: string) => Promise<void>;
-  signOut: () => Promise<void>;
-  signUp: (email: string, password?: string) => Promise<void>;
-  updateUser: (data: any) => Promise<void>;
   login: (email: string, password: string, captchaToken?: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUserProfile: (updates: Partial<ExtendedUser>) => Promise<void>;
-  subscription: UserSubscription | null;
 }
-
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-interface UserSubscription {
-  tier: SubscriptionTier;
-  isActive: boolean;
-  expiresAt: Date | null;
-}
-
-export type SubscriptionTier = 'free' | 'basic' | 'premium' | 'professional';
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [session, setSession] = useState<Session | null>(null);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<ExtendedUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [subscription, setSubscription] = useState<UserSubscription | null>(null);
 
   useEffect(() => {
-    const loadSession = async () => {
-      setIsLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
-
-      setSession(session);
-      setUser(session?.user || null);
-      setIsLoading(false);
-    };
-
-    loadSession();
-
-    supabase.auth.onAuthStateChange(
-      async (event: AuthChangeEvent, session: Session | null) => {
-        setSession(session);
-        setUser(session?.user || null);
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        const extendedUser: ExtendedUser = {
+          ...session.user,
+          name: session.user.user_metadata?.name || session.user.email,
+          avatar: session.user.user_metadata?.avatar_url,
+          subscribed: session.user.user_metadata?.subscribed || false,
+          subscriptionTier: session.user.user_metadata?.subscription_tier || 'free',
+          role: session.user.user_metadata?.role as UserRole || UserRole.USER
+        };
+        setUser(extendedUser);
       }
-    );
+      setIsLoading(false);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const extendedUser: ExtendedUser = {
+          ...session.user,
+          name: session.user.user_metadata?.name || session.user.email,
+          avatar: session.user.user_metadata?.avatar_url,
+          subscribed: session.user.user_metadata?.subscribed || false,
+          subscriptionTier: session.user.user_metadata?.subscription_tier || 'free',
+          role: session.user.user_metadata?.role as UserRole || UserRole.USER
+        };
+        setUser(extendedUser);
+      } else {
+        setUser(null);
+      }
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  useEffect(() => {
-    const getSubscription = async () => {
-      if (user) {
-        // Mock subscription check - replace with actual logic
-        const mockSubscription: UserSubscription = {
-          tier: 'professional',
-          isActive: true,
-          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-        };
-        setSubscription(mockSubscription);
-      } else {
-        setSubscription(null);
-      }
-    };
-
-    getSubscription();
-  }, [user]);
-
-  const signIn = async (email: string) => {
-    try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.signInWithOtp({ email });
-      if (error) throw error;
-      alert("Check your email for the magic link to sign in!");
-    } catch (error: any) {
-      alert(error.error_description || error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const login = async (email: string, password: string, captchaToken?: string) => {
-    try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({ 
-        email, 
-        password 
-      });
-      if (error) throw error;
-    } catch (error: any) {
-      alert(error.error_description || error.message);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const signOut = async () => {
-    try {
-      setIsLoading(true);
-      await supabase.auth.signOut();
-    } catch (error: any) {
-      alert(error.error_description || error.message);
-    } finally {
-      setIsLoading(false);
-    }
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+      options: captchaToken ? { captchaToken } : undefined
+    });
+    if (error) throw error;
   };
 
   const logout = async () => {
-    await signOut();
-  };
-
-  const signUp = async (email: string, password?: string) => {
-    try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) throw error;
-      alert("Check your email to verify your account!");
-    } catch (error: any) {
-      alert(error.error_description || error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const updateUser = async (data: any) => {
-    try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.updateUser(data);
-      if (error) throw error;
-    } catch (error: any) {
-      alert(error.error_description || error.message);
-    } finally {
-      setIsLoading(false);
-    }
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
   };
 
   const updateUserProfile = async (updates: Partial<ExtendedUser>) => {
-    await updateUser(updates);
+    if (!user) throw new Error('No user logged in');
+    
+    const { error } = await supabase.auth.updateUser({
+      data: updates
+    });
+    
+    if (error) throw error;
+    
+    setUser(prev => prev ? { ...prev, ...updates } : null);
   };
 
-  const value = {
-    session,
+  const value: AuthContextProps = {
     user,
+    isAuthenticated: !!user,
     isLoading,
-    signIn,
-    signOut,
-    signUp,
-    updateUser,
     login,
     logout,
     updateUserProfile,
-    subscription,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
