@@ -1,4 +1,3 @@
-
 import React, {
   createContext,
   useState,
@@ -33,7 +32,7 @@ interface AuthContextProps {
   updateUser: (data: any) => Promise<void>;
   subscription: UserSubscription | null;
   // Additional properties for compatibility
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, captchaToken?: string | null) => Promise<void>;
   logout: () => Promise<void>;
   updateUserProfile: (data: any) => Promise<void>;
 }
@@ -142,7 +141,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, captchaToken?: string | null) => {
     try {
       setIsLoading(true);
       const { error } = await supabase.auth.signInWithPassword({ email, password });
