@@ -1,23 +1,33 @@
 
 import React from 'react';
-import { Play, Pause, X } from 'lucide-react';
+import { Play, Pause, X, AlertTriangle, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { useAudioPlayer } from '@/context/AudioPlayerContext';
 import { cn } from '@/lib/utils';
 
 const formatTime = (seconds: number): string => {
+  if (!isFinite(seconds)) return '0:00';
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
 };
 
 const GlobalMiniPlayer: React.FC = () => {
-  const { state, pauseTrack, resumeTrack, seek, clearPlayer } = useAudioPlayer();
+  const { state, pauseTrack, resumeTrack, seek, clearPlayer, clearError, playTrack } = useAudioPlayer();
 
   if (!state.currentTrack) return null;
 
   const handlePlayPause = () => {
+    if (state.error) {
+      // If there's an error, try to restart the track
+      clearError();
+      if (state.currentTrack) {
+        playTrack(state.currentTrack, state.lastPlayedTime);
+      }
+      return;
+    }
+
     if (state.isPlaying) {
       pauseTrack();
     } else {
@@ -26,11 +36,20 @@ const GlobalMiniPlayer: React.FC = () => {
   };
 
   const handleProgressChange = (values: number[]) => {
-    seek(values[0]);
+    if (!state.error && state.duration > 0) {
+      seek(values[0]);
+    }
   };
 
   const handleClose = () => {
     clearPlayer();
+  };
+
+  const handleRetry = () => {
+    clearError();
+    if (state.currentTrack) {
+      playTrack(state.currentTrack, state.lastPlayedTime);
+    }
   };
 
   return (
@@ -39,6 +58,25 @@ const GlobalMiniPlayer: React.FC = () => {
       "lg:bottom-4 lg:left-4 lg:right-4 lg:rounded-lg lg:border lg:max-w-md lg:mx-auto"
     )}>
       <div className="p-3">
+        {/* Error State */}
+        {state.error && (
+          <div className="mb-2 p-2 bg-destructive/10 border border-destructive/20 rounded-md">
+            <div className="flex items-center gap-2 text-sm">
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+              <span className="text-destructive">{state.error}</span>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="ml-auto h-6 px-2 text-xs"
+                onClick={handleRetry}
+              >
+                <RotateCcw className="h-3 w-3 mr-1" />
+                Retry
+              </Button>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center gap-3">
           {/* Track Info */}
           <div className="flex items-center flex-1 min-w-0">
@@ -51,7 +89,10 @@ const GlobalMiniPlayer: React.FC = () => {
             </div>
             <div className="ml-3 flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{state.currentTrack.name}</p>
-              <p className="text-xs text-muted-foreground truncate">{state.currentTrack.artist}</p>
+              <p className="text-xs text-muted-foreground truncate">
+                {state.currentTrack.artist}
+                {state.isLoading && " • Loading..."}
+              </p>
             </div>
           </div>
           
@@ -62,11 +103,15 @@ const GlobalMiniPlayer: React.FC = () => {
               variant="ghost" 
               className="h-8 w-8" 
               onClick={handlePlayPause}
+              disabled={state.isLoading}
             >
-              {state.isPlaying ? 
-                <Pause className="h-4 w-4" /> : 
+              {state.error ? (
+                <RotateCcw className="h-4 w-4" />
+              ) : state.isPlaying ? (
+                <Pause className="h-4 w-4" />
+              ) : (
                 <Play className="h-4 w-4" />
-              }
+              )}
             </Button>
             
             <Button 
@@ -87,7 +132,8 @@ const GlobalMiniPlayer: React.FC = () => {
             max={state.duration || 100} 
             step={0.1}
             onValueChange={handleProgressChange}
-            className="h-1"
+            className={cn("h-1", state.error && "opacity-50")}
+            disabled={state.error || state.isLoading || state.duration === 0}
           />
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>{formatTime(state.currentTime)}</span>

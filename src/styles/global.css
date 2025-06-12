@@ -1,4 +1,110 @@
+
 /* styles/global.css */
 nav.flex.flex-col.gap-6 img.h-8.w-8.mb-6 {
   margin-bottom: 0 !important;
+}
+
+/* Responsive fixes to prevent horizontal overflow */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Ensure containers don't exceed viewport width */
+.container {
+  max-width: 100%;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Make images responsive */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Fix video embeds and containers */
+.video-container {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 16/9;
+  overflow: hidden;
+}
+
+.video-container iframe,
+.video-container video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Responsive grid layouts */
+.responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  width: 100%;
+  max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  .responsive-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .responsive-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+}
+
+/* Fix for cards and components */
+.card, .component-container {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Ensure text doesn't cause overflow */
+.text-overflow-fix {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Fix for flex layouts */
+.flex-container {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+/* Audio player responsive fixes */
+.audio-player {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* ChromaGrid responsive improvements */
+.chroma-grid {
+  max-width: 100vw;
+  overflow: hidden;
+  padding: 1rem;
+}
+
+.chroma-items-container {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.chroma-card {
+  max-width: 100%;
+  width: 100%;
 }
