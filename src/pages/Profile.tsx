@@ -1,160 +1,269 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth, UserRole } from '@/context/AuthContext';
-import MainLayout from '@/components/layout/MainLayout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Helmet } from 'react-helmet';
+import { useState } from "react";
+import { useAuth, UserRole } from "@/context/AuthContext";
+import MainLayout from "@/components/layout/MainLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useToast } from "@/hooks/use-toast";
+import { mockSubscriptionPlans } from "@/data/mockData";
+import AvatarEditor from "@/components/profile/AvatarEditor";
+import { Link } from "react-router-dom";
+import { ExternalLink, LogOut } from "lucide-react";
 
-const ProfilePage = () => {
-  const { user, updateUserProfile } = useAuth();
-  const [name, setName] = useState(user?.name || '');
-  const [email, setEmail] = useState(user?.email || '');
-  const [avatar, setAvatar] = useState(user?.avatar || '');
-  const [role, setRole] = useState<UserRole>(user?.role || UserRole.USER);
-  const [subscribed, setSubscribed] = useState(user?.subscribed || false);
-  const [bio, setBio] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
+const Profile = () => {
+  const { user, logout, updateUserProfile } = useAuth();
+  const { toast } = useToast();
+  const [avatarEditorOpen, setAvatarEditorOpen] = useState(false);
 
-  useEffect(() => {
+  const [profile, setProfile] = useState({
+    name: user?.name || "",
+    email: user?.email || "",
+  });
+
+  const handleSaveProfile = () => {
+    toast({
+      title: "Profile Updated",
+      description: "Your profile has been successfully updated.",
+    });
+  };
+
+  const handleAvatarSave = (avatarUrl: string) => {
+    // In a real app, would call an API to update the user's avatar
+    console.log("Avatar updated:", avatarUrl);
+    
+    // Update the user profile in context for immediate global effect
     if (user) {
-      setName(user.name || '');
-      setEmail(user.email || '');
-      setAvatar(user.avatar || '');
-      setRole(user.role || UserRole.USER);
-      setSubscribed(user.subscribed || false);
+      updateUserProfile({ ...user, avatar: avatarUrl });
     }
-  }, [user]);
-
-  const handleUpdateProfile = async () => {
-    try {
-      await updateUserProfile({
-        name,
-        avatar,
-        role,
-        subscribed,
-      });
-      setIsEditing(false);
-      alert('Profile updated successfully!');
-    } catch (error: any) {
-      console.error('Failed to update profile', error);
-      alert(`Failed to update profile: ${error.message}`);
-    }
+    
+    // Show success message
+    toast({
+      title: "Avatar Updated",
+      description: "Your profile picture has been changed successfully.",
+    });
   };
 
-  const roleLabels: Record<UserRole, string> = {
-    [UserRole.USER]: 'User',
-    [UserRole.ADMIN]: 'Administrator',
-    [UserRole.MODERATOR]: 'Moderator',
-    [UserRole.STUDENT]: 'Student',
-    [UserRole.TEACHER]: 'Teacher',
-    [UserRole.PARENT]: 'Parent',
-    [UserRole.ADULT]: 'Adult'
+  const roleMapping: Record<UserRole, string> = {
+    student: "Student",
+    adult: "Adult Learner",
+    parent: "Parent/Guardian",
+    teacher: "Teacher",
+    admin: "Administrator",
   };
+
+  // Find the user's current subscription plan
+  const currentPlan = user?.subscribed 
+    ? mockSubscriptionPlans.find(plan => plan.isPopular) || mockSubscriptionPlans[0]
+    : null;
+
+  if (!user) {
+    return (
+      <MainLayout>
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-medium">Please log in to view your profile</h2>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
-    <>
-      <Helmet>
-        <title>Profile - Saem's Tunes</title>
-        <meta name="description" content="Manage your profile settings" />
-      </Helmet>
-      
-      <MainLayout>
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-2xl mx-auto">
-            <h1 className="text-3xl font-bold mb-6">Your Profile</h1>
-            {user ? (
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="name">Name</Label>
-                  <Input
-                    type="text"
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    disabled={!isEditing}
-                  />
+    <MainLayout>
+      <div className="space-y-8">
+        <h1 className="text-3xl font-serif font-bold">Your Profile</h1>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Personal Information</CardTitle>
+                <CardDescription>
+                  Update your personal information and how we can contact you
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col md:flex-row gap-6 items-start">
+                  <div className="flex flex-col items-center">
+                    <Avatar 
+                      className="h-24 w-24 cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={() => setAvatarEditorOpen(true)}
+                    >
+                      <AvatarImage src={user.avatar} alt={user.name} />
+                      <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <Button 
+                      variant="link" 
+                      className="text-gold hover:text-gold-dark mt-2"
+                      onClick={() => setAvatarEditorOpen(true)}
+                    >
+                      Change Avatar
+                    </Button>
+                  </div>
+                  
+                  <div className="flex-1 space-y-4 w-full">
+                    <div className="grid w-full gap-1.5">
+                      <Label htmlFor="name">Full Name</Label>
+                      <Input
+                        id="name"
+                        value={profile.name}
+                        onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                      />
+                    </div>
+                    
+                    <div className="grid w-full gap-1.5">
+                      <Label htmlFor="email">Email Address</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={profile.email}
+                        onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="email">Email</Label>
+              </CardContent>
+              <CardFooter>
+                <Button onClick={handleSaveProfile} className="bg-gold hover:bg-gold-dark text-white">
+                  Save Changes
+                </Button>
+              </CardFooter>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Account Preferences</CardTitle>
+                <CardDescription>
+                  Manage your account settings and preferences
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid w-full gap-1.5">
+                  <Label htmlFor="role">Account Type</Label>
                   <Input
-                    type="email"
-                    id="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="role"
+                    value={roleMapping[user.role] || user.role}
                     disabled
                   />
                 </div>
-                <div>
-                  <Label htmlFor="avatar">Avatar URL</Label>
-                  <Input
-                    type="text"
-                    id="avatar"
-                    value={avatar}
-                    onChange={(e) => setAvatar(e.target.value)}
-                    disabled={!isEditing}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="role">Role</Label>
-                  <Select value={role} onValueChange={(value) => setRole(value as UserRole)} disabled={!isEditing}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select a role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(roleLabels).map(([key, label]) => (
-                        <SelectItem key={key} value={key as UserRole}>
-                          {label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="subscribed">Subscribed</Label>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="subscribed"
-                      checked={subscribed}
-                      onCheckedChange={(checked) => setSubscribed(checked)}
-                      disabled={!isEditing}
+                
+                <div className="grid w-full gap-1.5">
+                  <Label htmlFor="password">Password</Label>
+                  <div className="flex gap-4">
+                    <Input
+                      id="password"
+                      type="password"
+                      value="********"
+                      disabled
                     />
-                    <span>{subscribed ? 'Yes' : 'No'}</span>
+                    <Button variant="outline">
+                      Change Password
+                    </Button>
                   </div>
                 </div>
-                <div>
-                  <Label htmlFor="bio">Bio</Label>
-                  <Textarea
-                    id="bio"
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value)}
-                    disabled={!isEditing}
-                  />
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Subscription</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {currentPlan ? (
+                  <>
+                    <div className="bg-gold/10 rounded-md p-4 mb-4">
+                      <h3 className="font-medium">Current Plan</h3>
+                      <p className="text-2xl font-bold mt-1">{currentPlan.name}</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        ${currentPlan.price}/{currentPlan.interval}
+                      </p>
+                    </div>
+                    
+                    <Button className="w-full" variant="outline">
+                      Manage Subscription
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <div className="bg-muted rounded-md p-4 mb-4">
+                      <h3 className="font-medium">Free Plan</h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        You are currently on the free plan with limited access.
+                      </p>
+                    </div>
+                    
+                    <Button className="w-full bg-gold hover:bg-gold-dark text-white">
+                      Upgrade to Premium
+                    </Button>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle>Account Activity</CardTitle>
+                <Link to="/user-details" className="text-sm text-gold hover:underline flex items-center">
+                  <span>View Details</span>
+                  <ExternalLink className="ml-1 h-3 w-3" />
+                </Link>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-sm font-medium">Last Login</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-sm font-medium">Member Since</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date().toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex justify-end space-x-2">
-                  {isEditing ? (
-                    <>
-                      <Button variant="secondary" onClick={() => setIsEditing(false)}>
-                        Cancel
-                      </Button>
-                      <Button onClick={handleUpdateProfile}>Save</Button>
-                    </>
-                  ) : (
-                    <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <p>Please log in to view your profile.</p>
-            )}
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-destructive/5 border-destructive/20">
+              <CardHeader>
+                <CardTitle className="text-destructive">Danger Zone</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  variant="destructive" 
+                  className="w-full"
+                  onClick={() => {
+                    logout();
+                    toast({
+                      title: "Logged out",
+                      description: "You have been successfully logged out"
+                    });
+                  }}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Log Out
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
-      </MainLayout>
-    </>
+      </div>
+
+      {/* Avatar editor dialog */}
+      <AvatarEditor 
+        currentAvatar={user.avatar}
+        username={user.name}
+        onSave={handleAvatarSave}
+        open={avatarEditorOpen}
+        onOpenChange={setAvatarEditorOpen}
+      />
+    </MainLayout>
   );
 };
 
-export default ProfilePage;
+export default Profile;
