@@ -7,34 +7,20 @@ import React, {
 } from "react";
 import {
   Session,
-  User as SupabaseUser,
+  User,
   AuthChangeEvent,
 } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-export enum UserRole {
-  USER = 'user',
-  ADMIN = 'admin',
-  MODERATOR = 'moderator',
-  STUDENT = 'student',
-  TEACHER = 'teacher',
-  PARENT = 'parent',
-  ADULT = 'adult'
-}
-
 interface AuthContextProps {
   session: Session | null;
-  user: ExtendedUser | null;
+  user: User | null;
   isLoading: boolean;
   signIn: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
   signUp: (email: string, password?: string) => Promise<void>;
   updateUser: (data: any) => Promise<void>;
   subscription: UserSubscription | null;
-  // Additional properties for compatibility
-  login: (email: string, password: string, captchaToken?: string | null) => Promise<void>;
-  logout: () => Promise<void>;
-  updateUserProfile: (data: any) => Promise<void>;
 }
 
 interface AuthProviderProps {
@@ -49,20 +35,11 @@ interface UserSubscription {
 
 export type SubscriptionTier = 'free' | 'basic' | 'premium' | 'professional';
 
-// Create our own extended user interface
-interface ExtendedUser extends SupabaseUser {
-  name?: string;
-  avatar?: string;
-  subscribed?: boolean;
-  subscriptionTier?: SubscriptionTier;
-  role?: UserRole;
-}
-
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<ExtendedUser | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [subscription, setSubscription] = useState<UserSubscription | null>(null);
 
@@ -72,20 +49,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const { data: { session } } = await supabase.auth.getSession();
 
       setSession(session);
-      if (session?.user) {
-        // Extend user object with additional properties
-        const extendedUser: ExtendedUser = {
-          ...session.user,
-          name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
-          avatar: session.user.user_metadata?.avatar_url || '/placeholder.svg',
-          subscribed: true, // Mock value
-          subscriptionTier: 'professional' as SubscriptionTier,
-          role: UserRole.USER,
-        };
-        setUser(extendedUser);
-      } else {
-        setUser(null);
-      }
+      setUser(session?.user || null);
       setIsLoading(false);
     };
 
@@ -94,19 +58,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session: Session | null) => {
         setSession(session);
-        if (session?.user) {
-          const extendedUser: ExtendedUser = {
-            ...session.user,
-            name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
-            avatar: session.user.user_metadata?.avatar_url || '/placeholder.svg',
-            subscribed: true,
-            subscriptionTier: 'professional' as SubscriptionTier,
-            role: UserRole.USER,
-          };
-          setUser(extendedUser);
-        } else {
-          setUser(null);
-        }
+        setUser(session?.user || null);
       }
     );
   }, []);
@@ -114,10 +66,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const getSubscription = async () => {
       if (user) {
+        // Mock subscription check - replace with actual logic
         const mockSubscription: UserSubscription = {
-          tier: 'professional',
+          tier: 'professional', // Changed from 'enterprise' to 'professional'
           isActive: true,
-          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
         };
         setSubscription(mockSubscription);
       } else {
@@ -141,18 +94,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const login = async (email: string, password: string, captchaToken?: string | null) => {
-    try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-    } catch (error: any) {
-      alert(error.error_description || error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const signOut = async () => {
     try {
       setIsLoading(true);
@@ -163,8 +104,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsLoading(false);
     }
   };
-
-  const logout = signOut;
 
   const signUp = async (email: string, password?: string) => {
     try {
@@ -191,8 +130,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const updateUserProfile = updateUser;
-
   const value = {
     session,
     user,
@@ -202,9 +139,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signUp,
     updateUser,
     subscription,
-    login,
-    logout,
-    updateUserProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

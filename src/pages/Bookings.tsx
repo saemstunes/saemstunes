@@ -1,7 +1,6 @@
 
 import MainLayout from "@/components/layout/MainLayout";
 import { useAuth } from "@/context/AuthContext";
-import { UserRole } from "@/context/AuthContext";
 import TutorCard from "@/components/booking/TutorCard";
 import { mockTutors } from "@/data/mockData";
 import UpcomingBookings from "@/components/dashboard/UpcomingBookings";
@@ -48,7 +47,7 @@ const Bookings = () => {
           <TabsList className="mb-6">
             <TabsTrigger value="tutors">Find Tutors</TabsTrigger>
             <TabsTrigger value="upcoming">Upcoming Sessions</TabsTrigger>
-            {user && (user.role === UserRole.TEACHER || user.role === UserRole.ADMIN) && (
+            {user && (user.role === "teacher" || user.role === "admin") && (
               <TabsTrigger value="manage">Manage Sessions</TabsTrigger>
             )}
           </TabsList>
@@ -101,7 +100,7 @@ const Bookings = () => {
             <UpcomingBookings limit={10} />
           </TabsContent>
           
-          {user && (user.role === UserRole.TEACHER || user.role === UserRole.ADMIN) && (
+          {user && (user.role === "teacher" || user.role === "admin") && (
             <TabsContent value="manage">
               <div className="text-center py-12 bg-muted rounded-lg">
                 <h3 className="text-lg font-medium">Session Management</h3>

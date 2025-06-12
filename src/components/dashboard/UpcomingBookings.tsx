@@ -1,6 +1,5 @@
 
 import { useAuth } from "@/context/AuthContext";
-import { UserRole } from "@/context/AuthContext";
 import { mockBookings, mockTutors } from "@/data/mockData";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,15 +25,15 @@ const UpcomingBookings = ({ limit = 3 }: UpcomingBookingsProps) => {
         const bookingDate = new Date(`${booking.date}T${booking.time}`);
         return (
           // For students, parents, adults - find bookings they booked
-          ((user.role === UserRole.STUDENT ||
-            user.role === UserRole.PARENT ||
-            user.role === UserRole.ADULT) &&
+          ((user.role === "student" ||
+            user.role === "parent" ||
+            user.role === "adult") &&
             booking.studentId === user.id) ||
           // For teachers - find bookings they are teaching
-          (user.role === UserRole.TEACHER &&
+          (user.role === "teacher" &&
             booking.tutorId === user.id) ||
           // Admins can see all bookings
-          user.role === UserRole.ADMIN
+          user.role === "admin"
         );
       })
       .filter((booking) => {

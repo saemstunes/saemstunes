@@ -19,8 +19,6 @@ interface AudioPlayerState {
   isMuted: boolean;
   lastPlayedTime: number;
   lastPlayedTimestamp: number | null;
-  error: string | null;
-  isLoading: boolean;
 }
 
 interface AudioPlayerContextType {
@@ -33,7 +31,6 @@ interface AudioPlayerContextType {
   setVolume: (volume: number) => void;
   toggleMute: () => void;
   clearPlayer: () => void;
-  clearError: () => void;
 }
 
 const AudioPlayerContext = createContext<AudioPlayerContextType | undefined>(undefined);
@@ -50,8 +47,6 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     isMuted: false,
     lastPlayedTime: 0,
     lastPlayedTimestamp: null,
-    error: null,
-    isLoading: false,
   });
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -75,8 +70,6 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
           ...prevState,
           ...parsedState,
           isPlaying: false, // Never auto-play on load
-          error: null, // Clear any previous errors
-          isLoading: false,
         }));
       } catch (error) {
         console.error('Error loading audio player state:', error);
@@ -91,7 +84,6 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       const stateToSave = {
         ...state,
         lastPlayedTimestamp: Date.now(),
-        error: null, // Don't persist errors
       };
       localStorage.setItem('audioPlayerState', JSON.stringify(stateToSave));
     }
@@ -138,38 +130,13 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       audioRef.current.remove();
     }
 
-    setState(prevState => ({
-      ...prevState,
-      isLoading: true,
-      error: null,
-    }));
-
-    const audio = new Audio();
+    const audio = new Audio(track.src);
     audioRef.current = audio;
-
-    // Set up event listeners before setting src
-    audio.addEventListener('loadstart', () => {
-      setState(prevState => ({
-        ...prevState,
-        isLoading: true,
-        error: null,
-      }));
-    });
 
     audio.addEventListener('loadedmetadata', () => {
       setState(prevState => ({
         ...prevState,
         duration: audio.duration,
-        isLoading: false,
-        error: null,
-      }));
-    });
-
-    audio.addEventListener('canplay', () => {
-      setState(prevState => ({
-        ...prevState,
-        isLoading: false,
-        error: null,
       }));
     });
 
@@ -190,113 +157,48 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }));
     });
 
-    audio.addEventListener('error', (e) => {
-      console.error('Audio playback error:', e);
-      const errorMessage = getAudioErrorMessage(audio.error);
+    audio.addEventListener('error', () => {
+      console.error('Audio playback error');
       setState(prevState => ({
         ...prevState,
         isPlaying: false,
-        isLoading: false,
-        error: errorMessage,
       }));
     });
 
-    audio.addEventListener('stalled', () => {
-      setState(prevState => ({
-        ...prevState,
-        error: 'Audio playback stalled. Check your internet connection.',
-        isLoading: false,
-      }));
-    });
-
-    audio.addEventListener('suspend', () => {
-      setState(prevState => ({
-        ...prevState,
-        isLoading: false,
-      }));
-    });
-
-    // Set volume and src
     audio.volume = state.isMuted ? 0 : state.volume;
-    audio.src = track.src;
-  };
-
-  const getAudioErrorMessage = (error: MediaError | null): string => {
-    if (!error) return 'Unknown audio error occurred';
-    
-    switch (error.code) {
-      case MediaError.MEDIA_ERR_ABORTED:
-        return 'Audio playback was aborted';
-      case MediaError.MEDIA_ERR_NETWORK:
-        return 'Network error occurred while loading audio';
-      case MediaError.MEDIA_ERR_DECODE:
-        return 'Audio file is corrupted or unsupported format';
-      case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
-        return 'Audio format not supported';
-      default:
-        return 'Audio playback error occurred';
-    }
   };
 
   const playTrack = (track: AudioTrack, startTime: number = 0) => {
-    try {
-      // If it's the same track, just resume
-      if (state.currentTrack?.id === track.id && audioRef.current && !state.error) {
-        audioRef.current.currentTime = startTime || state.lastPlayedTime;
-        audioRef.current.play().then(() => {
-          setState(prevState => ({
-            ...prevState,
-            isPlaying: true,
-            error: null,
-          }));
-        }).catch((error) => {
-          console.error('Error resuming audio:', error);
-          setState(prevState => ({
-            ...prevState,
-            error: 'Failed to resume audio playback',
-            isPlaying: false,
-          }));
-        });
-        return;
-      }
-
-      // New track
+    // If it's the same track, just resume
+    if (state.currentTrack?.id === track.id && audioRef.current) {
+      audioRef.current.currentTime = startTime || state.lastPlayedTime;
+      audioRef.current.play().catch(console.error);
       setState(prevState => ({
         ...prevState,
-        currentTrack: track,
-        isPlaying: false,
-        currentTime: startTime,
-        lastPlayedTime: startTime,
-        error: null,
+        isPlaying: true,
       }));
+      return;
+    }
 
-      initializeAudio(track);
-      
-      if (audioRef.current) {
-        audioRef.current.currentTime = startTime;
-        audioRef.current.play().then(() => {
-          setState(prevState => ({
-            ...prevState,
-            isPlaying: true,
-            error: null,
-          }));
-        }).catch((error) => {
-          console.error('Error playing audio:', error);
-          setState(prevState => ({
-            ...prevState,
-            error: 'Failed to start audio playback',
-            isPlaying: false,
-          }));
-        });
-      }
-    } catch (error) {
-      console.error('Error in playTrack:', error);
-      setState(prevState => ({
-        ...prevState,
-        error: 'Failed to load audio track',
-        isPlaying: false,
-        isLoading: false,
-      }));
+    // New track
+    setState(prevState => ({
+      ...prevState,
+      currentTrack: track,
+      isPlaying: false,
+      currentTime: startTime,
+      lastPlayedTime: startTime,
+    }));
+
+    initializeAudio(track);
+    
+    if (audioRef.current) {
+      audioRef.current.currentTime = startTime;
+      audioRef.current.play().then(() => {
+        setState(prevState => ({
+          ...prevState,
+          isPlaying: true,
+        }));
+      }).catch(console.error);
     }
   };
 
@@ -312,21 +214,13 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const resumeTrack = () => {
-    if (audioRef.current && !state.error) {
+    if (audioRef.current) {
       audioRef.current.play().then(() => {
         setState(prevState => ({
           ...prevState,
           isPlaying: true,
-          error: null,
         }));
-      }).catch((error) => {
-        console.error('Error resuming audio:', error);
-        setState(prevState => ({
-          ...prevState,
-          error: 'Failed to resume audio playback',
-          isPlaying: false,
-        }));
-      });
+      }).catch(console.error);
     }
   };
 
@@ -340,27 +234,17 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       isPlaying: false,
       currentTime: 0,
       lastPlayedTime: 0,
-      error: null,
     }));
   };
 
   const seek = (time: number) => {
-    if (audioRef.current && !state.error) {
-      try {
-        audioRef.current.currentTime = time;
-        setState(prevState => ({
-          ...prevState,
-          currentTime: time,
-          lastPlayedTime: time,
-          error: null,
-        }));
-      } catch (error) {
-        console.error('Error seeking audio:', error);
-        setState(prevState => ({
-          ...prevState,
-          error: 'Failed to seek in audio track',
-        }));
-      }
+    if (audioRef.current) {
+      audioRef.current.currentTime = time;
+      setState(prevState => ({
+        ...prevState,
+        currentTime: time,
+        lastPlayedTime: time,
+      }));
     }
   };
 
@@ -386,13 +270,6 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }));
   };
 
-  const clearError = () => {
-    setState(prevState => ({
-      ...prevState,
-      error: null,
-    }));
-  };
-
   const clearPlayer = () => {
     if (audioRef.current) {
       audioRef.current.pause();
@@ -408,8 +285,6 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       isMuted: false,
       lastPlayedTime: 0,
       lastPlayedTimestamp: null,
-      error: null,
-      isLoading: false,
     });
     localStorage.removeItem('audioPlayerState');
     if (memoryTimeoutRef.current) {
@@ -429,7 +304,6 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setVolume,
         toggleMute,
         clearPlayer,
-        clearError,
       }}
     >
       {children}
