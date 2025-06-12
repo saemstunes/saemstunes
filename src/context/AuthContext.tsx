@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import {
   Session,
-  User,
+  User as SupabaseUser,
   AuthChangeEvent,
 } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,7 +21,7 @@ export enum UserRole {
 
 interface AuthContextProps {
   session: Session | null;
-  user: User | null;
+  user: ExtendedUser | null;
   isLoading: boolean;
   signIn: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -46,22 +46,20 @@ interface UserSubscription {
 
 export type SubscriptionTier = 'free' | 'basic' | 'premium' | 'professional';
 
-// Extend the Supabase User type with additional properties
-declare module "@supabase/supabase-js" {
-  interface User {
-    name?: string;
-    avatar?: string;
-    subscribed?: boolean;
-    subscriptionTier?: SubscriptionTier;
-    role?: UserRole;
-  }
+// Create our own extended user interface
+interface ExtendedUser extends SupabaseUser {
+  name?: string;
+  avatar?: string;
+  subscribed?: boolean;
+  subscriptionTier?: SubscriptionTier;
+  role?: UserRole;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<ExtendedUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [subscription, setSubscription] = useState<UserSubscription | null>(null);
 
@@ -73,7 +71,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setSession(session);
       if (session?.user) {
         // Extend user object with additional properties
-        const extendedUser = {
+        const extendedUser: ExtendedUser = {
           ...session.user,
           name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
           avatar: session.user.user_metadata?.avatar_url || '/placeholder.svg',
@@ -94,7 +92,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       async (event: AuthChangeEvent, session: Session | null) => {
         setSession(session);
         if (session?.user) {
-          const extendedUser = {
+          const extendedUser: ExtendedUser = {
             ...session.user,
             name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
             avatar: session.user.user_metadata?.avatar_url || '/placeholder.svg',
