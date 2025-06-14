@@ -1,4 +1,3 @@
-
 import React, {
   createContext,
   useState,
@@ -8,20 +7,10 @@ import React, {
 } from "react";
 import {
   Session,
-  User as SupabaseUser,
+  User,
   AuthChangeEvent,
 } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-
-export type UserRole = 'student' | 'adult' | 'parent' | 'teacher' | 'admin';
-
-export interface User extends SupabaseUser {
-  name: string;
-  avatar?: string;
-  role: UserRole;
-  subscribed: boolean;
-  subscriptionTier: SubscriptionTier;
-}
 
 interface AuthContextProps {
   session: Session | null;
@@ -32,9 +21,6 @@ interface AuthContextProps {
   signUp: (email: string, password?: string) => Promise<void>;
   updateUser: (data: any) => Promise<void>;
   subscription: UserSubscription | null;
-  login: (email: string, password: string, captchaToken?: string | null) => Promise<void>;
-  logout: () => Promise<void>;
-  updateUserProfile: (userData: Partial<User>) => void;
 }
 
 interface AuthProviderProps {
@@ -57,27 +43,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [subscription, setSubscription] = useState<UserSubscription | null>(null);
 
-  // Transform Supabase user to our custom User type
-  const transformUser = (supabaseUser: SupabaseUser | null): User | null => {
-    if (!supabaseUser) return null;
-    
-    return {
-      ...supabaseUser,
-      name: supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0] || 'User',
-      avatar: supabaseUser.user_metadata?.avatar_url || undefined,
-      role: (supabaseUser.user_metadata?.role as UserRole) || 'student',
-      subscribed: supabaseUser.user_metadata?.subscribed || false,
-      subscriptionTier: (supabaseUser.user_metadata?.subscription_tier as SubscriptionTier) || 'free',
-    };
-  };
-
   useEffect(() => {
     const loadSession = async () => {
       setIsLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
 
       setSession(session);
-      setUser(transformUser(session?.user || null));
+      setUser(session?.user || null);
       setIsLoading(false);
     };
 
@@ -86,7 +58,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session: Session | null) => {
         setSession(session);
-        setUser(transformUser(session?.user || null));
+        setUser(session?.user || null);
       }
     );
   }, []);
@@ -96,9 +68,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (user) {
         // Mock subscription check - replace with actual logic
         const mockSubscription: UserSubscription = {
-          tier: user.subscriptionTier || 'free',
-          isActive: user.subscribed,
-          expiresAt: user.subscribed ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null,
+          tier: 'professional', // Changed from 'enterprise' to 'professional'
+          isActive: true,
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
         };
         setSubscription(mockSubscription);
       } else {
@@ -122,24 +94,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const login = async (email: string, password: string, captchaToken?: string | null) => {
-    try {
-      setIsLoading(true);
-      const { error, data } = await supabase.auth.signInWithPassword({ 
-        email, 
-        password 
-      });
-      if (error) throw error;
-      
-      // Transform and set the user
-      setUser(transformUser(data.user));
-    } catch (error: any) {
-      throw new Error(error.error_description || error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const signOut = async () => {
     try {
       setIsLoading(true);
@@ -149,10 +103,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const logout = async () => {
-    await signOut();
   };
 
   const signUp = async (email: string, password?: string) => {
@@ -180,12 +130,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const updateUserProfile = (userData: Partial<User>) => {
-    if (user) {
-      setUser({ ...user, ...userData });
-    }
-  };
-
   const value = {
     session,
     user,
@@ -195,9 +139,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signUp,
     updateUser,
     subscription,
-    login,
-    logout,
-    updateUserProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
