@@ -12,9 +12,9 @@ import AlbumsPage from '@/pages/Albums';
 import ArtistsPage from '@/pages/Artists';
 import ProfilePage from '@/pages/Profile';
 import AudioPlayerPage from '@/pages/AudioPlayer';
-import QuizzesPage from '@/pages/QuizzesPage';
-import MusicQuizPage from '@/pages/MusicQuizPage';
-import DynamicQuizPage from '@/pages/DynamicQuizPage';
+import QuizzesPage from '@/pages/Library';
+import MusicQuizPage from '@/pages/MusicQuiz';
+import DynamicQuizPage from '@/pages/DynamicQuiz';
 import NotFoundPage from '@/pages/NotFound';
 import { AudioPlayerProvider } from '@/context/AudioPlayerContext';
 import GlobalMiniPlayer from '@/components/player/GlobalMiniPlayer';
@@ -28,7 +28,7 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <ThemeProvider>
         <AuthProvider>
           <AudioPlayerProvider>
             <TooltipProvider>
