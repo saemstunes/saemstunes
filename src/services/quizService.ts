@@ -1,3 +1,4 @@
+
 import { canAccessContent, type AccessLevel } from '@/lib/contentAccess';
 
 export interface QuizQuestion {
@@ -114,7 +115,6 @@ export const mockQuizzes: Quiz[] = [
         options: ["Soprano", "Mezzo-soprano", "Alto", "Contralto"],
         correctAnswer: 3,
         explanation: "Contralto is the lowest female singing voice. It's relatively rare and has a rich, deep sound quality. Alto is often used to describe the lower female voice in choral settings.",
-        category: "Vocal Techniques"
       },
       {
         id: 'q10',
