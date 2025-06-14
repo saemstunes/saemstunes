@@ -18,6 +18,7 @@ export type UserRole = 'student' | 'adult' | 'parent' | 'teacher' | 'admin';
 interface ExtendedUser extends User {
   role: UserRole;
   subscribed?: boolean;
+  subscriptionTier?: SubscriptionTier;
   name: string;
   avatar?: string;
 }
@@ -29,6 +30,7 @@ interface AuthContextProps {
   signIn: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
   signUp: (email: string, password?: string) => Promise<void>;
+  login: (email: string, password: string, captchaToken?: string | null) => Promise<void>;
   updateUser: (data: any) => Promise<void>;
   updateUserProfile: (userData: ExtendedUser) => void;
   logout: () => Promise<void>;
@@ -68,7 +70,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           role: 'student', // default role
           name: session.user.user_metadata?.full_name || session.user.email || 'User',
           avatar: session.user.user_metadata?.avatar_url,
-          subscribed: false
+          subscribed: false,
+          subscriptionTier: 'free' // default subscription tier
         };
         setUser(extendedUser);
       } else {
@@ -88,7 +91,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             role: 'student', // default role
             name: session.user.user_metadata?.full_name || session.user.email || 'User',
             avatar: session.user.user_metadata?.avatar_url,
-            subscribed: false
+            subscribed: false,
+            subscriptionTier: 'free' // default subscription tier
           };
           setUser(extendedUser);
         } else {
@@ -124,6 +128,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       alert("Check your email for the magic link to sign in!");
     } catch (error: any) {
       alert(error.error_description || error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const login = async (email: string, password: string, captchaToken?: string | null) => {
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+    } catch (error: any) {
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -180,6 +196,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signIn,
     signOut,
     signUp,
+    login,
     updateUser,
     updateUserProfile,
     logout,
