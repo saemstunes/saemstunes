@@ -1,4 +1,3 @@
-
 import { canAccessContent, type AccessLevel } from '@/lib/contentAccess';
 
 export interface QuizQuestion {
@@ -83,7 +82,7 @@ export const mockQuizzes: Quiz[] = [
       },
       {
         id: 'q5',
-        question "What is the name for a sequence of notes arranged in ascending or descending order?",
+        question: "What is the name for a sequence of notes arranged in ascending or descending order?",
         options: ["Chord", "Scale", "Arpeggio", "Octave"],
         correctAnswer: 1,
         explanation: "A scale is a sequence of notes arranged in ascending or descending order by pitch. Common examples include the major scale and minor scale.",
@@ -96,7 +95,7 @@ export const mockQuizzes: Quiz[] = [
         explanation: "In music composition, development refers to the process of creating variations on a musical theme, expanding and exploring it throughout a piece.",
       },
       {
-            id: 'q7',
+        id: 'q7',
         question: "What is the correct order of sharps in key signatures?",
         options: ["F, C, G, D, A, E, B", "C, F, G, D, E, A, B", "F, C, G, D, E, A, B", "B, E, A, D, G, C, F"],
         correctAnswer: 0,
@@ -111,11 +110,10 @@ export const mockQuizzes: Quiz[] = [
       },
       {
         id: 'q9',
-        text: "What type of voice is the lowest female singing voice?",
+        question: "What type of voice is the lowest female singing voice?",
         options: ["Soprano", "Mezzo-soprano", "Alto", "Contralto"],
         correctAnswer: 3,
         explanation: "Contralto is the lowest female singing voice. It's relatively rare and has a rich, deep sound quality. Alto is often used to describe the lower female voice in choral settings.",
-        category: "Vocal Techniques"
       },
       {
         id: 'q10',
