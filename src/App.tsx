@@ -8,8 +8,8 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from '@/context/AuthContext';
 import HomePage from '@/pages/Index';
 import TracksPage from '@/pages/Tracks';
-import AlbumsPage from '@/pages/Library';
-import ArtistsPage from '@/pages/Library';
+import AlbumsPage from '@/pages/Albums';
+import ArtistsPage from '@/pages/Artists';
 import ProfilePage from '@/pages/Profile';
 import AudioPlayerPage from '@/pages/AudioPlayer';
 import QuizzesPage from '@/pages/Library';

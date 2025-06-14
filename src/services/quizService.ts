@@ -1,4 +1,3 @@
-
 import { canAccessContent, type AccessLevel } from '@/lib/contentAccess';
 
 export interface QuizQuestion {
@@ -66,7 +65,7 @@ export const mockQuizzes: Quiz[] = [
         options: ['Major 2nd', 'Minor 3rd', 'Major 3rd', 'Perfect 4th'],
         correctAnswer: 2,
         explanation: 'C to E is a major third interval.'
-      }
+      },
       {
         id: 'q3',
         question: "Which vocal technique involves smooth connection between notes?",
@@ -76,42 +75,42 @@ export const mockQuizzes: Quiz[] = [
       },
       {
         id: 'q4',
-        text: "Who composed 'The Four Seasons'?",
+        question: "Who composed 'The Four Seasons'?",
         options: ["Johann Sebastian Bach", "Wolfgang Amadeus Mozart", "Ludwig van Beethoven", "Antonio Vivaldi"],
         correctAnswer: 3,
         explanation: "Antonio Vivaldi composed 'The Four Seasons' (Le quattro stagioni), a set of four violin concertos between 1718 and 1720, which is one of the most popular pieces of Baroque music.",
       },
       {
         id: 'q5',
-        text: "What is the name for a sequence of notes arranged in ascending or descending order?",
+        question: "What is the name for a sequence of notes arranged in ascending or descending order?",
         options: ["Chord", "Scale", "Arpeggio", "Octave"],
         correctAnswer: 1,
         explanation: "A scale is a sequence of notes arranged in ascending or descending order by pitch. Common examples include the major scale and minor scale.",
       },
       {
         id: 'q6',
-        text: "Which of these describes the process of creating variations on a musical theme?",
+        question: "Which of these describes the process of creating variations on a musical theme?",
         options: ["Harmonization", "Orchestration", "Development", "Transposition"],
         correctAnswer: 2,
         explanation: "In music composition, development refers to the process of creating variations on a musical theme, expanding and exploring it throughout a piece.",
       },
       {
-            id: 'q7',
-        text: "What is the correct order of sharps in key signatures?",
+        id: 'q7',
+        question: "What is the correct order of sharps in key signatures?",
         options: ["F, C, G, D, A, E, B", "C, F, G, D, E, A, B", "F, C, G, D, E, A, B", "B, E, A, D, G, C, F"],
         correctAnswer: 0,
         explanation: "The correct order of sharps in key signatures is F♯, C♯, G♯, D♯, A♯, E♯, B♯. This can be remembered with the mnemonic 'Father Charles Goes Down And Ends Battle.'",
       },
       {
         id: 'q8',
-        text: "Which famous composer was deaf when he composed his Ninth Symphony?",
+        question: "Which famous composer was deaf when he composed his Ninth Symphony?",
         options: ["Franz Liszt", "Johannes Brahms", "Wolfgang Amadeus Mozart", "Ludwig van Beethoven"],
         correctAnswer: 3,
         explanation: "Ludwig van Beethoven was almost completely deaf when he composed his Ninth Symphony. He began losing his hearing in 1798 and was virtually deaf for the last decade of his life.",
       },
       {
         id: 'q9',
-        text: "What type of voice is the lowest female singing voice?",
+        question: "What type of voice is the lowest female singing voice?",
         options: ["Soprano", "Mezzo-soprano", "Alto", "Contralto"],
         correctAnswer: 3,
         explanation: "Contralto is the lowest female singing voice. It's relatively rare and has a rich, deep sound quality. Alto is often used to describe the lower female voice in choral settings.",
@@ -119,7 +118,7 @@ export const mockQuizzes: Quiz[] = [
       },
       {
         id: 'q10',
-        text: "What is the term for when two or more notes are played together?",
+        question: "What is the term for when two or more notes are played together?",
         options: ["Melody", "Rhythm", "Harmony", "Tempo"],
         correctAnswer: 2,
         explanation: "Harmony refers to when two or more notes are played or sung together. This creates chords and chord progressions, which provide the harmonic structure of music.",
