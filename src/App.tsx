@@ -5,8 +5,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from '@/context/AuthContext';
-import HomePage from '@/pages/HomePage';
-import TracksPage from '@/pages/TracksPage';
+import HomePage from '@/pages/index';
+import TracksPage from '@/pages/Tracks';
 import AlbumsPage from '@/pages/AlbumsPage';
 import ArtistsPage from '@/pages/ArtistsPage';
 import ProfilePage from '@/pages/ProfilePage';
@@ -14,7 +14,7 @@ import AudioPlayerPage from '@/pages/AudioPlayer';
 import QuizzesPage from '@/pages/QuizzesPage';
 import MusicQuizPage from '@/pages/MusicQuizPage';
 import DynamicQuizPage from '@/pages/DynamicQuizPage';
-import NotFoundPage from '@/pages/NotFoundPage';
+import NotFoundPage from '@/pages/NotFound';
 import { AudioPlayerProvider } from '@/context/AudioPlayerContext';
 import GlobalMiniPlayer from '@/components/player/GlobalMiniPlayer';
 
