@@ -3,7 +3,8 @@ import { canAccessContent, type AccessLevel } from '@/lib/contentAccess';
 
 export interface QuizQuestion {
   id: string;
-  question: string;
+  question?: string;
+  text?: string;
   options: string[];
   correctAnswer: number;
   explanation?: string;
@@ -66,7 +67,7 @@ export const mockQuizzes: Quiz[] = [
         options: ['Major 2nd', 'Minor 3rd', 'Major 3rd', 'Perfect 4th'],
         correctAnswer: 2,
         explanation: 'C to E is a major third interval.'
-      }
+      },
       {
         id: 'q3',
         question: "Which vocal technique involves smooth connection between notes?",
@@ -96,7 +97,7 @@ export const mockQuizzes: Quiz[] = [
         explanation: "In music composition, development refers to the process of creating variations on a musical theme, expanding and exploring it throughout a piece.",
       },
       {
-            id: 'q7',
+        id: 'q7',
         text: "What is the correct order of sharps in key signatures?",
         options: ["F, C, G, D, A, E, B", "C, F, G, D, E, A, B", "F, C, G, D, E, A, B", "B, E, A, D, G, C, F"],
         correctAnswer: 0,
@@ -115,7 +116,6 @@ export const mockQuizzes: Quiz[] = [
         options: ["Soprano", "Mezzo-soprano", "Alto", "Contralto"],
         correctAnswer: 3,
         explanation: "Contralto is the lowest female singing voice. It's relatively rare and has a rich, deep sound quality. Alto is often used to describe the lower female voice in choral settings.",
-        category: "Vocal Techniques"
       },
       {
         id: 'q10',
