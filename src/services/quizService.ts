@@ -66,7 +66,7 @@ export const mockQuizzes: Quiz[] = [
         options: ['Major 2nd', 'Minor 3rd', 'Major 3rd', 'Perfect 4th'],
         correctAnswer: 2,
         explanation: 'C to E is a major third interval.'
-      }
+      },
       {
         id: 'q3',
         question: "Which vocal technique involves smooth connection between notes?",
