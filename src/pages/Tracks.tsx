@@ -330,8 +330,8 @@ const Tracks = () => {
       </Helmet>
       
       <MainLayout>
-        <div className="min-h-screen bg-background">
-          <div className="container mx-auto px-4 py-8">
+        <div className="min-h-screen bg-background pb-20 lg:pb-0">
+          <div className="container mx-auto px-4 py-8 max-w-7xl">
             <div className="flex justify-between items-center mb-8">
               <div>
                 <h1 className="text-3xl font-bold text-foreground">Tracks</h1>
@@ -559,14 +559,16 @@ const Tracks = () => {
                   <h2 className="text-2xl font-bold">Popular Playlists</h2>
                 </div>
                 
-                <div className="flex justify-center">
-                  <AnimatedList
-                    items={playlistTracks}
-                    onItemSelect={(item, index) => console.log(item, index)}
-                    showGradients={true}
-                    enableArrowNavigation={true}
-                    displayScrollbar={true}
-                  />
+                <div className="w-full overflow-hidden px-2">
+                  <div className="max-w-full">
+                    <AnimatedList
+                      items={playlistTracks}
+                      onItemSelect={(item, index) => console.log(item, index)}
+                      showGradients={true}
+                      enableArrowNavigation={true}
+                      displayScrollbar={true}
+                    />
+                  </div>
                 </div>
               </TabsContent>
 

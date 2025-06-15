@@ -1,74 +1,158 @@
 
-.scroll-list-container {
+.animated-list-container {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
   position: relative;
-  width: 500px;
 }
 
-.scroll-list {
-  max-height: 400px;
+.animated-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  max-height: 60vh;
   overflow-y: auto;
-  padding: 16px;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.scroll-list::-webkit-scrollbar {
-  width: 8px;
-}
-
-.scroll-list::-webkit-scrollbar-track {
-  background: hsl(var(--muted));
-}
-
-.scroll-list::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground));
-  border-radius: 4px;
-}
-
-.no-scrollbar::-webkit-scrollbar {
+.animated-list::-webkit-scrollbar {
   display: none;
 }
 
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+.animated-list.show-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(166, 124, 0, 0.5) transparent;
 }
 
-.item {
-  padding: 16px;
-  background-color: hsl(var(--card));
-  border: 1px solid hsl(var(--border));
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  transition: all 0.2s ease;
+.animated-list.show-scrollbar::-webkit-scrollbar {
+  display: block;
+  width: 6px;
 }
 
-.item.selected {
-  background-color: hsl(var(--accent));
-  border-color: hsl(var(--gold));
+.animated-list.show-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.animated-list.show-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(166, 124, 0, 0.5);
+  border-radius: 3px;
+}
+
+.animated-list-item {
+  position: relative;
+  padding: 0.875rem 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  word-wrap: break-word;
+  hyphens: auto;
+}
+
+.animated-list-item:hover {
+  background: rgba(166, 124, 0, 0.1);
+  border-color: rgba(166, 124, 0, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(166, 124, 0, 0.2);
+}
+
+.animated-list-item.selected {
+  background: rgba(166, 124, 0, 0.2);
+  border-color: rgba(166, 124, 0, 0.5);
+  box-shadow: 0 0 0 2px rgba(166, 124, 0, 0.3);
+}
+
+.animated-list-item.hovered {
+  transform: translateY(-1px);
+}
+
+.item-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
 }
 
 .item-text {
-  color: hsl(var(--foreground));
-  margin: 0;
+  font-weight: 500;
+  color: var(--foreground);
+  display: block;
+  line-height: 1.4;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
-.top-gradient {
+.item-gradient {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 50px;
-  background: linear-gradient(to bottom, hsl(var(--background)), transparent);
-  pointer-events: none;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent, rgba(166, 124, 0, 0.1), transparent);
+  opacity: 0;
   transition: opacity 0.3s ease;
+  z-index: 1;
 }
 
-.bottom-gradient {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 100px;
-  background: linear-gradient(to top, hsl(var(--background)), transparent);
-  pointer-events: none;
-  transition: opacity 0.3s ease;
+.animated-list-item:hover .item-gradient {
+  opacity: 1;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .animated-list {
+    padding: 0.75rem;
+    gap: 0.5rem;
+    max-height: 50vh;
+  }
+  
+  .animated-list-item {
+    padding: 0.75rem;
+    font-size: 0.875rem;
+  }
+  
+  .item-text {
+    font-size: 0.875rem;
+    line-height: 1.3;
+  }
+}
+
+@media (max-width: 480px) {
+  .animated-list {
+    padding: 0.5rem;
+    max-height: 45vh;
+  }
+  
+  .animated-list-item {
+    padding: 0.625rem;
+  }
+  
+  .item-text {
+    font-size: 0.8rem;
+  }
+}
+
+/* Ensure text doesn't overflow container */
+.animated-list-container {
+  min-width: 0;
+  flex: 1;
+}
+
+.animated-list-item {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.item-text {
+  max-width: 100%;
+  white-space: normal;
 }
