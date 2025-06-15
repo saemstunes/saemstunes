@@ -141,7 +141,6 @@ const applyDynamicColors = (currentTrackIndex) => {
   root.style.setProperty('--secondary-color', currentTrack.secondaryColor);
   root.style.setProperty('--dynamic-gradient', currentTrack.backgroundGradient);
 };
-    }
   ];
 
   const playlistTracks = [
