@@ -22,18 +22,7 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
 }) => {
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const [hoveredIndex, setHoveredIndex] = useState<number>(-1);
-  const [topGradientOpacity, setTopGradientOpacity] = useState(0);
-  const [bottomGradientOpacity, setBottomGradientOpacity] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-    setTopGradientOpacity(Math.min(scrollTop / 50, 1));
-    const bottomDistance = scrollHeight - (scrollTop + clientHeight);
-    setBottomGradientOpacity(
-      scrollHeight <= clientHeight ? 0 : Math.min(bottomDistance / 50, 1)
-    );
-  };
 
   useEffect(() => {
     if (!enableArrowNavigation) return;
@@ -62,10 +51,7 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
 
   return (
     <div className={`animated-list-container ${className}`} ref={containerRef}>
-      <div 
-        className={`animated-list ${displayScrollbar ? 'show-scrollbar' : ''}`}
-        onScroll={handleScroll}
-      >
+      <div className={`animated-list ${displayScrollbar ? 'show-scrollbar' : ''}`}>
         <AnimatePresence>
           {items.map((item, index) => (
             <motion.div
@@ -80,7 +66,7 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
               exit={{ opacity: 0, y: -20 }}
               transition={{ 
                 duration: 0.3, 
-                delay: index * 0.05,
+                delay: index * 0.1,
                 ease: "easeOut" 
               }}
               whileHover={{ 
@@ -102,19 +88,6 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
           ))}
         </AnimatePresence>
       </div>
-      
-      {showGradients && (
-        <>
-          <div
-            className="scroll-gradient scroll-gradient-top"
-            style={{ opacity: topGradientOpacity }}
-          />
-          <div
-            className="scroll-gradient scroll-gradient-bottom"
-            style={{ opacity: bottomGradientOpacity }}
-          />
-        </>
-      )}
     </div>
   );
 };
