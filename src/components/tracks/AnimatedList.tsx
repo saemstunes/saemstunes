@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
+import './AnimatedList.css';
 
 interface AnimatedItemProps {
   children: React.ReactNode;
@@ -129,7 +130,6 @@ const AnimatedList = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [items, selectedIndex, onItemSelect, enableArrowNavigation]);
 
-  // Auto-scroll to selected item
   useEffect(() => {
     if (!keyboardNav || selectedIndex < 0 || !listRef.current) return;
     const container = listRef.current;
@@ -164,19 +164,15 @@ const AnimatedList = ({
     >
       <div
         ref={listRef}
-        className={`h-full overflow-y-auto px-4 py-2 ${
+        className={`h-full overflow-y-auto px-4 py-2 animated-list-scrollbar ${
           !displayScrollbar ? 'scrollbar-hide' : ''
         }`}
         onScroll={handleScroll}
-        style={{
-          scrollbarWidth: displayScrollbar ? 'thin' : 'none',
-          msOverflowStyle: displayScrollbar ? 'auto' : 'none'
-        }}
       >
         {items.map((item, index) => (
           <AnimatedItem
             key={index}
-            delay={Math.min(index * 50, 500)} // Cap delay to prevent long waits
+            delay={Math.min(index * 50, 500)}
             index={index}
             isVisible={visibleItems.has(index)}
             onMouseEnter={() => setSelectedIndex(index)}
@@ -230,35 +226,8 @@ const AnimatedList = ({
           />
         </>
       )}
-      
-      <style jsx>{`
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        
-        /* Custom scrollbar styling for when displayScrollbar is true */
-        .overflow-y-auto::-webkit-scrollbar {
-          width: 8px;
-        }
-        .overflow-y-auto::-webkit-scrollbar-track {
-          background: hsl(var(--muted));
-          border-radius: 4px;
-        }
-        .overflow-y-auto::-webkit-scrollbar-thumb {
-          background: hsl(var(--accent));
-          border-radius: 4px;
-        }
-        .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-          background: hsl(43 100% 33%);
-        }
-      `}</style>
     </div>
   );
 };
 
-// Export the AnimatedList component for use in other pages
 export default AnimatedList;

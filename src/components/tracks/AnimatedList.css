@@ -1,4 +1,5 @@
 
+
 .animated-list-container {
   width: 100%;
   max-width: 100%;
@@ -107,6 +108,35 @@
   opacity: 1;
 }
 
+/* Scrollbar utilities for the AnimatedList component */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Custom scrollbar styling for the animated list */
+.animated-list-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.animated-list-scrollbar::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 4px;
+}
+
+.animated-list-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(var(--accent));
+  border-radius: 4px;
+}
+
+.animated-list-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: hsl(43 100% 33%);
+}
+
 /* Mobile responsive adjustments */
 @media (max-width: 768px) {
   .animated-list {
@@ -156,3 +186,4 @@
   max-width: 100%;
   white-space: normal;
 }
+
