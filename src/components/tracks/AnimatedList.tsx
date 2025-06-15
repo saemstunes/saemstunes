@@ -52,83 +52,38 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
   return (
     <div className={`animated-list-container ${className}`} ref={containerRef}>
       <div className={`animated-list ${displayScrollbar ? 'show-scrollbar' : ''}`}>
-        <AnimatePresence mode="popLayout">
+        <AnimatePresence>
           {items.map((item, index) => (
             <motion.div
-              key={`${item}-${index}`}
+              key={index}
               className={`animated-list-item ${
                 selectedIndex === index ? 'selected' : ''
               } ${
                 hoveredIndex === index ? 'hovered' : ''
               }`}
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ 
-                opacity: 1, 
-                y: 0, 
-                scale: 1,
-                transition: {
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 30,
-                  delay: index * 0.05
-                }
-              }}
-              exit={{ 
-                opacity: 0, 
-                y: -20, 
-                scale: 0.95,
-                transition: {
-                  duration: 0.2
-                }
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ 
+                duration: 0.3, 
+                delay: index * 0.1,
+                ease: "easeOut" 
               }}
               whileHover={{ 
                 scale: 1.02,
-                y: -2,
-                transition: { 
-                  type: "spring",
-                  stiffness: 400,
-                  damping: 25
-                }
+                transition: { duration: 0.2 }
               }}
-              whileTap={{ 
-                scale: 0.98,
-                transition: { duration: 0.1 }
-              }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => handleItemClick(item, index)}
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(-1)}
-              layout
             >
               <div className="item-content">
                 <span className="item-text">{item}</span>
                 {showGradients && (
-                  <motion.div 
-                    className="item-gradient"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ 
-                      opacity: hoveredIndex === index ? 1 : 0,
-                      scale: hoveredIndex === index ? 1 : 0.8
-                    }}
-                    transition={{ duration: 0.3 }}
-                  />
+                  <div className="item-gradient" />
                 )}
               </div>
-              
-              {/* Enhanced selection indicator */}
-              {selectedIndex === index && (
-                <motion.div
-                  className="selection-indicator"
-                  layoutId="selection"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 500,
-                    damping: 30
-                  }}
-                />
-              )}
             </motion.div>
           ))}
         </AnimatePresence>

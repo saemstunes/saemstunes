@@ -10,17 +10,16 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  padding: 1.5rem;
+  padding: 1rem;
   max-height: 60vh;
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  border-radius: 1rem;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  position: relative;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .animated-list::-webkit-scrollbar {
@@ -29,83 +28,67 @@
 
 .animated-list.show-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(166, 124, 0, 0.6) transparent;
+  scrollbar-color: rgba(166, 124, 0, 0.5) transparent;
 }
 
 .animated-list.show-scrollbar::-webkit-scrollbar {
   display: block;
-  width: 8px;
+  width: 6px;
 }
 
 .animated-list.show-scrollbar::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
+  background: transparent;
 }
 
 .animated-list.show-scrollbar::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(166, 124, 0, 0.7), rgba(166, 124, 0, 0.4));
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.animated-list.show-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(166, 124, 0, 0.9), rgba(166, 124, 0, 0.6));
+  background-color: rgba(166, 124, 0, 0.5);
+  border-radius: 3px;
 }
 
 .animated-list-item {
   position: relative;
-  padding: 1rem 1.25rem;
-  border-radius: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: 0.5rem;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   overflow: hidden;
   word-wrap: break-word;
   hyphens: auto;
-  min-width: 0;
-  max-width: 100%;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .animated-list-item:hover {
-  background: rgba(166, 124, 0, 0.15);
-  border-color: rgba(166, 124, 0, 0.4);
-  box-shadow: 0 8px 25px rgba(166, 124, 0, 0.25), 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: rgba(166, 124, 0, 0.1);
+  border-color: rgba(166, 124, 0, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(166, 124, 0, 0.2);
 }
 
 .animated-list-item.selected {
-  background: rgba(166, 124, 0, 0.25);
-  border-color: rgba(166, 124, 0, 0.6);
-  box-shadow: 
-    0 0 0 2px rgba(166, 124, 0, 0.4),
-    0 8px 25px rgba(166, 124, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: rgba(166, 124, 0, 0.2);
+  border-color: rgba(166, 124, 0, 0.5);
+  box-shadow: 0 0 0 2px rgba(166, 124, 0, 0.3);
 }
 
 .animated-list-item.hovered {
-  background: rgba(166, 124, 0, 0.12);
+  transform: translateY(-1px);
 }
 
 .item-content {
   position: relative;
   z-index: 2;
   width: 100%;
-  min-width: 0;
 }
 
 .item-text {
-  font-weight: 600;
+  font-weight: 500;
   color: var(--foreground);
   display: block;
-  line-height: 1.5;
+  line-height: 1.4;
   word-break: break-word;
   overflow-wrap: break-word;
-  white-space: normal;
-  max-width: 100%;
-  font-size: 0.95rem;
-  letter-spacing: 0.01em;
 }
 
 .item-gradient {
@@ -114,109 +97,56 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba(166, 124, 0, 0.15) 0%, 
-    rgba(166, 124, 0, 0.05) 50%, 
-    rgba(255, 255, 255, 0.1) 100%
-  );
+  background: linear-gradient(45deg, transparent, rgba(166, 124, 0, 0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
   z-index: 1;
-  border-radius: inherit;
 }
 
-.selection-indicator {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba(166, 124, 0, 0.2) 0%, 
-    rgba(166, 124, 0, 0.1) 100%
-  );
-  border: 2px solid rgba(166, 124, 0, 0.5);
-  border-radius: inherit;
-  z-index: 1;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+.animated-list-item:hover .item-gradient {
+  opacity: 1;
 }
 
-/* Enhanced responsive design */
-@media (max-width: 1024px) {
-  .animated-list {
-    padding: 1.25rem;
-    gap: 0.625rem;
-    max-height: 55vh;
-  }
-  
-  .animated-list-item {
-    padding: 0.875rem 1rem;
-  }
-  
-  .item-text {
-    font-size: 0.9rem;
-  }
-}
-
+/* Mobile responsive adjustments */
 @media (max-width: 768px) {
   .animated-list {
-    padding: 1rem;
+    padding: 0.75rem;
     gap: 0.5rem;
     max-height: 50vh;
-    border-radius: 0.875rem;
   }
   
   .animated-list-item {
-    padding: 0.75rem 0.875rem;
-    border-radius: 0.625rem;
+    padding: 0.75rem;
+    font-size: 0.875rem;
   }
   
   .item-text {
     font-size: 0.875rem;
-    line-height: 1.4;
-    font-weight: 500;
-  }
-}
-
-@media (max-width: 640px) {
-  .animated-list {
-    padding: 0.875rem;
-    max-height: 45vh;
-  }
-  
-  .animated-list-item {
-    padding: 0.625rem 0.75rem;
-  }
-  
-  .item-text {
-    font-size: 0.8rem;
     line-height: 1.3;
   }
 }
 
 @media (max-width: 480px) {
   .animated-list {
-    padding: 0.75rem;
-    gap: 0.375rem;
-    max-height: 40vh;
+    padding: 0.5rem;
+    max-height: 45vh;
   }
   
   .animated-list-item {
-    padding: 0.5rem 0.625rem;
+    padding: 0.625rem;
   }
   
   .item-text {
-    font-size: 0.775rem;
+    font-size: 0.8rem;
   }
 }
 
-/* Enhanced container responsiveness */
+/* Ensure text doesn't overflow container */
 .animated-list-container {
   min-width: 0;
   flex: 1;
-  width: 100%;
-  max-width: 100%;
 }
 
-/* Ensure no horizontal overflow */
 .animated-list-item {
   min-width: 0;
   max-width: 100%;
@@ -225,22 +155,4 @@
 .item-text {
   max-width: 100%;
   white-space: normal;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Enhanced focus states for accessibility */
-.animated-list-item:focus {
-  outline: 2px solid rgba(166, 124, 0, 0.6);
-  outline-offset: 2px;
-}
-
-/* Performance optimization for animations */
-.animated-list-item {
-  will-change: transform, box-shadow;
-}
-
-.item-gradient,
-.selection-indicator {
-  will-change: opacity, transform;
 }
