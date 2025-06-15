@@ -1,95 +1,161 @@
-
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useRef, useState, useEffect } from 'react';
+import { motion, useInView } from 'framer-motion';
 import './AnimatedList.css';
 
-interface AnimatedListProps {
-  items: string[];
-  onItemSelect?: (item: string, index: number) => void;
-  showGradients?: boolean;
-  enableArrowNavigation?: boolean;
-  displayScrollbar?: boolean;
-  className?: string;
+interface AnimatedItemProps {
+children: React.ReactNode;
+delay?: number;
+index: number;
+onMouseEnter: () => void;
+onClick: () => void;
 }
 
-const AnimatedList: React.FC<AnimatedListProps> = ({
-  items,
-  onItemSelect,
-  showGradients = false,
-  enableArrowNavigation = false,
-  displayScrollbar = false,
-  className = ''
-}) => {
-  const [selectedIndex, setSelectedIndex] = useState<number>(-1);
-  const [hoveredIndex, setHoveredIndex] = useState<number>(-1);
-  const containerRef = useRef<HTMLDivElement>(null);
+const AnimatedItem = ({ children, delay = 0, index, onMouseEnter, onClick }: AnimatedItemProps) => {
+const ref = useRef(null);
+const inView = useInView(ref, { amount: 0.5, once: false });
+return (
+<motion.div
+ref={ref}
+data-index={index}
+onMouseEnter={onMouseEnter}
+onClick={onClick}
+initial={{ scale: 0.7, opacity: 0 }}
+animate={inView ? { scale: 1, opacity: 1 } : { scale: 0.7, opacity: 0 }}
+transition={{ duration: 0.2, delay }}
+style={{ marginBottom: '1rem', cursor: 'pointer' }}
+>
+{children}
+</motion.div>
+);
+};
 
-  useEffect(() => {
-    if (!enableArrowNavigation) return;
+interface AnimatedListProps {
+items?: string[];
+onItemSelect?: (item: string, index: number) => void;
+showGradients?: boolean;
+enableArrowNavigation?: boolean;
+className?: string;
+itemClassName?: string;
+displayScrollbar?: boolean;
+initialSelectedIndex?: number;
+}
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'ArrowUp') {
-        event.preventDefault();
-        setSelectedIndex(prev => prev > 0 ? prev - 1 : items.length - 1);
-      } else if (event.key === 'ArrowDown') {
-        event.preventDefault();
-        setSelectedIndex(prev => prev < items.length - 1 ? prev + 1 : 0);
-      } else if (event.key === 'Enter' && selectedIndex >= 0) {
-        event.preventDefault();
-        onItemSelect?.(items[selectedIndex], selectedIndex);
-      }
-    };
+const AnimatedList = ({
+items = [
+'Item 1', 'Item 2', 'Item 3', 'Item 4', 'Item 5',
+'Item 6', 'Item 7', 'Item 8', 'Item 9', 'Item 10',
+'Item 11', 'Item 12', 'Item 13', 'Item 14', 'Item 15'
+],
+onItemSelect,
+showGradients = true,
+enableArrowNavigation = true,
+className = '',
+itemClassName = '',
+displayScrollbar = true,
+initialSelectedIndex = -1,
+}: AnimatedListProps) => {
+const listRef = useRef<HTMLDivElement>(null);
+const [selectedIndex, setSelectedIndex] = useState(initialSelectedIndex);
+const [keyboardNav, setKeyboardNav] = useState(false);
+const [topGradientOpacity, setTopGradientOpacity] = useState(0);
+const [bottomGradientOpacity, setBottomGradientOpacity] = useState(1);
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [enableArrowNavigation, selectedIndex, items, onItemSelect]);
+const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+setTopGradientOpacity(Math.min(scrollTop / 50, 1));
+const bottomDistance = scrollHeight - (scrollTop + clientHeight);
+setBottomGradientOpacity(
+scrollHeight <= clientHeight ? 0 : Math.min(bottomDistance / 50, 1)
+);
+};
 
-  const handleItemClick = (item: string, index: number) => {
-    setSelectedIndex(index);
-    onItemSelect?.(item, index);
-  };
+useEffect(() => {
+if (!enableArrowNavigation) return;
+const handleKeyDown = (e: KeyboardEvent) => {
+if (e.key === 'ArrowDown' || (e.key === 'Tab' && !e.shiftKey)) {
+e.preventDefault();
+setKeyboardNav(true);
+setSelectedIndex((prev) => Math.min(prev + 1, items.length - 1));
+} else if (e.key === 'ArrowUp' || (e.key === 'Tab' && e.shiftKey)) {
+e.preventDefault();
+setKeyboardNav(true);
+setSelectedIndex((prev) => Math.max(prev - 1, 0));
+} else if (e.key === 'Enter') {
+if (selectedIndex >= 0 && selectedIndex < items.length) {
+e.preventDefault();
+if (onItemSelect) {
+onItemSelect(items[selectedIndex], selectedIndex);
+}
+}
+}
+};
 
-  return (
-    <div className={`animated-list-container ${className}`} ref={containerRef}>
-      <div className={`animated-list ${displayScrollbar ? 'show-scrollbar' : ''}`}>
-        <AnimatePresence>
-          {items.map((item, index) => (
-            <motion.div
-              key={index}
-              className={`animated-list-item ${
-                selectedIndex === index ? 'selected' : ''
-              } ${
-                hoveredIndex === index ? 'hovered' : ''
-              }`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ 
-                duration: 0.3, 
-                delay: index * 0.1,
-                ease: "easeOut" 
-              }}
-              whileHover={{ 
-                scale: 1.02,
-                transition: { duration: 0.2 }
-              }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => handleItemClick(item, index)}
-              onMouseEnter={() => setHoveredIndex(index)}
-              onMouseLeave={() => setHoveredIndex(-1)}
-            >
-              <div className="item-content">
-                <span className="item-text">{item}</span>
-                {showGradients && (
-                  <div className="item-gradient" />
-                )}
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
-    </div>
-  );
+window.addEventListener('keydown', handleKeyDown);
+return () => window.removeEventListener('keydown', handleKeyDown);
+}, [items, selectedIndex, onItemSelect, enableArrowNavigation]);
+
+useEffect(() => {
+if (!keyboardNav || selectedIndex < 0 || !listRef.current) return;
+const container = listRef.current;
+const selectedItem = container.querySelector(`[data-index="${selectedIndex}"]`) as HTMLElement;
+if (selectedItem) {
+const extraMargin = 50;
+const containerScrollTop = container.scrollTop;
+const containerHeight = container.clientHeight;
+const itemTop = selectedItem.offsetTop;
+const itemBottom = itemTop + selectedItem.offsetHeight;
+if (itemTop < containerScrollTop + extraMargin) {
+container.scrollTo({ top: itemTop - extraMargin, behavior: 'smooth' });
+} else if (itemBottom > containerScrollTop + containerHeight - extraMargin) {
+container.scrollTo({
+top: itemBottom - containerHeight + extraMargin,
+behavior: 'smooth',
+});
+}
+}
+setKeyboardNav(false);
+}, [selectedIndex, keyboardNav]);
+
+return (
+<div className={`scroll-list-container ${className}`}>
+<div
+ref={listRef}
+className={`scroll-list ${!displayScrollbar ? 'no-scrollbar' : ''}`}
+onScroll={handleScroll}
+>
+{items.map((item, index) => (
+<AnimatedItem
+key={index}
+delay={0.1}
+index={index}
+onMouseEnter={() => setSelectedIndex(index)}
+onClick={() => {
+setSelectedIndex(index);
+if (onItemSelect) {
+onItemSelect(item, index);
+}
+}}
+>
+<div className={`item ${selectedIndex === index ? 'selected' : ''} ${itemClassName}`}>
+<p className="item-text">{item}</p>
+</div>
+</AnimatedItem>
+))}
+</div>
+{showGradients && (
+<>
+<div
+className="top-gradient"
+style={{ opacity: topGradientOpacity }}
+></div>
+<div
+className="bottom-gradient"
+style={{ opacity: bottomGradientOpacity }}
+></div>
+</>
+)}
+</div>
+);
 };
 
 export default AnimatedList;
