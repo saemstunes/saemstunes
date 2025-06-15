@@ -64,29 +64,83 @@ const Tracks = () => {
   };
 
   const albumItems = [
-    {
-      image: "https://i.imgur.com/HW2rxFd.jpeg",
-      title: "Pale Ulipo",
-      subtitle: "Full Cover",
-      handle: "@saemstunes",
-      borderColor: "#5A270F",
-      gradient: "linear-gradient(145deg, #5A270F, #000)",
-    },
-    {
-      image: "https://i.imgur.com/6yr8BpG.jpeg", 
-      title: "I Need You More",
-      subtitle: "Acoustic Cover",
-      handle: "@saemstunes",
-      borderColor: "#DF8142",
-      gradient: "linear-gradient(180deg, #DF8142, #000)",
-    },
-    {
-      image: "https://i.imgur.com/LJQDADg.jpeg",
-      title: "Ni Hai",
-      subtitle: "Originals",
-      handle: "@saemstunes, @kendinkonge",
-      borderColor: "#EEB38C",
-      gradient: "linear-gradient(165deg, #EEB38C, #000)",
+  {
+    image: "https://i.imgur.com/HW2rxFd.jpeg",
+    title: "Pale Ulipo",
+    subtitle: "Full Cover",
+    handle: "@saemstunes",
+    borderColor: "#5A270F",
+    gradient: "linear-gradient(145deg, #5A270F, #000)",
+    // New audio properties
+    audioUrl: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Cover_Tracks/Pale%20Ulipo%20cover.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvQ292ZXJfVHJhY2tzL1BhbGUgVWxpcG8gY292ZXIubTRhIiwiaWF0IjoxNzQ5OTYwMjQ1LCJleHAiOjE3ODE0OTYyNDV9.3vv7kkkTTw2uRXG_HEItaCZ5xC6dbgcucC-PYjJKXLA",
+    duration: "2:53",
+    previewUrl: "https://example.com/pale-ulipo-preview.mp3",
+    videoUrl: "https://youtube.com/watch?v=pale-ulipo-cover",
+    youtubeUrl: "https://www.youtube.com/shorts/7gCTtxzgVwc",
+    // Dynamic gradient colors that match cover art
+    primaryColor: "#5A270F",
+    secondaryColor: "#8B4513",
+    backgroundGradient: "linear-gradient(145deg, #5A270F 0%, #8B4513 50%, #000 100%)",
+  },
+  {
+    image: "https://i.imgur.com/6yr8BpG.jpeg", 
+    title: "I Need You More",
+    subtitle: "Acoustic Cover",
+    handle: "@saemstunes",
+    borderColor: "#DF8142",
+    gradient: "linear-gradient(180deg, #DF8142, #000)",
+    // New audio properties
+    audioUrl: "https://example.com/i-need-you-more.mp3",
+    duration: "4:15",
+    previewUrl: "https://example.com/i-need-you-more-preview.mp3",
+    videoUrl: "https://youtube.com/watch?v=i-need-you-more-acoustic",
+    youtubeUrl: "https://youtube.com/watch?v=i-need-you-more-acoustic",
+    // Dynamic gradient colors that match cover art
+    primaryColor: "#DF8142",
+    secondaryColor: "#F4A460",
+    backgroundGradient: "linear-gradient(180deg, #DF8142 0%, #F4A460 50%, #000 100%)",
+  },
+  {
+    image: "https://i.imgur.com/LJQDADg.jpeg",
+    title: "Ni Hai",
+    subtitle: "Originals",
+    handle: "@saemstunes, @kendinkonge",
+    borderColor: "#EEB38C",
+    gradient: "linear-gradient(165deg, #EEB38C, #000)",
+    // New audio properties
+    audioUrl: "https://example.com/ni-hai-original.mp3",
+    duration: "3:28",
+    previewUrl: "https://example.com/ni-hai-preview.mp3",
+    videoUrl: "https://youtube.com/watch?v=ni-hai-original",
+    youtubeUrl: "https://youtube.com/watch?v=ni-hai-original",
+    // Dynamic gradient colors that match cover art
+    primaryColor: "#EEB38C",
+    secondaryColor: "#DEB887",
+    backgroundGradient: "linear-gradient(165deg, #EEB38C 0%, #DEB887 50%, #000 100%)",
+  },
+];
+
+// Example usage for dynamic background that shifts with current track
+const updateBackgroundGradient = (currentTrackIndex) => {
+  const currentTrack = albumItems[currentTrackIndex];
+  document.body.style.background = currentTrack.backgroundGradient;
+  
+  // Or for a container element
+  const container = document.querySelector('.music-player-container');
+  if (container) {
+    container.style.background = currentTrack.backgroundGradient;
+  }
+};
+
+// Example CSS variables approach for dynamic theming
+const applyDynamicColors = (currentTrackIndex) => {
+  const currentTrack = albumItems[currentTrackIndex];
+  const root = document.documentElement;
+  
+  root.style.setProperty('--primary-color', currentTrack.primaryColor);
+  root.style.setProperty('--secondary-color', currentTrack.secondaryColor);
+  root.style.setProperty('--dynamic-gradient', currentTrack.backgroundGradient);
+};
     }
   ];
 
