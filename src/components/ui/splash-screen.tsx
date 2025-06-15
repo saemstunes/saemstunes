@@ -177,16 +177,17 @@ const SplashScreen = ({
     <AnimatePresence>
       {showSplash && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-background"
+          className="fixed inset-0 flex items-center justify-center overflow-hidden bg-background"
+          style={{
+            zIndex: 9999999,
+            pointerEvents: loading ? "auto" : "none",
+          }}
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
           exit={{
             opacity: 0,
             scale: 1.05,
             transition: { duration: 1, ease: EASINGS.decelerate },
-          }}
-          style={{
-            pointerEvents: loading ? "auto" : "none",
           }}
         >
           {/* Animated background elements */}
