@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -141,7 +140,6 @@ const applyDynamicColors = (currentTrackIndex) => {
   root.style.setProperty('--secondary-color', currentTrack.secondaryColor);
   root.style.setProperty('--dynamic-gradient', currentTrack.backgroundGradient);
 };
-  ];
 
   const playlistTracks = [
     "African Gospel",
