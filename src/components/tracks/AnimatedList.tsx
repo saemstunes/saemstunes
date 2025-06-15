@@ -158,7 +158,8 @@ const AnimatedList = ({
       className={`relative w-full max-w-full overflow-hidden ${className}`}
       style={{ 
         maxHeight,
-        minHeight: '200px'
+        minHeight: '200px',
+        backgroundColor: 'hsl(var(--background))'
       }}
     >
       <div
@@ -189,11 +190,21 @@ const AnimatedList = ({
             <div 
               className={`p-4 rounded-lg border-2 transition-all duration-200 ${
                 selectedIndex === index 
-                  ? 'bg-blue-50 border-blue-300 shadow-md transform scale-105' 
-                  : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                  ? 'bg-accent/10 dark:bg-accent/20 border-primary shadow-md transform scale-105' 
+                  : 'bg-card dark:bg-card border-border hover:border-accent/50 hover:shadow-sm'
               } ${itemClassName}`}
+              style={{
+                backgroundColor: selectedIndex === index 
+                  ? 'hsl(43 60% 45% / 0.1)' 
+                  : 'hsl(var(--card))',
+                borderColor: selectedIndex === index 
+                  ? 'hsl(43 100% 33%)' 
+                  : 'hsl(var(--border))',
+                color: 'hsl(var(--card-foreground))'
+              }}
             >
-              <p className="text-gray-800 font-medium text-sm md:text-base break-words">
+              <p className="font-medium text-sm md:text-base break-words" 
+                 style={{ color: 'hsl(var(--card-foreground))' }}>
                 {item}
               </p>
             </div>
@@ -204,12 +215,18 @@ const AnimatedList = ({
       {showGradients && (
         <>
           <div
-            className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-white to-transparent pointer-events-none z-10"
-            style={{ opacity: topGradientOpacity }}
+            className="absolute top-0 left-0 right-0 h-8 pointer-events-none z-10"
+            style={{ 
+              opacity: topGradientOpacity,
+              background: 'linear-gradient(to bottom, hsl(var(--background)), transparent)'
+            }}
           />
           <div
-            className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none z-10"
-            style={{ opacity: bottomGradientOpacity }}
+            className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none z-10"
+            style={{ 
+              opacity: bottomGradientOpacity,
+              background: 'linear-gradient(to top, hsl(var(--background)), transparent)'
+            }}
           />
         </>
       )}
@@ -221,6 +238,22 @@ const AnimatedList = ({
         }
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
+        }
+        
+        /* Custom scrollbar styling for when displayScrollbar is true */
+        .overflow-y-auto::-webkit-scrollbar {
+          width: 8px;
+        }
+        .overflow-y-auto::-webkit-scrollbar-track {
+          background: hsl(var(--muted));
+          border-radius: 4px;
+        }
+        .overflow-y-auto::-webkit-scrollbar-thumb {
+          background: hsl(var(--accent));
+          border-radius: 4px;
+        }
+        .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+          background: hsl(43 100% 33%);
         }
       `}</style>
     </div>
