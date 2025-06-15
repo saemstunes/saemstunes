@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Loader2, Music, Play, Headphones, Volume2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -33,15 +34,13 @@ const ANIMATION_CONFIGS = {
   },
 };
 
-// Theme colors - centralized for maintainability
+// Theme colors - updated to match brand colors
 const THEME_COLORS = {
-  primary: "#d4af37", // Gold
-  primaryRgb: "212, 175, 55",
-  secondary: "#f59e0b", // Yellow-500
-  background: {
-    light: "white",
-    dark: "rgb(41, 27, 15)", // Dark brown
-  },
+  primary: "#A67C00", // Brand gold
+  primaryLight: "#D4A936", // Light gold
+  primaryDark: "#7A5A00", // Dark gold
+  primaryRgb: "166, 124, 0", // RGB values for transparency effects
+  primaryLightRgb: "212, 169, 54", // Light gold RGB
 };
 
 interface SplashScreenProps {
@@ -178,7 +177,7 @@ const SplashScreen = ({
     <AnimatePresence>
       {showSplash && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-white dark:bg-amber-950"
+          className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-background"
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
           exit={{
@@ -212,7 +211,7 @@ const SplashScreen = ({
             >
               {/* Outer glow ring */}
               <motion.div
-                className="absolute -inset-8 rounded-full border border-yellow-500/20"
+                className="absolute -inset-8 rounded-full border border-primary/20"
                 animate={{
                   rotate: 360,
                   boxShadow: [
@@ -236,8 +235,13 @@ const SplashScreen = ({
               />
 
               {/* Logo container */}
-              <div className="relative z-10 flex items-center justify-center bg-white/80 dark:bg-amber-900/80 backdrop-blur-sm rounded-full p-6 border border-yellow-500/30">
-                <div className="w-20 h-20 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center shadow-2xl">
+              <div className="relative z-10 flex items-center justify-center bg-card/80 backdrop-blur-sm rounded-full p-6 border border-primary/30">
+                <div 
+                  className="w-20 h-20 rounded-full flex items-center justify-center shadow-2xl"
+                  style={{
+                    background: `linear-gradient(135deg, ${THEME_COLORS.primaryLight}, ${THEME_COLORS.primary})`
+                  }}
+                >
                   <Music className="w-10 h-10 text-white" />
                 </div>
               </div>
@@ -246,7 +250,7 @@ const SplashScreen = ({
               {[1, 2, 3, 4].map((i) => (
                 <motion.div
                   key={`pulse-${i}`}
-                  className="absolute inset-0 rounded-full border border-yellow-500/20"
+                  className="absolute inset-0 rounded-full border border-primary/20"
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{
                     scale: [0.9, 1.8, 2.2],
@@ -268,8 +272,9 @@ const SplashScreen = ({
                   return (
                     <motion.div
                       key={note.id}
-                      className="absolute text-yellow-500 top-1/2 left-1/2"
+                      className="absolute top-1/2 left-1/2"
                       style={{
+                        color: THEME_COLORS.primary,
                         filter: `drop-shadow(0 0 8px rgba(${THEME_COLORS.primaryRgb}, 0.6))`,
                       }}
                       initial={{
@@ -312,10 +317,10 @@ const SplashScreen = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.8 }}
             >
-              <h1 className="text-4xl font-bold text-slate-900 dark:text-amber-50 mb-2">
+              <h1 className="text-4xl font-bold text-foreground mb-2">
                 Saem's{" "}
                 <motion.span
-                  className="text-yellow-600 dark:text-yellow-400"
+                  style={{ color: THEME_COLORS.primary }}
                   animate={{
                     filter: [
                       `drop-shadow(0 0 5px rgba(${THEME_COLORS.primaryRgb}, 0.5))`,
@@ -330,7 +335,7 @@ const SplashScreen = ({
               </h1>
 
               <motion.p
-                className="text-slate-600 dark:text-amber-200 text-lg font-light italic"
+                className="text-muted-foreground text-lg font-light italic"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6, duration: 0.6 }}
@@ -348,9 +353,12 @@ const SplashScreen = ({
             >
               {/* Progress bar container */}
               <div className="relative mb-4" role="progressbar" aria-valuenow={progress} aria-valuemax={100}>
-                <div className="w-full h-2 bg-slate-200 dark:bg-amber-900 rounded-full overflow-hidden backdrop-blur-sm">
+                <div className="w-full h-2 bg-muted rounded-full overflow-hidden backdrop-blur-sm">
                   <motion.div
-                    className="h-full bg-gradient-to-r from-yellow-500 via-yellow-600 to-yellow-500 rounded-full relative"
+                    className="h-full rounded-full relative"
+                    style={{
+                      background: `linear-gradient(90deg, ${THEME_COLORS.primaryLight}, ${THEME_COLORS.primary}, ${THEME_COLORS.primaryLight})`
+                    }}
                     initial={{ width: "0%" }}
                     animate={{ width: `${progress}%` }}
                     transition={{ duration: 0.3, ease: EASINGS.standard }}
@@ -367,7 +375,7 @@ const SplashScreen = ({
 
               {/* Dynamic loading message */}
               <motion.div
-                className="flex items-center justify-center text-slate-600 dark:text-amber-200 min-h-[24px]"
+                className="flex items-center justify-center text-muted-foreground min-h-[24px]"
                 key={currentMessage}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -376,7 +384,10 @@ const SplashScreen = ({
                 role="status"
                 aria-live="polite"
               >
-                <Loader2 className="h-4 w-4 animate-spin mr-3 text-yellow-600 dark:text-yellow-400" />
+                <Loader2 
+                  className="h-4 w-4 animate-spin mr-3"
+                  style={{ color: THEME_COLORS.primary }}
+                />
                 <span className="text-sm">
                   {loading ? loadingMessages[currentMessage] : "Ready!"}
                 </span>
@@ -392,7 +403,8 @@ const SplashScreen = ({
                 transition={{ delay: 0.2, duration: 0.6 }}
               >
                 <motion.div
-                  className="text-yellow-600 dark:text-yellow-400 text-6xl"
+                  className="text-6xl"
+                  style={{ color: THEME_COLORS.primary }}
                   animate={{
                     scale: [1, 1.2, 1],
                     rotate: [0, 10, -10, 0],
@@ -407,7 +419,7 @@ const SplashScreen = ({
 
           {/* Accessibility fallback */}
           <noscript>
-            <div className="fixed inset-0 bg-white dark:bg-amber-950 flex items-center justify-center text-slate-900 dark:text-amber-50">
+            <div className="fixed inset-0 bg-background flex items-center justify-center text-foreground">
               <div className="text-center">
                 <h1 className="text-2xl font-bold mb-2">Saem's Tunes</h1>
                 <p>Loading your music...</p>
