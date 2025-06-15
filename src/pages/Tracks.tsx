@@ -116,8 +116,9 @@ const Tracks = () => {
   // Example usage for dynamic background that shifts with current track
   const updateBackgroundGradient = (currentTrackIndex: number) => {
     const currentTrack = albumItems[currentTrackIndex];
-    if (document.body) {
-      document.body.style.background = currentTrack.backgroundGradient;
+    const body = document.body;
+    if (body) {
+      body.style.background = currentTrack.backgroundGradient;
     }
     
     // Or for a container element
@@ -132,9 +133,11 @@ const Tracks = () => {
     const currentTrack = albumItems[currentTrackIndex];
     const root = document.documentElement;
     
-    root.style.setProperty('--primary-color', currentTrack.primaryColor);
-    root.style.setProperty('--secondary-color', currentTrack.secondaryColor);
-    root.style.setProperty('--dynamic-gradient', currentTrack.backgroundGradient);
+    if (root) {
+      root.style.setProperty('--primary-color', currentTrack.primaryColor);
+      root.style.setProperty('--secondary-color', currentTrack.secondaryColor);
+      root.style.setProperty('--dynamic-gradient', currentTrack.backgroundGradient);
+    }
   };
 
   const playlistTracks = [
@@ -285,7 +288,10 @@ const Tracks = () => {
         .from('tracks')
         .upload(`audio/${sanitizedAudioName}`, audioFile);
 
-      if (audioError) throw audioError;
+      if (audioError) {
+        console.error('Audio upload error:', audioError);
+        throw new Error(`Audio upload failed: ${audioError.message}`);
+      }
 
       // Upload cover image if provided
       let coverPath = null;
@@ -295,7 +301,10 @@ const Tracks = () => {
           .from('tracks')
           .upload(`covers/${sanitizedCoverName}`, coverFile);
 
-        if (coverError) throw coverError;
+        if (coverError) {
+          console.error('Cover upload error:', coverError);
+          throw new Error(`Cover upload failed: ${coverError.message}`);
+        }
         coverPath = coverData.path;
       }
 
@@ -311,7 +320,10 @@ const Tracks = () => {
           user_id: user.id
         });
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        console.error('Database insert error:', dbError);
+        throw new Error(`Database save failed: ${dbError.message}`);
+      }
 
       toast({
         title: "Upload Successful!",
@@ -331,9 +343,10 @@ const Tracks = () => {
       
     } catch (error) {
       console.error('Upload error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload track. Please try again.';
       toast({
         title: "Upload Failed",
-        description: "Failed to upload track. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -508,6 +521,7 @@ const Tracks = () => {
                           mobileWidth={280}
                           mobileHeight={280}
                           className="w-full h-auto rounded-2xl shadow-2xl transform hover:scale-105 transition-transform duration-300"
+                          priority={true}
                         />
                       </div>
                     </div>
@@ -840,6 +854,7 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
                 mobileWidth={48}
                 mobileHeight={48}
                 className="h-12 w-12 rounded-full object-cover"
+                priority={false}
               />
             ) : (
               <Music className="h-6 w-6 text-gold" />
@@ -867,6 +882,7 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
               mobileWidth={48}
               mobileHeight={48}
               className="h-16 w-16 md:h-16 md:w-16 sm:h-12 sm:w-12 rounded object-cover"
+              priority={false}
             />
           )}
         </div>
