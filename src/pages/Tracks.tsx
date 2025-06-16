@@ -852,41 +852,56 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
   };
 
   const handleShare = async () => {
-    const shareData = {
-      title: `${track.title} by ${track.profiles?.display_name || 'Unknown Artist'}`,
-      text: `Listen to ${track.title} on Saem's Tunes`,
-      url: `${window.location.origin}/audio-player/${track.id}`,
-    };
-
-    try {
-      if (navigator.share && navigator.canShare(shareData)) {
-        await navigator.share(shareData);
-      } else {
-        // Fallback to copying link
-        await navigator.clipboard.writeText(shareData.url);
-        toast({
-          title: "Link copied",
-          description: "Track link copied to clipboard",
-        });
-      }
-    } catch (error) {
-      console.error('Error sharing:', error);
-      // Fallback to copying link
-      try {
-        await navigator.clipboard.writeText(shareData.url);
-        toast({
-          title: "Link copied",
-          description: "Track link copied to clipboard",
-        });
-      } catch (clipboardError) {
-        toast({
-          title: "Share failed",
-          description: "Unable to share or copy link",
-          variant: "destructive",
-        });
-      }
+  // Determine the appropriate base URL
+  const getBaseUrl = () => {
+    // Check if we're on production or development
+    const hostname = window.location.hostname;
+    
+    if (hostname === 'saemstunes.vercel.app') {
+      return 'https://saemstunes.vercel.app';
+    } else if (hostname === 'saemstunes.lovable.app') {
+      return 'https://saemstunes.lovable.app';
+    } else {
+      // Fallback for local development or other environments
+      return window.location.origin;
     }
   };
+
+  const shareData = {
+    title: `${track.title} by ${track.profiles?.display_name || 'Unknown Artist'}`,
+    text: `Listen to ${track.title} on Saem's Tunes`,
+    url: `${getBaseUrl()}/audio-player/${track.id}`,
+  };
+
+  try {
+    if (navigator.share && navigator.canShare(shareData)) {
+      await navigator.share(shareData);
+    } else {
+      // Fallback to copying link
+      await navigator.clipboard.writeText(shareData.url);
+      toast({
+        title: "Link copied",
+        description: "Track link copied to clipboard",
+      });
+    }
+  } catch (error) {
+    console.error('Error sharing:', error);
+    // Fallback to copying link
+    try {
+      await navigator.clipboard.writeText(shareData.url);
+      toast({
+        title: "Link copied",
+        description: "Track link copied to clipboard",
+      });
+    } catch (clipboardError) {
+      toast({
+        title: "Share failed",
+        description: "Unable to share or copy link",
+        variant: "destructive",
+      });
+    }
+  }
+};
 
   return (
     <Card>
