@@ -895,8 +895,8 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
       });
     } catch (clipboardError) {
       toast({
-        title: "Share failed",
-        description: "Unable to share or copy link",
+        title: "Always A Next Time!",
+        description: "Come back when you\'re ready & spread the good news",
         variant: "destructive",
       });
     }
