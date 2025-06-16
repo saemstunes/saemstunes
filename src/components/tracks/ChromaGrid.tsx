@@ -165,15 +165,15 @@ export const ChromaGrid = ({
       className={`chroma-grid-enhanced ${className}`}
       style={{ "--r": `${radius}px` } as React.CSSProperties}
     >
-      {/* Preview Modal */}
+      {/* Preview Modal - Updated to match theme */}
       {previewItem && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-xl z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 rounded-2xl max-w-2xl w-full overflow-hidden border border-gray-700 relative">
+          <div className="bg-card text-foreground rounded-2xl max-w-2xl w-full overflow-hidden border border-border shadow-xl relative">
             <button 
-              className="absolute top-4 right-4 bg-gray-800 rounded-full p-2 hover:bg-gray-700 transition-colors z-10"
+              className="absolute top-4 right-4 bg-secondary text-secondary-foreground rounded-full p-2 hover:bg-secondary/80 transition-colors z-10"
               onClick={() => setPreviewItem(null)}
             >
-              <X className="h-6 w-6 text-white" />
+              <X className="h-6 w-6" />
             </button>
             
             <div className="aspect-video bg-black relative">
@@ -194,7 +194,7 @@ export const ChromaGrid = ({
                   />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="bg-black/50 rounded-full p-6 backdrop-blur-sm">
-                      <Play className="h-16 w-16 text-white fill-white" />
+                      <Play className="h-16 w-16 text-primary fill-primary" />
                     </div>
                   </div>
                 </div>
@@ -204,14 +204,14 @@ export const ChromaGrid = ({
             <div className="p-6">
               <div className="flex flex-col md:flex-row gap-6">
                 <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-white mb-2">
+                  <h2 className="text-2xl font-bold mb-2">
                     {previewItem.title}
                   </h2>
-                  <p className="text-gray-300 mb-4">
+                  <p className="text-muted-foreground mb-4">
                     {previewItem.subtitle}
                   </p>
                   {previewItem.duration && (
-                    <div className="flex items-center text-gray-400 gap-2 mb-4">
+                    <div className="flex items-center text-muted-foreground gap-2 mb-4">
                       <Clock className="h-4 w-4" />
                       <span>Duration: {previewItem.duration}</span>
                     </div>
@@ -221,7 +221,7 @@ export const ChromaGrid = ({
                 <div className="flex flex-col gap-3">
                   <button
                     onClick={handlePlayAudio}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
                   >
                     <Play className="h-5 w-5" />
                     <span>Play Audio</span>
@@ -230,7 +230,7 @@ export const ChromaGrid = ({
                   {previewItem.audioUrl && (
                     <button
                       onClick={() => window.open(previewItem.audioUrl, "_blank")}
-                      className="bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                      className="bg-secondary hover:bg-secondary/80 text-secondary-foreground font-medium py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
                     >
                       <ExternalLink className="h-5 w-5" />
                       <span>Audio Source</span>
