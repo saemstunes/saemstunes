@@ -33,7 +33,7 @@ export const ChromaGrid = ({
   className = "",
   radius = 300,
 }: ChromaGridProps) => {
-  const { setTrack } = useAudioPlayer();
+  const { setTrack, play } = useAudioPlayer(); // Added play function
   const rootRef = useRef<HTMLDivElement>(null);
   const [hoveredItem, setHoveredItem] = useState<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -150,18 +150,22 @@ export const ChromaGrid = ({
    const handlePlayAudio = useCallback(() => {
     if (!previewItem) return;
     
-    // Close the preview modal first
-    setPreviewItem(null);
-    
-    // Then set the track to play
-    setTrack({
+    // Create track data before closing modal
+    const trackData = {
       name: previewItem.title,
       artist: previewItem.subtitle,
       audioUrl: previewItem.audioUrl!,
       artwork: previewItem.image,
       duration: previewItem.duration ? parseDuration(previewItem.duration) : undefined,
-    });
-  }, [previewItem, setTrack, parseDuration]);
+    };
+    
+    // Set the track and play it explicitly
+    setTrack(trackData);
+    play(); // Explicitly start playback
+    
+    // Then close the modal
+    setPreviewItem(null);
+  }, [previewItem, setTrack, play, parseDuration]);
 
   
   return (
