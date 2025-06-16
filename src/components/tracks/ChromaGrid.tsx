@@ -82,6 +82,95 @@ export const ChromaGrid = ({
       className={`chroma-grid-enhanced ${className}`}
       style={{ "--r": `${radius}px` } as React.CSSProperties}
     >
+
+{/* Preview Modal */}
+      {previewItem && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-xl z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 rounded-2xl max-w-2xl w-full overflow-hidden border border-gray-700 relative">
+            <button 
+              className="absolute top-4 right-4 bg-gray-800 rounded-full p-2 hover:bg-gray-700 transition-colors z-10"
+              onClick={() => setPreviewItem(null)}
+            >
+              <X className="h-6 w-6 text-white" />
+            </button>
+            
+            <div className="aspect-video bg-black relative">
+              {previewItem.youtubeUrl ? (
+                <iframe
+                  src={`https://www.youtube.com/embed/${previewItem.youtubeUrl.split('v=')[1]}`}
+                  className="w-full h-full"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <img 
+                    src={previewItem.image} 
+                    alt={previewItem.title}
+                    className="w-full h-full object-cover opacity-70"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="bg-black/50 rounded-full p-6 backdrop-blur-sm">
+                      <Play className="h-16 w-16 text-white fill-white" />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="p-6">
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="flex-1">
+                  <h2 className="text-2xl font-bold text-white mb-2">
+                    {previewItem.title}
+                  </h2>
+                  <p className="text-gray-300 mb-4">
+                    {previewItem.subtitle}
+                  </p>
+                  {previewItem.duration && (
+                    <div className="flex items-center text-gray-400 gap-2 mb-4">
+                      <Clock className="h-4 w-4" />
+                      <span>Duration: {previewItem.duration}</span>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={handlePlayAudio}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <Play className="h-5 w-5" />
+                    <span>Play Audio</span>
+                  </button>
+                  
+                  {previewItem.audioUrl && (
+                    <button
+                      onClick={() => window.open(previewItem.audioUrl, "_blank")}
+                      className="bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <ExternalLink className="h-5 w-5" />
+                      <span>Audio Source</span>
+                    </button>
+                  )}
+                  
+                  {previewItem.youtubeUrl && (
+                    <button
+                      onClick={() => window.open(previewItem.youtubeUrl, "_blank")}
+                      className="bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <ExternalLink className="h-5 w-5" />
+                      <span>Watch on YouTube</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 w-full">
         {data.map((item, i) => (
           <article
