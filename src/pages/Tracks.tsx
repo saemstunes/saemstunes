@@ -65,7 +65,7 @@ const Tracks = () => {
   const albumItems = [
     {
       image: "https://i.imgur.com/VfKXMyG.png",
-      title: "Pale Ulipo - Pitson ft. Karura Voices",
+      title: "Pale Ulipo",
       subtitle: "Accompanied Cover",
       handle: "@saemstunes",
       borderColor: "#5A270F",
@@ -113,7 +113,7 @@ const Tracks = () => {
     },
         {
       image: "https://i.imgur.com/wrm7LI1.jpeg",
-      title: "Mapenzi Ya Ajabu - Saem's Tunes",
+      title: "Mapenzi Ya Ajabu",
       subtitle: "Original",
       handle: "@saemstunes",
       borderColor: "#5A270F",
