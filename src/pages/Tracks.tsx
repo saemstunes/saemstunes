@@ -840,12 +840,6 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
     }
   };
 
-  const audioUrl = track.audio_path ? 
-    supabase.storage.from('tracks').getPublicUrl(track.audio_path).data.publicUrl : '';
-  
-  const coverUrl = track.cover_path ? 
-    supabase.storage.from('tracks').getPublicUrl(track.cover_path).data.publicUrl : '';
-
   return (
     <Card>
       <CardContent className="p-6">
