@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import { Play, ExternalLink, Clock, Heart } from "lucide-react";
 import { useAudioPlayer } from "@/context/AudioPlayerContext";
 
@@ -32,20 +32,17 @@ export const ChromaGrid = ({
   items,
   className = "",
   radius = 300,
-  damping = 0.45,
-  fadeOut = 0.6,
-  ease = "power3.out",
 }: ChromaGridProps) => {
-  const { setTrack } = useAudioPlayer(); // Get setTrack from context
+  const { setTrack } = useAudioPlayer();
   const rootRef = useRef<HTMLDivElement>(null);
-  const fadeRef = useRef<HTMLDivElement>(null);
   const [hoveredItem, setHoveredItem] = useState<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
   // Utility to convert duration string to seconds
-  const parseDuration = (str: string): number => {
+  const parseDuration = useCallback((str: string): number => {
     const [mins, secs] = str.split(":").map(Number);
     return mins * 60 + secs;
+  }, []);
 
   // Check if mobile on mount and resize
   useEffect(() => {
@@ -59,100 +56,32 @@ export const ChromaGrid = ({
   }, []);
 
   const demo: ChromaGridItem[] = [
-    {
-      image: "https://i.pravatar.cc/300?img=8",
-      title: "Alex Rivera",
-      subtitle: "Full Stack Developer",
-      handle: "@alexrivera",
-      borderColor: "#4F46E5",
-      gradient: "linear-gradient(145deg, #4F46E5, #000)",
-      url: "https://github.com/",
-      duration: "3:45",
-      audioUrl: "https://example.com/track1.mp3",
-    },
-    {
-      image: "https://i.pravatar.cc/300?img=11",
-      title: "Jordan Chen",
-      subtitle: "DevOps Engineer",
-      handle: "@jordanchen",
-      borderColor: "#10B981",
-      gradient: "linear-gradient(210deg, #10B981, #000)",
-      url: "https://linkedin.com/in/",
-      duration: "4:12",
-      audioUrl: "https://example.com/track2.mp3",
-    },
-    {
-      image: "https://i.pravatar.cc/300?img=3",
-      title: "Morgan Blake",
-      subtitle: "UI/UX Designer",
-      handle: "@morganblake",
-      borderColor: "#F59E0B",
-      gradient: "linear-gradient(165deg, #F59E0B, #000)",
-      url: "https://dribbble.com/",
-      duration: "2:58",
-      audioUrl: "https://example.com/track3.mp3",
-    },
-    {
-      image: "https://i.pravatar.cc/300?img=16",
-      title: "Casey Park",
-      subtitle: "Data Scientist",
-      handle: "@caseypark",
-      borderColor: "#EF4444",
-      gradient: "linear-gradient(195deg, #EF4444, #000)",
-      url: "https://kaggle.com/",
-      duration: "3:21",
-      audioUrl: "https://example.com/track4.mp3",
-    },
-    {
-      image: "https://i.pravatar.cc/300?img=25",
-      title: "Sam Kim",
-      subtitle: "Mobile Developer",
-      handle: "@thesamkim",
-      borderColor: "#8B5CF6",
-      gradient: "linear-gradient(225deg, #8B5CF6, #000)",
-      url: "https://github.com/",
-      duration: "4:05",
-      audioUrl: "https://example.com/track5.mp3",
-    },
-    {
-      image: "https://i.pravatar.cc/300?img=60",
-      title: "Tyler Rodriguez",
-      subtitle: "Cloud Architect",
-      handle: "@tylerrod",
-      borderColor: "#06B6D4",
-      gradient: "linear-gradient(135deg, #06B6D4, #000)",
-      url: "https://aws.amazon.com/",
-      duration: "3:33",
-      audioUrl: "https://example.com/track6.mp3",
-    },
+    // ... (same as your demo data)
   ];
   
   const data = items?.length ? items : demo;
 
-  const handleCardClick = (url?: string) => {
+  const handleCardClick = useCallback((url?: string) => {
     if (url) {
       window.open(url, "_blank", "noopener,noreferrer");
     }
-  };
+  }, []);
 
-  const handleCardMove = (e: React.MouseEvent) => {
+  const handleCardMove = useCallback((e: React.MouseEvent) => {
     const card = e.currentTarget as HTMLElement;
     const rect = card.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     card.style.setProperty("--mouse-x", `${x}px`);
     card.style.setProperty("--mouse-y", `${y}px`);
-  };
+  }, []);
 
   return (
     <div
       ref={rootRef}
       className={`chroma-grid-enhanced ${className}`}
-      style={{
-        "--r": `${radius}px`,
-      } as React.CSSProperties}
+      style={{ "--r": `${radius}px` } as React.CSSProperties}
     >
-      {/* Responsive Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 w-full">
         {data.map((item, i) => (
           <article
@@ -177,7 +106,7 @@ export const ChromaGrid = ({
               />
               
               {/* Hover Overlay for Desktop */}
-             <div className={`absolute inset-0 bg-black/70 transition-opacity duration-300 flex items-center justify-center ${
+              <div className={`absolute inset-0 bg-black/70 transition-opacity duration-300 flex items-center justify-center ${
                 isMobile ? 'opacity-0' : hoveredItem === i ? 'opacity-100' : 'opacity-0'
               }`}>
                 <div className="flex gap-3">
@@ -221,7 +150,7 @@ export const ChromaGrid = ({
               )}
             </div>
 
-            {/* Details Section - Always visible on mobile, hover on desktop */}
+            {/* Details Section */}
             <div className={`p-4 transition-all duration-300 ${
               isMobile 
                 ? 'opacity-100 translate-y-0' 
@@ -245,38 +174,39 @@ export const ChromaGrid = ({
 
               {/* Action Buttons for Mobile */}
               {isMobile && (
-              <div className="flex gap-2 mt-3">
-                {item.audioUrl && (
-                  <button 
-                    className="flex-1 bg-white/20 backdrop-blur-sm rounded-lg py-2 px-3 text-white text-sm font-medium hover:bg-white/30 transition-colors flex items-center justify-center gap-2"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setTrack({
-                        name: item.title,
-                        artist: item.subtitle,
-                        audioUrl: item.audioUrl!,
-                        artwork: item.image,
-                        duration: item.duration ? parseDuration(item.duration) : undefined,
-                      });
-                    }}
-                  >
-                    <Play className="h-4 w-4" />
-                    Play
-                  </button>
-                )}
-                {item.url && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      window.open(item.url, "_blank", "noopener,noreferrer");
-                    }}
-                    className="bg-white/20 backdrop-blur-sm rounded-lg p-2 text-white hover:bg-white/30 transition-colors"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-            )}
+                <div className="flex gap-2 mt-3">
+                  {item.audioUrl && (
+                    <button 
+                      className="flex-1 bg-white/20 backdrop-blur-sm rounded-lg py-2 px-3 text-white text-sm font-medium hover:bg-white/30 transition-colors flex items-center justify-center gap-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setTrack({
+                          name: item.title,
+                          artist: item.subtitle,
+                          audioUrl: item.audioUrl!,
+                          artwork: item.image,
+                          duration: item.duration ? parseDuration(item.duration) : undefined,
+                        });
+                      }}
+                    >
+                      <Play className="h-4 w-4" />
+                      Play
+                    </button>
+                  )}
+                  {item.url && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(item.url, "_blank", "noopener,noreferrer");
+                      }}
+                      className="flex-1 md:flex-none bg-white/20 backdrop-blur-sm rounded-lg py-2 px-3 text-white text-sm font-medium hover:bg-white/30 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      Visit
+                    </button>
+                  )}
+                </div>
+              )}
 
               {/* Desktop Hover Details */}
               {!isMobile && hoveredItem === i && (
@@ -306,10 +236,10 @@ export const ChromaGrid = ({
               className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
               style={{
                 background: `linear-gradient(45deg, transparent 30%, ${item.borderColor || '#fff'} 50%, transparent 70%)`,
-                mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                maskComposite: 'subtract',
-                WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                WebkitMaskComposite: 'subtract',
+                mask: `linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)`,
+                WebkitMask: `linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)`,
+                maskComposite: 'exclude',
+                WebkitMaskComposite: 'xor',
                 padding: '2px',
               }}
             />
@@ -340,22 +270,22 @@ export const ChromaGrid = ({
           animation: animate-in 0.2s ease-out;
         }
         
-        .fade-in {
-          animation: fadeIn 0.2s ease-out;
-        }
-        
-        .slide-in-from-bottom-2 {
-          animation: slideInFromBottom 0.2s ease-out;
-        }
-        
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
         }
         
+        .fade-in {
+          animation: fadeIn 0.2s ease-out;
+        }
+        
         @keyframes slideInFromBottom {
           from { transform: translateY(8px); opacity: 0; }
           to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .slide-in-from-bottom-2 {
+          animation: slideInFromBottom 0.2s ease-out;
         }
       `}</style>
     </div>
