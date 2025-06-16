@@ -64,7 +64,7 @@ const Tracks = () => {
 
   const albumItems = [
     {
-      image: "https://i.imgur.com/HW2rxFd.jpeg",
+      image: "https://i.imgur.com/VfKXMyG.png",
       title: "Pale Ulipo",
       subtitle: "Full Cover",
       handle: "@saemstunes",
