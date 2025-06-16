@@ -287,7 +287,7 @@ const Tracks = () => {
     }
 
     // Validate file types for security
-    const allowedAudioTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/m4a'];
+    const allowedAudioTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/m4a', 'audio/aac'];
     const allowedImageTypes = ['image/jpeg', 'image/png', 'image/jpg'];
 
     if (!allowedAudioTypes.includes(audioFile.type)) {
@@ -440,7 +440,7 @@ const Tracks = () => {
       <MainLayout>
         <div className="min-h-screen bg-background pb-20 lg:pb-0">
           <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
               <div>
                 <h1 className="text-3xl font-bold text-foreground">Tracks</h1>
                 <p className="text-muted-foreground">Discover and share amazing music</p>
@@ -449,7 +449,7 @@ const Tracks = () => {
               {user && (
                 <Button 
                   onClick={() => setShowUpload(!showUpload)}
-                  className="bg-gold hover:bg-gold/90"
+                  className="bg-gold hover:bg-gold/90 w-full sm:w-auto"
                 >
                   <Upload className="h-4 w-4 mr-2" />
                   Upload Track
@@ -512,11 +512,11 @@ const Tracks = () => {
                     />
                   </div>
                   
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <Button 
                       onClick={handleUpload} 
                       disabled={uploading || !title.trim() || !audioFile}
-                      className="bg-gold hover:bg-gold/90"
+                      className="bg-gold hover:bg-gold/90 flex-1"
                     >
                       {uploading ? (
                         <>
@@ -533,6 +533,7 @@ const Tracks = () => {
                     <Button 
                       variant="outline" 
                       onClick={() => setShowUpload(false)}
+                      className="flex-1"
                     >
                       Cancel
                     </Button>
@@ -543,11 +544,11 @@ const Tracks = () => {
 
             {/* Main Content Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="showcase">Showcase</TabsTrigger>
-                <TabsTrigger value="albums">Covers</TabsTrigger>
-                <TabsTrigger value="playlists">Playlists</TabsTrigger>
-                <TabsTrigger value="community">Community</TabsTrigger>
+              <TabsList className="flex w-full overflow-x-auto no-scrollbar">
+                <TabsTrigger value="showcase" className="whitespace-nowrap">Showcase</TabsTrigger>
+                <TabsTrigger value="albums" className="whitespace-nowrap">Covers</TabsTrigger>
+                <TabsTrigger value="playlists" className="whitespace-nowrap">Playlists</TabsTrigger>
+                <TabsTrigger value="community" className="whitespace-nowrap">Community</TabsTrigger>
               </TabsList>
 
               <TabsContent value="showcase" className="space-y-8">
@@ -558,7 +559,7 @@ const Tracks = () => {
                     <h2 className="text-2xl font-bold">Featured Track of the Week</h2>
                   </div>
                   
-                  <div className="grid md:grid-cols-2 gap-6 lg:gap-8 items-center">
+                  <div className="flex flex-col md:grid md:grid-cols-2 gap-6 lg:gap-8 items-center">
                     <div className="flex justify-center relative order-2 md:order-1">
                       <div className="hover:z-[9999] relative transition-all duration-300 w-full max-w-sm">
                         <ResponsiveImage
@@ -580,7 +581,7 @@ const Tracks = () => {
                         This week's featured track showcases exceptional musical artistry and creativity.
                       </p>
                       
-                      <div className="flex gap-8 justify-center md:justify-start">
+                      <div className="flex flex-wrap gap-8 justify-center md:justify-start">
                         <div className="text-center">
                           <div className="flex items-center gap-2 justify-center">
                             <Play className="h-4 w-4" />
@@ -891,8 +892,8 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
   return (
     <Card>
       <CardContent className="p-6">
-        <div className="flex items-start gap-4 mb-4">
-          <div className="h-12 w-12 rounded-full bg-gold/20 flex items-center justify-center">
+        <div className="flex flex-wrap items-start gap-4 mb-4">
+          <div className="h-12 w-12 rounded-full bg-gold/20 flex items-center justify-center flex-shrink-0">
             {track.profiles?.avatar_url ? (
               <ResponsiveImage 
                 src={track.profiles.avatar_url} 
@@ -909,15 +910,15 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
             )}
           </div>
           
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-semibold text-lg">{track.title}</h3>
+              <h3 className="font-semibold text-lg truncate">{track.title}</h3>
             </div>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-muted-foreground text-sm truncate">
               by {track.profiles?.display_name || 'Unknown Artist'}
             </p>
             {track.description && (
-              <p className="text-sm mt-2">{track.description}</p>
+              <p className="text-sm mt-2 line-clamp-2">{track.description}</p>
             )}
           </div>
           
@@ -929,7 +930,7 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
               height={64}
               mobileWidth={48}
               mobileHeight={48}
-              className="h-16 w-16 md:h-16 md:w-16 sm:h-12 sm:w-12 rounded object-cover"
+              className="h-16 w-16 md:h-16 md:w-16 sm:h-12 sm:w-12 rounded object-cover flex-shrink-0"
               priority={false}
             />
           )}
@@ -954,7 +955,7 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
                 variant="ghost"
                 size="sm"
                 onClick={toggleLike}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 flex-shrink-0"
               >
                 <Heart className={`h-4 w-4 ${liked ? 'fill-red-500 text-red-500' : ''}`} />
                 {likeCount}
@@ -964,7 +965,7 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
                 variant="ghost"
                 size="sm"
                 onClick={toggleSave}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 flex-shrink-0"
               >
                 <CheckCircle className={`h-4 w-4 ${saved ? 'fill-green-500 text-green-500' : ''}`} />
                 {saved ? 'Saved' : 'Save'}
@@ -975,14 +976,14 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
           <Button 
             variant="ghost" 
             size="sm" 
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 flex-shrink-0"
             onClick={handleShare}
           >
             <Share className="h-4 w-4" />
             Share
           </Button>
           
-          <span className="text-xs text-muted-foreground ml-auto">
+          <span className="text-xs text-muted-foreground ml-auto flex-shrink-0">
             {new Date(track.created_at).toLocaleDateString()}
           </span>
         </div>
