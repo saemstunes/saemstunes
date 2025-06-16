@@ -545,7 +545,7 @@ const Tracks = () => {
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="showcase">Showcase</TabsTrigger>
-                <TabsTrigger value="albums">Albums</TabsTrigger>
+                <TabsTrigger value="albums">Covers</TabsTrigger>
                 <TabsTrigger value="playlists">Playlists</TabsTrigger>
                 <TabsTrigger value="community">Community</TabsTrigger>
               </TabsList>
@@ -613,7 +613,7 @@ const Tracks = () => {
                 <section>
                   <div className="flex items-center gap-2 mb-6">
                     <TrendingUp className="h-6 w-6 text-gold" />
-                    <h2 className="text-2xl font-bold">Upcoming Singles</h2>
+                    <h2 className="text-2xl font-bold">Suggested By You</h2>
                   </div>
                   
                   <div className="grid gap-6">
@@ -648,7 +648,7 @@ const Tracks = () => {
               <TabsContent value="albums" className="space-y-8">
                 <div className="flex items-center gap-2 mb-6">
                   <Music className="h-6 w-6 text-gold" />
-                  <h2 className="text-2xl font-bold">Featured Albums</h2>
+                  <h2 className="text-2xl font-bold">Featured Covers</h2>
                 </div>
                 
                 <div className="w-full overflow-hidden">
