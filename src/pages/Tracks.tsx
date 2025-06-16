@@ -219,45 +219,6 @@ const Tracks = () => {
     }
   };
 
-  const cropImageToSquare = async (file: File): Promise<File> => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const reader = new FileReader();
-
-    reader.onload = (e) => {
-      if (!e.target?.result) return reject("File reading failed");
-
-      img.src = e.target.result as string;
-    };
-
-    img.onload = () => {
-      const minSize = Math.min(img.width, img.height);
-      const canvas = document.createElement("canvas");
-      canvas.width = minSize;
-      canvas.height = minSize;
-
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return reject("Canvas context error");
-
-      const offsetX = (img.width - minSize) / 2;
-      const offsetY = (img.height - minSize) / 2;
-
-      ctx.drawImage(img, offsetX, offsetY, minSize, minSize, 0, 0, minSize, minSize);
-
-      canvas.toBlob((blob) => {
-        if (!blob) return reject("Cropping failed");
-
-        const croppedFile = new File([blob], file.name, { type: file.type });
-        resolve(croppedFile);
-      }, file.type);
-    };
-
-    img.onerror = () => reject("Image loading failed");
-    reader.readAsDataURL(file);
-  });
-};
-
-
   const handleUpload = async () => {
     if (!user) {
       toast({
@@ -276,14 +237,6 @@ const Tracks = () => {
       });
       return;
     }
-
-    if (coverFile) {
-      const croppedCoverFile = await cropImageToSquare(coverFile);
-      const sanitizedCoverName = `${user.id}/${Date.now()}-${croppedCoverFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-      const { data: coverData, error: coverError } = await supabase.storage
-        .from('tracks')
-        .upload(sanitizedCoverName, croppedCoverFile);
-
 
     // Validate file types for security
     const allowedAudioTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/m4a'];
@@ -742,33 +695,31 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
   }, [user, track.id]);
 
   const checkIfLiked = async () => {
-  if (!user) return;
-  
-  const { data, error } = await supabase
-    .from('likes')
-    .select()
-    .eq('user_id', user.id)
-    .eq('track_id', track.id);
-
-  if (!error) {
-    setLiked(data && data.length > 0);
-  }
-};
+    if (!user) return;
+    
+    const { data } = await supabase
+      .from('likes')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('track_id', track.id)
+      .single();
+    
+    setLiked(!!data);
+  };
 
   const checkIfSaved = async () => {
-  if (!user) return;
-  
-  const { data, error } = await supabase
-    .from('favorites')
-    .select()
-    .eq('user_id', user.id)
-    .eq('content_id', track.id)
-    .eq('content_type', 'track');
-
-  if (!error) {
-    setSaved(data && data.length > 0);
-  }
-};
+    if (!user) return;
+    
+    const { data } = await supabase
+      .from('favorites')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('content_id', track.id)
+      .eq('content_type', 'track')
+      .single();
+    
+    setSaved(!!data);
+  };
 
   const getLikeCount = async () => {
     const { count } = await supabase
