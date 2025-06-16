@@ -30,6 +30,23 @@ interface ChromaGridProps {
   ease?: string;
 }
 
+const getYouTubeVideoId = (url: string): string | null => {
+  const patterns = [
+    /youtu\.be\/([^#&?]{11})/, // youtu.be links
+    /youtube\.com\/shorts\/([^#&?]{11})/, // YouTube shorts
+    /youtube\.com\/watch\?v=([^#&?]{11})/, // Standard watch URLs
+    /youtube\.com\/embed\/([^#&?]{11})/, // Embed URLs
+  ];
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match && match[1]) {
+      return match[1];
+    }
+  }
+  return null;
+};
+
 export const ChromaGrid = ({
   items,
   className = "",
@@ -185,7 +202,7 @@ export const ChromaGrid = ({
       className={`chroma-grid-enhanced ${className}`}
       style={{ "--r": `${radius}px` } as React.CSSProperties}
     >
-      {/* Preview Modal - Updated positioning */}
+      {/* Preview Modal */}
       {previewItem && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-xl z-50 flex items-center justify-center p-4 md:pb-[4.5rem]">
           <div className="bg-card text-foreground rounded-2xl max-w-2xl w-full overflow-hidden border border-border shadow-xl relative">
@@ -197,17 +214,33 @@ export const ChromaGrid = ({
             </button>
             
             {/* Responsive aspect ratio container */}
-            <div className="aspect-video bg-black relative">
+            <div className="relative pb-[56.25%] h-0"> {/* Default 16:9 aspect ratio */}
               {previewItem.youtubeUrl ? (
-                <iframe
-                  src={`https://www.youtube.com/embed/${previewItem.youtubeUrl.split('v=')[1]}`}
-                  className="w-full h-full"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                ></iframe>
+                (() => {
+                  const videoId = getYouTubeVideoId(previewItem.youtubeUrl);
+                  const isShorts = previewItem.youtubeUrl.includes('/shorts/');
+                  
+                  return (
+                    <div className={cn(
+                      "absolute inset-0 w-full h-full",
+                      isShorts ? "flex items-center justify-center" : ""
+                    )}>
+                      {videoId ? (
+                        <iframe
+                          src={`https://www.youtube.com/embed/${videoId}`}
+                          className={cn(
+                            "w-full h-full",
+                            isShorts ? "max-w-full max-h-full aspect-video" : ""
+                          )}
+                          style={{
+                            aspectRatio: isShorts ? "9/16" : "16/9"
+                          }}
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        ></iframe>
               ) : (
-                <div className="w-full h-full flex items-center justify-center">
+                <div className="absolute inset-0 w-full h-full flex items-center justify-center">
                   <img 
                     src={previewItem.image} 
                     alt={previewItem.title}
