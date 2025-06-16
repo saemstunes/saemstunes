@@ -13,7 +13,7 @@
   "icons": [
     {
       "src": "/lovable-uploads/logo-icon-sm.webp",
-      "sizes": "192x192",
+      "sizes": "64x64",
       "type": "image/webp"
     },
     {
