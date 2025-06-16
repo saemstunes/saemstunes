@@ -391,7 +391,7 @@ const Tracks = () => {
       
       <MainLayout>
         <div className="min-h-screen bg-background pb-20 lg:pb-0">
-          <div className="container mx-auto px-4 py-8 max-w-7xl">
+          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="flex justify-between items-center mb-8">
               <div>
                 <h1 className="text-3xl font-bold text-foreground">Tracks</h1>
