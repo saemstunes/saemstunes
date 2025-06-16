@@ -610,7 +610,7 @@ const Tracks = () => {
                     damping={0.45}
                     fadeOut={0.6}
                     ease="power3.out"
-                  />
+                    />
                 </div>
               </TabsContent>
 
