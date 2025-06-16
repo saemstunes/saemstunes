@@ -282,31 +282,31 @@ const Tracks = () => {
     setUploading(true);
 
     try {
-      // Upload audio file with sanitized filename
-      const sanitizedAudioName = `${Date.now()}-${audioFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-      const { data: audioData, error: audioError } = await supabase.storage
+    // Upload audio file with user folder structure
+    const sanitizedAudioName = `${user.id}/${Date.now()}-${audioFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+    const { data: audioData, error: audioError } = await supabase.storage
+      .from('tracks')
+      .upload(sanitizedAudioName, audioFile); // Remove 'audio/' prefix
+
+    if (audioError) {
+      console.error('Audio upload error:', audioError);
+      throw new Error(`Audio upload failed: ${audioError.message}`);
+    }
+
+    // Upload cover image with user folder structure
+    let coverPath = null;
+    if (coverFile) {
+      const sanitizedCoverName = `${user.id}/${Date.now()}-${coverFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const { data: coverData, error: coverError } = await supabase.storage
         .from('tracks')
-        .upload(`audio/${sanitizedAudioName}`, audioFile);
+        .upload(sanitizedCoverName, coverFile); // Remove 'covers/' prefix
 
-      if (audioError) {
-        console.error('Audio upload error:', audioError);
-        throw new Error(`Audio upload failed: ${audioError.message}`);
+      if (coverError) {
+        console.error('Cover upload error:', coverError);
+        throw new Error(`Cover upload failed: ${coverError.message}`);
       }
-
-      // Upload cover image if provided
-      let coverPath = null;
-      if (coverFile) {
-        const sanitizedCoverName = `${Date.now()}-${coverFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-        const { data: coverData, error: coverError } = await supabase.storage
-          .from('tracks')
-          .upload(`covers/${sanitizedCoverName}`, coverFile);
-
-        if (coverError) {
-          console.error('Cover upload error:', coverError);
-          throw new Error(`Cover upload failed: ${coverError.message}`);
-        }
-        coverPath = coverData.path;
-      }
+      coverPath = coverData.path;
+    }
 
       // Save track to database
       const { error: dbError } = await supabase
@@ -363,7 +363,7 @@ const Tracks = () => {
           name: 'Salama (DEMO)',
           artist: 'Saem\'s Tunes ft. Evans Simali',
           artwork: featuredTrack.imageSrc,
-          album: 'Demo Singles'
+          album: 'NaombAoH'
         }
       }
     });
@@ -679,6 +679,12 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
   const [likeCount, setLikeCount] = useState(0);
   const [saved, setSaved] = useState(false);
   const { toast } = useToast();
+  
+  const audioUrl = track.audio_path ? 
+    supabase.storage.from('tracks').getPublicUrl(track.audio_path).data.publicUrl : '';
+  
+  const coverUrl = track.cover_path ? 
+    supabase.storage.from('tracks').getPublicUrl(track.cover_path).data.publicUrl : '';
   
   useEffect(() => {
     if (user) {
