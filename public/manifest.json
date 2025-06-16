@@ -13,12 +13,12 @@
   "icons": [
     {
       "src": "/lovable-uploads/logo-icon-sm.webp",
-      "sizes": "64x64",
+      "sizes": "192x192",
       "type": "image/webp"
     },
     {
       "src": "/lovable-uploads/logo-icon-md.webp", 
-      "sizes": "128x128",
+      "sizes": "512x512",
       "type": "image/webp"
     }
   ],
