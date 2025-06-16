@@ -17,8 +17,8 @@ interface ChromaGridItem {
   primaryColor?: string;
   secondaryColor?: string;
   backgroundGradient?: string;
-  likes?: number; // Added
-  views?: number; // Added
+  likes?: number;
+  views?: number;
 }
 
 interface ChromaGridProps {
@@ -32,10 +32,10 @@ interface ChromaGridProps {
 
 const getYouTubeVideoId = (url: string): string | null => {
   const patterns = [
-    /youtu\.be\/([^#&?]{11})/, // youtu.be links
-    /youtube\.com\/shorts\/([^#&?]{11})/, // YouTube shorts
-    /youtube\.com\/watch\?v=([^#&?]{11})/, // Standard watch URLs
-    /youtube\.com\/embed\/([^#&?]{11})/, // Embed URLs
+    /youtu\.be\/([^#&?]{11})/,
+    /youtube\.com\/shorts\/([^#&?]{11})/,
+    /youtube\.com\/watch\?v=([^#&?]{11})/,
+    /youtube\.com\/embed\/([^#&?]{11})/,
   ];
 
   for (const pattern of patterns) {
@@ -52,19 +52,17 @@ export const ChromaGrid = ({
   className = "",
   radius = 300,
 }: ChromaGridProps) => {
-  const { playTrack } = useAudioPlayer(); // Added play function
+  const { playTrack } = useAudioPlayer();
   const rootRef = useRef<HTMLDivElement>(null);
   const [hoveredItem, setHoveredItem] = useState<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [previewItem, setPreviewItem] = useState<ChromaGridItem | null>(null);
 
-  // Utility to convert duration string to seconds
   const parseDuration = useCallback((str: string): number => {
     const [mins, secs] = str.split(":").map(Number);
     return mins * 60 + secs;
   }, []);
 
-  // Check if mobile on mount and resize
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -75,7 +73,7 @@ export const ChromaGrid = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-   const demo: ChromaGridItem[] = [
+  const demo: ChromaGridItem[] = [
     {
       image: "https://i.pravatar.cc/300?img=8",
       title: "Alex Rivera",
@@ -86,8 +84,8 @@ export const ChromaGrid = ({
       url: "https://github.com/",
       duration: "3:45",
       audioUrl: "https://example.com/track1.mp3",
-      likes: 120, // Added
-      views: 1500, // Added
+      likes: 120,
+      views: 1500,
     },
     {
       image: "https://i.pravatar.cc/300?img=11",
@@ -99,8 +97,8 @@ export const ChromaGrid = ({
       url: "https://linkedin.com/in/",
       duration: "4:12",
       audioUrl: "https://example.com/track2.mp3",
-      likes: 85, // Added
-      views: 3200, // Added
+      likes: 85,
+      views: 3200,
     },
     {
       image: "https://i.pravatar.cc/300?img=3",
@@ -112,8 +110,8 @@ export const ChromaGrid = ({
       url: "https://dribbble.com/",
       duration: "2:58",
       audioUrl: "https://example.com/track3.mp3",
-      likes: 210, // Added
-      views: 4800, // Added
+      likes: 210,
+      views: 4800,
     },
     {
       image: "https://i.pravatar.cc/300?img=16",
@@ -125,8 +123,8 @@ export const ChromaGrid = ({
       url: "https://kaggle.com/",
       duration: "3:21",
       audioUrl: "https://example.com/track4.mp3",
-      likes: 75, // Added
-      views: 2100, // Added
+      likes: 75,
+      views: 2100,
     },
     {
       image: "https://i.pravatar.cc/300?img=25",
@@ -138,8 +136,8 @@ export const ChromaGrid = ({
       url: "https://github.com/",
       duration: "4:05",
       audioUrl: "https://example.com/track5.mp3",
-      likes: 180, // Added
-      views: 5600, // Added
+      likes: 180,
+      views: 5600,
     },
     {
       image: "https://i.pravatar.cc/300?img=60",
@@ -151,8 +149,8 @@ export const ChromaGrid = ({
       url: "https://aws.amazon.com/",
       duration: "3:33",
       audioUrl: "https://example.com/track6.mp3",
-      likes: 95, // Added
-      views: 3900, // Added
+      likes: 95,
+      views: 3900,
     },
   ];
   
@@ -178,23 +176,19 @@ export const ChromaGrid = ({
     setPreviewItem(item);
   }, []);
 
-   const handlePlayAudio = useCallback(() => {
+  const handlePlayAudio = useCallback(() => {
     if (!previewItem) return;
     
-    // Close the preview modal first
     setPreviewItem(null);
     
-    // Then play the track using playTrack
     playTrack({
-      id: previewItem.audioUrl!, // Use audioUrl as unique ID
+      id: previewItem.audioUrl!,
       src: previewItem.audioUrl!,
       name: previewItem.title,
       artist: previewItem.subtitle,
       artwork: previewItem.image,
-      // Add duration if your player supports it
     });
   }, [previewItem, playTrack]);
-
   
   return (
     <div
@@ -202,7 +196,6 @@ export const ChromaGrid = ({
       className={`chroma-grid-enhanced ${className}`}
       style={{ "--r": `${radius}px` } as React.CSSProperties}
     >
-      {/* Preview Modal */}
       {previewItem && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-xl z-50 flex items-center justify-center p-4 md:pb-[4.5rem]">
           <div className="bg-card text-foreground rounded-2xl max-w-2xl w-full overflow-hidden border border-border shadow-xl relative">
@@ -214,24 +207,18 @@ export const ChromaGrid = ({
             </button>
             
             {/* Responsive aspect ratio container */}
-            <div className="relative pb-[56.25%] h-0"> {/* Default 16:9 aspect ratio */}
+            <div className="relative pb-[56.25%] h-0">
               {previewItem.youtubeUrl ? (
                 (() => {
                   const videoId = getYouTubeVideoId(previewItem.youtubeUrl);
                   const isShorts = previewItem.youtubeUrl.includes('/shorts/');
                   
                   return (
-                    <div className={cn(
-                      "absolute inset-0 w-full h-full",
-                      isShorts ? "flex items-center justify-center" : ""
-                    )}>
+                    <div className={`absolute inset-0 w-full h-full ${isShorts ? "flex items-center justify-center" : ""}`}>
                       {videoId ? (
                         <iframe
                           src={`https://www.youtube.com/embed/${videoId}`}
-                          className={cn(
-                            "w-full h-full",
-                            isShorts ? "max-w-full max-h-full aspect-video" : ""
-                          )}
+                          className={`w-full h-full ${isShorts ? "max-w-full max-h-full aspect-video" : ""}`}
                           style={{
                             aspectRatio: isShorts ? "9/16" : "16/9"
                           }}
@@ -239,6 +226,14 @@ export const ChromaGrid = ({
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                           allowFullScreen
                         ></iframe>
+                      ) : (
+                        <div className="w-full h-full bg-black flex items-center justify-center">
+                          <p className="text-white">Invalid YouTube URL</p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()
               ) : (
                 <div className="absolute inset-0 w-full h-full flex items-center justify-center">
                   <img 
@@ -307,7 +302,6 @@ export const ChromaGrid = ({
         </div>
       )}
 
-      {/* Grid Items */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 w-full">
         {data.map((item, i) => (
           <article
@@ -323,7 +317,6 @@ export const ChromaGrid = ({
               background: item.gradient || "linear-gradient(145deg, #333, #000)",
             } as React.CSSProperties}
           >
-            {/* Image Container */}
             <div className="aspect-square relative overflow-hidden">
               <img 
                 src={item.image} 
@@ -331,7 +324,6 @@ export const ChromaGrid = ({
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
               
-              {/* Hover Overlay for Desktop */}
               <div className={`absolute inset-0 bg-black/70 transition-opacity duration-300 flex items-center justify-center ${
                 isMobile ? 'opacity-0' : hoveredItem === i ? 'opacity-100' : 'opacity-0'
               }`}>
@@ -358,7 +350,6 @@ export const ChromaGrid = ({
                 </div>
               </div>
 
-              {/* Duration Badge */}
               {item.duration && (
                 <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-sm rounded-full px-2 py-1 text-xs text-white flex items-center gap-1">
                   <Clock className="h-3 w-3" />
@@ -367,7 +358,6 @@ export const ChromaGrid = ({
               )}
             </div>
 
-            {/* Details Section */}
             <div className={`p-4 transition-all duration-300 ${
               isMobile 
                 ? 'opacity-100 translate-y-0' 
@@ -389,7 +379,6 @@ export const ChromaGrid = ({
                 </p>
               )}
 
-              {/* Mobile Stats - Always visible on mobile */}
               {isMobile && (item.likes !== undefined || item.views !== undefined) && (
                 <div className="flex items-center gap-3 mt-2 text-xs text-white/60">
                   {item.likes !== undefined && (
@@ -407,7 +396,6 @@ export const ChromaGrid = ({
                 </div>
               )}
 
-              {/* Action Buttons for Mobile */}
               {isMobile && (
                 <div className="flex gap-2 mt-3">
                   {(item.audioUrl || item.youtubeUrl) && (
@@ -434,8 +422,6 @@ export const ChromaGrid = ({
                 </div>
               )}
 
-              {/* Desktop Hover Details */}
-              {/* Desktop Hover Details */}
               {!isMobile && hoveredItem === i && (
                 <div className="mt-3 space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
                   {item.location && (
@@ -464,7 +450,6 @@ export const ChromaGrid = ({
               )}
             </div>
             
-            {/* Card Border Effect */}
             <div 
               className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
               style={{
