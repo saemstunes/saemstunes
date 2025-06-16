@@ -9,6 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview"
+    "migrate-storage": "node scripts/migrate-storage.js"
   },
   "dependencies": {
     "@hcaptcha/react-hcaptcha": "^1.12.0",
