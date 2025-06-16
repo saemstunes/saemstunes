@@ -51,7 +51,6 @@ import Subscriptions from "./pages/Subscriptions";
 import ComingSoon from "./pages/ComingSoon";
 import Tracks from "@/pages/Tracks";
 import AudioPlayer from "./pages/AudioPlayer";
-import { SpeedInsights } from '@vercel/speed-insights/react';
 
 const queryClient = new QueryClient();
 
@@ -141,7 +140,6 @@ const App = () => {
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <GlobalMiniPlayer />
-              <SpeedInsights />
             </BrowserRouter>
           </TooltipProvider>
         </AudioPlayerProvider>
