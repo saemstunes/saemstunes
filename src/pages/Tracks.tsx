@@ -74,7 +74,7 @@ const Tracks = () => {
       duration: "2:53",
       previewUrl: "https://example.com/pale-ulipo-preview.mp3",
       videoUrl: "https://youtube.com/watch?v=pale-ulipo-cover",
-      youtubeUrl: "https://www.youtube.com/shorts/7gCTtxzgVwc",
+      youtubeUrl: "https://www.youtube.com/watch?v=Y5hIQj7WoDg",
       primaryColor: "#5A270F",
       secondaryColor: "#8B4513",
       backgroundGradient: "linear-gradient(145deg, #5A270F 0%, #8B4513 50%, #000 100%)",
