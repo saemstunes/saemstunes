@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 import { Play, ExternalLink, Clock, Heart } from "lucide-react";
+import { useAudioPlayer } from "@/context/AudioPlayerContext";
 
 interface ChromaGridItem {
   image: string;
@@ -35,10 +36,16 @@ export const ChromaGrid = ({
   fadeOut = 0.6,
   ease = "power3.out",
 }: ChromaGridProps) => {
+  const { setTrack } = useAudioPlayer(); // Get setTrack from context
   const rootRef = useRef<HTMLDivElement>(null);
   const fadeRef = useRef<HTMLDivElement>(null);
   const [hoveredItem, setHoveredItem] = useState<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Utility to convert duration string to seconds
+  const parseDuration = (str: string): number => {
+    const [mins, secs] = str.split(":").map(Number);
+    return mins * 60 + secs;
 
   // Check if mobile on mount and resize
   useEffect(() => {
@@ -170,17 +177,35 @@ export const ChromaGrid = ({
               />
               
               {/* Hover Overlay for Desktop */}
-              <div className={`absolute inset-0 bg-black/70 transition-opacity duration-300 flex items-center justify-center ${
+             <div className={`absolute inset-0 bg-black/70 transition-opacity duration-300 flex items-center justify-center ${
                 isMobile ? 'opacity-0' : hoveredItem === i ? 'opacity-100' : 'opacity-0'
               }`}>
                 <div className="flex gap-3">
                   {item.audioUrl && (
-                    <button className="bg-white/20 backdrop-blur-sm rounded-full p-3 hover:bg-white/30 transition-colors">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setTrack({
+                          name: item.title,
+                          artist: item.subtitle,
+                          audioUrl: item.audioUrl!,
+                          artwork: item.image,
+                          duration: item.duration ? parseDuration(item.duration) : undefined,
+                        });
+                      }}
+                      className="bg-white/20 backdrop-blur-sm rounded-full p-3 hover:bg-white/30 transition-colors"
+                    >
                       <Play className="h-6 w-6 text-white fill-white" />
                     </button>
                   )}
                   {item.url && (
-                    <button className="bg-white/20 backdrop-blur-sm rounded-full p-3 hover:bg-white/30 transition-colors">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(item.url, "_blank", "noopener,noreferrer");
+                      }}
+                      className="bg-white/20 backdrop-blur-sm rounded-full p-3 hover:bg-white/30 transition-colors"
+                    >
                       <ExternalLink className="h-6 w-6 text-white" />
                     </button>
                   )}
@@ -220,20 +245,38 @@ export const ChromaGrid = ({
 
               {/* Action Buttons for Mobile */}
               {isMobile && (
-                <div className="flex gap-2 mt-3">
-                  {item.audioUrl && (
-                    <button className="flex-1 bg-white/20 backdrop-blur-sm rounded-lg py-2 px-3 text-white text-sm font-medium hover:bg-white/30 transition-colors flex items-center justify-center gap-2">
-                      <Play className="h-4 w-4" />
-                      Play
-                    </button>
-                  )}
-                  {item.url && (
-                    <button className="bg-white/20 backdrop-blur-sm rounded-lg p-2 text-white hover:bg-white/30 transition-colors">
-                      <ExternalLink className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-              )}
+              <div className="flex gap-2 mt-3">
+                {item.audioUrl && (
+                  <button 
+                    className="flex-1 bg-white/20 backdrop-blur-sm rounded-lg py-2 px-3 text-white text-sm font-medium hover:bg-white/30 transition-colors flex items-center justify-center gap-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setTrack({
+                        name: item.title,
+                        artist: item.subtitle,
+                        audioUrl: item.audioUrl!,
+                        artwork: item.image,
+                        duration: item.duration ? parseDuration(item.duration) : undefined,
+                      });
+                    }}
+                  >
+                    <Play className="h-4 w-4" />
+                    Play
+                  </button>
+                )}
+                {item.url && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.open(item.url, "_blank", "noopener,noreferrer");
+                    }}
+                    className="bg-white/20 backdrop-blur-sm rounded-lg p-2 text-white hover:bg-white/30 transition-colors"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            )}
 
               {/* Desktop Hover Details */}
               {!isMobile && hoveredItem === i && (
