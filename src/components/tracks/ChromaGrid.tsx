@@ -17,6 +17,8 @@ interface ChromaGridItem {
   primaryColor?: string;
   secondaryColor?: string;
   backgroundGradient?: string;
+  likes?: number; // Added
+  views?: number; // Added
 }
 
 interface ChromaGridProps {
@@ -67,6 +69,8 @@ export const ChromaGrid = ({
       url: "https://github.com/",
       duration: "3:45",
       audioUrl: "https://example.com/track1.mp3",
+      likes: 120, // Added
+      views: 1500, // Added
     },
     {
       image: "https://i.pravatar.cc/300?img=11",
@@ -78,6 +82,8 @@ export const ChromaGrid = ({
       url: "https://linkedin.com/in/",
       duration: "4:12",
       audioUrl: "https://example.com/track2.mp3",
+      likes: 85, // Added
+      views: 3200, // Added
     },
     {
       image: "https://i.pravatar.cc/300?img=3",
@@ -89,6 +95,8 @@ export const ChromaGrid = ({
       url: "https://dribbble.com/",
       duration: "2:58",
       audioUrl: "https://example.com/track3.mp3",
+      likes: 210, // Added
+      views: 4800, // Added
     },
     {
       image: "https://i.pravatar.cc/300?img=16",
@@ -100,6 +108,8 @@ export const ChromaGrid = ({
       url: "https://kaggle.com/",
       duration: "3:21",
       audioUrl: "https://example.com/track4.mp3",
+      likes: 75, // Added
+      views: 2100, // Added
     },
     {
       image: "https://i.pravatar.cc/300?img=25",
@@ -111,6 +121,8 @@ export const ChromaGrid = ({
       url: "https://github.com/",
       duration: "4:05",
       audioUrl: "https://example.com/track5.mp3",
+      likes: 180, // Added
+      views: 5600, // Added
     },
     {
       image: "https://i.pravatar.cc/300?img=60",
@@ -122,6 +134,8 @@ export const ChromaGrid = ({
       url: "https://aws.amazon.com/",
       duration: "3:33",
       audioUrl: "https://example.com/track6.mp3",
+      likes: 95, // Added
+      views: 3900, // Added
     },
   ];
   
@@ -342,6 +356,24 @@ export const ChromaGrid = ({
                 </p>
               )}
 
+              {/* Mobile Stats - Always visible on mobile */}
+              {isMobile && (item.likes !== undefined || item.views !== undefined) && (
+                <div className="flex items-center gap-3 mt-2 text-xs text-white/60">
+                  {item.likes !== undefined && (
+                    <span className="flex items-center gap-1">
+                      <Heart className="h-3 w-3" />
+                      {item.likes}
+                    </span>
+                  )}
+                  {item.views !== undefined && (
+                    <span className="flex items-center gap-1">
+                      <Play className="h-3 w-3" />
+                      {item.views.toLocaleString()}
+                    </span>
+                  )}
+                </div>
+              )}
+
               {/* Action Buttons for Mobile */}
               {isMobile && (
                 <div className="flex gap-2 mt-3">
@@ -370,6 +402,7 @@ export const ChromaGrid = ({
               )}
 
               {/* Desktop Hover Details */}
+              {/* Desktop Hover Details */}
               {!isMobile && hoveredItem === i && (
                 <div className="mt-3 space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
                   {item.location && (
@@ -378,20 +411,26 @@ export const ChromaGrid = ({
                     </p>
                   )}
                   
-                  <div className="flex items-center gap-4 text-white/60 text-xs">
-                    <span className="flex items-center gap-1">
-                      <Heart className="h-3 w-3" />
-                      {Math.floor(Math.random() * 1000)}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Play className="h-3 w-3" />
-                      {Math.floor(Math.random() * 10000)}
-                    </span>
-                  </div>
+                  {(item.likes !== undefined || item.views !== undefined) && (
+                    <div className="flex items-center gap-4 text-white/60 text-xs">
+                      {item.likes !== undefined && (
+                        <span className="flex items-center gap-1">
+                          <Heart className="h-3 w-3" />
+                          {item.likes}
+                        </span>
+                      )}
+                      {item.views !== undefined && (
+                        <span className="flex items-center gap-1">
+                          <Play className="h-3 w-3" />
+                          {item.views.toLocaleString()}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-
+            
             {/* Card Border Effect */}
             <div 
               className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
