@@ -20,50 +20,50 @@ const ContentTabs: React.FC<ContentTabsProps> = ({ activeTab, setActiveTab }) =>
     {
       name: "Kendi Nkonge",
       role: "Performer/Vocalist",
-      imageSrc: "https://picsum.photos/400/400?random=1",
-      link: "https://open.spotify.com/artist/example1"
+      imageSrc: "https://i.imgur.com/7CFi8hL.jpeg",
+      link: "https://open.spotify.com/artist/1eRQ6VZjE5zn8a8cxYEoR7"
     },
     {
       name: "Jonathan McReynolds",
       role: "Singer/Music Professor", 
-      imageSrc: "https://picsum.photos/400/400?random=2",
-      link: "https://open.spotify.com/artist/example2"
+      imageSrc: "https://i.imgur.com/HDfxFTF.jpeg",
+      link: "https://open.spotify.com/artist/5ItTHwcEtFh6DEOBheMub9"
     },
     {
       name: "Janice Wanjiru-Kioko",
       role: "Singer/Vocal Coach",
-      imageSrc: "https://picsum.photos/400/400?random=3", 
-      link: "https://music.apple.com/artist/example3"
+      imageSrc: "https://i.imgur.com/m4RCnEl.jpeg", 
+      link: "https://www.instagram.com/janicewanjiru_kioko/?hl=en"
     },
     {
       name: "Bire the Vocalist",
-      role: "Singer",
-      imageSrc: "https://picsum.photos/400/400?random=4",
-      link: "https://open.spotify.com/artist/example4"
+      role: "Performer/Vocalist",
+      imageSrc: "https://i.imgur.com/GiaZkBN.jpeg",
+      link: "https://open.spotify.com/artist/19cIDIEhh6ccn5BzxvZi3x"
     },
     {
       name: "Josh Groban",
       role: "Classical Singer",
-      imageSrc: "https://picsum.photos/400/400?random=5",
-      link: "https://music.apple.com/artist/example5"
+      imageSrc: "https://i.imgur.com/zoWPxEW.jpeg",
+      link: "https://music.apple.com/artist/6cXMpsP9x0SH4kFfMyVezF"
     },
     {
       name: "Tori Kelly",
       role: "Performer/Vocalist",
-      imageSrc: "https://picsum.photos/400/400?random=6",
-      link: "https://open.spotify.com/artist/example6"
+      imageSrc: "https://i.imgur.com/jT7HABQ.jpeg",
+      link: "https://open.spotify.com/artist/1vSN1fsvrzpbttOYGsliDr"
     },
     {
-      name: "Raye",
+      name: "Lisa-Oduor Noah",
       role: "Performer/Vocalist", 
-      imageSrc: "https://picsum.photos/400/400?random=7",
-      link: "https://music.apple.com/artist/example7"
+      imageSrc: "https://i.imgur.com/1jFe8dW.jpeg",
+      link: "https://music.apple.com/artist/2lzhfTv334wDq7W7tFyJHa"
     },
     {
-      name: "Ellie Banke",
-      role: "Singer",
-      imageSrc: "https://picsum.photos/400/400?random=8",
-      link: "https://open.spotify.com/artist/example8"
+      name: "Cynthia Erivo",
+      role: "Performer/Vocalist",
+      imageSrc: "https://i.imgur.com/napbSbt.jpeg",
+      link: "https://open.spotify.com/artist/46UMQ0cW8ToR8egkBRwAxZ"
     }
   ];
   
