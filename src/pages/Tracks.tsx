@@ -112,7 +112,7 @@ const Tracks = () => {
       backgroundGradient: "linear-gradient(165deg, #EEB38C 0%, #DEB887 50%, #000 100%)",
     },
         {
-      image: "https://i.imgur.com/VfKXMyG.png",
+      image: "https://i.imgur.com/wrm7LI1.jpeg",
       title: "Mapenzi Ya Ajabu - Saem's Tunes",
       subtitle: "Original",
       handle: "@saemstunes",
@@ -128,7 +128,7 @@ const Tracks = () => {
       backgroundGradient: "linear-gradient(145deg, #5A270F 0%, #8B4513 50%, #000 100%)",
     },
     {
-      image: "https://i.imgur.com/6yr8BpG.jpeg", 
+      image: "https://i.imgur.com/dzjTYAw.jpeg", 
       title: "LOVE Medley",
       subtitle: "Project",
       handle: "@saemstunes",
@@ -144,7 +144,7 @@ const Tracks = () => {
       backgroundGradient: "linear-gradient(180deg, #DF8142 0%, #F4A460 50%, #000 100%)",
     },
     {
-      image: "https://i.imgur.com/LJQDADg.jpeg",
+      image: "https://i.imgur.com/HDBX1q8.jpeg",
       title: "TCBU Medley",
       subtitle: "Project",
       handle: "@saemstunes, @timgrandmich",
