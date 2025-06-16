@@ -742,31 +742,33 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
   }, [user, track.id]);
 
   const checkIfLiked = async () => {
-    if (!user) return;
-    
-    const { data } = await supabase
-      .from('likes')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('track_id', track.id)
-      .single();
-    
-    setLiked(!!data);
-  };
+  if (!user) return;
+  
+  const { data, error } = await supabase
+    .from('likes')
+    .select()
+    .eq('user_id', user.id)
+    .eq('track_id', track.id);
+
+  if (!error) {
+    setLiked(data && data.length > 0);
+  }
+};
 
   const checkIfSaved = async () => {
-    if (!user) return;
-    
-    const { data } = await supabase
-      .from('favorites')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('content_id', track.id)
-      .eq('content_type', 'track')
-      .single();
-    
-    setSaved(!!data);
-  };
+  if (!user) return;
+  
+  const { data, error } = await supabase
+    .from('favorites')
+    .select()
+    .eq('user_id', user.id)
+    .eq('content_id', track.id)
+    .eq('content_type', 'track');
+
+  if (!error) {
+    setSaved(data && data.length > 0);
+  }
+};
 
   const getLikeCount = async () => {
     const { count } = await supabase
