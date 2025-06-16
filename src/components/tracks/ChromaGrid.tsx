@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from "react";
-import { Play, ExternalLink, Clock, Heart } from "lucide-react";
+import { Play, ExternalLink, Clock, Heart, X } from "lucide-react";
 import { useAudioPlayer } from "@/context/AudioPlayerContext";
 
 interface ChromaGridItem {
@@ -37,6 +37,7 @@ export const ChromaGrid = ({
   const rootRef = useRef<HTMLDivElement>(null);
   const [hoveredItem, setHoveredItem] = useState<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [previewItem, setPreviewItem] = useState<ChromaGridItem | null>(null);
 
   // Utility to convert duration string to seconds
   const parseDuration = useCallback((str: string): number => {
@@ -55,8 +56,73 @@ export const ChromaGrid = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const demo: ChromaGridItem[] = [
-    // ... (same as your demo data)
+   const demo: ChromaGridItem[] = [
+    {
+      image: "https://i.pravatar.cc/300?img=8",
+      title: "Alex Rivera",
+      subtitle: "Full Stack Developer",
+      handle: "@alexrivera",
+      borderColor: "#4F46E5",
+      gradient: "linear-gradient(145deg, #4F46E5, #000)",
+      url: "https://github.com/",
+      duration: "3:45",
+      audioUrl: "https://example.com/track1.mp3",
+    },
+    {
+      image: "https://i.pravatar.cc/300?img=11",
+      title: "Jordan Chen",
+      subtitle: "DevOps Engineer",
+      handle: "@jordanchen",
+      borderColor: "#10B981",
+      gradient: "linear-gradient(210deg, #10B981, #000)",
+      url: "https://linkedin.com/in/",
+      duration: "4:12",
+      audioUrl: "https://example.com/track2.mp3",
+    },
+    {
+      image: "https://i.pravatar.cc/300?img=3",
+      title: "Morgan Blake",
+      subtitle: "UI/UX Designer",
+      handle: "@morganblake",
+      borderColor: "#F59E0B",
+      gradient: "linear-gradient(165deg, #F59E0B, #000)",
+      url: "https://dribbble.com/",
+      duration: "2:58",
+      audioUrl: "https://example.com/track3.mp3",
+    },
+    {
+      image: "https://i.pravatar.cc/300?img=16",
+      title: "Casey Park",
+      subtitle: "Data Scientist",
+      handle: "@caseypark",
+      borderColor: "#EF4444",
+      gradient: "linear-gradient(195deg, #EF4444, #000)",
+      url: "https://kaggle.com/",
+      duration: "3:21",
+      audioUrl: "https://example.com/track4.mp3",
+    },
+    {
+      image: "https://i.pravatar.cc/300?img=25",
+      title: "Sam Kim",
+      subtitle: "Mobile Developer",
+      handle: "@thesamkim",
+      borderColor: "#8B5CF6",
+      gradient: "linear-gradient(225deg, #8B5CF6, #000)",
+      url: "https://github.com/",
+      duration: "4:05",
+      audioUrl: "https://example.com/track5.mp3",
+    },
+    {
+      image: "https://i.pravatar.cc/300?img=60",
+      title: "Tyler Rodriguez",
+      subtitle: "Cloud Architect",
+      handle: "@tylerrod",
+      borderColor: "#06B6D4",
+      gradient: "linear-gradient(135deg, #06B6D4, #000)",
+      url: "https://aws.amazon.com/",
+      duration: "3:33",
+      audioUrl: "https://example.com/track6.mp3",
+    },
   ];
   
   const data = items?.length ? items : demo;
@@ -76,12 +142,118 @@ export const ChromaGrid = ({
     card.style.setProperty("--mouse-y", `${y}px`);
   }, []);
 
+  const handlePlayButtonClick = useCallback((e: React.MouseEvent, item: ChromaGridItem) => {
+    e.stopPropagation();
+    setPreviewItem(item);
+  }, []);
+
+  const handlePlayAudio = useCallback(() => {
+    if (!previewItem) return;
+    
+    setTrack({
+      name: previewItem.title,
+      artist: previewItem.subtitle,
+      audioUrl: previewItem.audioUrl!,
+      artwork: previewItem.image,
+      duration: previewItem.duration ? parseDuration(previewItem.duration) : undefined,
+    });
+  }, [previewItem, setTrack, parseDuration]);
+
   return (
     <div
       ref={rootRef}
       className={`chroma-grid-enhanced ${className}`}
       style={{ "--r": `${radius}px` } as React.CSSProperties}
     >
+      {/* Preview Modal */}
+      {previewItem && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-xl z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 rounded-2xl max-w-2xl w-full overflow-hidden border border-gray-700 relative">
+            <button 
+              className="absolute top-4 right-4 bg-gray-800 rounded-full p-2 hover:bg-gray-700 transition-colors z-10"
+              onClick={() => setPreviewItem(null)}
+            >
+              <X className="h-6 w-6 text-white" />
+            </button>
+            
+            <div className="aspect-video bg-black relative">
+              {previewItem.youtubeUrl ? (
+                <iframe
+                  src={`https://www.youtube.com/embed/${previewItem.youtubeUrl.split('v=')[1]}`}
+                  className="w-full h-full"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <img 
+                    src={previewItem.image} 
+                    alt={previewItem.title}
+                    className="w-full h-full object-cover opacity-70"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="bg-black/50 rounded-full p-6 backdrop-blur-sm">
+                      <Play className="h-16 w-16 text-white fill-white" />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="p-6">
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="flex-1">
+                  <h2 className="text-2xl font-bold text-white mb-2">
+                    {previewItem.title}
+                  </h2>
+                  <p className="text-gray-300 mb-4">
+                    {previewItem.subtitle}
+                  </p>
+                  {previewItem.duration && (
+                    <div className="flex items-center text-gray-400 gap-2 mb-4">
+                      <Clock className="h-4 w-4" />
+                      <span>Duration: {previewItem.duration}</span>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={handlePlayAudio}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <Play className="h-5 w-5" />
+                    <span>Play Audio</span>
+                  </button>
+                  
+                  {previewItem.audioUrl && (
+                    <button
+                      onClick={() => window.open(previewItem.audioUrl, "_blank")}
+                      className="bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <ExternalLink className="h-5 w-5" />
+                      <span>Audio Source</span>
+                    </button>
+                  )}
+                  
+                  {previewItem.youtubeUrl && (
+                    <button
+                      onClick={() => window.open(previewItem.youtubeUrl, "_blank")}
+                      className="bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <ExternalLink className="h-5 w-5" />
+                      <span>Watch on YouTube</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Grid Items */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 w-full">
         {data.map((item, i) => (
           <article
@@ -110,18 +282,9 @@ export const ChromaGrid = ({
                 isMobile ? 'opacity-0' : hoveredItem === i ? 'opacity-100' : 'opacity-0'
               }`}>
                 <div className="flex gap-3">
-                  {item.audioUrl && (
+                  {(item.audioUrl || item.youtubeUrl) && (
                     <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setTrack({
-                          name: item.title,
-                          artist: item.subtitle,
-                          audioUrl: item.audioUrl!,
-                          artwork: item.image,
-                          duration: item.duration ? parseDuration(item.duration) : undefined,
-                        });
-                      }}
+                      onClick={(e) => handlePlayButtonClick(e, item)}
                       className="bg-white/20 backdrop-blur-sm rounded-full p-3 hover:bg-white/30 transition-colors"
                     >
                       <Play className="h-6 w-6 text-white fill-white" />
@@ -175,22 +338,13 @@ export const ChromaGrid = ({
               {/* Action Buttons for Mobile */}
               {isMobile && (
                 <div className="flex gap-2 mt-3">
-                  {item.audioUrl && (
+                  {(item.audioUrl || item.youtubeUrl) && (
                     <button 
                       className="flex-1 bg-white/20 backdrop-blur-sm rounded-lg py-2 px-3 text-white text-sm font-medium hover:bg-white/30 transition-colors flex items-center justify-center gap-2"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setTrack({
-                          name: item.title,
-                          artist: item.subtitle,
-                          audioUrl: item.audioUrl!,
-                          artwork: item.image,
-                          duration: item.duration ? parseDuration(item.duration) : undefined,
-                        });
-                      }}
+                      onClick={(e) => handlePlayButtonClick(e, item)}
                     >
                       <Play className="h-4 w-4" />
-                      Play
+                      Preview
                     </button>
                   )}
                   {item.url && (
