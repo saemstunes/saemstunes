@@ -577,7 +577,7 @@ const Tracks = () => {
                     <div className="space-y-4 order-1 md:order-2 text-center md:text-left">
                       <h3 className="text-xl font-semibold">{featuredTrack.artist}</h3>
                       <p className="text-muted-foreground">
-                        This week's featured track showcases exceptional musical artistry and creativity.
+                        Amidst a concerning time around the world, we thought to capture the picture of it in light of what we know & are assured of. This song goes back almost 20 years & to be able to translate it in this way, with some of the people who have been a support to this space, is an esteemed honor. I pray this song grows to translate, even beyond my ability, the moments that can't be imagined: bomb landings in promised sheltered areas, an innocent mum and dad beholding their lost child, children suddenly made orphans, the plight of a future riddled with uncertainties as powers that greater be call the shots... how damning to not even be able to promise a solution. But even in the midst of it, just to find a voice that speaks to you, comforts you, is a true balm to the wounds the world oft inflicts. Might I present to you Jesus? He knows every thought, bottles every tear and is sovereign even when it feels He isn't. In Christ, nahnu aaminum/nahnun 'āminūm/sango mbote/we are safe/tuko SALAMA!  
                       </p>
                       
                       <div className="flex gap-8 justify-center md:justify-start">
