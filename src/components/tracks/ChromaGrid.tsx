@@ -147,9 +147,13 @@ export const ChromaGrid = ({
     setPreviewItem(item);
   }, []);
 
-  const handlePlayAudio = useCallback(() => {
+   const handlePlayAudio = useCallback(() => {
     if (!previewItem) return;
     
+    // Close the preview modal first
+    setPreviewItem(null);
+    
+    // Then set the track to play
     setTrack({
       name: previewItem.title,
       artist: previewItem.subtitle,
@@ -159,15 +163,16 @@ export const ChromaGrid = ({
     });
   }, [previewItem, setTrack, parseDuration]);
 
+  
   return (
     <div
       ref={rootRef}
       className={`chroma-grid-enhanced ${className}`}
       style={{ "--r": `${radius}px` } as React.CSSProperties}
     >
-      {/* Preview Modal - Updated to match theme */}
+      {/* Preview Modal - Updated positioning */}
       {previewItem && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-xl z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-xl z-50 flex items-center justify-center p-4 md:pb-[4.5rem]">
           <div className="bg-card text-foreground rounded-2xl max-w-2xl w-full overflow-hidden border border-border shadow-xl relative">
             <button 
               className="absolute top-4 right-4 bg-secondary text-secondary-foreground rounded-full p-2 hover:bg-secondary/80 transition-colors z-10"
@@ -176,6 +181,7 @@ export const ChromaGrid = ({
               <X className="h-6 w-6" />
             </button>
             
+            {/* Responsive aspect ratio container */}
             <div className="aspect-video bg-black relative">
               {previewItem.youtubeUrl ? (
                 <iframe
@@ -201,49 +207,49 @@ export const ChromaGrid = ({
               )}
             </div>
             
-            <div className="p-6">
-              <div className="flex flex-col md:flex-row gap-6">
+            <div className="p-4 md:p-6">
+              <div className="flex flex-col md:flex-row gap-4 md:gap-6">
                 <div className="flex-1">
-                  <h2 className="text-2xl font-bold mb-2">
+                  <h2 className="text-xl md:text-2xl font-bold mb-1 md:mb-2">
                     {previewItem.title}
                   </h2>
-                  <p className="text-muted-foreground mb-4">
+                  <p className="text-muted-foreground text-sm md:text-base mb-2 md:mb-4">
                     {previewItem.subtitle}
                   </p>
                   {previewItem.duration && (
-                    <div className="flex items-center text-muted-foreground gap-2 mb-4">
-                      <Clock className="h-4 w-4" />
+                    <div className="flex items-center text-muted-foreground text-xs md:text-sm gap-1 md:gap-2">
+                      <Clock className="h-3 w-3 md:h-4 md:w-4" />
                       <span>Duration: {previewItem.duration}</span>
                     </div>
                   )}
                 </div>
                 
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-2 md:gap-3 mt-2 md:mt-0">
                   <button
                     onClick={handlePlayAudio}
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2 md:py-3 px-4 md:px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
                   >
-                    <Play className="h-5 w-5" />
-                    <span>Play Audio</span>
+                    <Play className="h-4 w-4 md:h-5 md:w-5" />
+                    <span className="text-sm md:text-base">Play Audio</span>
                   </button>
                   
                   {previewItem.audioUrl && (
                     <button
                       onClick={() => window.open(previewItem.audioUrl, "_blank")}
-                      className="bg-secondary hover:bg-secondary/80 text-secondary-foreground font-medium py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                      className="bg-secondary hover:bg-secondary/80 text-secondary-foreground font-medium py-2 md:py-3 px-4 md:px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
                     >
-                      <ExternalLink className="h-5 w-5" />
-                      <span>Audio Source</span>
+                      <ExternalLink className="h-4 w-4 md:h-5 md:w-5" />
+                      <span className="text-sm md:text-base">Audio Source</span>
                     </button>
                   )}
                   
                   {previewItem.youtubeUrl && (
                     <button
                       onClick={() => window.open(previewItem.youtubeUrl, "_blank")}
-                      className="bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                      className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 md:py-3 px-4 md:px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
                     >
-                      <ExternalLink className="h-5 w-5" />
-                      <span>Watch on YouTube</span>
+                      <ExternalLink className="h-4 w-4 md:h-5 md:w-5" />
+                      <span className="text-sm md:text-base">Watch on YouTube</span>
                     </button>
                   )}
                 </div>
