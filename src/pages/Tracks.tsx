@@ -219,6 +219,45 @@ const Tracks = () => {
     }
   };
 
+  const cropImageToSquare = async (file: File): Promise<File> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      if (!e.target?.result) return reject("File reading failed");
+
+      img.src = e.target.result as string;
+    };
+
+    img.onload = () => {
+      const minSize = Math.min(img.width, img.height);
+      const canvas = document.createElement("canvas");
+      canvas.width = minSize;
+      canvas.height = minSize;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return reject("Canvas context error");
+
+      const offsetX = (img.width - minSize) / 2;
+      const offsetY = (img.height - minSize) / 2;
+
+      ctx.drawImage(img, offsetX, offsetY, minSize, minSize, 0, 0, minSize, minSize);
+
+      canvas.toBlob((blob) => {
+        if (!blob) return reject("Cropping failed");
+
+        const croppedFile = new File([blob], file.name, { type: file.type });
+        resolve(croppedFile);
+      }, file.type);
+    };
+
+    img.onerror = () => reject("Image loading failed");
+    reader.readAsDataURL(file);
+  });
+};
+
+
   const handleUpload = async () => {
     if (!user) {
       toast({
@@ -237,6 +276,14 @@ const Tracks = () => {
       });
       return;
     }
+
+    if (coverFile) {
+      const croppedCoverFile = await cropImageToSquare(coverFile);
+      const sanitizedCoverName = `${user.id}/${Date.now()}-${croppedCoverFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const { data: coverData, error: coverError } = await supabase.storage
+        .from('tracks')
+        .upload(sanitizedCoverName, croppedCoverFile);
+
 
     // Validate file types for security
     const allowedAudioTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/m4a'];
