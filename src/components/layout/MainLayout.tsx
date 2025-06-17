@@ -566,7 +566,7 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
 
         {/* Main Content */}
         <main className="flex-1">
-          <div className="container mx-auto py-6 px-4 lg:px-6 min-h-screen pb-24 lg:pb-6">
+          <div class="w-full max-w-7xl mx-auto py-6 px-4 lg:px-6 min-h-screen pb-24 lg:pb-6">
             {children}
           </div>
           
