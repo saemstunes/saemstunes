@@ -263,7 +263,7 @@ const LoginForm = ({ onAdminTap }: LoginFormProps) => {
                 transition={{ duration: 0.3 }}
               >
                 <HCaptcha
-                  sitekey="6ddca290-02b6-4572-90ce-dcdcc1d2c4ca"
+                  sitekey="02409832-47f4-48c0-ac48-d98828b23724"
                   onVerify={handleCaptchaVerify}
                   onExpire={handleCaptchaExpire}
                   onError={handleCaptchaError}
