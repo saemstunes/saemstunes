@@ -120,13 +120,13 @@ const Admin = () => {
                 </div>
               )}
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="username"
+                  id="email"
                   type="text"
-                  value={loginForm.username}
-                  onChange={(e) => setLoginForm(prev => ({ ...prev, username: e.target.value }))}
-                  placeholder="Enter username"
+                  value={loginForm.email}
+                  onChange={(e) => setLoginForm(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="Enter email"
                   required
                 />
               </div>
