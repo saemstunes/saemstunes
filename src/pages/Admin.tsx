@@ -76,7 +76,7 @@ const Admin = () => {
 
     if (
       loginForm.email === ADMIN_CREDENTIALS.email &&
-      loginForm.password === ADMIN_CREDENTIALS.password &&
+      loginForm.password === ADMIN_CREDENTIALS.password
     ) {
       setIsAuthenticated(true);
       sessionStorage.setItem('adminAuth', 'true');
@@ -89,7 +89,7 @@ const Admin = () => {
     try {
       sessionStorage.removeItem('adminAuth');
       setIsAuthenticated(false);
-      setLoginForm({ username: '', password: '' });
+      setLoginForm({ email: '', password: '' });
       if (user) {
         await logout();
       }
