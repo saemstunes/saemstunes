@@ -112,6 +112,7 @@ const App = () => {
                 <Route path="/payment-success" element={<PaymentSuccess />} />
                 <Route path="/subscriptions" element={<Subscriptions />} />
                 <Route path="/music-tools" element={<MusicTools />} />
+                <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
                 
                 {/* Protected Routes */}
                 <Route path="/bookings" element={
