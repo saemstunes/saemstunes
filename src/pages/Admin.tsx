@@ -51,7 +51,7 @@ const NAV_ITEMS = [
 
 // Admin credentials - stored as constants for this implementation
 const ADMIN_CREDENTIALS = {
-  email: 'saemstunes@gmail.com',
+  username: 'saemstunes',
   password: 'ilovetosing123'
 };
 
@@ -75,7 +75,7 @@ const Admin = () => {
     setLoginError('');
 
     if (
-      loginForm.email === ADMIN_CREDENTIALS.email &&
+      loginForm.username === ADMIN_CREDENTIALS.username &&
       loginForm.password === ADMIN_CREDENTIALS.password
     ) {
       setIsAuthenticated(true);
@@ -89,7 +89,7 @@ const Admin = () => {
     try {
       sessionStorage.removeItem('adminAuth');
       setIsAuthenticated(false);
-      setLoginForm({ email: '', password: '' });
+      setLoginForm({ username: '', password: '' });
       if (user) {
         await logout();
       }
@@ -120,13 +120,13 @@ const Admin = () => {
                 </div>
               )}
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="username">Username</Label>
                 <Input
-                  id="email"
+                  id="username"
                   type="text"
-                  value={loginForm.email}
-                  onChange={(e) => setLoginForm(prev => ({ ...prev, email: e.target.value }))}
-                  placeholder="Enter email"
+                  value={loginForm.username}
+                  onChange={(e) => setLoginForm(prev => ({ ...prev, username: e.target.value }))}
+                  placeholder="Enter username"
                   required
                 />
               </div>

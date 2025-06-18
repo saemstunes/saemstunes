@@ -86,90 +86,93 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
   };
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
-  if (!captchaToken) {
-    toast({
-      title: "Verification required",
-      description: "Please complete the captcha verification.",
-      variant: "destructive",
-    });
-    return;
-  }
+    if (!captchaToken) {
+      toast({
+        title: "Verification required",
+        description: "Please complete the captcha verification.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-  if (isDisposableEmail(data.email)) {
-    toast({
-      title: "Disposable email not allowed",
-      description: "Please use a valid personal or work email address.",
-      variant: "destructive",
-      duration: 5000,
-    });
-    return;
-  }
-  
-  setIsSubmitting(true);
-  
-  try {
-    const { data: signUpData, error } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-      options: {
-        data: {
-          name: data.name,
-          full_name: data.name,
-          role: "student", // This will be used by the trigger
-          avatar: "/lovable-uploads/avatar-1.png",
-          subscribed: false,
+    // Check if the email is from a disposable domain
+    if (isDisposableEmail(data.email)) {
+      toast({
+        title: "Disposable email not allowed",
+        description: "Please use a valid personal or work email address.",
+        variant: "destructive",
+        duration: 5000,
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Using Supabase directly with captcha token
+      const { data: signUpData, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            name: data.name,
+            role: "student",
+            avatar: "/lovable-uploads/avatar-1.png", // Default avatar
+            subscribed: false,
+          },
+          captchaToken,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
-        captchaToken,
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-    
-    if (error) {
-      if (error.message.includes("already registered")) {
-        toast({
-          title: "Account exists",
-          description: "An account with this email already exists. Try signing in instead.",
-          variant: "destructive",
-        });
-        return;
+      });
+      
+      if (error) {
+        if (error.message.includes("already registered")) {
+          toast({
+            title: "Account exists",
+            description: "An account with this email already exists. Try signing in instead.",
+            variant: "destructive",
+          });
+          return;
+        }
+        throw error;
       }
-      throw error;
-    }
-    
-    if (signUpData.user && !signUpData.session) {
+      
+      if (signUpData.user && !signUpData.session) {
+        toast({
+          title: "Account created!",
+          description: "Please check your email and click the verification link to complete your registration.",
+        });
+        // Redirect to verification waiting page instead of calling onSignupComplete
+        navigate("/verification-waiting", { 
+          state: { email: data.email }
+        });
+      } else if (signUpData.session) {
+        toast({
+          title: "Welcome!",
+          description: "Your account has been created successfully.",
+        });
+        navigate("/user-details");
+      }
+      
+    } catch (error: any) {
+      console.error("Signup error:", error);
+      // Reset captcha on error
+      captchaRef.current?.resetCaptcha();
+      setCaptchaToken(null);
+      
       toast({
-        title: "Account created!",
-        description: "Please check your email and click the verification link to complete your registration.",
+        title: "Signup failed",
+        description: error.message || "Something went wrong. Please try again.",
+        variant: "destructive",
       });
-      navigate("/verification-waiting", { 
-        state: { email: data.email }
+      
+      form.setError("root", { 
+        message: error.message || "There was an error signing up. Please try again." 
       });
-    } else if (signUpData.session) {
-      toast({
-        title: "Welcome!",
-        description: "Your account has been created successfully.",
-      });
-      navigate("/user-details");
+    } finally {
+      setIsSubmitting(false);
     }
-    
-  } catch (error: any) {
-    console.error("Signup error:", error);
-    captchaRef.current?.resetCaptcha();
-    setCaptchaToken(null);
-    
-    toast({
-      title: "Signup failed",
-      description: error.message || "Something went wrong. Please try again.",
-      variant: "destructive",
-    });
-    
-    form.setError("root", { 
-      message: error.message || "There was an error signing up. Please try again." 
-    });
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
   return (
     <Card className="w-full border-gold/20 shadow-lg">
