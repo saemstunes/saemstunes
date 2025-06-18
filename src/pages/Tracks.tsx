@@ -227,11 +227,19 @@ const Tracks = () => {
       const { data, error } = await supabase
         .from('tracks')
         .select(`
-          *,
-          profiles:user_id (
-            display_name,
-            avatar_url
-          )
+        id,
+        title,
+        description,
+        audio_path,
+        cover_path,
+        access_level,
+        user_id,
+        approved,
+        created_at,
+        profiles:user_id (
+        display_name,
+        avatar_url
+        )
         `)
         .order('created_at', { ascending: false });
 
