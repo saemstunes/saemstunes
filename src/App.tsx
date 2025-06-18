@@ -78,6 +78,7 @@ const App = () => {
               <IdleStateManager idleTime={60000} />
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/admin" element={<Admin />} />
                 <Route path="/login" element={<Auth />} />
                 <Route path="/signup" element={<Auth />} />
                 <Route path="/auth" element={<Auth />} />
@@ -111,7 +112,6 @@ const App = () => {
                 <Route path="/payment-success" element={<PaymentSuccess />} />
                 <Route path="/subscriptions" element={<Subscriptions />} />
                 <Route path="/music-tools" element={<MusicTools />} />
-                <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
                 
                 {/* Protected Routes */}
                 <Route path="/bookings" element={
