@@ -108,22 +108,21 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
   setIsSubmitting(true);
   
   try {
-    // In onSubmit function:
-const { data: signUpData, error } = await supabase.auth.signUp({
-  email: data.email,
-  password: data.password,
-  options: {
-    data: {
-      name: data.name,
-      full_name: data.name,
-      role: "student", // Ensure role is passed
-      avatar: "/lovable-uploads/avatar-1.png",
-      subscribed: false,
-    },
-    captchaToken,
-    emailRedirectTo: `${window.location.origin}/auth/callback`,
-  },
-});
+    const { data: signUpData, error } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+      options: {
+        data: {
+          name: data.name,
+          full_name: data.name,
+          role: "student", // This will be used by the trigger
+          avatar: "/lovable-uploads/avatar-1.png",
+          subscribed: false,
+        },
+        captchaToken,
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
     
     if (error) {
       if (error.message.includes("already registered")) {
