@@ -51,7 +51,7 @@ const NAV_ITEMS = [
 
 // Admin credentials - stored as constants for this implementation
 const ADMIN_CREDENTIALS = {
-  username: 'saemstunes',
+  email: 'saemstunes@gmail.com',
   password: 'ilovetosing123'
 };
 
@@ -75,8 +75,8 @@ const Admin = () => {
     setLoginError('');
 
     if (
-      loginForm.username === ADMIN_CREDENTIALS.username &&
-      loginForm.password === ADMIN_CREDENTIALS.password
+      loginForm.email === ADMIN_CREDENTIALS.email &&
+      loginForm.password === ADMIN_CREDENTIALS.password &&
     ) {
       setIsAuthenticated(true);
       sessionStorage.setItem('adminAuth', 'true');
