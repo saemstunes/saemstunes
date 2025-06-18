@@ -78,7 +78,6 @@ const App = () => {
               <IdleStateManager idleTime={60000} />
               <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/admin" element={<Admin />} />
                 <Route path="/login" element={<Auth />} />
                 <Route path="/signup" element={<Auth />} />
                 <Route path="/auth" element={<Auth />} />
