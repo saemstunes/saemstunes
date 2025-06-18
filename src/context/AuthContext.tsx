@@ -1,3 +1,4 @@
+
 import React, {
   createContext,
   useState,
@@ -14,23 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type UserRole = 'student' | 'adult' | 'parent' | 'teacher' | 'admin';
 
-interface Profile {
-  id: string;
-  first_name?: string;
-  last_name?: string;
-  display_name?: string;
-  avatar_url?: string;
-  role: UserRole;
-  phone?: string;
-  parent_id?: string;
-  bio?: string;
-  onboarding_complete?: boolean;
-  email?: string;
-  full_name?: string;
-}
-
 interface ExtendedUser extends User {
-  profile?: Profile;
   role: UserRole;
   subscribed?: boolean;
   subscriptionTier?: SubscriptionTier;
@@ -50,7 +35,6 @@ interface AuthContextProps {
   updateUserProfile: (userData: ExtendedUser) => void;
   logout: () => Promise<void>;
   subscription: UserSubscription | null;
-  isAdmin: boolean;
 }
 
 interface AuthProviderProps {
@@ -73,86 +57,49 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [subscription, setSubscription] = useState<UserSubscription | null>(null);
 
-  // Fetch user profile from profiles table
-  const fetchUserProfile = async (userId: string): Promise<Profile | null> => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-      
-      if (error) {
-        console.error('Error fetching profile:', error);
-        return null;
-      }
-      
-      return data;
-    } catch (error) {
-      console.error('Error in fetchUserProfile:', error);
-      return null;
-    }
-  };
-
-  // Create extended user object
-  const createExtendedUser = async (authUser: User): Promise<ExtendedUser> => {
-    const profile = await fetchUserProfile(authUser.id);
-    
-    return {
-      ...authUser,
-      profile,
-      role: profile?.role || 'student',
-      name: profile?.full_name || profile?.first_name || authUser.user_metadata?.full_name || authUser.email || 'User',
-      avatar: profile?.avatar_url || authUser.user_metadata?.avatar_url,
-      subscribed: false,
-      subscriptionTier: 'free'
-    };
-  };
-
   useEffect(() => {
     const loadSession = async () => {
       setIsLoading(true);
-      
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        
-        if (session?.user) {
-          const extendedUser = await createExtendedUser(session.user);
-          setUser(extendedUser);
-        } else {
-          setUser(null);
-        }
-      } catch (error) {
-        console.error('Error loading session:', error);
+      const { data: { session } } = await supabase.auth.getSession();
+
+      setSession(session);
+      if (session?.user) {
+        // Create extended user with default values
+        const extendedUser: ExtendedUser = {
+          ...session.user,
+          role: 'student', // default role
+          name: session.user.user_metadata?.full_name || session.user.email || 'User',
+          avatar: session.user.user_metadata?.avatar_url,
+          subscribed: false,
+          subscriptionTier: 'free' // default subscription tier
+        };
+        setUser(extendedUser);
+      } else {
         setUser(null);
-      } finally {
-        setIsLoading(false);
       }
+      setIsLoading(false);
     };
 
     loadSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session: Session | null) => {
-        console.log('Auth state changed:', event, session?.user?.id);
-        
         setSession(session);
-        
         if (session?.user) {
-          const extendedUser = await createExtendedUser(session.user);
+          const extendedUser: ExtendedUser = {
+            ...session.user,
+            role: 'student', // default role
+            name: session.user.user_metadata?.full_name || session.user.email || 'User',
+            avatar: session.user.user_metadata?.avatar_url,
+            subscribed: false,
+            subscriptionTier: 'free' // default subscription tier
+          };
           setUser(extendedUser);
         } else {
           setUser(null);
         }
-        
-        if (event === 'SIGNED_OUT') {
-          setSubscription(null);
-        }
       }
     );
-
-    return () => subscription?.unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -160,9 +107,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (user) {
         // Mock subscription check - replace with actual logic
         const mockSubscription: UserSubscription = {
-          tier: user.profile?.role === 'admin' ? 'professional' : 'free',
+          tier: 'professional',
           isActive: true,
-          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
         };
         setSubscription(mockSubscription);
       } else {
@@ -176,12 +123,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signIn = async (email: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signInWithOtp({ 
-        email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`
-        }
-      });
+      const { error } = await supabase.auth.signInWithOtp({ email });
       if (error) throw error;
       alert("Check your email for the magic link to sign in!");
     } catch (error: any) {
@@ -194,13 +136,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string, captchaToken?: string | null) => {
     try {
       setIsLoading(true);
-      const signInOptions: any = { email, password };
-      
-      if (captchaToken) {
-        signInOptions.options = { captchaToken };
-      }
-      
-      const { error } = await supabase.auth.signInWithPassword(signInOptions);
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
     } catch (error: any) {
       throw error;
@@ -214,7 +150,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsLoading(true);
       await supabase.auth.signOut();
     } catch (error: any) {
-      console.error('Sign out error:', error);
+      alert(error.error_description || error.message);
     } finally {
       setIsLoading(false);
     }
@@ -227,13 +163,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signUp = async (email: string, password?: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signUp({ 
-        email, 
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`
-        }
-      });
+      const { error } = await supabase.auth.signUp({ email, password });
       if (error) throw error;
       alert("Check your email to verify your account!");
     } catch (error: any) {
@@ -259,8 +189,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(userData);
   };
 
-  const isAdmin = user?.role === 'admin' || false;
-
   const value = {
     session,
     user,
@@ -273,7 +201,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     updateUserProfile,
     logout,
     subscription,
-    isAdmin,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
