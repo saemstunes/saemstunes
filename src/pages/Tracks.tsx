@@ -59,7 +59,7 @@ const Tracks = () => {
     artist: "Saem's Tunes ft. Evans Simali - Salama (DEMO)",
     plays: 0,
     likes: 0,
-    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Tracks/Salama%20ft.%20Simali%20(DEMO).mp3?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvVHJhY2tzL1NhbGFtYSBmdC4gU2ltYWxpIChERU1PKS5tcDMiLCJpYXQiOjE3NDk2MTU1NDIsImV4cCI6MTc1MjIwNzU0Mn0.kehGk3zwno3PEvRY8Z-lMqD3QNp027VFg-qKwfTXwO0"
+    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Cover%20Art/Salama%20-%20Saem%20x%20Simali.mp3"
   };
 
   const albumItems = [
@@ -86,7 +86,7 @@ const Tracks = () => {
       handle: "@saemstunes",
       borderColor: "#DF8142",
       gradient: "linear-gradient(180deg, #DF8142, #000)",
-      audioUrl: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/8fd68d12-48b8-45df-9f9c-47454a8b3d63/1750071545026-I_Need_You_More_-_Abbie_Gamboa__inspired_by_Isaiah_Emmanuel___Saem_s_Tunes_cover__-_02_Intro.mp3",
+      audioUrl: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/I%20Need%20You%20More.wav",
       duration: "0:53",
       previewUrl: "https://www.youtube.com/shorts/CcC5vemVEjY",
       videoUrl: "https://www.youtube.com/shorts/CcC5vemVEjY",
@@ -102,7 +102,7 @@ const Tracks = () => {
       handle: "@saemstunes, @kendinkonge",
       borderColor: "#EEB38C",
       gradient: "linear-gradient(165deg, #EEB38C, #000)",
-      audioUrl: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/Salama%20ft.%20Simali%20(DEMO).mp3",
+      audioUrl: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/Ni%20Hai%20(Demo)%20-%20Saem's%20Tunes%20(OFFICIAL%20MUSIC%20VIDEO)%20(128kbit_AAC).m4a",
       duration: "1:18",
       previewUrl: "https://youtu.be/0aLSJiQrMRc?si=WJzRMZVah_UTj7Fs",
       videoUrl: "https://youtu.be/0aLSJiQrMRc?si=WJzRMZVah_UTj7Fs",
@@ -118,7 +118,7 @@ const Tracks = () => {
       handle: "@saemstunes",
       borderColor: "#5A270F",
       gradient: "linear-gradient(145deg, #5A270F, #000)",
-      audioUrl: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/Ni%20Hai%20(Demo)%20-%20Saem's%20Tunes%20(OFFICIAL%20MUSIC%20VIDEO)%20(128kbit_AAC).m4a",
+      audioUrl: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/Mapenzi%20Ya%20Ajabu%20(Demo)%20-%20Saem's%20Tunes%20(OFFICIAL%20MUSIC%20VIDEO)%20(128kbit_AAC).m4a",
       duration: "1:30",
       previewUrl: "https://youtu.be/rl5UOp8q1cM?si=pPE-0BljTQ-kceMl",
       videoUrl: "https://youtu.be/rl5UOp8q1cM?si=pPE-0BljTQ-kceMl",
@@ -134,7 +134,7 @@ const Tracks = () => {
       handle: "@saemstunes",
       borderColor: "#DF8142",
       gradient: "linear-gradient(180deg, #DF8142, #000)",
-      audioUrl: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/8fd68d12-48b8-45df-9f9c-47454a8b3d63/1750071545026-I_Need_You_More_-_Abbie_Gamboa__inspired_by_Isaiah_Emmanuel___Saem_s_Tunes_cover__-_02_Intro.mp3",
+      audioUrl: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/LOVE%20Medley%20-%20Greatest,%20MYA(OC),%20Kama%20Si%20We,%20Hold%20On%20Me.mp3",
       duration: "2:07",
       previewUrl: "https://youtu.be/9NU3PBcj1-U?si=b75lJDDRm1rAiw0A",
       videoUrl: "https://youtu.be/9NU3PBcj1-U?si=b75lJDDRm1rAiw0A",
@@ -150,7 +150,7 @@ const Tracks = () => {
       handle: "@saemstunes, @timgrandmich",
       borderColor: "#EEB38C",
       gradient: "linear-gradient(165deg, #EEB38C, #000)",
-      audioUrl: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/Salama%20ft.%20Simali%20(DEMO).mp3",
+      audioUrl: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/TCBU%20Medley%20ft.%20Tim%20GrandMich.mp3",
       duration: "3:36",
       previewUrl: "https://youtu.be/GEcYrcEvFas?si=C9BQt6wvNy2Zxnvk",
       videoUrl: "https://youtu.be/GEcYrcEvFas?si=C9BQt6wvNy2Zxnvk",
