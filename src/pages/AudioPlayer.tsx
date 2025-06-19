@@ -47,7 +47,7 @@ const AudioPlayerPage = () => {
   const [loading, setLoading] = useState(true);
   const SALAMA_TRACK = {
   id: 'featured',
-  src: 'https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Tracks/Salama%20ft.%20Simali%20(DEMO).mp3?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvVHJhY2tzL1NhbGFtYSBmdC4gU2ltYWxpIChERU1PKS5tcDMiLCJpYXQiOjE3NDk2MTU1NDIsImV4cCI6MTc1MjIwNzU0Mn0.kehGk3zwno3PEvRY8Z-lMqD3QNp027VFg-qKwfTXwO0',
+  src: 'https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Cover%20Art/Salama%20-%20Saem%20x%20Simali.mp3',
   name: 'Salama (DEMO)',
   artist: "Saem's Tunes ft. Evans Simali",
   artwork: 'https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Cover%20Art/salama-featured.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvQ292ZXIgQXJ0L3NhbGFtYS1mZWF0dXJlZC5qcGciLCJpYXQiOjE3NDk5NTMwNTksImV4cCI6MTc4MTQ4OTA1OX0.KtKlRXxj5z5KzzbnTDWd9oRVbztRHwioGA0YN1Xjn4Q',
