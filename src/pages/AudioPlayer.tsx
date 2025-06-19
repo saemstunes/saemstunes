@@ -45,35 +45,42 @@ const AudioPlayerPage = () => {
   const [audioError, setAudioError] = useState(false);
   const [trackData, setTrackData] = useState<AudioTrack | null>(null);
   const [loading, setLoading] = useState(true);
+  const SALAMA_TRACK = {
+  id: 'featured',
+  src: 'https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Tracks/Salama%20ft.%20Simali%20(DEMO).mp3?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvVHJhY2tzL1NhbGFtYSBmdC4gU2ltYWxpIChERU1PKS5tcDMiLCJpYXQiOjE3NDk2MTU1NDIsImV4cCI6MTc1MjIwNzU0Mn0.kehGk3zwno3PEvRY8Z-lMqD3QNp027VFg-qKwfTXwO0',
+  name: 'Salama (DEMO)',
+  artist: "Saem's Tunes ft. Evans Simali",
+  artwork: 'https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Cover%20Art/salama-featured.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvQ292ZXIgQXJ0L3NhbGFtYS1mZWF0dXJlZC5qcGciLCJpYXQiOjE3NDk5NTMwNTksImV4cCI6MTc4MTQ4OTA1OX0.KtKlRXxj5z5KzzbnTDWd9oRVbztRHwioGA0YN1Xjn4Q',
+  album: 'NaombAoH'
+};
   
-  useEffect(() => {
-    // Check if track data is passed via navigation state
-    if (location.state?.track) {
-      setTrackData(location.state.track);
-      setLoading(false);
-    } else if (id) {
-      // Fetch track data from database
-      fetchTrackData(id);
-    } else {
-      // Use default track data
-      setTrackData({
-        id: 1,
-        src: '/audio/sample.mp3',
-        name: 'Sample Track',
-        artist: 'Sample Artist',
-        artwork: '/lovable-uploads/df415c9b-2546-4c87-9f13-b44439a1f4e4.png',
-        album: 'Sample Album'
-      });
-      setLoading(false);
-    }
-  }, [id, location.state]);
-
-  useEffect(() => {
-    if (user && trackData) {
-      checkIfLiked();
-      checkIfSaved();
-    }
-  }, [user, trackData]);
+  // Update the useEffect hook
+useEffect(() => {
+  // If we're on the featured route, set Salama as default
+  if (id === 'featured') {
+    setTrackData(SALAMA_TRACK);
+    setLoading(false);
+    return;
+  }
+  
+  // Existing logic for other tracks
+  if (location.state?.track) {
+    setTrackData(location.state.track);
+    setLoading(false);
+  } else if (id) {
+    fetchTrackData(id);
+  } else {
+    setTrackData({
+      id: 1,
+      src: '/audio/sample.mp3',
+      name: 'Sample Track',
+      artist: 'Sample Artist',
+      artwork: '/placeholder.svg',
+      album: 'Sample Album'
+    });
+    setLoading(false);
+  }
+}, [id, location.state]);
 
   const fetchTrackData = async (trackId: string) => {
     try {
