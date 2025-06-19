@@ -56,7 +56,7 @@ const FollowUs = () => {
       name: 'Spotify',
       description: 'Stream our original compositions and curated playlists.',
       url: 'https://open.spotify.com/artist/6oMbcOwuuETAvO51LesbO8',
-      image: '/spotify-header.svg'
+      image: '/spotify.header.svg'
     },
     {
       name: 'SoundCloud',
