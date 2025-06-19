@@ -106,7 +106,7 @@ const ContactUs = () => {
                   <MapPin className="h-5 w-5 text-gold mt-1" />
                   <div>
                     <h4 className="font-medium">Studio Location</h4>
-                    <p className="text-muted-foreground text-sm">123 Music Street, Nairobi, Kenya</p>
+                    <p className="text-muted-foreground text-sm">Nairobi, Kenya</p>
                   </div>
                 </div>
                 
@@ -114,7 +114,7 @@ const ContactUs = () => {
                   <Clock className="h-5 w-5 text-gold mt-1" />
                   <div>
                     <h4 className="font-medium">Business Hours</h4>
-                    <p className="text-muted-foreground text-sm">Monday - Friday: 9am - 6pm</p>
+                    <p className="text-muted-foreground text-sm">Monday - Friday: 10am - 5pm</p>
                     <p className="text-muted-foreground text-sm">Saturday: 10am - 3pm</p>
                   </div>
                 </div>
