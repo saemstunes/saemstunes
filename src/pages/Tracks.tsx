@@ -907,10 +907,10 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
     };
 
     const shareData = {
-      title: `${track.title} by ${track.profiles?.display_name || 'Unknown Artist'}`,
-      text: `Listen to ${track.title} on Saem's Tunes`,
-      url: `${getBaseUrl()}/audio-player/${track.id}`,
-    };
+    title: `${track.title} by ${track.profiles?.display_name || 'Unknown Artist'}`,
+    text: `Listen to ${track.title} on Saem's Tunes`,
+    url: `${getBaseUrl()}/tracks`, // Changed to /tracks
+  };
 
     try {
       if (navigator.share && navigator.canShare(shareData)) {
