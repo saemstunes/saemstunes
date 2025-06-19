@@ -750,16 +750,19 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
   const coverUrl = track.cover_path ? 
     supabase.storage.from('tracks').getPublicUrl(track.cover_path).data.publicUrl : '';
   
+  // Check if this is a valid database track (not the featured track)
+  const isValidDatabaseTrack = track.id !== 'featured' && track.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(track.id);
+  
   useEffect(() => {
-    if (user) {
+    if (user && isValidDatabaseTrack) {
       checkIfLiked();
       checkIfSaved();
       getLikeCount();
     }
-  }, [user, track.id]);
+  }, [user, track.id, isValidDatabaseTrack]);
 
   const checkIfLiked = async () => {
-    if (!user) return;
+    if (!user || !isValidDatabaseTrack) return;
     
     const { data } = await supabase
       .from('likes')
@@ -772,7 +775,7 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
   };
 
   const checkIfSaved = async () => {
-    if (!user) return;
+    if (!user || !isValidDatabaseTrack) return;
     
     const { data } = await supabase
       .from('favorites')
@@ -786,6 +789,8 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
   };
 
   const getLikeCount = async () => {
+    if (!isValidDatabaseTrack) return;
+    
     const { count } = await supabase
       .from('likes')
       .select('*', { count: 'exact', head: true })
@@ -799,6 +804,15 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
       toast({
         title: "Sign In Required",
         description: "Please sign in to like tracks",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!isValidDatabaseTrack) {
+      toast({
+        title: "Feature Not Available",
+        description: "Likes are not available for this track",
         variant: "destructive",
       });
       return;
@@ -839,6 +853,15 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
       return;
     }
     
+    if (!isValidDatabaseTrack) {
+      toast({
+        title: "Feature Not Available",
+        description: "Saving is not available for this track",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (saved) {
       await supabase
         .from('favorites')
@@ -868,56 +891,56 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
   };
 
   const handleShare = async () => {
-  // Determine the appropriate base URL
-  const getBaseUrl = () => {
-    // Check if we're on production or development
-    const hostname = window.location.hostname;
-    
-    if (hostname === 'saemstunes.vercel.app') {
-      return 'https://saemstunes.vercel.app';
-    } else if (hostname === 'saemstunes.lovable.app') {
-      return 'https://saemstunes.lovable.app';
-    } else {
-      // Fallback for local development or other environments
-      return window.location.origin;
-    }
-  };
+    // Determine the appropriate base URL
+    const getBaseUrl = () => {
+      // Check if we're on production or development
+      const hostname = window.location.hostname;
+      
+      if (hostname === 'saemstunes.vercel.app') {
+        return 'https://saemstunes.vercel.app';
+      } else if (hostname === 'saemstunes.lovable.app') {
+        return 'https://saemstunes.lovable.app';
+      } else {
+        // Fallback for local development or other environments
+        return window.location.origin;
+      }
+    };
 
-  const shareData = {
-    title: `${track.title} by ${track.profiles?.display_name || 'Unknown Artist'}`,
-    text: `Listen to ${track.title} on Saem's Tunes`,
-    url: `${getBaseUrl()}/audio-player/${track.id}`,
-  };
+    const shareData = {
+      title: `${track.title} by ${track.profiles?.display_name || 'Unknown Artist'}`,
+      text: `Listen to ${track.title} on Saem's Tunes`,
+      url: `${getBaseUrl()}/audio-player/${track.id}`,
+    };
 
-  try {
-    if (navigator.share && navigator.canShare(shareData)) {
-      await navigator.share(shareData);
-    } else {
-      // Fallback to copying link
-      await navigator.clipboard.writeText(shareData.url);
-      toast({
-        title: "Link copied",
-        description: "Track link copied to clipboard",
-      });
-    }
-  } catch (error) {
-    console.error('Error sharing:', error);
-    // Fallback to copying link
     try {
-      await navigator.clipboard.writeText(shareData.url);
-      toast({
-        title: "Link copied",
-        description: "Track link copied to clipboard",
-      });
-    } catch (clipboardError) {
-      toast({
-        title: "Always A Next Time!",
-        description: "Come back when you\'re ready & spread the good news",
-        variant: "destructive",
-      });
+      if (navigator.share && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        // Fallback to copying link
+        await navigator.clipboard.writeText(shareData.url);
+        toast({
+          title: "Link copied",
+          description: "Track link copied to clipboard",
+        });
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+      // Fallback to copying link
+      try {
+        await navigator.clipboard.writeText(shareData.url);
+        toast({
+          title: "Link copied",
+          description: "Track link copied to clipboard",
+        });
+      } catch (clipboardError) {
+        toast({
+          title: "Always A Next Time!",
+          description: "Come back when you're ready & spread the good news",
+          variant: "destructive",
+        });
+      }
     }
-  }
-};
+  };
 
   return (
     <Card>
@@ -979,7 +1002,7 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
         )}
 
         <div className="flex items-center gap-4 flex-wrap">
-          {user && (
+          {user && isValidDatabaseTrack && (
             <>
               <Button
                 variant="ghost"
