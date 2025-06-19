@@ -243,15 +243,7 @@ const Tracks = () => {
         `)
         .order('created_at', { ascending: false });
 
-      if (error) {
-      console.error('Supabase Error Details:', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint
-      });
-      throw error;
-    }
+      if (error) throw error;
       
       // Filter tracks based on user access level and ensure proper typing
       const typedTracks = (data || []).map(track => ({
@@ -272,7 +264,7 @@ const Tracks = () => {
       
       setTracks(accessibleTracks);
     } catch (error) {
-      console.error('Full Error Object:', error);
+      console.error('Error fetching tracks:', error);
       toast({
         title: "Error",
         description: "Failed to load tracks",
