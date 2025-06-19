@@ -55,20 +55,20 @@ const FollowUs = () => {
     {
       name: 'Spotify',
       description: 'Stream our original compositions and curated playlists.',
-      url: 'https://open.spotify.com/artist/saemstunes',
-      image: '/placeholder.svg'
+      url: 'https://open.spotify.com/artist/6oMbcOwuuETAvO51LesbO8',
+      image: '/spotify-header.svg'
     },
     {
       name: 'SoundCloud',
       description: 'Discover our latest tracks and student performances.',
       url: 'https://soundcloud.com/saemstunes',
-      image: '/placeholder.svg'
+      image: '/soundcloud-header.svg'
     },
     {
       name: 'Apple Music',
       description: 'Listen to our music catalog on Apple Music.',
-      url: 'https://music.apple.com/artist/saemstunes',
-      image: '/placeholder.svg'
+      url: 'https://music.apple.com/ca/artist/saems-tunes/1723336566',
+      image: '/apple-header.svg'
     }
   ];
 
