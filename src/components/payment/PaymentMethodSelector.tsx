@@ -28,9 +28,9 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
 
   const formatAmount = (amount: number, currency: string) => {
     if (currency === 'USD') {
-      return `$${(amount / 100).toFixed(2)}`;
+      return `$${(amount / 130).toFixed(2)}`;
     } else if (currency === 'KES') {
-      return `KSh ${(amount / 100).toFixed(2)}`;
+      return `KSh ${(amount / 130).toFixed(2)}`;
     }
     return `${currency} ${(amount / 100).toFixed(2)}`;
   };
