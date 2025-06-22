@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,16 +16,20 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const isPrimary = variant === "default";
   
+  // Conversion rate: 1 USD = 130 KSh
+  const USD_TO_KSH_RATE = 130;
+  const priceInKSh = plan.price * USD_TO_KSH_RATE;
+  
   const handleSubscribe = () => {
     setShowPaymentDialog(true);
   };
-
+  
   const paymentRequest = {
     orderType: 'subscription' as const,
     itemId: plan.id,
     itemName: `${plan.name} Subscription`,
-    amount: Math.round(plan.price * 100), // Convert to cents
-    currency: 'USD'
+    amount: Math.round(priceInKSh * 100), // Convert KSh to cents
+    currency: 'KES' // Kenyan Shilling currency code
   };
   
   return (
@@ -52,18 +55,20 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
         <CardContent className="text-center space-y-6">
           <div className="space-y-2">
             <p className="text-4xl font-bold">
-              ${plan.price}
+              KSh {priceInKSh.toLocaleString()}
               <span className="text-muted-foreground text-sm font-normal">
                 /month
               </span>
             </p>
+            <p className="text-sm text-muted-foreground">
+              (${plan.price} USD)
+            </p>
             {plan.annualDiscount && (
               <p className="text-sm text-muted-foreground">
-                Save ${plan.annualDiscount} annually
+                Save KSh {(plan.annualDiscount * USD_TO_KSH_RATE).toLocaleString()} annually
               </p>
             )}
           </div>
-
           <div className="space-y-2">
             {plan.features.map((feature, index) => (
               <div key={index} className="flex items-center">
@@ -86,7 +91,6 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
           </Button>
         </CardFooter>
       </Card>
-
       <PaymentDialog
         isOpen={showPaymentDialog}
         onClose={() => setShowPaymentDialog(false)}
