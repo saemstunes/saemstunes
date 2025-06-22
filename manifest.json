@@ -1,4 +1,3 @@
-
 {
   "name": "Saem's Tunes - Making Music, Representing Christ",
   "short_name": "Saem's Tunes",
@@ -20,17 +19,18 @@
       "src": "/lovable-uploads/logo-icon-md.webp", 
       "sizes": "128x128",
       "type": "image/webp"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "16x16 32x32",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
     }
   ],
-  "permissions": [
-    "microphone",
-    "camera", 
-    "geolocation",
-    "notifications",
-    "persistent-storage"
-  ],
-  "features": [
-    "microphone",
-    "camera"
-  ]
+  "categories": ["education", "music"],
+  "prefer_related_applications": false
 }
