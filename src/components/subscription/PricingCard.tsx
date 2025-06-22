@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Minus, Plus, ChevronDown } from "lucide-react";
+import { Check, Minus, Plus, ChevronDown, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SubscriptionPlan } from "@/data/mockData";
 import PaymentDialog from "@/components/payment/PaymentDialog";
@@ -27,7 +27,7 @@ const PRICING_CONFIG = {
     minClasses: 3,
     maxClasses: 6
   },
-  3: { // Professional
+  3: { // Professional (Premium)
     regular: 4500,
     discounted: 3600,
     discount: 20,
@@ -83,6 +83,7 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
   const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false);
   
   const isPrimary = variant === "default";
+  const isPremium = plan.id === 3; // Premium tier (Professional)
   const pricingConfig = PRICING_CONFIG[plan.id as keyof typeof PRICING_CONFIG] || {
     regular: 0,
     discounted: 0,
@@ -135,10 +136,21 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
         className={cn(
           "flex flex-col justify-between relative",
           isPrimary && "border-gold shadow-lg shadow-gold/10",
+          isPremium && "ring-2 ring-gold ring-offset-2 transform scale-105",
           className
         )}
       >
-        <CardHeader>
+        {/* Popular Badge for Premium */}
+        {isPremium && (
+          <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
+            <div className="bg-gradient-to-r from-gold to-yellow-500 text-white px-4 py-1 rounded-full text-sm font-semibold flex items-center gap-1 shadow-lg">
+              <Star className="h-3 w-3 fill-current" />
+              Most Popular
+            </div>
+          </div>
+        )}
+
+        <CardHeader className={cn(isPremium && "pt-8")}>
           <CardTitle className="text-xl font-proxima text-center">
             {plan.name}
           </CardTitle>
@@ -151,13 +163,23 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
           {/* Main Subscription Price Display */}
           <div className="relative">
             <div className="space-y-2">
-              <div className="flex items-center justify-center gap-2">
-                <p className="text-4xl font-bold text-gold">
-                  KSh {pricingConfig.discounted.toLocaleString()}
-                </p>
-                <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-xs font-medium">
-                  {pricingConfig.discount}% OFF
-                </span>
+              <div className="flex items-center justify-center gap-3">
+                <div className="flex flex-col items-end">
+                  <p className="text-lg text-muted-foreground line-through">
+                    KSh {pricingConfig.regular.toLocaleString()}
+                  </p>
+                  <p className="text-4xl font-bold text-gold">
+                    KSh {pricingConfig.discounted.toLocaleString()}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm">
+                    Save {Math.round(pricingConfig.discount)}%
+                  </div>
+                  <div className="text-xs text-green-600 font-medium">
+                    KSh {(pricingConfig.regular - pricingConfig.discounted).toLocaleString()} off
+                  </div>
+                </div>
               </div>
               <p className="text-sm text-muted-foreground">per month</p>
               
@@ -188,9 +210,14 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
                   <div className="space-y-4">
                     <div className="text-center">
                       <h4 className="font-semibold text-sm text-gold mb-2">MONTHLY SUBSCRIPTION</h4>
-                      <p className="text-sm text-muted-foreground line-through">
-                        Regular: KSh {pricingConfig.regular.toLocaleString()}/month
-                      </p>
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <p className="text-sm text-muted-foreground line-through">
+                          Regular: KSh {pricingConfig.regular.toLocaleString()}/month
+                        </p>
+                        <span className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-2 py-0.5 rounded text-xs font-bold">
+                          -{Math.round(pricingConfig.discount)}%
+                        </span>
+                      </div>
                       {plan.annualDiscount && (
                         <p className="text-sm text-muted-foreground">
                           Save {plan.annualDiscount}% annually
@@ -256,9 +283,14 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
             <div className="space-y-3 p-4 bg-muted rounded-lg">
               <div className="text-center">
                 <h4 className="font-semibold text-sm text-gold mb-2">MONTHLY SUBSCRIPTION</h4>
-                <p className="text-sm text-muted-foreground line-through">
-                  Regular: KSh {pricingConfig.regular.toLocaleString()}/month
-                </p>
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <p className="text-sm text-muted-foreground line-through">
+                    Regular: KSh {pricingConfig.regular.toLocaleString()}/month
+                  </p>
+                  <span className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-2 py-0.5 rounded text-xs font-bold">
+                    -{Math.round(pricingConfig.discount)}%
+                  </span>
+                </div>
                 {plan.annualDiscount && (
                   <p className="text-sm text-muted-foreground">
                     Save {plan.annualDiscount}% annually
@@ -332,13 +364,13 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
         <CardFooter className="flex flex-col gap-2">
           <Button
             className={cn("w-full", 
-              isPrimary 
+              isPrimary || isPremium
                 ? "bg-gold hover:bg-gold/90 text-white font-medium" 
                 : "bg-muted/70 hover:bg-muted text-foreground dark:bg-muted/30 dark:hover:bg-muted/40 dark:text-foreground"
             )}
             onClick={() => handleSubscribe('subscription')}
           >
-            Start Subscription
+            {isPremium ? "Get Premium Plan" : "Start Subscription"}
           </Button>
           <Button
             variant="outline"
