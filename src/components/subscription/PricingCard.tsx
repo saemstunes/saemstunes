@@ -177,7 +177,7 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
                     Save {Math.round(pricingConfig.discount)}%
                   </div>
                   <div className="text-xs text-green-600 font-medium">
-                    KSh {(pricingConfig.regular - pricingConfig.discounted).toLocaleString()} off 
+                    KSh {(pricingConfig.regular - pricingConfig.discounted).toLocaleString()} off<br />
                     the first month
                   </div>
                 </div>
