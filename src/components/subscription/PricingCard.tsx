@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
@@ -12,66 +12,92 @@ interface PricingCardProps {
   className?: string;
 }
 
+// Tier-specific pricing configuration
+const TIER_BUNDLES = {
+  1: [ // Starter
+    { classCount: 4, totalPrice: 1600, perClass: 400 },
+    { classCount: 3, totalPrice: 1650, perClass: 550 },
+    { classCount: 2, totalPrice: 1800, perClass: 900 }
+  ],
+  2: [ // Standard
+    { classCount: 6, totalPrice: 2100, perClass: 350 },
+    { classCount: 5, totalPrice: 2500, perClass: 500 },
+    { classCount: 4, totalPrice: 2800, perClass: 700 },
+    { classCount: 3, totalPrice: 3000, perClass: 1000 }
+  ],
+  3: [ // Professional
+    { classCount: 12, totalPrice: 3600, perClass: 300 },
+    { classCount: 10, totalPrice: 5000, perClass: 500 },
+    { classCount: 8, totalPrice: 5200, perClass: 650 },
+    { classCount: 6, totalPrice: 6000, perClass: 1000 },
+    { classCount: 5, totalPrice: 6750, perClass: 1350 }
+  ]
+};
+
+const TIER_SUBSCRIPTION_PRICE = {
+  1: 1200, // Starter regular price
+  2: 2000, // Standard regular price
+  3: 4500  // Professional regular price
+};
+
 const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", className }) => {
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
-  const [paymentType, setPaymentType] = useState<'subscription' | 'one-time'>('subscription');
+  const [paymentType, setPaymentType] = useState<'subscription' | 'bundle'>('subscription');
+  const [selectedBundle, setSelectedBundle] = useState<{ classCount: number; totalPrice: number; perClass: number } | null>(null);
   const isPrimary = variant === "default";
-  
-  // Conversion rate: 1 USD = 130 KSh
-  const USD_TO_KSH_RATE = 130;
-  
-  // Maintain original price calculation as base
-  const basePriceInKSh = plan.price * USD_TO_KSH_RATE;
-  
-  // Tier-specific pricing configuration
-  const tierPricing = {
-    1: { // Starter
-      discounted: 800,
-      oneTime: 400
-    },
-    2: { // Standard
-      discounted: 1500,
-      oneTime: 350
-    },
-    3: { // Professional
-      discounted: 3600,
-      oneTime: 300
+  const isTieredPlan = [1, 2, 3].includes(plan.id);
+
+  // Initialize selected bundle
+  useEffect(() => {
+    if (isTieredPlan) {
+      setSelectedBundle(TIER_BUNDLES[plan.id as keyof typeof TIER_BUNDLES][0]);
+    }
+  }, [plan.id, isTieredPlan]);
+
+  // Calculate subscription price with first-month discount
+  const getSubscriptionPrice = () => {
+    if (!isTieredPlan) return plan.price * 130;
+    
+    const regularPrice = TIER_SUBSCRIPTION_PRICE[plan.id as keyof typeof TIER_SUBSCRIPTION_PRICE];
+    switch(plan.id) {
+      case 1: return 800;  // 33% discount
+      case 2: return 1500; // 25% discount
+      case 3: return 3600; // 20% discount
+      default: return regularPrice;
     }
   };
-  
-  // Check if current plan is a special tier
-  const isTieredPlan = [1, 2, 3].includes(plan.id);
-  
-  // Calculate prices - maintain original as fallback
-  const subscriptionPrice = isTieredPlan 
-    ? tierPricing[plan.id as keyof typeof tierPricing].discounted 
-    : basePriceInKSh;
-    
-  const oneTimePrice = isTieredPlan 
-    ? tierPricing[plan.id as keyof typeof tierPricing].oneTime 
-    : Math.round(basePriceInKSh * 0.3);
-  
-  // Original annual discount in KSh
-  const annualDiscountInKSh = plan.annualDiscount 
-    ? plan.annualDiscount * USD_TO_KSH_RATE 
+
+  const subscriptionPrice = getSubscriptionPrice();
+  const regularPrice = isTieredPlan 
+    ? TIER_SUBSCRIPTION_PRICE[plan.id as keyof typeof TIER_SUBSCRIPTION_PRICE] 
+    : plan.price * 130;
+
+  const discountPercentage = isTieredPlan
+    ? Math.round((1 - (subscriptionPrice / regularPrice)) * 100)
     : 0;
 
-  const handleSubscribe = (type: 'subscription' | 'one-time') => {
+  const handlePayment = (type: 'subscription' | 'bundle') => {
     setPaymentType(type);
     setShowPaymentDialog(true);
   };
-  
-  // Maintain original payment request structure with enhancements
+
   const paymentRequest = {
     orderType: paymentType,
     itemId: plan.id,
-    itemName: `${plan.name} ${paymentType === 'subscription' ? 'Subscription' : 'Class'}`,
-    amount: Math.round((paymentType === 'subscription' 
-      ? subscriptionPrice 
-      : oneTimePrice) * 100),
-    currency: 'KES'
+    itemName: paymentType === 'subscription'
+      ? `${plan.name} Subscription`
+      : `${plan.name} Bundle (${selectedBundle?.classCount} classes)`,
+    amount: paymentType === 'subscription'
+      ? Math.round(subscriptionPrice * 100)
+      : selectedBundle
+        ? Math.round(selectedBundle.totalPrice * 100)
+        : 0,
+    currency: 'KES',
+    ...(paymentType === 'bundle' && selectedBundle && { 
+      classCount: selectedBundle.classCount 
+    })
   };
-  
+
   return (
     <>
       <Card
@@ -96,7 +122,7 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
         </CardHeader>
         
         <CardContent className="text-center space-y-6">
-          {/* Combined Pricing Display */}
+          {/* Subscription Pricing */}
           <div className="space-y-2">
             <div className="flex flex-col items-center">
               <p className="text-4xl font-bold">
@@ -106,46 +132,66 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
                 </span>
               </p>
               
-              {/* Original USD Conversion Display */}
-              <p className="text-sm text-muted-foreground">
-                (${plan.price} USD)
-              </p>
-              
-              {/* Original Annual Discount Display */}
-              {plan.annualDiscount && (
-                <p className="text-sm text-muted-foreground">
-                  Save KSh {annualDiscountInKSh.toLocaleString()} annually
-                </p>
-              )}
-              
-              {/* Tiered Discount Badge */}
               {isTieredPlan && (
-                <span className="bg-red-100 text-red-600 px-2 py-1 rounded-md text-xs font-medium mt-2">
-                  {Math.round((1 - (subscriptionPrice / basePriceInKSh)) * 100)}% OFF first month
-                </span>
+                <div className="mt-2">
+                  <p className="text-sm text-muted-foreground line-through">
+                    KSh {regularPrice.toLocaleString()}
+                  </p>
+                  <span className="bg-red-100 text-red-600 px-2 py-1 rounded-md text-xs font-medium">
+                    {discountPercentage}% OFF first month
+                  </span>
+                </div>
               )}
             </div>
           </div>
           
-          {/* New One-time Purchase Option */}
-          <div className="space-y-3 p-4 border border-muted rounded-lg">
-            <h4 className="font-semibold text-sm uppercase tracking-wide">
-              Pay Per Class
-            </h4>
-            <div className="space-y-1">
-              <p className="text-2xl font-bold">
-                KSh {oneTimePrice.toLocaleString()}
-                <span className="text-muted-foreground text-sm font-normal ml-1">
-                  /class
-                </span>
-              </p>
-              <p className="text-xs text-muted-foreground">
-                No commitment • Pay as you go
-              </p>
+          {/* Bundle Purchase Options */}
+          {isTieredPlan && selectedBundle && (
+            <div className="space-y-3 p-4 border border-muted rounded-lg">
+              <h4 className="font-semibold text-sm uppercase tracking-wide">
+                Class Bundles
+              </h4>
+              
+              <div className="w-full">
+                <select
+                  value={selectedBundle.classCount}
+                  onChange={(e) => {
+                    const bundle = TIER_BUNDLES[plan.id as keyof typeof TIER_BUNDLES]
+                      .find(b => b.classCount === parseInt(e.target.value));
+                    if (bundle) setSelectedBundle(bundle);
+                  }}
+                  className="w-full p-2 border rounded bg-white dark:bg-gray-800"
+                >
+                  {TIER_BUNDLES[plan.id as keyof typeof TIER_BUNDLES].map((bundle) => (
+                    <option key={bundle.classCount} value={bundle.classCount}>
+                      {bundle.classCount} classes
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="space-y-1">
+                <p className="text-2xl font-bold">
+                  KSh {selectedBundle.totalPrice.toLocaleString()}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {selectedBundle.perClass.toLocaleString()} per class
+                </p>
+                
+                {/* Premium Indicator */}
+                {selectedBundle.classCount < TIER_BUNDLES[plan.id as keyof typeof TIER_BUNDLES][0].classCount && (
+                  <p className="text-xs text-amber-600 font-medium">
+                    +{Math.round((
+                      (selectedBundle.totalPrice / selectedBundle.classCount) / 
+                      (subscriptionPrice / TIER_BUNDLES[plan.id as keyof typeof TIER_BUNDLES][0].classCount) - 1
+                    ) * 100)}% premium
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
+          )}
           
-          {/* Original Features List */}
+          {/* Features List */}
           <div className="space-y-2">
             {plan.features.map((feature, index) => (
               <div key={index} className="flex items-center">
@@ -157,30 +203,31 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
         </CardContent>
         
         <CardFooter className="flex flex-col gap-3">
-          {/* Original Button with Enhancement */}
+          {/* Subscription Button */}
           <Button
             className={cn("w-full", 
               isPrimary 
                 ? "bg-gold hover:bg-gold/90 text-white font-medium" 
                 : "bg-muted/70 hover:bg-muted text-foreground dark:bg-muted/30 dark:hover:bg-muted/40 dark:text-foreground"
             )}
-            onClick={() => handleSubscribe('subscription')}
+            onClick={() => handlePayment('subscription')}
           >
             Subscribe Now
           </Button>
           
-          {/* New One-time Button */}
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => handleSubscribe('one-time')}
-          >
-            Buy Single Class
-          </Button>
+          {/* Bundle Button */}
+          {isTieredPlan && (
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => handlePayment('bundle')}
+            >
+              Buy Class Bundle
+            </Button>
+          )}
         </CardFooter>
       </Card>
       
-      {/* Original PaymentDialog - Should handle new paymentType */}
       <PaymentDialog
         isOpen={showPaymentDialog}
         onClose={() => setShowPaymentDialog(false)}
