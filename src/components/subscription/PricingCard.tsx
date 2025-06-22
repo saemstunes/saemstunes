@@ -33,7 +33,7 @@ const PRICING_CONFIG = {
     discount: 20,
     baseCoefficient: 1.0,
     penaltyMultipliers: [1.0, 1.03, 1.1, 1.32, 1.44],
-    classCounts: [12, 11, 10, 9, 8, 7, 6, 5],
+    classCounts: [12, 10, 8, 6, 5],
     minClasses: 5,
     maxClasses: 12
   }
@@ -161,13 +161,15 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
               <p className="text-sm text-muted-foreground">per month</p>
               
               {/* Mobile minimalist indicator */}
-              <div className="md:hidden">
+              <div className="md:hidden mt-3">
                 <button 
                   onClick={() => setMobileDetailsOpen(!mobileDetailsOpen)}
-                  className="text-xs text-muted-foreground hover:text-gold transition-colors flex items-center justify-center gap-1 w-full py-1"
+                  className="w-full py-3 px-4 bg-muted/50 hover:bg-muted transition-colors rounded-lg flex items-center justify-center gap-2"
                 >
-                  <ChevronDown className={cn("h-3 w-3 transition-transform", mobileDetailsOpen && "rotate-180")} />
-                  View pricing options
+                  <span className="text-sm font-medium text-foreground">
+                    {mobileDetailsOpen ? "Hide" : "More"} pricing options
+                  </span>
+                  <ChevronDown className={cn("h-4 w-4 text-gold transition-transform", mobileDetailsOpen && "rotate-180")} />
                 </button>
               </div>
             </div>
