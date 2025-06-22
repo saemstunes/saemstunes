@@ -83,7 +83,7 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
   const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false);
   
   const isPrimary = variant === "default";
-  const isPremium = plan.id === 3; // Premium tier (Professional)
+  const isPremium = plan.id === 2; // Premium tier (Professional)
   const pricingConfig = PRICING_CONFIG[plan.id as keyof typeof PRICING_CONFIG] || {
     regular: 0,
     discounted: 0,
