@@ -39,6 +39,35 @@ const PRICING_CONFIG = {
   }
 };
 
+// Exported function to calculate raw price
+export const calculateRawPrice = (
+  planId: number, 
+  classCount: number, 
+  paymentType: 'subscription' | 'one-time',
+  planPrice?: number
+) => {
+  const pricingConfig = PRICING_CONFIG[planId as keyof typeof PRICING_CONFIG];
+  const isTieredPlan = [1, 2, 3].includes(planId);
+  
+  if (paymentType === 'subscription') {
+    return pricingConfig ? pricingConfig.discounted : 0;
+  }
+  
+  if (isTieredPlan && pricingConfig) {
+    const classCountIndex = pricingConfig.classCounts.indexOf(classCount);
+    if (classCountIndex === -1) return pricingConfig.regular;
+    
+    const penalty = pricingConfig.penaltyMultipliers[classCountIndex];
+    const rawPrice = (pricingConfig.regular * pricingConfig.baseCoefficient * penalty) / classCount;
+    const maxPrice = (pricingConfig.regular * 1.5) / classCount;
+    const oneTimePrice = Math.min(Math.round(rawPrice), maxPrice);
+    return oneTimePrice * classCount;
+  }
+  
+  // For non-tiered plans
+  return planPrice ? Math.round(planPrice * 130 * 0.3) : 0;
+};
+
 interface PricingCardProps {
   plan: SubscriptionPlan;
   variant?: "default" | "outline";
@@ -86,13 +115,14 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
     setShowPaymentDialog(true);
   };
   
+  // Calculate raw price for payment dialog
+  const rawPrice = calculateRawPrice(plan.id, classCount, paymentType, plan.price);
+  
   const paymentRequest = {
     orderType: paymentType,
     itemId: plan.id,
     itemName: `${plan.name} ${paymentType === 'subscription' ? 'Subscription' : `Class Pack (${classCount} classes)`}`,
-    amount: Math.round((paymentType === 'subscription' 
-      ? pricingConfig.discounted 
-      : oneTimePrice * classCount) * 100),
+    amount: Math.round(rawPrice * 100), // Use rawPrice instead of manual calculation
     currency: 'KES',
     classCount: paymentType === 'one-time' ? classCount : undefined
   };
