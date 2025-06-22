@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Minus, Plus } from "lucide-react";
+import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SubscriptionPlan } from "@/data/mockData";
 import PaymentDialog from "@/components/payment/PaymentDialog";
@@ -12,73 +12,49 @@ interface PricingCardProps {
   className?: string;
 }
 
-// Pricing structure with first-month discounts
-const PRICING_DATA = {
-  1: { // Tier 1 - Starter
-    regular: 1200,
-    discounted: 800,
-    discount: 33.33,
-    baseCoefficient: 1.1,
-    penaltyMultipliers: [1.0, 1.15, 1.31],
-    classCounts: [4, 3, 2],
-    minClasses: 2,
-    maxClasses: 4,
-    icon: "🌱"
-  },
-  2: { // Tier 2 - Standard
-    regular: 2000,
-    discounted: 1500,
-    discount: 25,
-    baseCoefficient: 1.05,
-    penaltyMultipliers: [1.0, 1.08, 1.26, 1.5],
-    classCounts: [6, 5, 4, 3],
-    minClasses: 3,
-    maxClasses: 6,
-    icon: "🌿"
-  },
-  3: { // Tier 3 - Professional
-    regular: 4500,
-    discounted: 3600,
-    discount: 20,
-    baseCoefficient: 1.0,
-    penaltyMultipliers: [1.0, 1.03, 1.1, 1.32, 1.44],
-    classCounts: [12, 10, 8, 6, 5],
-    minClasses: 5,
-    maxClasses: 12,
-    icon: "⛰️"
-  }
-} as const;
-
 const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", className }) => {
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [paymentType, setPaymentType] = useState<'subscription' | 'one-time'>('subscription');
-  const [classCount, setClassCount] = useState<number>(4);
-  
   const isPrimary = variant === "default";
-  const currentPricing = PRICING_DATA[plan.id as keyof typeof PRICING_DATA];
   
-  // Set default class count based on tier
-  useEffect(() => {
-    if (!currentPricing) return;
-    setClassCount(currentPricing.maxClasses);
-  }, [currentPricing]);
+  // Conversion rate: 1 USD = 130 KSh
+  const USD_TO_KSH_RATE = 130;
   
-  // Calculate one-time price based on class count
-  const calculateOneTimePrice = () => {
-    if (!currentPricing) return 0;
-    
-    const classCountIndex = currentPricing.classCounts.indexOf(classCount);
-    if (classCountIndex === -1) return currentPricing.regular;
-    
-    const penalty = currentPricing.penaltyMultipliers[classCountIndex];
-    const rawPrice = (currentPricing.regular * currentPricing.baseCoefficient * penalty) / classCount;
-    
-    // Apply 50% premium cap
-    const maxPrice = (currentPricing.regular * 1.5) / classCount;
-    return Math.min(Math.round(rawPrice), maxPrice);
+  // Pricing structure with first-month discounts - using plan.id directly
+  const pricingData = {
+    [plan.id]: { // Use plan.id as key
+      regular: plan.price * USD_TO_KSH_RATE,
+      discounted: 0,
+      discount: 0,
+      oneTime: Math.round(plan.price * USD_TO_KSH_RATE * 0.3)
+    }
   };
   
-  const oneTimePrice = calculateOneTimePrice();
+  // Apply tier-specific pricing if available
+  if (plan.id === 1) { // Starter
+    pricingData[1] = {
+      regular: 1200,
+      discounted: 800,
+      discount: 33.33,
+      oneTime: 400
+    };
+  } else if (plan.id === 2) { // Standard
+    pricingData[2] = {
+      regular: 2000,
+      discounted: 1500,
+      discount: 25,
+      oneTime: 350
+    };
+  } else if (plan.id === 3) { // Professional
+    pricingData[3] = {
+      regular: 4500,
+      discounted: 3600,
+      discount: 20,
+      oneTime: 300
+    };
+  }
+  
+  const currentPricing = pricingData[plan.id];
   
   const handleSubscribe = (type: 'subscription' | 'one-time') => {
     setPaymentType(type);
@@ -88,166 +64,116 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
   const paymentRequest = {
     orderType: paymentType,
     itemId: plan.id,
-    itemName: `${plan.name} ${paymentType === 'subscription' ? 'Subscription' : `Class Pack (${classCount} classes)`}`,
+    itemName: `${plan.name} ${paymentType === 'subscription' ? 'Subscription' : 'Class'}`,
     amount: Math.round((paymentType === 'subscription' 
-      ? currentPricing?.discounted || 0 
-      : oneTimePrice * classCount) * 100),
-    currency: 'KES',
-    classCount: paymentType === 'one-time' ? classCount : undefined
+      ? currentPricing.discounted 
+      : currentPricing.oneTime) * 100),
+    currency: 'KES'
   };
-  
-  if (!currentPricing) {
-    return (
-      <Card className={cn("p-6 text-center", className)}>
-        <p className="text-destructive">Pricing not available for this plan</p>
-      </Card>
-    );
-  }
-  
-  // Calculate savings percentage for subscription
-  const subscriptionSavings = Math.round(
-    (1 - currentPricing.discounted / (oneTimePrice * currentPricing.maxClasses)) * 100
-  );
   
   return (
     <>
       <Card
         className={cn(
-          "flex flex-col justify-between h-full overflow-hidden transition-all duration-300 hover:shadow-xl",
-          isPrimary 
-            ? "border-primary ring-2 ring-primary/20" 
-            : "border-border",
+          "flex flex-col justify-between h-full",
+          isPrimary && "border-gold shadow-lg shadow-gold/10",
           className
         )}
       >
-        {/* Popular Ribbon */}
-        {plan.isPopular && (
-          <div className="absolute top-4 right-[-30px] w-[120px] rotate-45 bg-primary py-1 text-center text-xs font-bold text-primary-foreground">
-            MOST POPULAR
-          </div>
-        )}
-        
-        <CardHeader className="pb-3">
-          <div className="flex justify-center mb-3 text-3xl">
-            {currentPricing.icon}
-          </div>
-          <CardTitle className="text-xl font-bold text-center text-foreground">
+        <CardHeader>
+          {plan.isPopular && (
+            <div className="py-1 px-3 bg-gold/20 text-gold rounded-full text-xs font-medium w-fit mx-auto mb-2">
+              MOST POPULAR
+            </div>
+          )}
+          <CardTitle className="text-xl font-proxima text-center">
             {plan.name}
           </CardTitle>
-          <CardDescription className="text-center text-muted-foreground">
+          <CardDescription className="text-center">
             {plan.shortDescription || ""}
           </CardDescription>
         </CardHeader>
         
         <CardContent className="space-y-6">
           {/* Subscription Pricing */}
-          <div className="text-center">
-            <div className="flex justify-center items-baseline gap-2">
-              <span className="text-4xl font-bold text-primary">
-                KSh {currentPricing.discounted.toLocaleString()}
-              </span>
-              <span className="text-muted-foreground line-through">
-                KSh {currentPricing.regular.toLocaleString()}
-              </span>
-              <span className="ml-2 bg-destructive/20 text-destructive px-2 py-0.5 rounded-full text-xs font-bold">
-                {currentPricing.discount}% OFF
-              </span>
+          <div className="space-y-3 p-4 bg-muted/30 rounded-lg">
+            <h4 className="font-semibold text-sm text-gold uppercase tracking-wide text-center">
+              Monthly Subscription
+            </h4>
+            <div className="space-y-2">
+              <div className="flex items-center justify-center gap-3">
+                <p className="text-3xl font-bold text-gold">
+                  KSh {currentPricing.discounted.toLocaleString()}
+                </p>
+                {currentPricing.discount > 0 && (
+                  <span className="bg-red-100 text-red-600 px-2 py-1 rounded-md text-xs font-medium">
+                    {currentPricing.discount}% OFF
+                  </span>
+                )}
+              </div>
+              {currentPricing.discount > 0 ? (
+                <>
+                  <p className="text-sm text-muted-foreground line-through text-center">
+                    Regular: KSh {currentPricing.regular.toLocaleString()}/month
+                  </p>
+                  <p className="text-xs text-muted-foreground text-center">
+                    First month special - then KSh {currentPricing.regular.toLocaleString()}/month
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center">
+                  Regular: KSh {currentPricing.regular.toLocaleString()}/month
+                </p>
+              )}
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              per month • Save up to {subscriptionSavings}%
-            </p>
           </div>
           
-          {/* Class Count Selector */}
-          <div className="bg-muted/50 p-4 rounded-lg border border-border">
-            <div className="flex justify-between items-center mb-3">
-              <span className="text-sm font-medium text-foreground">Classes:</span>
-              <div className="flex items-center gap-1">
-                <span className="text-xs text-muted-foreground mr-2">
-                  {currentPricing.minClasses}-{currentPricing.maxClasses}
+          {/* One-time Purchase Option */}
+          <div className="space-y-3 p-4 border border-muted rounded-lg">
+            <h4 className="font-semibold text-sm uppercase tracking-wide text-center">
+              Pay Per Class
+            </h4>
+            <div className="space-y-1">
+              <p className="text-2xl font-bold text-center">
+                KSh {currentPricing.oneTime.toLocaleString()}
+                <span className="text-muted-foreground text-sm font-normal ml-1">
+                  /class
                 </span>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="w-8 h-8"
-                  disabled={classCount <= currentPricing.minClasses}
-                  onClick={() => setClassCount(prev => Math.max(prev - 1, currentPricing.minClasses))}
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <span className="text-lg font-bold w-10 text-center text-foreground">
-                  {classCount}
-                </span>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="w-8 h-8"
-                  disabled={classCount >= currentPricing.maxClasses}
-                  onClick={() => setClassCount(prev => Math.min(prev + 1, currentPricing.maxClasses))}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            
-            {/* Pricing Breakdown */}
-            <div className="grid grid-cols-2 gap-3 mt-4">
-              <div className="bg-background p-3 rounded-lg text-center">
-                <p className="text-sm text-muted-foreground">Per class</p>
-                <p className="text-xl font-bold text-foreground">
-                  KSh {oneTimePrice.toLocaleString()}
-                </p>
-              </div>
-              <div className="bg-background p-3 rounded-lg text-center">
-                <p className="text-sm text-muted-foreground">Total</p>
-                <p className="text-xl font-bold text-foreground">
-                  KSh {(oneTimePrice * classCount).toLocaleString()}
-                </p>
-              </div>
-            </div>
-            
-            {/* Premium Indicator */}
-            {classCount < currentPricing.maxClasses && (
-              <p className="text-xs text-center text-destructive mt-3">
-                +{Math.round((currentPricing.penaltyMultipliers[
-                  currentPricing.classCounts.indexOf(classCount)
-                ] - 1) * 100)}% flexibility premium
               </p>
-            )}
+              <p className="text-xs text-muted-foreground text-center">
+                No commitment • Pay as you go
+              </p>
+            </div>
           </div>
           
-          {/* Features List */}
-          <div>
-            <h5 className="font-semibold text-sm text-foreground mb-3">Includes:</h5>
-            <ul className="space-y-2">
-              {plan.features.map((feature, index) => (
-                <li key={index} className="flex items-start">
-                  <Check className="h-4 w-4 text-primary mt-0.5 flex-shrink-0 mr-2" />
-                  <span className="text-sm text-muted-foreground">{feature}</span>
-                </li>
-              ))}
-            </ul>
+          {/* Features List - Original Implementation */}
+          <div className="space-y-2">
+            {plan.features.map((feature, index) => (
+              <div key={index} className="flex items-center">
+                <Check className="h-4 w-4 text-gold mr-2 shrink-0" />
+                <p className="text-sm text-left">{feature}</p>
+              </div>
+            ))}
           </div>
         </CardContent>
         
-        <CardFooter className="flex flex-col gap-3 pt-0 mt-auto">
+        <CardFooter className="flex flex-col gap-3 pt-0">
           <Button
-            className={cn(
-              "w-full font-bold py-6 transition-all",
+            className={cn("w-full font-medium", 
               isPrimary 
-                ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg" 
-                : "bg-secondary hover:bg-secondary/80 text-secondary-foreground"
+                ? "bg-gold hover:bg-gold/90 text-white" 
+                : "bg-muted/70 hover:bg-muted text-foreground dark:bg-muted/30 dark:hover:bg-muted/40"
             )}
             onClick={() => handleSubscribe('subscription')}
           >
-            Get Started
+            Start Subscription
           </Button>
           <Button
             variant="outline"
-            className="w-full py-6 border border-border text-foreground hover:bg-accent hover:text-accent-foreground"
+            className="w-full"
             onClick={() => handleSubscribe('one-time')}
           >
-            Buy {classCount} Classes
+            Buy Single Class
           </Button>
         </CardFooter>
       </Card>
