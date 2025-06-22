@@ -20,54 +20,55 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
   // Conversion rate: 1 USD = 130 KSh
   const USD_TO_KSH_RATE = 130;
   
-  // Pricing structure with first-month discounts - using plan.id directly
-  const pricingData = {
-    [plan.id]: { // Use plan.id as key
-      regular: plan.price * USD_TO_KSH_RATE,
-      discounted: 0,
-      discount: 0,
-      oneTime: Math.round(plan.price * USD_TO_KSH_RATE * 0.3)
+  // Maintain original price calculation as base
+  const basePriceInKSh = plan.price * USD_TO_KSH_RATE;
+  
+  // Tier-specific pricing configuration
+  const tierPricing = {
+    1: { // Starter
+      discounted: 800,
+      oneTime: 400
+    },
+    2: { // Standard
+      discounted: 1500,
+      oneTime: 350
+    },
+    3: { // Professional
+      discounted: 3600,
+      oneTime: 300
     }
   };
   
-  // Apply tier-specific pricing if available
-  if (plan.id === 1) { // Starter
-    pricingData[1] = {
-      regular: 1200,
-      discounted: 800,
-      discount: 33.33,
-      oneTime: 400
-    };
-  } else if (plan.id === 2) { // Standard
-    pricingData[2] = {
-      regular: 2000,
-      discounted: 1500,
-      discount: 25,
-      oneTime: 350
-    };
-  } else if (plan.id === 3) { // Professional
-    pricingData[3] = {
-      regular: 4500,
-      discounted: 3600,
-      discount: 20,
-      oneTime: 300
-    };
-  }
+  // Check if current plan is a special tier
+  const isTieredPlan = [1, 2, 3].includes(plan.id);
   
-  const currentPricing = pricingData[plan.id];
+  // Calculate prices - maintain original as fallback
+  const subscriptionPrice = isTieredPlan 
+    ? tierPricing[plan.id as keyof typeof tierPricing].discounted 
+    : basePriceInKSh;
+    
+  const oneTimePrice = isTieredPlan 
+    ? tierPricing[plan.id as keyof typeof tierPricing].oneTime 
+    : Math.round(basePriceInKSh * 0.3);
   
+  // Original annual discount in KSh
+  const annualDiscountInKSh = plan.annualDiscount 
+    ? plan.annualDiscount * USD_TO_KSH_RATE 
+    : 0;
+
   const handleSubscribe = (type: 'subscription' | 'one-time') => {
     setPaymentType(type);
     setShowPaymentDialog(true);
   };
   
+  // Maintain original payment request structure with enhancements
   const paymentRequest = {
     orderType: paymentType,
     itemId: plan.id,
     itemName: `${plan.name} ${paymentType === 'subscription' ? 'Subscription' : 'Class'}`,
     amount: Math.round((paymentType === 'subscription' 
-      ? currentPricing.discounted 
-      : currentPricing.oneTime) * 100),
+      ? subscriptionPrice 
+      : oneTimePrice) * 100),
     currency: 'KES'
   };
   
@@ -75,7 +76,7 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
     <>
       <Card
         className={cn(
-          "flex flex-col justify-between h-full",
+          "flex flex-col justify-between",
           isPrimary && "border-gold shadow-lg shadow-gold/10",
           className
         )}
@@ -94,59 +95,57 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
           </CardDescription>
         </CardHeader>
         
-        <CardContent className="space-y-6">
-          {/* Subscription Pricing */}
-          <div className="space-y-3 p-4 bg-muted/30 rounded-lg">
-            <h4 className="font-semibold text-sm text-gold uppercase tracking-wide text-center">
-              Monthly Subscription
-            </h4>
-            <div className="space-y-2">
-              <div className="flex items-center justify-center gap-3">
-                <p className="text-3xl font-bold text-gold">
-                  KSh {currentPricing.discounted.toLocaleString()}
+        <CardContent className="text-center space-y-6">
+          {/* Combined Pricing Display */}
+          <div className="space-y-2">
+            <div className="flex flex-col items-center">
+              <p className="text-4xl font-bold">
+                KSh {subscriptionPrice.toLocaleString()}
+                <span className="text-muted-foreground text-sm font-normal">
+                  /month
+                </span>
+              </p>
+              
+              {/* Original USD Conversion Display */}
+              <p className="text-sm text-muted-foreground">
+                (${plan.price} USD)
+              </p>
+              
+              {/* Original Annual Discount Display */}
+              {plan.annualDiscount && (
+                <p className="text-sm text-muted-foreground">
+                  Save KSh {annualDiscountInKSh.toLocaleString()} annually
                 </p>
-                {currentPricing.discount > 0 && (
-                  <span className="bg-red-100 text-red-600 px-2 py-1 rounded-md text-xs font-medium">
-                    {currentPricing.discount}% OFF
-                  </span>
-                )}
-              </div>
-              {currentPricing.discount > 0 ? (
-                <>
-                  <p className="text-sm text-muted-foreground line-through text-center">
-                    Regular: KSh {currentPricing.regular.toLocaleString()}/month
-                  </p>
-                  <p className="text-xs text-muted-foreground text-center">
-                    First month special - then KSh {currentPricing.regular.toLocaleString()}/month
-                  </p>
-                </>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center">
-                  Regular: KSh {currentPricing.regular.toLocaleString()}/month
-                </p>
+              )}
+              
+              {/* Tiered Discount Badge */}
+              {isTieredPlan && (
+                <span className="bg-red-100 text-red-600 px-2 py-1 rounded-md text-xs font-medium mt-2">
+                  {Math.round((1 - (subscriptionPrice / basePriceInKSh)) * 100)}% OFF first month
+                </span>
               )}
             </div>
           </div>
           
-          {/* One-time Purchase Option */}
+          {/* New One-time Purchase Option */}
           <div className="space-y-3 p-4 border border-muted rounded-lg">
-            <h4 className="font-semibold text-sm uppercase tracking-wide text-center">
+            <h4 className="font-semibold text-sm uppercase tracking-wide">
               Pay Per Class
             </h4>
             <div className="space-y-1">
-              <p className="text-2xl font-bold text-center">
-                KSh {currentPricing.oneTime.toLocaleString()}
+              <p className="text-2xl font-bold">
+                KSh {oneTimePrice.toLocaleString()}
                 <span className="text-muted-foreground text-sm font-normal ml-1">
                   /class
                 </span>
               </p>
-              <p className="text-xs text-muted-foreground text-center">
+              <p className="text-xs text-muted-foreground">
                 No commitment • Pay as you go
               </p>
             </div>
           </div>
           
-          {/* Features List - Original Implementation */}
+          {/* Original Features List */}
           <div className="space-y-2">
             {plan.features.map((feature, index) => (
               <div key={index} className="flex items-center">
@@ -157,17 +156,20 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
           </div>
         </CardContent>
         
-        <CardFooter className="flex flex-col gap-3 pt-0">
+        <CardFooter className="flex flex-col gap-3">
+          {/* Original Button with Enhancement */}
           <Button
-            className={cn("w-full font-medium", 
+            className={cn("w-full", 
               isPrimary 
-                ? "bg-gold hover:bg-gold/90 text-white" 
-                : "bg-muted/70 hover:bg-muted text-foreground dark:bg-muted/30 dark:hover:bg-muted/40"
+                ? "bg-gold hover:bg-gold/90 text-white font-medium" 
+                : "bg-muted/70 hover:bg-muted text-foreground dark:bg-muted/30 dark:hover:bg-muted/40 dark:text-foreground"
             )}
             onClick={() => handleSubscribe('subscription')}
           >
-            Start Subscription
+            Subscribe Now
           </Button>
+          
+          {/* New One-time Button */}
           <Button
             variant="outline"
             className="w-full"
@@ -178,6 +180,7 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
         </CardFooter>
       </Card>
       
+      {/* Original PaymentDialog - Should handle new paymentType */}
       <PaymentDialog
         isOpen={showPaymentDialog}
         onClose={() => setShowPaymentDialog(false)}
