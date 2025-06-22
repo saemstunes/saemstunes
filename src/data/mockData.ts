@@ -259,7 +259,7 @@ export interface SubscriptionPlan {
 export const mockSubscriptionPlans: SubscriptionPlan[] = [
   {
     id: 1, // Changed to number for tier 1
-    name: "Starter",
+    name: "Basic",
     price: 9.23, // 1200 KSh / 130 (exchange rate)
     interval: "month",
     tier: 'basic',
@@ -275,7 +275,7 @@ export const mockSubscriptionPlans: SubscriptionPlan[] = [
   },
   {
     id: 2, // Changed to number for tier 2
-    name: "Standard",
+    name: "Premium",
     price: 15.38, // 2000 KSh / 130
     interval: "month",
     tier: 'premium',
