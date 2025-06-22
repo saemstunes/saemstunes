@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, Minus, Plus } from "lucide-react";
@@ -12,61 +12,64 @@ interface PricingCardProps {
   className?: string;
 }
 
+// Pricing structure with first-month discounts
+const PRICING_DATA = {
+  1: { // Tier 1 - Starter
+    regular: 1200,
+    discounted: 800,
+    discount: 33.33,
+    baseCoefficient: 1.1,
+    penaltyMultipliers: [1.0, 1.15, 1.31],
+    classCounts: [4, 3, 2],
+    minClasses: 2,
+    maxClasses: 4,
+    icon: "🌱"
+  },
+  2: { // Tier 2 - Standard
+    regular: 2000,
+    discounted: 1500,
+    discount: 25,
+    baseCoefficient: 1.05,
+    penaltyMultipliers: [1.0, 1.08, 1.26, 1.5],
+    classCounts: [6, 5, 4, 3],
+    minClasses: 3,
+    maxClasses: 6,
+    icon: "🌿"
+  },
+  3: { // Tier 3 - Professional
+    regular: 4500,
+    discounted: 3600,
+    discount: 20,
+    baseCoefficient: 1.0,
+    penaltyMultipliers: [1.0, 1.03, 1.1, 1.32, 1.44],
+    classCounts: [12, 10, 8, 6, 5],
+    minClasses: 5,
+    maxClasses: 12,
+    icon: "⛰️"
+  }
+} as const;
+
 const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", className }) => {
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [paymentType, setPaymentType] = useState<'subscription' | 'one-time'>('subscription');
-  const [classCount, setClassCount] = useState<number>(() => {
-    // Default class counts based on tier
-    if (plan.id === 1) return 4;
-    if (plan.id === 2) return 6;
-    return 12;
-  });
+  const [classCount, setClassCount] = useState<number>(4);
   
   const isPrimary = variant === "default";
+  const currentPricing = PRICING_DATA[plan.id as keyof typeof PRICING_DATA];
   
-  // Pricing structure with first-month discounts
-  const pricingData = {
-    1: { // Tier 1 - Starter
-      regular: 1200,
-      discounted: 800,
-      discount: 33.33,
-      baseCoefficient: 1.1,
-      penaltyMultipliers: [1.0, 1.15, 1.31],
-      classCounts: [4, 3, 2],
-      minClasses: 2,
-      maxClasses: 4,
-      icon: "🌱"
-    },
-    2: { // Tier 2 - Standard
-      regular: 2000,
-      discounted: 1500,
-      discount: 25,
-      baseCoefficient: 1.05,
-      penaltyMultipliers: [1.0, 1.08, 1.26, 1.5],
-      classCounts: [6, 5, 4, 3],
-      minClasses: 3,
-      maxClasses: 6,
-      icon: "🌿"
-    },
-    3: { // Tier 3 - Professional
-      regular: 4500,
-      discounted: 3600,
-      discount: 20,
-      baseCoefficient: 1.0,
-      penaltyMultipliers: [1.0, 1.03, 1.1, 1.32, 1.44],
-      classCounts: [12, 10, 8, 6, 5],
-      minClasses: 5,
-      maxClasses: 12,
-      icon: "⛰️"
-    }
-  };
-  
-  // Get pricing for current plan
-  const currentPricing = pricingData[plan.id as keyof typeof pricingData];
+  // Set default class count based on tier
+  useEffect(() => {
+    if (!currentPricing) return;
+    setClassCount(currentPricing.maxClasses);
+  }, [currentPricing]);
   
   // Calculate one-time price based on class count
   const calculateOneTimePrice = () => {
+    if (!currentPricing) return 0;
+    
     const classCountIndex = currentPricing.classCounts.indexOf(classCount);
+    if (classCountIndex === -1) return currentPricing.regular;
+    
     const penalty = currentPricing.penaltyMultipliers[classCountIndex];
     const rawPrice = (currentPricing.regular * currentPricing.baseCoefficient * penalty) / classCount;
     
@@ -87,11 +90,19 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
     itemId: plan.id,
     itemName: `${plan.name} ${paymentType === 'subscription' ? 'Subscription' : `Class Pack (${classCount} classes)`}`,
     amount: Math.round((paymentType === 'subscription' 
-      ? currentPricing.discounted 
+      ? currentPricing?.discounted || 0 
       : oneTimePrice * classCount) * 100),
     currency: 'KES',
     classCount: paymentType === 'one-time' ? classCount : undefined
   };
+  
+  if (!currentPricing) {
+    return (
+      <Card className={cn("p-6 text-center", className)}>
+        <p className="text-destructive">Pricing not available for this plan</p>
+      </Card>
+    );
+  }
   
   // Calculate savings percentage for subscription
   const subscriptionSavings = Math.round(
@@ -138,11 +149,9 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
               <span className="text-muted-foreground line-through">
                 KSh {currentPricing.regular.toLocaleString()}
               </span>
-              {currentPricing.discount > 0 && (
-                <span className="ml-2 bg-destructive/20 text-destructive px-2 py-0.5 rounded-full text-xs font-bold">
-                  {currentPricing.discount}% OFF
-                </span>
-              )}
+              <span className="ml-2 bg-destructive/20 text-destructive px-2 py-0.5 rounded-full text-xs font-bold">
+                {currentPricing.discount}% OFF
+              </span>
             </div>
             <p className="text-sm text-muted-foreground mt-1">
               per month • Save up to {subscriptionSavings}%
@@ -200,7 +209,9 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
             {/* Premium Indicator */}
             {classCount < currentPricing.maxClasses && (
               <p className="text-xs text-center text-destructive mt-3">
-                +{Math.round((currentPricing.penaltyMultipliers[currentPricing.classCounts.indexOf(classCount)] - 1) * 100)}% flexibility premium
+                +{Math.round((currentPricing.penaltyMultipliers[
+                  currentPricing.classCounts.indexOf(classCount)
+                ] - 1) * 100)}% flexibility premium
               </p>
             )}
           </div>
