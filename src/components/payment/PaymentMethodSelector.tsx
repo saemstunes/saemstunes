@@ -1,10 +1,10 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Loader2, CreditCard, Smartphone, Globe } from "lucide-react";
+import { calculateRawPrice } from "@/components/pricing/PricingCard";
 
 interface PaymentMethodSelectorProps {
   selectedMethod: 'paystack' | 'remitly' | 'mpesa';
@@ -13,6 +13,11 @@ interface PaymentMethodSelectorProps {
   isLoading: boolean;
   amount: number;
   currency?: string;
+  // New props to use calculateRawPrice instead of amount
+  planId?: number;
+  classCount?: number;
+  paymentType?: 'subscription' | 'one-time';
+  planPrice?: number;
 }
 
 const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
@@ -21,18 +26,27 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
   onProceed,
   isLoading,
   amount,
-  currency = 'USD'
+  currency = 'USD',
+  planId,
+  classCount,
+  paymentType,
+  planPrice
 }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneError, setPhoneError] = useState('');
 
+  // Calculate the actual amount using rawPrice if plan details are provided
+  const actualAmount = (planId && classCount && paymentType) 
+    ? calculateRawPrice(planId, classCount, paymentType, planPrice)
+    : amount / 100; // Convert from cents if using legacy amount prop
+
   const formatAmount = (amount: number, currency: string) => {
     if (currency === 'USD') {
-      return `$${(amount / 130).toFixed(2)}`;
+      return `$${amount.toFixed(2)}`;
     } else if (currency === 'KES') {
-      return `KSh ${(amount / 130).toFixed(2)}`;
+      return `KSh ${amount.toLocaleString()}`;
     }
-    return `${currency} ${(amount / 100).toFixed(2)}`;
+    return `${currency} ${amount.toFixed(2)}`;
   };
 
   const validatePhoneNumber = (phone: string) => {
@@ -87,7 +101,7 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
     <div className="space-y-6">
       <div className="text-center p-4 bg-muted/50 rounded-lg">
         <p className="text-lg font-semibold">
-          Total: {formatAmount(amount, currency)}
+          Total: {formatAmount(actualAmount, currency)}
         </p>
       </div>
 
@@ -177,7 +191,7 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
             Processing...
           </>
         ) : (
-          `Proceed to Pay ${formatAmount(amount, currency)}`
+          `Proceed to Pay ${formatAmount(actualAmount, currency)}`
         )}
       </Button>
 
