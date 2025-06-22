@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     
-    <!-- Content Security Policy -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://uxyvhqtwkutstihtxdsv.supabase.co https://cdn.gpteng.co https://newassets.hcaptcha.com https://hcaptcha.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://uxyvhqtwkutstihtxdsv.supabase.co https://images.unsplash.com https://i.imgur.com; connect-src 'self' https://uxyvhqtwkutstihtxdsv.supabase.co wss://uxyvhqtwkutstihtxdsv.supabase.co https://sentry.hcaptcha.com; frame-src 'self' https://newassets.hcaptcha.com https://hcaptcha.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.hcaptcha.com https://cdn.gpteng.co;" />
+    <!-- Content Security Policy - Updated to include YouTube -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://uxyvhqtwkutstihtxdsv.supabase.co https://cdn.gpteng.co https://newassets.hcaptcha.com https://hcaptcha.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://uxyvhqtwkutstihtxdsv.supabase.co https://images.unsplash.com https://i.imgur.com https://img.youtube.com; connect-src 'self' https://uxyvhqtwkutstihtxdsv.supabase.co wss://uxyvhqtwkutstihtxdsv.supabase.co https://sentry.hcaptcha.com; frame-src 'self' https://newassets.hcaptcha.com https://hcaptcha.com https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.hcaptcha.com https://cdn.gpteng.co;" />
     
     <title>The Saem's Tunes App</title>
     <meta name="description" content="Making Music, Representing Christ - Tots to teens to adults: everyone's go-to music learning space!" />
@@ -36,7 +36,7 @@
     <link rel="manifest" href="/manifest.json" />
     
     <!-- Apple PWA specific -->
-   <meta name="mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Saem's Tunes" />
 
@@ -48,9 +48,8 @@
       rel="stylesheet"
     />
 
-    <!-- Preload logo images -->
-    <link rel="preload" href="/lovable-uploads/4fdafda9-d6df-439b-935a-055eaf0f63c5.png" as="image" fetchpriority="high" />
-    <link rel="preload" href="/lovable-uploads/4fdafda9-d6df-439b-935a-055eaf0f63c5.webp" as="image" fetchpriority="high" />
+    <!-- Removed preload for logo images to fix warnings -->
+    <!-- Only preload if they're used immediately on page load -->
 
     <!-- Structured Data for Organization -->
     <script type="application/ld+json">
