@@ -11,31 +11,6 @@ import { usePayment, PaymentRequest } from "@/hooks/usePayment";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-// Pricing configuration mirroring PricingCard.tsx
-const PRICING_CONFIG = {
-  1: { // Starter
-    regular: 1200,
-    discounted: 800,
-    baseCoefficient: 1.1,
-    penaltyMultipliers: [1.0, 1.15, 1.31],
-    classCounts: [4, 3, 2],
-  },
-  2: { // Standard
-    regular: 2000,
-    discounted: 1500,
-    baseCoefficient: 1.05,
-    penaltyMultipliers: [1.0, 1.08, 1.26, 1.5],
-    classCounts: [6, 5, 4, 3],
-  },
-  3: { // Professional
-    regular: 4500,
-    discounted: 3600,
-    baseCoefficient: 1.0,
-    penaltyMultipliers: [1.0, 1.03, 1.1, 1.32, 1.44],
-    classCounts: [12, 10, 8, 6, 5],
-  }
-};
-
 interface PaymentDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -58,79 +33,34 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
     onClose();
   };
 
-  // Calculate savings for display
-  const calculateSavings = () => {
-    if (paymentRequest.orderType !== 'subscription') return null;
-    
-    const planId = paymentRequest.itemId;
-    const config = PRICING_CONFIG[planId as keyof typeof PRICING_CONFIG];
-    if (!config) return null;
-
-    const regularPrice = config.regular;
-    const discountedPrice = config.discounted;
-    const savings = regularPrice - discountedPrice;
-    const savingsPercentage = Math.round((savings / regularPrice) * 100);
-
-    return {
-      amount: savings,
-      percentage: savingsPercentage
-    };
-  };
-
-  const savings = calculateSavings();
-  const isSubscription = paymentRequest.orderType === 'subscription';
+  // Format amount for display
   const displayAmount = (paymentRequest.amount / 100).toLocaleString();
-  const planName = paymentRequest.itemName.replace(' Subscription', '').replace(/Class Pack \(\d+ classes\)/, '').trim();
+  const isSubscription = paymentRequest.orderType === 'subscription';
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md rounded-lg border-0 shadow-lg">
         <DialogHeader className="space-y-4">
           <DialogTitle className="font-proxima text-center text-xl">
-            {isSubscription ? 'Confirm Subscription' : 'Confirm Class Purchase'}
+            Complete Your Purchase
           </DialogTitle>
-          
-          <div className="space-y-3 bg-muted/30 p-4 rounded-lg border border-muted">
+          <div className="space-y-2 bg-muted/30 p-4 rounded-lg">
             <p className="text-sm font-medium text-center">
-              {planName} Plan
+              You're purchasing: <span className="text-gold">{paymentRequest.itemName}</span>
             </p>
-            
-            <div className="flex flex-col items-center">
-              {isSubscription ? (
-                <>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-gold">
-                      KSh {displayAmount}
-                    </span>
-                    {savings && (
-                      <span className="text-muted-foreground line-through">
-                        KSh {savings.amount + parseInt(displayAmount)}
-                      </span>
-                    )}
-                  </div>
-                  {savings && (
-                    <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded">
-                      Save {savings.percentage}%
-                    </span>
-                  )}
-                  <p className="text-sm text-muted-foreground mt-1">
-                    per month, billed monthly
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className="text-3xl font-bold text-gold">
-                    KSh {displayAmount}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {paymentRequest.classCount} classes
-                    {paymentRequest.classCount && paymentRequest.classCount > 1 && (
-                      <span> · KSh {Math.round(parseInt(displayAmount) / paymentRequest.classCount)} per class</span>
-                    )}
-                  </p>
-                </>
+            <p className="text-2xl font-bold text-center">
+              KSh {displayAmount}
+              {isSubscription && (
+                <span className="text-muted-foreground text-sm font-normal ml-1">
+                  /month
+                </span>
               )}
-            </div>
+            </p>
+            {paymentRequest.classCount && (
+              <p className="text-sm text-center text-muted-foreground">
+                {paymentRequest.classCount} classes included
+              </p>
+            )}
           </div>
         </DialogHeader>
         
