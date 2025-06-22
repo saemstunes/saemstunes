@@ -224,10 +224,11 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
                             </Button>
                           </div>
                           <p className="text-lg font-bold text-center">
-                            KSh {(oneTimePrice * classCount).toLocaleString()}
+                            KSh {oneTimePrice.toLocaleString()}
+                            <span className="text-xs text-muted-foreground font-normal"> per class</span>
                           </p>
                           <p className="text-xs text-muted-foreground text-center">
-                            {oneTimePrice.toLocaleString()} per class
+                            Total: KSh {(oneTimePrice * classCount).toLocaleString()}
                           </p>
                         </div>
                       ) : (
@@ -294,10 +295,11 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
                     </Button>
                   </div>
                   <p className="text-2xl font-bold text-center">
-                    KSh {(oneTimePrice * classCount).toLocaleString()}
+                    KSh {oneTimePrice.toLocaleString()}
+                    <span className="text-sm text-muted-foreground font-normal"> per class</span>
                   </p>
                   <p className="text-sm text-muted-foreground text-center">
-                    {oneTimePrice.toLocaleString()} per class
+                    Total: KSh {(oneTimePrice * classCount).toLocaleString()}
                   </p>
                 </>
               ) : (
