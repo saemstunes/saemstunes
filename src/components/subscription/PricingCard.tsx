@@ -32,9 +32,10 @@ const PRICING_CONFIG = {
     discounted: 3600,
     discount: 20,
     baseCoefficient: 1.0,
-    penaltyMultipliers: [1.0, 1.03, 1.1, 1.32, 1.44],
+    // Fixed: Correctly interpolated to maintain 1.0 (lowest) to 1.44 (highest)
+    penaltyMultipliers: [1.0, 1.015, 1.03, 1.065, 1.1, 1.21, 1.32, 1.44],
     classCounts: [12, 11, 10, 9, 8, 7, 6, 5],
-    minClasses: 8,
+    minClasses: 5,
     maxClasses: 12
   }
 };
@@ -97,7 +98,7 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
     const tiered = [1, 2, 3].includes(plan.id);
     setIsTieredPlan(tiered);
     if (tiered) setClassCount(pricingConfig.maxClasses);
-  }, [plan.id]);
+  }, [plan.id, pricingConfig.maxClasses]);
 
   const calculateOneTimePrice = () => {
     const classCountIndex = pricingConfig.classCounts.indexOf(classCount);
