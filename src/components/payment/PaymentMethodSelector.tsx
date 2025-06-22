@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Loader2, CreditCard, Smartphone, Globe } from "lucide-react";
-import { calculateRawPrice } from "@/components/pricing/PricingCard";
+import { calculateRawPrice } from "@/components/subscription/PricingCard";
 
 interface PaymentMethodSelectorProps {
   selectedMethod: 'paystack' | 'remitly' | 'mpesa';
