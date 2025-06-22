@@ -12,63 +12,52 @@ interface PricingCardProps {
   className?: string;
 }
 
+// Tier-specific pricing configuration
+const TIER_PRICING = {
+  1: { // Starter
+    regular: 1200,
+    discounted: 800,
+    discount: 33.33,
+    oneTime: 400
+  },
+  2: { // Standard
+    regular: 2000,
+    discounted: 1500,
+    discount: 25,
+    oneTime: 350
+  },
+  3: { // Professional
+    regular: 4500,
+    discounted: 3600,
+    discount: 20,
+    oneTime: 300
+  }
+};
+
 const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", className }) => {
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [paymentType, setPaymentType] = useState<'subscription' | 'one-time'>('subscription');
   const isPrimary = variant === "default";
   
-  // Conversion rate: 1 USD = 130 KSh
+  // Get pricing for current plan tier
+  const tierPricing = TIER_PRICING[plan.id as keyof typeof TIER_PRICING];
+  
+  // Original USD conversion for reference
   const USD_TO_KSH_RATE = 130;
+  const priceInKSh = plan.price * USD_TO_KSH_RATE;
   
-  // Maintain original price calculation as base
-  const basePriceInKSh = plan.price * USD_TO_KSH_RATE;
-  
-  // Tier-specific pricing configuration
-  const tierPricing = {
-    1: { // Starter
-      discounted: 800,
-      oneTime: 400
-    },
-    2: { // Standard
-      discounted: 1500,
-      oneTime: 350
-    },
-    3: { // Professional
-      discounted: 3600,
-      oneTime: 300
-    }
-  };
-  
-  // Check if current plan is a special tier
-  const isTieredPlan = [1, 2, 3].includes(plan.id);
-  
-  // Calculate prices - maintain original as fallback
-  const subscriptionPrice = isTieredPlan 
-    ? tierPricing[plan.id as keyof typeof tierPricing].discounted 
-    : basePriceInKSh;
-    
-  const oneTimePrice = isTieredPlan 
-    ? tierPricing[plan.id as keyof typeof tierPricing].oneTime 
-    : Math.round(basePriceInKSh * 0.3);
-  
-  // Original annual discount in KSh
-  const annualDiscountInKSh = plan.annualDiscount 
-    ? plan.annualDiscount * USD_TO_KSH_RATE 
-    : 0;
-
   const handleSubscribe = (type: 'subscription' | 'one-time') => {
     setPaymentType(type);
     setShowPaymentDialog(true);
   };
   
-  // Maintain original payment request structure with enhancements
   const paymentRequest = {
     orderType: paymentType,
     itemId: plan.id,
     itemName: `${plan.name} ${paymentType === 'subscription' ? 'Subscription' : 'Class'}`,
     amount: Math.round((paymentType === 'subscription' 
-      ? subscriptionPrice 
-      : oneTimePrice) * 100),
+      ? tierPricing.discounted 
+      : tierPricing.oneTime) * 100),
     currency: 'KES'
   };
   
@@ -76,7 +65,7 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
     <>
       <Card
         className={cn(
-          "flex flex-col justify-between",
+          "flex flex-col justify-between h-full",
           isPrimary && "border-gold shadow-lg shadow-gold/10",
           className
         )}
@@ -96,50 +85,42 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
         </CardHeader>
         
         <CardContent className="text-center space-y-6">
-          {/* Combined Pricing Display */}
-          <div className="space-y-2">
-            <div className="flex flex-col items-center">
-              <p className="text-4xl font-bold">
-                KSh {subscriptionPrice.toLocaleString()}
-                <span className="text-muted-foreground text-sm font-normal">
-                  /month
-                </span>
-              </p>
-              
-              {/* Original USD Conversion Display */}
-              <p className="text-sm text-muted-foreground">
-                (${plan.price} USD)
-              </p>
-              
-              {/* Original Annual Discount Display */}
-              {plan.annualDiscount && (
-                <p className="text-sm text-muted-foreground">
-                  Save KSh {annualDiscountInKSh.toLocaleString()} annually
+          {/* Subscription Pricing */}
+          <div className="space-y-3 p-4 bg-muted/30 rounded-lg">
+            <h4 className="font-semibold text-sm text-gold uppercase tracking-wide text-center">
+              Monthly Subscription
+            </h4>
+            <div className="space-y-2">
+              <div className="flex items-center justify-center gap-3">
+                <p className="text-3xl font-bold text-gold">
+                  KSh {tierPricing.discounted.toLocaleString()}
                 </p>
-              )}
-              
-              {/* Tiered Discount Badge */}
-              {isTieredPlan && (
-                <span className="bg-red-100 text-red-600 px-2 py-1 rounded-md text-xs font-medium mt-2">
-                  {Math.round((1 - (subscriptionPrice / basePriceInKSh)) * 100)}% OFF first month
+                <span className="bg-red-100 text-red-600 px-2 py-1 rounded-md text-xs font-medium">
+                  {tierPricing.discount}% OFF
                 </span>
-              )}
+              </div>
+              <p className="text-sm text-muted-foreground line-through text-center">
+                Regular: KSh {tierPricing.regular.toLocaleString()}/month
+              </p>
+              <p className="text-xs text-muted-foreground text-center">
+                First month special - then KSh {tierPricing.regular.toLocaleString()}/month
+              </p>
             </div>
           </div>
           
-          {/* New One-time Purchase Option */}
+          {/* One-time Purchase Option */}
           <div className="space-y-3 p-4 border border-muted rounded-lg">
-            <h4 className="font-semibold text-sm uppercase tracking-wide">
+            <h4 className="font-semibold text-sm uppercase tracking-wide text-center">
               Pay Per Class
             </h4>
             <div className="space-y-1">
-              <p className="text-2xl font-bold">
-                KSh {oneTimePrice.toLocaleString()}
+              <p className="text-2xl font-bold text-center">
+                KSh {tierPricing.oneTime.toLocaleString()}
                 <span className="text-muted-foreground text-sm font-normal ml-1">
                   /class
                 </span>
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground text-center">
                 No commitment • Pay as you go
               </p>
             </div>
@@ -154,22 +135,27 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
               </div>
             ))}
           </div>
+          
+          {/* Original USD Reference */}
+          <div className="text-sm text-muted-foreground">
+            <p>Reference: ${plan.price} USD ≈ KSh {priceInKSh.toLocaleString()}</p>
+            {plan.annualDiscount && (
+              <p>Save KSh {(plan.annualDiscount * USD_TO_KSH_RATE).toLocaleString()} annually</p>
+            )}
+          </div>
         </CardContent>
         
-        <CardFooter className="flex flex-col gap-3">
-          {/* Original Button with Enhancement */}
+        <CardFooter className="flex flex-col gap-3 pt-0">
           <Button
-            className={cn("w-full", 
+            className={cn("w-full font-medium", 
               isPrimary 
-                ? "bg-gold hover:bg-gold/90 text-white font-medium" 
-                : "bg-muted/70 hover:bg-muted text-foreground dark:bg-muted/30 dark:hover:bg-muted/40 dark:text-foreground"
+                ? "bg-gold hover:bg-gold/90 text-white" 
+                : "bg-muted/70 hover:bg-muted text-foreground dark:bg-muted/30 dark:hover:bg-muted/40"
             )}
             onClick={() => handleSubscribe('subscription')}
           >
-            Subscribe Now
+            Start Subscription
           </Button>
-          
-          {/* New One-time Button */}
           <Button
             variant="outline"
             className="w-full"
@@ -180,7 +166,6 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
         </CardFooter>
       </Card>
       
-      {/* Original PaymentDialog - Should handle new paymentType */}
       <PaymentDialog
         isOpen={showPaymentDialog}
         onClose={() => setShowPaymentDialog(false)}
