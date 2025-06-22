@@ -97,163 +97,115 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
     classCount: paymentType === 'one-time' ? classCount : undefined
   };
 
-  const subscriptionSavings = isTieredPlan 
-    ? Math.round((1 - pricingConfig.discounted / (oneTimePrice * pricingConfig.maxClasses)) * 100)
-    : 0;
-
   return (
     <>
       <Card
         className={cn(
-          "flex flex-col justify-between h-full transition-all duration-300 border-0",
-          isPrimary 
-            ? "bg-gradient-to-b from-primary/5 to-transparent shadow-lg" 
-            : "bg-background shadow-md",
+          "flex flex-col justify-between",
+          isPrimary && "border-gold shadow-lg shadow-gold/10",
           className
         )}
       >
-        {/* Popular Badge */}
-        {plan.isPopular && (
-          <div className="absolute top-0 right-0 bg-primary text-primary-foreground px-3 py-1 rounded-bl-lg rounded-tr-lg text-xs font-bold">
-            MOST POPULAR
-          </div>
-        )}
-        
-        <CardHeader className="pb-0">
-          <CardTitle className="text-xl font-semibold text-center text-foreground">
+        <CardHeader>
+          <CardTitle className="text-xl font-proxima text-center">
             {plan.name}
           </CardTitle>
-          <CardDescription className="text-center text-muted-foreground">
+          <CardDescription className="text-center">
             {plan.shortDescription || ""}
           </CardDescription>
         </CardHeader>
         
-        <CardContent className="space-y-6 px-6">
+        <CardContent className="text-center space-y-6">
           {/* Subscription Pricing */}
-          <div className="space-y-3 p-4 bg-background rounded-lg border border-border">
-            <h4 className="font-medium text-sm text-center uppercase tracking-wider text-primary">
-              Monthly Subscription
-            </h4>
-            <div className="space-y-2">
-              <div className="flex items-center justify-center gap-3">
-                <p className="text-3xl font-bold text-primary">
+          <div className="space-y-3 p-4 bg-muted/30 rounded-lg">
+            <h4 className="font-semibold text-sm text-gold">MONTHLY SUBSCRIPTION</h4>
+            <div className="space-y-1">
+              <div className="flex items-center justify-center gap-2">
+                <p className="text-3xl font-bold text-gold">
                   KSh {pricingConfig.discounted.toLocaleString()}
                 </p>
-                {pricingConfig.discount > 0 && (
-                  <span className="bg-primary/10 text-primary px-2 py-1 rounded-md text-xs font-medium">
-                    {pricingConfig.discount}% OFF
-                  </span>
-                )}
+                <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-xs font-medium">
+                  {pricingConfig.discount}% OFF
+                </span>
               </div>
-              <p className="text-sm text-muted-foreground line-through text-center">
+              <p className="text-sm text-muted-foreground line-through">
                 Regular: KSh {pricingConfig.regular.toLocaleString()}/month
               </p>
-              {isTieredPlan && subscriptionSavings > 0 && (
-                <p className="text-xs text-muted-foreground text-center">
-                  Save {subscriptionSavings}% vs buying classes individually
+              {plan.annualDiscount && (
+                <p className="text-sm text-muted-foreground">
+                  Save {plan.annualDiscount}% annually
                 </p>
               )}
             </div>
           </div>
           
-          {/* Class Purchase Options */}
-          <div className="space-y-4 p-4 bg-background rounded-lg border border-border">
-            <h4 className="font-medium text-sm text-center uppercase tracking-wider text-foreground">
-              {isTieredPlan ? "Pay Per Class Pack" : "Pay Per Class"}
-            </h4>
-            
-            {isTieredPlan && (
-              <div className="flex flex-col gap-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Number of classes:</span>
-                  <div className="flex items-center gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-8 h-8"
-                      disabled={classCount <= pricingConfig.minClasses}
-                      onClick={() => setClassCount(prev => Math.max(prev - 1, pricingConfig.minClasses))}
-                    >
-                      <Minus className="h-3 w-3" />
-                    </Button>
-                    <span className="text-base font-medium w-8 text-center">
-                      {classCount}
-                    </span>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-8 h-8"
-                      disabled={classCount >= pricingConfig.maxClasses}
-                      onClick={() => setClassCount(prev => Math.min(prev + 1, pricingConfig.maxClasses))}
-                    >
-                      <Plus className="h-3 w-3" />
-                    </Button>
-                  </div>
+          {/* One-time Purchase */}
+          <div className="space-y-3 p-4 border border-muted rounded-lg">
+            <h4 className="font-semibold text-sm">PAY PER CLASS</h4>
+            {isTieredPlan ? (
+              <>
+                <div className="flex justify-center items-center gap-3 mb-2">
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="w-8 h-8"
+                    disabled={classCount <= pricingConfig.minClasses}
+                    onClick={() => setClassCount(prev => Math.max(prev - 1, pricingConfig.minClasses))}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <span className="text-2xl font-bold">
+                    {classCount}
+                  </span>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="w-8 h-8"
+                    disabled={classCount >= pricingConfig.maxClasses}
+                    onClick={() => setClassCount(prev => Math.min(prev + 1, pricingConfig.maxClasses))}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
                 </div>
-                
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground">Per class</p>
-                    <p className="text-lg font-semibold text-foreground">
-                      KSh {oneTimePrice.toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground">Total</p>
-                    <p className="text-lg font-semibold text-foreground">
-                      KSh {(oneTimePrice * classCount).toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-                
-                {classCount < pricingConfig.maxClasses && (
-                  <p className="text-xs text-center text-destructive">
-                    +{Math.round((
-                      pricingConfig.penaltyMultipliers[
-                        pricingConfig.classCounts.indexOf(classCount)
-                      ] - 1
-                    ) * 100)}% flexibility premium
-                  </p>
-                )}
-              </div>
-            )}
-            
-            {!isTieredPlan && (
-              <div className="text-center">
-                <p className="text-lg font-semibold text-foreground">
+                <p className="text-2xl font-bold">
+                  KSh {(oneTimePrice * classCount).toLocaleString()}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {oneTimePrice.toLocaleString()} per class
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-2xl font-bold">
                   KSh {oneTimePrice.toLocaleString()}
-                  <span className="text-muted-foreground text-sm font-normal ml-1">
+                  <span className="text-muted-foreground text-sm font-normal">
                     /class
                   </span>
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground">
                   No commitment • Pay as you go
                 </p>
-              </div>
+              </>
             )}
           </div>
           
-          {/* Features List */}
-          <div className="space-y-3">
-            <h5 className="font-medium text-sm text-foreground">What's included:</h5>
-            <ul className="space-y-2">
-              {plan.features.map((feature, index) => (
-                <li key={index} className="flex items-start">
-                  <Check className="h-4 w-4 text-primary mt-0.5 mr-2 flex-shrink-0" />
-                  <span className="text-sm text-muted-foreground">{feature}</span>
-                </li>
-              ))}
-            </ul>
+          {/* Features */}
+          <div className="space-y-2">
+            {plan.features.map((feature, index) => (
+              <div key={index} className="flex items-center">
+                <Check className="h-4 w-4 text-gold mr-2 shrink-0" />
+                <p className="text-sm text-left">{feature}</p>
+              </div>
+            ))}
           </div>
         </CardContent>
         
-        <CardFooter className="flex flex-col gap-3 px-6 pb-6 pt-0">
+        <CardFooter className="flex flex-col gap-2">
           <Button
-            className={cn(
-              "w-full font-medium py-5 transition-all",
+            className={cn("w-full", 
               isPrimary 
-                ? "bg-primary hover:bg-primary/90 text-primary-foreground" 
-                : "bg-secondary hover:bg-secondary/80 text-secondary-foreground"
+                ? "bg-gold hover:bg-gold/90 text-white font-medium" 
+                : "bg-muted/70 hover:bg-muted text-foreground dark:bg-muted/30 dark:hover:bg-muted/40 dark:text-foreground"
             )}
             onClick={() => handleSubscribe('subscription')}
           >
@@ -261,7 +213,7 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
           </Button>
           <Button
             variant="outline"
-            className="w-full py-5 border border-border text-foreground hover:bg-accent hover:text-accent-foreground"
+            className="w-full"
             onClick={() => handleSubscribe('one-time')}
           >
             {isTieredPlan ? `Buy ${classCount} Classes` : "Buy Single Class"}
