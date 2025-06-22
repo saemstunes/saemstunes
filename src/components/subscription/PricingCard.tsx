@@ -34,7 +34,7 @@ const PRICING_CONFIG = {
     baseCoefficient: 1.0,
     penaltyMultipliers: [1.0, 1.03, 1.1, 1.32, 1.44],
     classCounts: [12, 11, 10, 9, 8, 7, 6, 5],
-    minClasses: 5,
+    minClasses: 8,
     maxClasses: 12
   }
 };
