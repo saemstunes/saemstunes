@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Minus, Plus } from "lucide-react";
+import { Check, Minus, Plus, Info, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SubscriptionPlan } from "@/data/mockData";
 import PaymentDialog from "@/components/payment/PaymentDialog";
@@ -79,6 +79,7 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
   const [paymentType, setPaymentType] = useState<'subscription' | 'one-time'>('subscription');
   const [classCount, setClassCount] = useState<number>(4);
   const [isTieredPlan, setIsTieredPlan] = useState(false);
+  const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false);
   
   const isPrimary = variant === "default";
   const pricingConfig = PRICING_CONFIG[plan.id as keyof typeof PRICING_CONFIG] || {
@@ -131,7 +132,7 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
     <>
       <Card
         className={cn(
-          "flex flex-col justify-between",
+          "flex flex-col justify-between relative",
           isPrimary && "border-gold shadow-lg shadow-gold/10",
           className
         )}
@@ -146,18 +147,105 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
         </CardHeader>
         
         <CardContent className="text-center space-y-6">
-          {/* Subscription Pricing */}
-          <div className="space-y-3 p-4 bg-muted/30 rounded-lg">
-            <h4 className="font-semibold text-sm text-gold">MONTHLY SUBSCRIPTION</h4>
-            <div className="space-y-1">
+          {/* Main Subscription Price Display */}
+          <div className="relative group">
+            <div className="space-y-2">
               <div className="flex items-center justify-center gap-2">
-                <p className="text-3xl font-bold text-gold">
+                <p className="text-4xl font-bold text-gold">
                   KSh {pricingConfig.discounted.toLocaleString()}
                 </p>
                 <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-xs font-medium">
                   {pricingConfig.discount}% OFF
                 </span>
               </div>
+              <p className="text-sm text-muted-foreground">per month</p>
+              
+              {/* Mobile indicator */}
+              <div className="flex items-center justify-center gap-1 md:hidden">
+                <Info className="h-3 w-3 text-muted-foreground" />
+                <button 
+                  onClick={() => setMobileDetailsOpen(!mobileDetailsOpen)}
+                  className="text-xs text-muted-foreground flex items-center gap-1 hover:text-foreground transition-colors"
+                >
+                  Tap for details 
+                  <ChevronDown className={cn("h-3 w-3 transition-transform", mobileDetailsOpen && "rotate-180")} />
+                </button>
+              </div>
+            </div>
+            
+            {/* Desktop Hover Details */}
+            <div className="hidden md:block absolute -top-2 left-1/2 transform -translate-x-1/2 -translate-y-full 
+                          opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto
+                          bg-white dark:bg-gray-800 border border-border rounded-lg p-4 shadow-lg z-10 w-80">
+              <div className="space-y-3">
+                <div className="text-center">
+                  <h4 className="font-semibold text-sm text-gold mb-2">MONTHLY SUBSCRIPTION</h4>
+                  <p className="text-sm text-muted-foreground line-through">
+                    Regular: KSh {pricingConfig.regular.toLocaleString()}/month
+                  </p>
+                  {plan.annualDiscount && (
+                    <p className="text-sm text-muted-foreground">
+                      Save {plan.annualDiscount}% annually
+                    </p>
+                  )}
+                </div>
+                
+                <div className="border-t pt-3">
+                  <h4 className="font-semibold text-sm mb-2">PAY PER CLASS</h4>
+                  {isTieredPlan ? (
+                    <div className="space-y-2">
+                      <div className="flex justify-center items-center gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="w-6 h-6"
+                          disabled={classCount <= pricingConfig.minClasses}
+                          onClick={() => setClassCount(prev => Math.max(prev - 1, pricingConfig.minClasses))}
+                        >
+                          <Minus className="h-3 w-3" />
+                        </Button>
+                        <span className="text-lg font-bold">{classCount}</span>
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="w-6 h-6"
+                          disabled={classCount >= pricingConfig.maxClasses}
+                          onClick={() => setClassCount(prev => Math.min(prev + 1, pricingConfig.maxClasses))}
+                        >
+                          <Plus className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      <p className="text-lg font-bold">
+                        KSh {(oneTimePrice * classCount).toLocaleString()}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {oneTimePrice.toLocaleString()} per class
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-lg font-bold">
+                        KSh {oneTimePrice.toLocaleString()}/class
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        No commitment • Pay as you go
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              {/* Arrow pointing down */}
+              <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-l-8 border-r-8 border-t-8 
+                            border-l-transparent border-r-transparent border-t-border"></div>
+            </div>
+          </div>
+          
+          {/* Mobile Collapsible Details */}
+          <div className={cn(
+            "md:hidden overflow-hidden transition-all duration-300 space-y-4",
+            mobileDetailsOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+          )}>
+            <div className="space-y-3 p-4 bg-muted/30 rounded-lg">
               <p className="text-sm text-muted-foreground line-through">
                 Regular: KSh {pricingConfig.regular.toLocaleString()}/month
               </p>
@@ -167,56 +255,55 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
                 </p>
               )}
             </div>
-          </div>
-          
-          {/* One-time Purchase */}
-          <div className="space-y-3 p-4 border border-muted rounded-lg">
-            <h4 className="font-semibold text-sm">PAY PER CLASS</h4>
-            {isTieredPlan ? (
-              <>
-                <div className="flex justify-center items-center gap-3 mb-2">
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    className="w-8 h-8"
-                    disabled={classCount <= pricingConfig.minClasses}
-                    onClick={() => setClassCount(prev => Math.max(prev - 1, pricingConfig.minClasses))}
-                  >
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                  <span className="text-2xl font-bold">
-                    {classCount}
-                  </span>
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    className="w-8 h-8"
-                    disabled={classCount >= pricingConfig.maxClasses}
-                    onClick={() => setClassCount(prev => Math.min(prev + 1, pricingConfig.maxClasses))}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <p className="text-2xl font-bold">
-                  KSh {(oneTimePrice * classCount).toLocaleString()}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {oneTimePrice.toLocaleString()} per class
-                </p>
-              </>
-            ) : (
-              <>
-                <p className="text-2xl font-bold">
-                  KSh {oneTimePrice.toLocaleString()}
-                  <span className="text-muted-foreground text-sm font-normal">
-                    /class
-                  </span>
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  No commitment • Pay as you go
-                </p>
-              </>
-            )}
+            
+            <div className="space-y-3 p-4 border border-muted rounded-lg">
+              <h4 className="font-semibold text-sm">PAY PER CLASS</h4>
+              {isTieredPlan ? (
+                <>
+                  <div className="flex justify-center items-center gap-3 mb-2">
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      className="w-8 h-8"
+                      disabled={classCount <= pricingConfig.minClasses}
+                      onClick={() => setClassCount(prev => Math.max(prev - 1, pricingConfig.minClasses))}
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <span className="text-2xl font-bold">
+                      {classCount}
+                    </span>
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      className="w-8 h-8"
+                      disabled={classCount >= pricingConfig.maxClasses}
+                      onClick={() => setClassCount(prev => Math.min(prev + 1, pricingConfig.maxClasses))}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-2xl font-bold">
+                    KSh {(oneTimePrice * classCount).toLocaleString()}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {oneTimePrice.toLocaleString()} per class
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-2xl font-bold">
+                    KSh {oneTimePrice.toLocaleString()}
+                    <span className="text-muted-foreground text-sm font-normal">
+                      /class
+                    </span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    No commitment • Pay as you go
+                  </p>
+                </>
+              )}
+            </div>
           </div>
           
           {/* Features */}
