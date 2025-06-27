@@ -16,7 +16,7 @@ dist-ssr
 *.tsbuildinfo
 
 # Environment variables (add specific .env files)
-.env.local
+*local
 .env.development.local
 .env.test.local
 .env.production.local
