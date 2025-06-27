@@ -59,16 +59,24 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
         return;
       }
 
-      // Prepare request body with ALL required fields
+      // FIXED: Prepare request body with correct field names that match your Edge Function
       const requestBody = {
+        // Required fields (these were missing!)
         orderType: paymentRequest.orderType,
-        itemId: paymentRequest.itemId,
-        itemName: paymentRequest.itemName,
+        paymentMethod: selectedMethod, // This was missing!
         amount: paymentRequest.amount,
         currency: paymentRequest.currency,
-        paymentMethod: selectedMethod,
+        
+        // Optional fields
+        itemId: paymentRequest.itemId,
+        itemName: paymentRequest.itemName,
         successUrl: `${window.location.origin}/payment-success`,
         cancelUrl: `${window.location.origin}/payment-cancel`,
+        
+        // Additional fields for context
+        ...(paymentRequest.classCount && { classCount: paymentRequest.classCount }),
+        ...(paymentRequest.planId && { planId: paymentRequest.planId }),
+        ...(paymentRequest.paymentType && { paymentType: paymentRequest.paymentType }),
         ...(selectedMethod === 'mpesa' && phoneNumber && { userPhone: phoneNumber })
       };
 
