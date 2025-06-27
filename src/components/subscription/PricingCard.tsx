@@ -118,17 +118,19 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
     setShowPaymentDialog(true);
   };
   
-  // Calculate raw price for payment dialog
-  const rawPrice = calculateRawPrice(plan.id, classCount, paymentType, plan.price);
-  
-  const paymentRequest = {
-    orderType: paymentType,
-    itemId: plan.id,
-    itemName: `${plan.name} ${paymentType === 'subscription' ? 'Subscription' : `Class Pack (${classCount} classes)`}`,
-    amount: Math.round(rawPrice * 100), // Use rawPrice instead of manual calculation
-    currency: 'KES',
-    classCount: paymentType === 'one-time' ? classCount : undefined
-  };
+ // Calculate raw price for payment dialog
+const rawPrice = calculateRawPrice(plan.id, classCount, paymentType, plan.price);
+
+const paymentRequest = {
+  orderType: paymentType === 'subscription' ? 'subscription_purchase' : 'service_purchase', // More descriptive orderType
+  itemId: plan.id,
+  itemName: `${plan.name} ${paymentType === 'subscription' ? 'Subscription' : `Class Pack (${classCount} classes)`}`,
+  amount: Math.round(rawPrice * 100), // Amount in cents
+  currency: 'KES',
+  classCount: paymentType === 'one-time' ? classCount : undefined,
+  planId: plan.id, // Add planId for reference
+  paymentType: paymentType as 'subscription' | 'one-time' // Add explicit payment type
+};
 
   return (
     <>
