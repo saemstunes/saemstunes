@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,42 +8,9 @@ import {
 } from "@/components/ui/dialog";
 import PaymentMethodSelector from "./PaymentMethodSelector";
 import { useToast } from "@/hooks/use-toast";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-// Environment variables with better validation
-const getEnvironmentConfig = () => {
-  const config = {
-    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  };
-
-  // Debug logging
-  console.log('🔧 Environment Configuration:', {
-    supabaseUrl: config.supabaseUrl ? '✅ Set' : '❌ Missing',
-    supabaseAnonKey: config.supabaseAnonKey ? '✅ Set' : '❌ Missing',
-    urlValue: config.supabaseUrl || 'undefined',
-    keyPrefix: config.supabaseAnonKey ? `${config.supabaseAnonKey.substring(0, 10)}...` : 'undefined'
-  });
-
-  return config;
-};
-
-const envConfig = getEnvironmentConfig();
-
-// Create Supabase client only if environment variables are available
-let supabase: ReturnType<typeof createClient> | null = null;
-
-try {
-  if (envConfig.supabaseUrl && envConfig.supabaseAnonKey) {
-    supabase = createClient(envConfig.supabaseUrl, envConfig.supabaseAnonKey);
-    console.log('✅ Supabase client created successfully');
-  } else {
-    console.error('❌ Cannot create Supabase client: Missing environment variables');
-  }
-} catch (error) {
-  console.error('❌ Error creating Supabase client:', error);
-}
-
+// Types
 export interface PaymentRequest {
   orderType: string;
   itemId: number;
@@ -61,42 +28,135 @@ interface PaymentDialogProps {
   paymentRequest: PaymentRequest;
 }
 
+type PaymentMethod = 'paystack' | 'remitly' | 'mpesa';
+
+interface PaymentResponse {
+  success: boolean;
+  sessionData?: {
+    url?: string;
+    transactionId?: string;
+  };
+  error?: string;
+  message?: string;
+}
+
+interface EnvironmentConfig {
+  supabaseUrl: string | undefined;
+  supabaseAnonKey: string | undefined;
+}
+
+// Environment configuration with better error handling
+const getEnvironmentConfig = (): EnvironmentConfig => {
+  // Check if we're in a browser environment
+  if (typeof window === 'undefined') {
+    return {
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    };
+  }
+
+  // Client-side environment variables
+  return {
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || (window as any).ENV?.SUPABASE_URL,
+    supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || (window as any).ENV?.SUPABASE_ANON_KEY,
+  };
+};
+
+// Custom hook for Supabase client
+const useSupabaseClient = () => {
+  const [client, setClient] = useState<SupabaseClient | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  
+  useEffect(() => {
+    const initializeClient = () => {
+      try {
+        const config = getEnvironmentConfig();
+        
+        if (!config.supabaseUrl || !config.supabaseAnonKey) {
+          setError('Missing Supabase configuration');
+          console.error('❌ Cannot create Supabase client: Missing environment variables', {
+            supabaseUrl: config.supabaseUrl ? '✅ Set' : '❌ Missing',
+            supabaseAnonKey: config.supabaseAnonKey ? '✅ Set' : '❌ Missing',
+          });
+          return;
+        }
+
+        const supabaseClient = createClient(config.supabaseUrl, config.supabaseAnonKey);
+        setClient(supabaseClient);
+        setError(null);
+        console.log('✅ Supabase client created successfully');
+      } catch (err) {
+        const errorMessage = 'Failed to initialize Supabase client';
+        setError(errorMessage);
+        console.error('❌ Error creating Supabase client:', err);
+      }
+    };
+
+    initializeClient();
+  }, []);
+
+  return { client, error };
+};
+
 const PaymentDialog: React.FC<PaymentDialogProps> = ({
   isOpen,
   onClose,
   paymentRequest
 }) => {
-  const [selectedMethod, setSelectedMethod] = useState<'paystack' | 'remitly' | 'mpesa'>('paystack');
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('paystack');
   const [isLoading, setIsLoading] = useState(false);
-  const [initializationError, setInitializationError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const { toast } = useToast();
+  const { client: supabase, error: supabaseError } = useSupabaseClient();
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Component initialization effect
+  const MAX_RETRIES = 3;
+
+  // Cleanup on unmount
   useEffect(() => {
-    console.log('💳 PaymentDialog Component Mounted');
-    console.log('📋 Payment Request:', paymentRequest);
-    console.log('🔌 Supabase Status:', supabase ? 'Connected' : 'Not Connected');
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      setIsLoading(false);
+    };
+  }, []);
 
-    // Check for initialization errors
-    if (!supabase) {
-      const errorMessage = 'Payment system not properly configured';
-      setInitializationError(errorMessage);
-      console.error('❌ Initialization Error:', errorMessage);
-    } else {
-      setInitializationError(null);
+  // Log component mount and payment request
+  useEffect(() => {
+    if (isOpen) {
+      console.log('💳 PaymentDialog Component Mounted');
+      console.log('📋 Payment Request:', paymentRequest);
+      console.log('🔌 Supabase Status:', supabase ? 'Connected' : 'Not Connected');
     }
-  }, [paymentRequest]);
+  }, [isOpen, paymentRequest, supabase]);
 
-  const validatePaymentRequest = (request: PaymentRequest): boolean => {
-    const required = ['orderType', 'itemId', 'itemName', 'amount', 'currency'];
-    const missing = required.filter(field => !request[field as keyof PaymentRequest]);
+  const validatePaymentRequest = useCallback((request: PaymentRequest): boolean => {
+    const required: (keyof PaymentRequest)[] = ['orderType', 'itemId', 'itemName', 'amount', 'currency'];
+    const missing = required.filter(field => {
+      const value = request[field];
+      return value === undefined || value === null || value === '';
+    });
     
     if (missing.length > 0) {
       console.error('❌ Missing required payment fields:', missing);
       return false;
     }
+
+    // Validate amount is positive
+    if (request.amount <= 0) {
+      console.error('❌ Invalid amount:', request.amount);
+      return false;
+    }
     
     return true;
+  }, []);
+
+  const isNetworkError = (error: Error): boolean => {
+    return error.message.toLowerCase().includes('fetch') || 
+           error.message.toLowerCase().includes('network') ||
+           error.message.toLowerCase().includes('timeout') ||
+           error.name === 'AbortError';
   };
 
   const handleProceed = async (phoneNumber?: string) => {
@@ -117,24 +177,26 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
       console.error('❌ Supabase client not available');
       toast({
         title: "Configuration Error",
-        description: "Payment system not properly configured. Please contact support.",
+        description: supabaseError || "Payment system not properly configured. Please contact support.",
         variant: "destructive",
       });
       return;
     }
 
-    // Check environment variables
-    if (!envConfig.supabaseUrl) {
-      console.error('❌ Supabase URL not configured');
+    // Validate M-Pesa phone number
+    if (selectedMethod === 'mpesa' && !phoneNumber) {
       toast({
-        title: "Configuration Error",
-        description: "Payment service URL not available. Please contact support.",
+        title: "Phone Number Required",
+        description: "Please enter your phone number for M-Pesa payment.",
         variant: "destructive",
       });
       return;
     }
 
     setIsLoading(true);
+
+    // Create abort controller for this request
+    abortControllerRef.current = new AbortController();
 
     try {
       // Get user session
@@ -162,6 +224,12 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
         tokenExists: !!session.access_token
       });
 
+      // Get environment config
+      const envConfig = getEnvironmentConfig();
+      if (!envConfig.supabaseUrl) {
+        throw new Error('Supabase URL not configured');
+      }
+
       // Prepare request body
       const requestBody = {
         orderType: paymentRequest.orderType,
@@ -182,7 +250,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
 
       console.log('📤 Request payload:', requestBody);
 
-      // Make API call
+      // Make API call with timeout
       const apiUrl = `${envConfig.supabaseUrl}/functions/v1/create-payment-session`;
       console.log('🌐 API endpoint:', apiUrl);
 
@@ -192,13 +260,13 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
+        signal: abortControllerRef.current.signal,
       });
 
       console.log('📥 Response status:', response.status);
-      console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
 
-      let responseData;
+      let responseData: PaymentResponse;
       try {
         responseData = await response.json();
         console.log('📋 Response data:', responseData);
@@ -249,6 +317,9 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
           default:
             throw new Error(`Unsupported payment method: ${selectedMethod}`);
         }
+
+        // Reset retry count on success
+        setRetryCount(0);
       } else {
         console.error('❌ Unexpected response format:', responseData);
         throw new Error('Payment service returned unexpected response format');
@@ -257,7 +328,31 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
     } catch (error) {
       console.error('💥 Payment process failed:', error);
       
+      // Handle abort errors
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log('🚫 Payment request was cancelled');
+        return;
+      }
+
       const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      
+      // Check if we should retry
+      if (error instanceof Error && isNetworkError(error) && retryCount < MAX_RETRIES) {
+        console.log(`🔄 Retrying payment request (${retryCount + 1}/${MAX_RETRIES})`);
+        setRetryCount(retryCount + 1);
+        
+        // Retry after a delay
+        setTimeout(() => {
+          handleProceed(phoneNumber);
+        }, 1000 * (retryCount + 1));
+        
+        toast({
+          title: "Connection Issue",
+          description: `Retrying payment request (${retryCount + 1}/${MAX_RETRIES})...`,
+          duration: 3000,
+        });
+        return;
+      }
       
       toast({
         title: "Payment Failed",
@@ -266,12 +361,13 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
       });
     } finally {
       setIsLoading(false);
+      abortControllerRef.current = null;
       console.log('🏁 Payment process completed');
     }
   };
 
   // Render error state if system is not properly configured
-  if (initializationError) {
+  if (supabaseError) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-md">
@@ -280,7 +376,25 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
               Configuration Error
             </DialogTitle>
             <DialogDescription>
-              {initializationError}. Please contact support for assistance.
+              {supabaseError}. Please contact support for assistance.
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // Don't render if Supabase client is not ready
+  if (!supabase) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-proxima">
+              Loading Payment System...
+            </DialogTitle>
+            <DialogDescription>
+              Please wait while we initialize the payment system.
             </DialogDescription>
           </DialogHeader>
         </DialogContent>
