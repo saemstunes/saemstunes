@@ -5,6 +5,11 @@ import { Progress } from "@/components/ui/progress";
 import { Award, BookOpen, CheckCircle, ChevronRight, HelpCircle, RotateCcw, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/integrations/supabase/types';
+
+
 
 // Music knowledge categories
 type QuizCategory =
@@ -38,8 +43,8 @@ category?: QuizCategory;
 difficulty?: number;
 onComplete?: (score: number, totalQuestions: number) => void;
 // Add these props for database connection
-supabaseClient?: any; // Replace with your Supabase client type
-userAccessLevel?: 'free' | 'basic' | 'premium' | 'private';
+supabaseClient?: SupabaseClient<Database>;
+userAccessLevel?: 'free' | 'basic' | 'premium' | 'professional';
 }
 
 const MusicQuiz: React.FC<MusicQuizProps> = ({
@@ -128,7 +133,7 @@ const levels = {
 'free': ['free'],
 'basic': ['free', 'basic'],
 'premium': ['free', 'basic', 'premium'],
-'private': ['free', 'basic', 'premium', 'private']
+'private': ['free', 'basic', 'premium', 'professional']
 };
 return levels[userLevel as keyof typeof levels] || ['free'];
 };
