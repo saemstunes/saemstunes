@@ -14,7 +14,7 @@ interface PaymentDialogProps {
   isOpen: boolean;
   onClose: () => void;
   paymentRequest: Omit<PaymentRequest, 'paymentMethod'> & {
-    orderType: 'subscription' | 'class' | 'credits' | 'class_package' | 'resource'; // Add your specific order types
+    orderType: 'subscription' | 'one-time'; // Add your specific order types
     };
 }
 
