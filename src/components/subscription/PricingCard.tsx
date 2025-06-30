@@ -44,13 +44,13 @@ const PRICING_CONFIG = {
 export const calculateRawPrice = (
   planId: number, 
   classCount: number, 
-  paymentType: 'subscription' | 'one-time',
+  orderType: 'subscription' | 'one-time',
   planPrice?: number
 ) => {
   const pricingConfig = PRICING_CONFIG[planId as keyof typeof PRICING_CONFIG];
   const isTieredPlan = [1, 2, 3].includes(planId);
   
-  if (paymentType === 'subscription') {
+  if (orderType === 'subscription') {
     return pricingConfig ? pricingConfig.discounted : 0;
   }
   
