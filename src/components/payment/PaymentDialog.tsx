@@ -10,6 +10,10 @@ import PaymentMethodSelector from "./PaymentMethodSelector";
 import { useToast } from "@/hooks/use-toast";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
+console.log('🔎 Supabase ENV URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+console.log('🔎 Supabase ENV KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+
+
 // Types
 export interface PaymentRequest {
   orderType: string;
