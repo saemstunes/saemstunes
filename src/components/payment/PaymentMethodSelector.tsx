@@ -27,7 +27,7 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
   currency = 'USD',
   planId,
   classCount = 1,
-  paymentType = 'subscription'
+  paymentType = 'subscription' | 'one-time'
 }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneError, setPhoneError] = useState('');
