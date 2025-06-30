@@ -33,7 +33,6 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
   const [phoneError, setPhoneError] = useState('');
 
   const formatAmount = (amount: number, currency: string) => {
-    // Use rawPrice if planId is provided, otherwise use the passed amount
     const displayAmount = planId ? calculateRawPrice(planId, classCount, paymentType) : amount;
     
     if (currency === 'USD') {
@@ -45,7 +44,6 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
   };
 
   const validatePhoneNumber = (phone: string) => {
-    // Kenya phone number validation (254XXXXXXXXX)
     const phoneRegex = /^254[0-9]{9}$/;
     if (!phone) {
       return 'Phone number is required for M-Pesa payments';
@@ -70,10 +68,8 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
   };
 
   const handlePhoneChange = (value: string) => {
-    // Remove any non-numeric characters
     const cleaned = value.replace(/\D/g, '');
     
-    // Auto-format: if they start with 07, 01, etc., convert to 254
     let formatted = cleaned;
     if (cleaned.startsWith('0')) {
       formatted = '254' + cleaned.substring(1);
@@ -81,7 +77,6 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
       formatted = '254' + cleaned;
     }
     
-    // Limit to 12 digits (254 + 9 digits)
     if (formatted.length > 12) {
       formatted = formatted.substring(0, 12);
     }
@@ -109,50 +104,56 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
           onValueChange={(value) => onMethodChange(value as any)}
           className="space-y-3"
         >
-          <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+          {/* Paystack - Entire button is now clickable */}
+          <Label
+            htmlFor="paystack"  // Associate label with radio input
+            className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+          >
             <RadioGroupItem value="paystack" id="paystack" />
             <div className="flex items-center space-x-3 flex-1">
               <CreditCard className="h-5 w-5 text-blue-600" />
               <div>
-                <Label htmlFor="paystack" className="font-medium cursor-pointer">
-                  Paystack
-                </Label>
+                <span className="font-medium">Paystack</span>
                 <p className="text-sm text-muted-foreground">
                   Pay with card, bank transfer, or mobile money
                 </p>
               </div>
             </div>
-          </div>
+          </Label>
 
-          <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+          {/* Mpesa - Entire button is now clickable */}
+          <Label
+            htmlFor="mpesa"
+            className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+          >
             <RadioGroupItem value="mpesa" id="mpesa" />
             <div className="flex items-center space-x-3 flex-1">
               <Smartphone className="h-5 w-5 text-green-600" />
               <div>
-                <Label htmlFor="mpesa" className="font-medium cursor-pointer">
-                  M-Pesa
-                </Label>
+                <span className="font-medium">M-Pesa</span>
                 <p className="text-sm text-muted-foreground">
                   Pay directly with M-Pesa STK Push
                 </p>
               </div>
             </div>
-          </div>
+          </Label>
 
-          <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+          {/* Remitly - Entire button is now clickable */}
+          <Label
+            htmlFor="remitly"
+            className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+          >
             <RadioGroupItem value="remitly" id="remitly" />
             <div className="flex items-center space-x-3 flex-1">
               <Globe className="h-5 w-5 text-purple-600" />
               <div>
-                <Label htmlFor="remitly" className="font-medium cursor-pointer">
-                  Remitly
-                </Label>
+                <span className="font-medium">Remitly</span>
                 <p className="text-sm text-muted-foreground">
                   International transfer to M-Pesa
                 </p>
               </div>
             </div>
-          </div>
+          </Label>
         </RadioGroup>
       </div>
 
