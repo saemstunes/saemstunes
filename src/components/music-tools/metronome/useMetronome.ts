@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAnimation } from "framer-motion";
 import { userPreferences } from '@/lib/animation-utils';
+import { useAnimationRef } from '@/lib/animation-utils'; // Add this
 
 // Constants for audio scheduling
 const LOOKAHEAD = 25.0; // How often to call scheduler (in ms)
@@ -26,10 +27,24 @@ export const useMetronome = () => {
   const lastNotePlayed = useRef<number>(-1);
   const pendulumControls = useAnimation();
   const animationFrameRef = useRef<number | null>(null);
+
+  // Use refs for values that need real-time access
+  const tempoRef = useAnimationRef(tempo);
+  const beatsPerMeasureRef = useAnimationRef(beatsPerMeasure);
+
+  // Audio context and timing references
+  const audioContext = useRef<AudioContext | null>(null);
+  const timerID = useRef<number | null>(null);
+  const nextNoteTime = useRef<number>(0);
+  const pendulumControls = useAnimation();
+  const currentBeatRef = useRef(0);
+  const beatIntervalRef = useRef(60 / tempo);
   
   // Save preferences when they change
   useEffect(() => {
     userPreferences.save('metronome-tempo', tempo);
+    tempoRef.current = tempo;
+    beatIntervalRef.current = 60 / tempo;
   }, [tempo]);
   
   useEffect(() => {
@@ -110,21 +125,28 @@ export const useMetronome = () => {
     // Get current time and calculate seconds per beat
     const context = getAudioContext();
     const currentTime = context.currentTime;
-    const secondsPerBeat = getBeatInterval();
+    
+    // Use ref values for real-time access
+    const currentTempo = tempoRef.current;
+    const currentBeatsPerMeasure = beatsPerMeasureRef.current;
+    const secondsPerBeat = 60 / currentTempo;
     
     // Schedule notes ahead of time
     while (nextNoteTime.current < currentTime + SCHEDULE_AHEAD_TIME) {
       const beatNumber = Math.floor(currentBeat) % beatsPerMeasure;
       playBeat(nextNoteTime.current, beatNumber);
+
+      // Update beat counter
+      currentBeatRef.current = (currentBeatRef.current + 1) % currentBeatsPerMeasure;
+      setCurrentBeat(currentBeatRef.current);
       
-      // Advance beat time
+      // Advance beat time using current tempo
       nextNoteTime.current += secondsPerBeat;
-      setCurrentBeat((prev) => (prev + 1) % beatsPerMeasure);
     }
     
     // Schedule next call
     timerID.current = window.setTimeout(scheduler, LOOKAHEAD);
-  }, [currentBeat, beatsPerMeasure, getBeatInterval, playBeat]);
+  }, [playBeat]);
   
   // Visual beat indicator updater
   useEffect(() => {
@@ -155,26 +177,16 @@ export const useMetronome = () => {
     if (isPlaying) {
       // Stop the metronome
       setIsPlaying(false);
-      
-      if (timerID.current !== null) {
-        clearTimeout(timerID.current);
-        timerID.current = null;
-      }
-      
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-        animationFrameRef.current = null;
-      }
+      if (timerID.current !== null) clearTimeout(timerID.current);
+      timerID.current = null;
     } else {
       // Start the metronome
-      if (context.state === 'suspended') {
-        context.resume();
-      }
+      if (context.state === 'suspended') context.resume();
       
       setIsPlaying(true);
+      currentBeatRef.current = 0;
       setCurrentBeat(0);
-      lastNotePlayed.current = -1;
-      nextNoteTime.current = context.currentTime;
+      nextNoteTime.current = context.currentTime + 0.05; // Add small delay
       scheduler();
     }
   }, [isPlaying, scheduler]);
