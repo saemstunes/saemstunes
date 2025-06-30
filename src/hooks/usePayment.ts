@@ -1,9 +1,9 @@
-import { useState } from 'react';
+imeimport { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 export interface PaymentRequest {
-  orderType: 'subscription' | 'service' | 'product';
+  orderType: 'subscription' | 'one-time';
   itemId: string;
   itemName: string;
   amount: number;
