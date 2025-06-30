@@ -19,20 +19,70 @@ const MetronomeVisual: React.FC<MetronomeVisualProps> = ({
   beatsPerMeasure,
   pendulumControls
 }) => {
+  // Determine if this is a compound time signature
+  const timeSignatureInfo = useMemo(() => {
+    const isCompound = beatsPerMeasure === 6 || beatsPerMeasure === 9 || beatsPerMeasure === 12;
+    
+    let actualBeats: number;
+    let subdivisions: number;
+    let accentPattern: boolean[];
+    
+    if (isCompound) {
+      // Compound time: group subdivisions
+      switch (beatsPerMeasure) {
+        case 6: // 6/8 = 2 main beats, each with 3 subdivisions
+          actualBeats = 2;
+          subdivisions = 3;
+          accentPattern = [true, false, false, true, false, false];
+          break;
+        case 9: // 9/8 = 3 main beats, each with 3 subdivisions
+          actualBeats = 3;
+          subdivisions = 3;
+          accentPattern = [true, false, false, true, false, false, true, false, false];
+          break;
+        case 12: // 12/8 = 4 main beats, each with 3 subdivisions
+          actualBeats = 4;
+          subdivisions = 3;
+          accentPattern = [true, false, false, true, false, false, true, false, false, true, false, false];
+          break;
+        default:
+          actualBeats = beatsPerMeasure;
+          subdivisions = 1;
+          accentPattern = Array(beatsPerMeasure).fill(false).map((_, i) => i === 0);
+      }
+    } else {
+      // Simple time: direct beats
+      actualBeats = beatsPerMeasure;
+      subdivisions = 1;
+      accentPattern = Array(beatsPerMeasure).fill(false).map((_, i) => i === 0);
+    }
+    
+    return {
+      isCompound,
+      actualBeats,
+      subdivisions,
+      accentPattern,
+      totalMarkers: beatsPerMeasure
+    };
+  }, [beatsPerMeasure]);
+
   // Calculate the beat marker positions on a circle
   const beatMarkers = useMemo(() => {
-    return Array.from({ length: beatsPerMeasure }).map((_, i) => {
-      // Calculate position on a circle
-      const angle = (Math.PI * 1.5) + (2 * Math.PI * i / beatsPerMeasure);
+    return Array.from({ length: timeSignatureInfo.totalMarkers }).map((_, i) => {
+      // Calculate position on a circle, starting from top (12 o'clock) and going clockwise
+      const angle = (Math.PI * 1.5) + (2 * Math.PI * i / timeSignatureInfo.totalMarkers);
       const radius = 42; // Circle radius percentage
       
       return {
         top: `${50 - radius * Math.sin(angle)}%`,
         left: `${50 + radius * Math.cos(angle)}%`,
-        beat: i
+        beat: i,
+        isAccent: timeSignatureInfo.accentPattern[i],
+        isMainBeat: timeSignatureInfo.isCompound ? 
+          i % timeSignatureInfo.subdivisions === 0 : true
       };
     });
-  }, [beatsPerMeasure]);
+  }, [timeSignatureInfo]);
 
   // Dynamic styles for the tempo display
   const tempoTextStyle = {
@@ -97,31 +147,98 @@ const MetronomeVisual: React.FC<MetronomeVisualProps> = ({
         {/* Beat Markers Circle */}
         {visualFeedback && (
           <div className="absolute inset-0">
-            {beatMarkers.map(({ top, left, beat }) => {
+            {beatMarkers.map(({ top, left, beat, isAccent, isMainBeat }) => {
               const isActive = isPlaying && currentBeat === beat;
+              
+              // Different sizes and colors based on beat type
+              const markerSize = isAccent ? 'w-5 h-5' : isMainBeat ? 'w-4 h-4' : 'w-3 h-3';
+              const baseColor = isAccent ? '#FFD700' : isMainBeat ? '#FFA500' : '#FFD700';
+              const activeColor = isAccent ? '#FFFF00' : '#FFD700';
+              const inactiveOpacity = isAccent ? 0.6 : isMainBeat ? 0.4 : 0.3;
               
               return (
                 <motion.div 
                   key={beat}
-                  className="absolute w-4 h-4 rounded-full"
+                  className={`absolute ${markerSize} rounded-full`}
                   style={{
                     top,
                     left,
                     transform: 'translate(-50%, -50%)',
-                    marginLeft: '-9px',
-                    marginTop: '-9px',
-                    background: isActive ? "#FFD700" : "rgba(255, 215, 0, 0.3)",
-                    boxShadow: isActive ? "0 0 12px rgba(255, 215, 0, 0.9)" : "none"
+                    background: isActive ? activeColor : baseColor,
+                    boxShadow: isActive ? 
+                      (isAccent ? "0 0 20px rgba(255, 255, 0, 1)" : "0 0 15px rgba(255, 215, 0, 0.9)") : 
+                      "none",
+                    border: isAccent ? "2px solid rgba(255, 255, 255, 0.3)" : 
+                           isMainBeat ? "1px solid rgba(255, 255, 255, 0.2)" : "none"
                   }}
                   animate={{
-                    scale: isActive ? [1, 1.4, 1] : 1,
-                    opacity: isActive ? [0.7, 1, 0.7] : 0.7
+                    scale: isActive ? 
+                      (isAccent ? [1, 1.6, 1] : [1, 1.4, 1]) : 1,
+                    opacity: isActive ? [0.8, 1, 0.8] : inactiveOpacity
                   }}
                   transition={{
-                    duration: isActive ? 0.2 : 0,
+                    duration: isActive ? 0.15 : 0,
                     ease: "easeInOut"
                   }}
                 />
+              );
+            })}
+          </div>
+        )}
+        
+        {/* Connection lines for compound time groupings */}
+        {visualFeedback && timeSignatureInfo.isCompound && (
+          <div className="absolute inset-0">
+            {Array.from({ length: timeSignatureInfo.actualBeats }).map((_, groupIndex) => {
+              const startBeat = groupIndex * timeSignatureInfo.subdivisions;
+              const groupActive = isPlaying && 
+                currentBeat >= startBeat && 
+                currentBeat < startBeat + timeSignatureInfo.subdivisions;
+              
+              return (
+                <motion.div
+                  key={`group-${groupIndex}`}
+                  className="absolute inset-0"
+                  animate={{
+                    opacity: groupActive ? 0.3 : 0.1
+                  }}
+                  transition={{ duration: 0.1 }}
+                >
+                  {/* Create subtle arc connecting beats in the same group */}
+                  <svg className="w-full h-full" style={{ pointerEvents: 'none' }}>
+                    <defs>
+                      <linearGradient id={`groupGradient-${groupIndex}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="rgba(255, 215, 0, 0.1)" />
+                        <stop offset="50%" stopColor="rgba(255, 215, 0, 0.3)" />
+                        <stop offset="100%" stopColor="rgba(255, 215, 0, 0.1)" />
+                      </linearGradient>
+                    </defs>
+                    {/* Draw subtle connecting arcs for compound time groupings */}
+                    {Array.from({ length: timeSignatureInfo.subdivisions - 1 }).map((_, connectionIndex) => {
+                      const beatIndex1 = startBeat + connectionIndex;
+                      const beatIndex2 = startBeat + connectionIndex + 1;
+                      
+                      if (beatIndex1 < beatMarkers.length && beatIndex2 < beatMarkers.length) {
+                        const marker1 = beatMarkers[beatIndex1];
+                        const marker2 = beatMarkers[beatIndex2];
+                        
+                        return (
+                          <line
+                            key={`connection-${beatIndex1}-${beatIndex2}`}
+                            x1={marker1.left}
+                            y1={marker1.top}
+                            x2={marker2.left}
+                            y2={marker2.top}
+                            stroke={`url(#groupGradient-${groupIndex})`}
+                            strokeWidth="1"
+                            opacity={groupActive ? 0.4 : 0.2}
+                          />
+                        );
+                      }
+                      return null;
+                    })}
+                  </svg>
+                </motion.div>
               );
             })}
           </div>
