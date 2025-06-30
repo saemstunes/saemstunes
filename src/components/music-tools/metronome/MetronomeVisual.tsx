@@ -1,6 +1,7 @@
 // src/components/music-tools/metronome/MetronomeVisual.tsx
 import React, { useMemo } from 'react';
 import { motion } from "framer-motion";
+import { useAnimationRef } from '@/lib/animation-utils';
 
 interface MetronomeVisualProps {
   tempo: number;
@@ -19,6 +20,8 @@ const MetronomeVisual: React.FC<MetronomeVisualProps> = ({
   beatsPerMeasure,
   pendulumControls
 }) => {
+
+  const currentBeatRef = useAnimationRef(currentBeat);
   // Calculate the beat marker positions on a circle
   const beatMarkers = useMemo(() => {
     return Array.from({ length: beatsPerMeasure }).map((_, i) => {
@@ -98,7 +101,7 @@ const MetronomeVisual: React.FC<MetronomeVisualProps> = ({
         {visualFeedback && (
           <div className="absolute inset-0">
             {beatMarkers.map(({ top, left, beat }) => {
-              const isActive = isPlaying && currentBeat === beat;
+            const isActive = isPlaying && currentBeatRef.current === beat;
               
               return (
                 <motion.div 
