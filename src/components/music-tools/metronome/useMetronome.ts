@@ -1,10 +1,11 @@
+// src/components/music-tools/metronome/useMetronome.ts
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAnimation } from "framer-motion";
 import { userPreferences } from '@/lib/animation-utils';
 
 // Constants for audio scheduling
-const LOOKAHEAD = 25.0;
-const SCHEDULE_AHEAD_TIME = 0.1;
+const LOOKAHEAD = 25.0; // How often to call scheduler (in ms)
+const SCHEDULE_AHEAD_TIME = 0.1; // How far ahead to schedule audio (in seconds)
 
 export const useMetronome = () => {
   // Load saved preferences or use defaults
@@ -22,20 +23,10 @@ export const useMetronome = () => {
   const audioContext = useRef<AudioContext | null>(null);
   const timerID = useRef<number | null>(null);
   const nextNoteTime = useRef<number>(0);
+  const lastNotePlayed = useRef<number>(-1);
   const pendulumControls = useAnimation();
+  const animationFrameRef = useRef<number | null>(null);
   
-  // Use refs for real-time access to changing values
-  const tempoRef = useRef(tempo);
-  const beatsPerMeasureRef = useRef(beatsPerMeasure);
-  const currentBeatRef = useRef(currentBeat);
-  
-  // Sync refs with state
-  useEffect(() => {
-    tempoRef.current = tempo;
-    beatsPerMeasureRef.current = beatsPerMeasure;
-    currentBeatRef.current = currentBeat;
-  }, [tempo, beatsPerMeasure, currentBeat]);
-
   // Save preferences when they change
   useEffect(() => {
     userPreferences.save('metronome-tempo', tempo);
@@ -49,7 +40,7 @@ export const useMetronome = () => {
     userPreferences.save('metronome-visual', visualFeedback);
   }, [visualFeedback]);
   
-  // Initialize audio context
+  // Initialize audio context - use lazy initialization
   const getAudioContext = () => {
     if (!audioContext.current) {
       audioContext.current = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -57,10 +48,15 @@ export const useMetronome = () => {
     return audioContext.current;
   };
   
+  // Calculate interval between beats in seconds
+  const getBeatInterval = useCallback(() => {
+    return 60.0 / tempo;
+  }, [tempo]);
+  
   // Update pendulum animation when tempo changes or play state changes
   useEffect(() => {
     if (isPlaying && visualFeedback) {
-      const beatInterval = 60.0 / tempo;
+      const beatInterval = getBeatInterval();
       
       pendulumControls.start({
         rotate: [30, -30, 30],
@@ -75,7 +71,7 @@ export const useMetronome = () => {
       pendulumControls.stop();
       pendulumControls.set({ rotate: 0 });
     }
-  }, [tempo, isPlaying, visualFeedback, pendulumControls]);
+  }, [tempo, isPlaying, visualFeedback, pendulumControls, getBeatInterval]);
   
   // Play a single beat
   const playBeat = useCallback((time: number, beatNumber: number) => {
@@ -105,6 +101,8 @@ export const useMetronome = () => {
     
     osc.start(time);
     osc.stop(time + 0.1);
+    
+    lastNotePlayed.current = beatNumber;
   }, []);
   
   // Schedule the next sequence of beats
@@ -112,25 +110,43 @@ export const useMetronome = () => {
     // Get current time and calculate seconds per beat
     const context = getAudioContext();
     const currentTime = context.currentTime;
-    const secondsPerBeat = 60.0 / tempoRef.current;
+    const secondsPerBeat = getBeatInterval();
     
     // Schedule notes ahead of time
     while (nextNoteTime.current < currentTime + SCHEDULE_AHEAD_TIME) {
-      const beatNumber = currentBeatRef.current % beatsPerMeasureRef.current;
+      const beatNumber = Math.floor(currentBeat) % beatsPerMeasure;
       playBeat(nextNoteTime.current, beatNumber);
       
-      // Advance beat time using current tempo
+      // Advance beat time
       nextNoteTime.current += secondsPerBeat;
-      
-      // Update beat counter and state
-      const nextBeat = (currentBeatRef.current + 1) % beatsPerMeasureRef.current;
-      currentBeatRef.current = nextBeat;
-      setCurrentBeat(nextBeat);
+      setCurrentBeat((prev) => (prev + 1) % beatsPerMeasure);
     }
     
     // Schedule next call
     timerID.current = window.setTimeout(scheduler, LOOKAHEAD);
-  }, [playBeat]);
+  }, [currentBeat, beatsPerMeasure, getBeatInterval, playBeat]);
+  
+  // Visual beat indicator updater
+  useEffect(() => {
+    if (!isPlaying) return;
+    
+    const updateVisualBeat = () => {
+      // Update visual beat if it's different from the last beat played
+      if (lastNotePlayed.current >= 0) {
+        setCurrentBeat(lastNotePlayed.current);
+      }
+      
+      animationFrameRef.current = requestAnimationFrame(updateVisualBeat);
+    };
+    
+    animationFrameRef.current = requestAnimationFrame(updateVisualBeat);
+    
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [isPlaying]);
   
   // Start or stop the metronome
   const startStop = useCallback(() => {
@@ -144,6 +160,11 @@ export const useMetronome = () => {
         clearTimeout(timerID.current);
         timerID.current = null;
       }
+      
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
     } else {
       // Start the metronome
       if (context.state === 'suspended') {
@@ -151,9 +172,9 @@ export const useMetronome = () => {
       }
       
       setIsPlaying(true);
-      currentBeatRef.current = 0;
       setCurrentBeat(0);
-      nextNoteTime.current = context.currentTime + 0.05; // Small delay for stability
+      lastNotePlayed.current = -1;
+      nextNoteTime.current = context.currentTime;
       scheduler();
     }
   }, [isPlaying, scheduler]);
@@ -190,6 +211,10 @@ export const useMetronome = () => {
     return () => {
       if (timerID.current !== null) {
         clearTimeout(timerID.current);
+      }
+      
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
       }
       
       if (audioContext.current) {
