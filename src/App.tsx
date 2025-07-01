@@ -47,6 +47,7 @@ import UserDetails from "./pages/UserDetails";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import IdleStateManager from "@/components/idle-state/IdleStateManager";
+import { MediaStateProvider } from '@/components/idle-state/mediaStateContext';
 import Subscriptions from "./pages/Subscriptions";
 import ComingSoon from "./pages/ComingSoon";
 import Tracks from "@/pages/Tracks";
@@ -70,6 +71,7 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <AudioPlayerProvider>
+          <MediaStateProvider>
           <TooltipProvider>
             <Toaster />
             <Sonner />
@@ -142,6 +144,7 @@ const App = () => {
               <GlobalMiniPlayer />
             </BrowserRouter>
           </TooltipProvider>
+         </MediaStateProvider>
         </AudioPlayerProvider>
       </AuthProvider>
     </QueryClientProvider>
