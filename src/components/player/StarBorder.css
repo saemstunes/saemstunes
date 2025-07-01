@@ -2,7 +2,7 @@
 .star-border-container {
   display: block;
   position: relative;
-  border-radius: 18px;
+  border-radius: 16px;
   overflow: hidden;
   padding: 1px 0; /* Thickness control */
 }
@@ -33,7 +33,7 @@
 
 .inner-content {
   position: relative;
-  border-radius: 18px;
+  border-radius: 16px;
   z-index: 1;
 }
 
