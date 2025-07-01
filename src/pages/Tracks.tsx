@@ -1,3 +1,4 @@
+
 import React from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { motion } from "framer-motion";
@@ -23,7 +24,7 @@ const Tracks = () => {
           damping={60}
           stiffness={200}
         />
-      </div>
+      </motion.div>
     </MainLayout>
   );
 };
