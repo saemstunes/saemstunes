@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/integrations/supabase/types';
 
+
+
 // Music knowledge categories
 type QuizCategory =
 | 'Music Theory'
@@ -94,7 +96,7 @@ query = query.eq('difficulty', difficulty);
 
 // Filter by access level (only show quizzes user has access to)
 const accessLevels = getAccessibleLevels(userAccessLevel);
-query = query.in('access_level', accessLevels as ("free" | "basic" | "premium" | "private")[]);
+query = query.in('access_level', accessLevels);
 
 const { data, error: fetchError } = await query;
 
@@ -108,18 +110,10 @@ setLoading(false);
 return;
 }
 
-// Transform the data to match DatabaseQuiz interface
-const transformedData: DatabaseQuiz[] = data.map(quiz => ({
-...quiz,
-questions: Array.isArray(quiz.questions) 
-  ? quiz.questions as Question[] 
-  : (quiz.questions as unknown as Question[]) || []
-}));
-
-setAvailableQuizzes(transformedData);
+setAvailableQuizzes(data);
 
 // Randomly select a quiz from available options
-const randomQuiz = transformedData[Math.floor(Math.random() * transformedData.length)];
+const randomQuiz = data[Math.floor(Math.random() * data.length)];
 selectQuiz(randomQuiz);
 
 } catch (err) {
@@ -139,7 +133,7 @@ const levels = {
 'free': ['free'],
 'basic': ['free', 'basic'],
 'premium': ['free', 'basic', 'premium'],
-'professional': ['free', 'basic', 'premium', 'private']
+'private': ['free', 'basic', 'premium', 'professional']
 };
 return levels[userLevel as keyof typeof levels] || ['free'];
 };
