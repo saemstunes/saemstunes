@@ -13,9 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 interface PaymentDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  paymentRequest: Omit<PaymentRequest, 'paymentMethod'> & {
-    orderType: 'subscription' | 'one-time'; // Add your specific order types
-    };
+  paymentRequest: Omit<PaymentRequest, 'paymentMethod'>;
 }
 
 type PaymentMethod = 'paystack' | 'remitly' | 'mpesa';
@@ -49,10 +47,9 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
     }
   }, [isOpen]);
 
-   const validateRequest = useCallback((): boolean => {
-    // Add 'orderType' to required fields
+  const validateRequest = useCallback((): boolean => {
     const requiredFields: (keyof typeof paymentRequest)[] = [
-      'itemId', 'itemName', 'amount', 'currency', 'orderType' // NEW
+      'itemId', 'itemName', 'amount', 'currency'
     ];
     
     const missingFields = requiredFields.filter(

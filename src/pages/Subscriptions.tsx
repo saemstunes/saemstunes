@@ -1,233 +1,456 @@
 
 import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { pageTransition } from "@/lib/animation-utils";
 import MainLayout from "@/components/layout/MainLayout";
-import PricingCard, { SubscriptionPlan } from "@/components/subscription/PricingCard";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Crown, Music, Star, Users, Zap } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, ArrowRight, Check, CreditCard, Gift, RotateCcw, ShoppingBag } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { mockSubscriptionPlans } from "@/data/mockData";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const subscriptionPlans: SubscriptionPlan[] = [
+interface PaymentMethod {
+  id: string;
+  name: string;
+  last4: string;
+  expiry: string;
+  type: "card" | "paypal" | "bank";
+  isDefault: boolean;
+}
+
+const samplePaymentMethods: PaymentMethod[] = [
   {
-    id: 1,
-    name: "Basic",
-    description: "Perfect for beginners starting their musical journey",
-    price: 29.99,
-    features: [
-      "Access to basic lessons",
-      "Community forum access",
-      "Email support",
-      "Monthly progress reports",
-      "Basic music theory courses"
-    ]
+    id: "card1",
+    name: "Visa ending in 4242",
+    last4: "4242",
+    expiry: "09/25",
+    type: "card",
+    isDefault: true
   },
   {
-    id: 2,
-    name: "Premium",
-    description: "For serious learners who want comprehensive access",
-    price: 49.99,
-    features: [
-      "All Basic features",
-      "Advanced lessons & tutorials",
-      "1-on-1 monthly coaching session",
-      "Priority email support",
-      "Live group sessions",
-      "Sheet music downloads",
-      "Practice tracking tools"
-    ],
-    isRecommended: true
-  },
-  {
-    id: 3,
-    name: "Professional",
-    description: "For advanced musicians and music professionals",
-    price: 99.99,
-    features: [
-      "All Premium features",
-      "Weekly 1-on-1 coaching",
-      "Masterclass access",
-      "Performance opportunities",
-      "Industry networking events",
-      "Professional certification",
-      "Custom learning paths"
-    ]
+    id: "paypal1",
+    name: "PayPal",
+    last4: "",
+    expiry: "",
+    type: "paypal",
+    isDefault: false
   }
 ];
 
 const Subscriptions = () => {
-  const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
-  const [annualMode, setAnnualMode] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState<"subscriptions" | "payments">("subscriptions");
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>(samplePaymentMethods);
+  const [selectedPlan, setSelectedPlan] = useState<string>(mockSubscriptionPlans[1].id); // Default to middle plan
+  const [promoCode, setPromoCode] = useState("");
+  const [promoApplied, setPromoApplied] = useState(false);
+  
+  const urlSearchParams = new URLSearchParams(location.search);
+  const contentType = urlSearchParams.get('contentType');
+  const contentId = urlSearchParams.get('contentId');
 
-  const handlePlanSelect = (planId: number) => {
-    setSelectedPlan(planId);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>(samplePaymentMethods.find(pm => pm.isDefault)?.id || "");
+
+  const toggleCheckout = (planId?: string) => {
+    if (planId) {
+      setSelectedPlan(planId);
+    }
+    setIsCheckingOut(!isCheckingOut);
   };
 
-  const currentPlan = user?.subscriptionTier || null;
-
-  const isPlanActive = (planId: number) => {
-    return currentPlan === planId.toString();
+  const applyPromoCode = () => {
+    if (promoCode.toLowerCase() === "saem50") {
+      setPromoApplied(true);
+      toast({
+        title: "Promo code applied!",
+        description: "You've received a 10% discount on your subscription.",
+      });
+    } else {
+      toast({
+        title: "Invalid promo code",
+        description: "The promo code you entered is not valid.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const getUpgradeText = (planId: number) => {
-    if (!currentPlan) return "Get Started";
+  const handlePaymentSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     
-    const currentPlanId = parseInt(currentPlan);
-    if (planId === currentPlanId) return "Current Plan";
-    if (planId < currentPlanId) return "Downgrade";
-    return "Upgrade";
+    // Simulating a loading state
+    toast({
+      title: "Processing payment...",
+      description: "Please wait while we process your payment.",
+    });
+    
+    // Simulate API call with setTimeout
+    setTimeout(() => {
+      navigate("/payment-success");
+    }, 2000);
   };
 
+  const selectedPlanDetails = mockSubscriptionPlans.find(p => p.id === selectedPlan);
+
+  const handleAddPaymentMethod = () => {
+    navigate("/add-payment-method");
+  };
+  
   return (
     <MainLayout>
-      <motion.div className="space-y-12" {...pageTransition}>
-        {/* Header Section */}
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl md:text-5xl font-serif font-bold">
-            Choose Your <span className="text-gold">Music Journey</span>
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Unlock your musical potential with our comprehensive learning platform. 
-            Start your journey today with the perfect plan for your needs.
-          </p>
-        </div>
-
-        {/* Annual/Monthly Toggle */}
-        <div className="flex items-center justify-center space-x-4">
-          <span className={`text-sm font-medium ${!annualMode ? 'text-foreground' : 'text-muted-foreground'}`}>
-            Monthly
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setAnnualMode(!annualMode)}
-            className={`relative rounded-full p-1 transition-all duration-200 ${
-              annualMode ? 'bg-gold text-white' : 'bg-muted'
-            }`}
+      <div className="space-y-6">
+        <div className="flex items-center">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate(-1)}
+            className="mr-4"
           >
-            <div className={`w-5 h-5 rounded-full transition-transform duration-200 ${
-              annualMode ? 'translate-x-5' : 'translate-x-0'
-            } bg-white`} />
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
           </Button>
-          <div className="flex items-center space-x-2">
-            <span className={`text-sm font-medium ${annualMode ? 'text-foreground' : 'text-muted-foreground'}`}>
-              Annual
-            </span>
-            <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
-              Save 20%
-            </Badge>
-          </div>
-        </div>
-
-        {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {subscriptionPlans.map((plan) => (
-            <PricingCard
-              key={plan.id}
-              plan={plan}
-              onPlanSelect={handlePlanSelect}
-              isCurrentPlan={isPlanActive(plan.id)}
-              annualMode={annualMode}
-              highlightRecommended={true}
-              className="h-full"
-            />
-          ))}
-        </div>
-
-        {/* Features Comparison */}
-        <div className="max-w-6xl mx-auto">
-          <Card>
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl font-bold">Compare All Features</CardTitle>
-              <CardDescription>
-                See what's included in each plan
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-4 px-2">Features</th>
-                      <th className="text-center py-4 px-2">Basic</th>
-                      <th className="text-center py-4 px-2">Premium</th>
-                      <th className="text-center py-4 px-2">Professional</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[
-                      { feature: "Basic lessons", basic: true, premium: true, pro: true },
-                      { feature: "Community forum", basic: true, premium: true, pro: true },
-                      { feature: "Email support", basic: true, premium: true, pro: true },
-                      { feature: "Advanced tutorials", basic: false, premium: true, pro: true },
-                      { feature: "1-on-1 coaching", basic: false, premium: true, pro: true },
-                      { feature: "Live sessions", basic: false, premium: true, pro: true },
-                      { feature: "Masterclasses", basic: false, premium: false, pro: true },
-                      { feature: "Professional certification", basic: false, premium: false, pro: true },
-                    ].map((row, index) => (
-                      <tr key={index} className="border-b">
-                        <td className="py-3 px-2 font-medium">{row.feature}</td>
-                        <td className="text-center py-3 px-2">
-                          {row.basic ? <Check className="h-5 w-5 text-green-500 mx-auto" /> : "-"}
-                        </td>
-                        <td className="text-center py-3 px-2">
-                          {row.premium ? <Check className="h-5 w-5 text-green-500 mx-auto" /> : "-"}
-                        </td>
-                        <td className="text-center py-3 px-2">
-                          {row.pro ? <Check className="h-5 w-5 text-green-500 mx-auto" /> : "-"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* FAQ Section */}
-        <div className="max-w-4xl mx-auto space-y-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold mb-4">Frequently Asked Questions</h2>
+          <div>
+            <h1 className="text-3xl font-proxima font-bold">Subscriptions & Payments</h1>
             <p className="text-muted-foreground">
-              Everything you need to know about our subscription plans
+              Manage your subscriptions and payment methods
             </p>
           </div>
-
-          <div className="space-y-4">
-            {[
-              {
-                q: "Can I change my plan anytime?",
-                a: "Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately, and we'll prorate any billing differences."
-              },
-              {
-                q: "What happens if I cancel my subscription?",
-                a: "You'll continue to have access to your plan features until the end of your current billing period. After that, you'll be moved to our free tier."
-              },
-              {
-                q: "Do you offer refunds?",
-                a: "We offer a 30-day money-back guarantee for all new subscribers. If you're not satisfied, contact us for a full refund."
-              },
-              {
-                q: "Are there any setup fees?",
-                a: "No hidden fees! The price you see is exactly what you'll pay. No setup fees, no activation charges."
-              }
-            ].map((faq, index) => (
-              <Card key={index}>
-                <CardHeader>
-                  <CardTitle className="text-lg">{faq.q}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">{faq.a}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
         </div>
-      </motion.div>
+  
+        {contentType && contentId && (
+          <Alert className="bg-gold/10 border-gold">
+            <ShoppingBag className="h-4 w-4 text-gold" />
+            <AlertTitle>Access Premium Content</AlertTitle>
+            <AlertDescription className="space-y-2">
+              <p>Subscribe to access {contentType === 'exclusive' ? 'exclusive content' : contentType}</p>
+              <Button size="sm" className="bg-gold hover:bg-gold/90 text-white mt-2" onClick={() => setActiveTab("subscriptions")}>
+                View Plans
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+  
+        <Tabs 
+          defaultValue={activeTab}
+          value={activeTab} 
+          onValueChange={(value) => setActiveTab(value as "subscriptions" | "payments")}
+        >
+          <TabsList className="grid grid-cols-2 w-full md:w-[400px]">
+            <TabsTrigger value="subscriptions">
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Subscriptions
+            </TabsTrigger>
+            <TabsTrigger value="payments">
+              <CreditCard className="h-4 w-4 mr-2" />
+              Payment Methods
+            </TabsTrigger>
+          </TabsList>
+  
+          <TabsContent value="subscriptions" className="mt-6 space-y-6">
+            {isCheckingOut ? (
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Complete Your Purchase</CardTitle>
+                    <CardDescription>Review your order details and checkout</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="rounded-lg border p-4">
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="font-medium">{selectedPlanDetails?.name} Subscription</span>
+                          <span>${selectedPlanDetails?.price}/month</span>
+                        </div>
+                        
+                        {promoApplied && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-green-600">Promo: SAEM50</span>
+                            <span className="text-green-600">-10%</span>
+                          </div>
+                        )}
+                        
+                        <div className="h-px bg-border my-2"></div>
+                        
+                        <div className="flex justify-between font-medium">
+                          <span>Total</span>
+                          <span>
+                            ${promoApplied 
+                              ? (parseFloat(String(selectedPlanDetails?.price || "0")) * 0.9).toFixed(2) 
+                              : selectedPlanDetails?.price}/month
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <form onSubmit={handlePaymentSubmit} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="payment-method">Payment Method</Label>
+                        <Select 
+                          value={selectedPaymentMethod} 
+                          onValueChange={setSelectedPaymentMethod}
+                        >
+                          <SelectTrigger id="payment-method">
+                            <SelectValue placeholder="Select payment method" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {paymentMethods.map(method => (
+                              <SelectItem key={method.id} value={method.id}>
+                                {method.name}
+                                {method.isDefault && " (Default)"}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          className="w-full mt-2"
+                          onClick={handleAddPaymentMethod}
+                        >
+                          Add New Payment Method
+                        </Button>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="promo">Promo Code</Label>
+                          {promoApplied && (
+                            <span className="text-xs text-green-600">Applied</span>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Input 
+                            id="promo" 
+                            value={promoCode}
+                            onChange={(e) => setPromoCode(e.target.value)}
+                            placeholder="Enter promo code"
+                            disabled={promoApplied}
+                          />
+                          <Button 
+                            type="button"
+                            variant="outline"
+                            onClick={applyPromoCode}
+                            disabled={promoApplied || !promoCode}
+                          >
+                            Apply
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <Alert className="bg-muted">
+                        <Gift className="h-4 w-4" />
+                        <AlertTitle>Subscription Benefits</AlertTitle>
+                        <AlertDescription>
+                          <ul className="list-disc list-inside space-y-1 text-sm mt-2">
+                            {selectedPlanDetails?.features.map((feature, index) => (
+                              <li key={index}>{feature}</li>
+                            ))}
+                          </ul>
+                        </AlertDescription>
+                      </Alert>
+                      
+                      <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3">
+                        <Button 
+                          type="button"
+                          variant="outline" 
+                          onClick={() => toggleCheckout()}
+                          className="flex-1"
+                        >
+                          Back to Plans
+                        </Button>
+                        <Button 
+                          type="submit"
+                          className="flex-1 bg-gold hover:bg-gold/90 text-white"
+                        >
+                          Complete Purchase
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                      </div>
+                    </form>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {!user && (
+                  <Alert>
+                    <AlertTitle>Sign in to manage subscriptions</AlertTitle>
+                    <AlertDescription>
+                      You need to be logged in to manage your subscriptions.
+                      <div className="flex gap-2 mt-2">
+                        <Button onClick={() => navigate("/auth")} size="sm">
+                          Sign In
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => navigate("/auth?signup=true")}>
+                          Create Account
+                        </Button>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
+                <h2 className="text-2xl font-proxima font-semibold">Choose Your Plan</h2>
+                  
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {mockSubscriptionPlans.map((plan, index) => (
+                    <Card 
+                      key={plan.id}
+                      className={cn(
+                        "flex flex-col justify-between",
+                        plan.isPopular && "border-gold shadow-md",
+                        selectedPlan === plan.id && "ring-2 ring-gold"
+                      )}
+                    >
+                      <CardHeader>
+                        {plan.isPopular && (
+                          <div className="py-1 px-3 bg-gold/20 text-gold rounded-full text-xs font-medium w-fit mx-auto mb-2">
+                            MOST POPULAR
+                          </div>
+                        )}
+                        <CardTitle className="text-xl text-center">
+                          {plan.name}
+                        </CardTitle>
+                        <CardDescription className="text-center">
+                          {plan.shortDescription}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="text-center space-y-6">
+                        <div>
+                          <p className="text-4xl font-bold">
+                            ${plan.price}
+                            <span className="text-muted-foreground text-sm font-normal">/month</span>
+                          </p>
+                          {plan.annualDiscount && (
+                            <p className="text-sm text-muted-foreground">
+                              Save ${plan.annualDiscount} annually
+                            </p>
+                          )}
+                        </div>
+                        <div className="space-y-2 text-left">
+                          {plan.features.map((feature, i) => (
+                            <div key={i} className="flex items-center">
+                              <Check className="h-4 w-4 text-gold mr-2 shrink-0" />
+                              <p className="text-sm">{feature}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                      <div className="p-6 pt-0">
+                        <Button
+                          className={cn(
+                            "w-full",
+                            index === 1 
+                              ? "bg-gold hover:bg-gold/90 text-white" 
+                              : "bg-muted/60 hover:bg-muted text-foreground dark:bg-muted/30 dark:hover:bg-muted/40"
+                          )}
+                          onClick={() => toggleCheckout(plan.id)}
+                        >
+                          {selectedPlan === plan.id ? "Selected" : "Subscribe Now"}
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+                
+                <div className="text-center max-w-2xl mx-auto">
+                  <h3 className="text-lg font-medium mb-2">Why subscribe to Saem's Tunes?</h3>
+                  <p className="text-muted-foreground">
+                    Get unlimited access to all premium lessons, one-on-one sessions with experienced 
+                    instructors, and exclusive content to accelerate your musical journey.
+                  </p>
+                </div>
+              </div>
+            )}
+          </TabsContent>
+  
+          <TabsContent value="payments" className="mt-6 space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Payment Methods</CardTitle>
+                <CardDescription>
+                  Manage your stored payment methods
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {paymentMethods.map((method) => (
+                  <div 
+                    key={method.id} 
+                    className="flex items-center justify-between border rounded-lg p-4"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={cn(
+                        "p-2 rounded-full",
+                        method.type === "card" ? "bg-blue-50" :
+                        method.type === "paypal" ? "bg-blue-100" : "bg-gray-100"
+                      )}>
+                        <CreditCard className={cn(
+                          "h-5 w-5",
+                          method.type === "card" ? "text-blue-500" :
+                          method.type === "paypal" ? "text-blue-600" : "text-gray-500"
+                        )} />
+                      </div>
+                      <div>
+                        <p className="font-medium">{method.name}</p>
+                        {method.expiry && (
+                          <p className="text-sm text-muted-foreground">Expires {method.expiry}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {method.isDefault && (
+                        <span className="text-xs bg-muted px-2 py-1 rounded">Default</span>
+                      )}
+                      <Button variant="ghost" size="sm">
+                        Edit
+                      </Button>
+                      <Button variant="ghost" size="sm">
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                
+                <Button variant="outline" className="w-full mt-4" onClick={handleAddPaymentMethod}>
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Add Payment Method
+                </Button>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Merchandise & Products</CardTitle>
+                <CardDescription>
+                  View your past purchases and orders
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="rounded-lg border border-dashed p-8 text-center">
+                  <ShoppingBag className="h-8 w-8 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="font-medium mb-2">No purchases yet</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Explore the store to find Saem's Tunes merchandise and products.
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => navigate("/store")}
+                  >
+                    Browse Store
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </MainLayout>
   );
 };

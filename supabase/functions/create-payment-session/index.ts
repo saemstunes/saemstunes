@@ -106,17 +106,10 @@ serve(async (req) => {
     });
 
     // Validate required fields
-    const missingFields = [];
-if (!orderType) missingFields.push("orderType");
-if (!paymentMethod) missingFields.push("paymentMethod");
-if (!amount) missingFields.push("amount");
-if (!currency) missingFields.push("currency");
-
-if (missingFields.length > 0) {
-  logStep(`Missing fields: ${missingFields.join(", ")}`);
-  return new Response(JSON.stringify({
-    error: `Missing required fields: ${missingFields.join(", ")}`,
-    details: { received: { orderType, paymentMethod, amount, currency } }
+    if (!orderType || !paymentMethod || !amount || !currency) {
+      logStep('Missing required fields');
+      return new Response(JSON.stringify({
+        error: 'Missing required fields: orderType, paymentMethod, amount, currency'
       }), {
         status: 400,
         headers: {
