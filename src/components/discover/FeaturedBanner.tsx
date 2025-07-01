@@ -6,7 +6,7 @@ const FeaturedBanner = () => {
   const navigate = useNavigate();
   
   const handleFeaturedClick = () => {
-    navigate("/learning-hub/advanced-guitar-techniques");
+    navigate("/videos/v1");
   };
 
   return (
@@ -16,7 +16,7 @@ const FeaturedBanner = () => {
     >
       <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent z-10"></div>
       <img 
-        src="https://i.imgur.com/CezScCW.jpeg" 
+        src="https://i.imgur.com/5PLIYGQ.jpeg" 
         alt="Featured content" 
         className="absolute inset-0 w-full h-full object-cover" 
       />
@@ -28,7 +28,7 @@ const FeaturedBanner = () => {
           How 'Salama' Was Written
         </h3>
         <p className="text-white/80 text-sm md:text-base max-w-lg">
-          Explore the intricacy of a song heard in Machakos, written in Eldoret and recorded in Nairobi
+          Explore the intricacy of co-writing with Simali a song heard in Machakos, written in Eldoret and recorded in Nairobi
         </p>
       </div>
     </div>
