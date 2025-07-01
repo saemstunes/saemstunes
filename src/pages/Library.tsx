@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -10,7 +11,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import DynamicMusicQuiz from "@/components/quiz/DynamicMusicQuiz";
 import ResourceCard, { Resource } from "@/components/resources/ResourceCard";
 import { useToast } from "@/hooks/use-toast";
@@ -246,11 +246,9 @@ const Library = () => {
           <div className="lg:col-span-2">
             {activeQuizId ? (
               <DynamicMusicQuiz 
-  quizId={activeQuizId}
-  onComplete={handleQuizComplete}
-  supabaseClient={supabase} // ✅ Pass the client here
-/>
-
+                quizId={activeQuizId}
+                onComplete={handleQuizComplete}
+              />
             ) : (
               <Card>
                 <CardHeader>

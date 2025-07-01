@@ -183,7 +183,7 @@ const Subscriptions = () => {
                           <span>Total</span>
                           <span>
                             ${promoApplied 
-                              ? (parseFloat(String(selectedPlanDetails?.price || "0")) * 0.9).toFixed(2) 
+                              ? (Number(selectedPlanDetails?.price || 0) * 0.9).toFixed(2) 
                               : selectedPlanDetails?.price}/month
                           </span>
                         </div>

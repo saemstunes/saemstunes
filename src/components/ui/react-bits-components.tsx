@@ -39,11 +39,15 @@ export const FloatingCard: React.FC<FloatingCardProps> = ({
 );
 
 // Glowing Button Component
-interface GlowingButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface GlowingButtonProps {
   children: React.ReactNode;
   variant?: 'primary' | 'secondary' | 'outline';
   size?: 'sm' | 'md' | 'lg';
   glow?: boolean;
+  className?: string;
+  onClick?: () => void;
+  disabled?: boolean;
+  type?: 'button' | 'submit' | 'reset';
 }
 
 export const GlowingButton: React.FC<GlowingButtonProps> = ({ 
@@ -52,7 +56,9 @@ export const GlowingButton: React.FC<GlowingButtonProps> = ({
   variant = 'primary',
   size = 'md',
   glow = true,
-  ...props 
+  onClick,
+  disabled = false,
+  type = 'button'
 }) => {
   const baseClasses = "relative overflow-hidden font-medium transition-all duration-300 transform-gpu";
   const variantClasses = {
@@ -69,11 +75,13 @@ export const GlowingButton: React.FC<GlowingButtonProps> = ({
 
   return (
     <motion.button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
       className={cn(baseClasses, variantClasses[variant], sizeClasses[size], glowClasses, className)}
       whileTap={{ scale: 0.95 }}
-      whileHover={{ scale: glow ? 1.05 : 1.02 }}
+      whileHover={glow ? { scale: 1.05 } : { scale: 1.02 }}
       style={{ willChange: 'transform' }}
-      {...props}
     >
       {/* Shimmer effect */}
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 transform translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />

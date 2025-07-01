@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Play, 
@@ -394,8 +395,8 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         )}
       </div>
 
-      {/* Custom CSS for extra small screens */}
-      <style jsx>{`
+      {/* Custom CSS for extra small screens - Remove jsx prop */}
+      <style>{`
         @media (max-width: 475px) {
           .xs\\:block { display: block !important; }
           .xs\\:flex { display: flex !important; }

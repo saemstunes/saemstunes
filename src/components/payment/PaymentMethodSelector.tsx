@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,16 +28,16 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
   currency = 'USD',
   planId,
   classCount = 1,
-  orderType = 'subscription' | 'one-time'
+  orderType = 'subscription'
 }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneError, setPhoneError] = useState('');
 
   const formatAmount = (amount: number, currency: string) => {
-    const displayAmount = planId ? calculateRawPrice(planId, classCount, paymentType) : amount;
+    const displayAmount = planId ? calculateRawPrice(planId, classCount, orderType) : amount;
     
     if (currency === 'USD') {
-      return `$${(displayAmount / 130).toFixed(2)}`;
+      return `$${(displayAmount / 100).toFixed(2)}`;
     } else if (currency === 'KES') {
       return `KSh ${(displayAmount / 100).toFixed(2)}`;
     }
@@ -87,7 +88,7 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
     }
   };
 
-  const displayAmount = planId ? calculateRawPrice(planId, classCount, paymentType) : amount;
+  const displayAmount = planId ? calculateRawPrice(planId, classCount, orderType) : amount;
 
   return (
     <div className="space-y-6">
