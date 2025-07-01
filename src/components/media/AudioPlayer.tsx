@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { usePermissionRequest } from '@/lib/permissionsHelper';
 import { useAudioPlayer } from '@/context/AudioPlayerContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useMediaState } from '@/components/idle-state/mediaStateContext';
 
 interface AudioPlayerProps {
   src: string;
@@ -58,6 +59,11 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const { toast } = useToast();
   const { requestPermissionWithFeedback } = usePermissionRequest();
   const { state, playTrack, pauseTrack, resumeTrack, seek, setVolume, toggleMute } = useAudioPlayer();
+
+   // Add this useEffect to handle external state changes
+  useEffect(() => {
+    setMediaPlaying(state.isPlaying);
+  }, [state.isPlaying, setMediaPlaying]);
 
   // Create track object
   const track = {
