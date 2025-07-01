@@ -24,6 +24,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useMediaState } from '@/components/idle-state/mediaStateContext';
 
 interface AudioTrack {
   id: string | number;
@@ -45,6 +46,22 @@ const AudioPlayerPage = () => {
   const [audioError, setAudioError] = useState(false);
   const [trackData, setTrackData] = useState<AudioTrack | null>(null);
   const [loading, setLoading] = useState(true);
+  const { setMediaPlaying } = useMediaState();
+
+  // Add this useEffect to handle page visibility
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        setMediaPlaying(false);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [setMediaPlaying]);
   const SALAMA_TRACK = {
   id: 'featured',
   src: 'https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Cover%20Art/Salama%20-%20Saem%20x%20Simali.mp3',
@@ -134,6 +151,7 @@ useEffect(() => {
       setLoading(false);
     }
   };
+  
 
   const checkIfLiked = async () => {
     if (!user || !trackData) return;
