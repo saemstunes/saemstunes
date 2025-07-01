@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, ShieldCheck, Users, Download, HelpCircle, BookOpenCheck, Lightning } from 'lucide-react';
+import { Check, ShieldCheck, Users, Download, HelpCircle, BookOpenCheck, Zap } from 'lucide-react';
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";

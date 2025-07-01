@@ -111,7 +111,9 @@ return;
 // Transform the data to match DatabaseQuiz interface
 const transformedData: DatabaseQuiz[] = data.map(quiz => ({
 ...quiz,
-questions: Array.isArray(quiz.questions) ? quiz.questions as Question[] : []
+questions: Array.isArray(quiz.questions) 
+  ? quiz.questions as Question[] 
+  : (quiz.questions as unknown as Question[]) || []
 }));
 
 setAvailableQuizzes(transformedData);

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -50,7 +49,7 @@ const Subscriptions = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"subscriptions" | "payments">("subscriptions");
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>(samplePaymentMethods);
-  const [selectedPlan, setSelectedPlan] = useState<string>(mockSubscriptionPlans[1].id); // Default to middle plan
+  const [selectedPlan, setSelectedPlan] = useState<string>(mockSubscriptionPlans[1].id.toString()); // Convert to string
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   
@@ -63,7 +62,7 @@ const Subscriptions = () => {
 
   const toggleCheckout = (planId?: string) => {
     if (planId) {
-      setSelectedPlan(planId);
+      setSelectedPlan(planId.toString()); // Convert to string
     }
     setIsCheckingOut(!isCheckingOut);
   };
@@ -99,7 +98,7 @@ const Subscriptions = () => {
     }, 2000);
   };
 
-  const selectedPlanDetails = mockSubscriptionPlans.find(p => p.id === selectedPlan);
+  const selectedPlanDetails = mockSubscriptionPlans.find(p => p.id.toString() === selectedPlan); // Convert for comparison
 
   const handleAddPaymentMethod = () => {
     navigate("/add-payment-method");
@@ -306,7 +305,7 @@ const Subscriptions = () => {
                       className={cn(
                         "flex flex-col justify-between",
                         plan.isPopular && "border-gold shadow-md",
-                        selectedPlan === plan.id && "ring-2 ring-gold"
+                        selectedPlan === plan.id.toString() && "ring-2 ring-gold" // Convert for comparison
                       )}
                     >
                       <CardHeader>
@@ -351,9 +350,9 @@ const Subscriptions = () => {
                               ? "bg-gold hover:bg-gold/90 text-white" 
                               : "bg-muted/60 hover:bg-muted text-foreground dark:bg-muted/30 dark:hover:bg-muted/40"
                           )}
-                          onClick={() => toggleCheckout(plan.id)}
+                          onClick={() => toggleCheckout(plan.id.toString())} // Convert to string
                         >
-                          {selectedPlan === plan.id ? "Selected" : "Subscribe Now"}
+                          {selectedPlan === plan.id.toString() ? "Selected" : "Subscribe Now"} {/* Convert for comparison */}
                         </Button>
                       </div>
                     </Card>
