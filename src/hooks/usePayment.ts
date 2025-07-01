@@ -1,4 +1,5 @@
-imeimport { useState } from 'react';
+
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -113,8 +114,6 @@ export const usePayment = () => {
 
       throw new Error('Failed to create payment session');
     } catch (error: any) {
-      console.error('Payment session creation failed:', error);
-
       if (error.message?.includes('Phone number required')) {
         toast({
           title: 'Phone Number Required',
