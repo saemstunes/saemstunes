@@ -496,7 +496,10 @@ const LandingPage = () => {
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                 >
                   <PricingCard 
-                    plan={plan} 
+                    plan={{
+                      ...plan,
+                      description: plan.description || "Perfect for your musical journey"
+                    }} 
                     variant={index === 1 ? "default" : "outline"}
                     className={index === 1 ? "scale-105 ring-2 ring-gold/30 shadow-2xl" : ""}
                   />

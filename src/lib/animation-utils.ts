@@ -94,6 +94,11 @@ export const waitForAnimationComplete = (duration: number = DURATIONS.normal): P
   return new Promise(resolve => setTimeout(resolve, duration));
 };
 
+// Placeholder for useAnimationRef - simple ref hook
+export const useAnimationRef = () => {
+  return { current: null };
+};
+
 // Store and retrieve user preferences
 export const userPreferences = {
   save: (key: string, value: any): void => {

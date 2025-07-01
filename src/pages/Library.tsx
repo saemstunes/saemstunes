@@ -1,453 +1,293 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from 'react';
 import MainLayout from "@/components/layout/MainLayout";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useAuth } from "@/context/AuthContext";
-import { Library as LibraryIcon, BookOpen, Bookmark, Clock, Music, GraduationCap } from "lucide-react";
+import { motion } from "framer-motion";
+import { pageTransition } from "@/lib/animation-utils";
 import { Button } from "@/components/ui/button";
-import { mockVideos } from "@/data/mockData";
-import VideoCardWrapper from "@/components/videos/VideoCardWrapper";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { CalendarClock, Music2, Search, BookOpenCheck, BookOpen, GraduationCap, ListChecks } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import DynamicMusicQuiz from "@/components/quiz/DynamicMusicQuiz";
-import ResourceCard, { Resource } from "@/components/resources/ResourceCard";
-import { useToast } from "@/hooks/use-toast";
-import QuizSelection from "@/components/quiz/QuizSelection";
-import { useUserQuizProgress } from "@/hooks/useQuizzes";
+import { supabase } from '@/integrations/supabase/client';
+import { Database } from '@/types/supabase';
+
+// Define types for quizzes and questions
+interface Question {
+  id: string;
+  text: string;
+  options: string[];
+  correctAnswer: number;
+  explanation?: string;
+}
+
+interface DatabaseQuiz {
+  id: string;
+  created_at: string;
+  created_by: string;
+  title: string;
+  description: string;
+  category: string;
+  difficulty: number;
+  access_level: 'free' | 'basic' | 'premium' | 'private';
+  questions: Question[];
+  updated_at: string;
+}
+
+interface MusicQuizProps {
+  quizId: string;
+  onComplete: (score: number, total: number, quizId: string) => void;
+}
+
+const DynamicMusicQuiz: React.FC<MusicQuizProps> = ({ quizId, onComplete }) => {
+  const [quizzes, setQuizzes] = useState<DatabaseQuiz[]>([]);
+  const [selectedQuiz, setSelectedQuiz] = useState<DatabaseQuiz | null>(null);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedAnswers, setSelectedAnswers: any] = useState<{ [key: number]: number }>({});
+  const [showResults, setShowResults] = useState(false);
+  const [score, setScore] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [filters, setFilters] = useState({
+    difficulty: 'all',
+    category: 'all',
+    access: 'all'
+  });
+
+  const { user } = useAuth();
+
+  useEffect(() => {
+    fetchQuizzes();
+  }, []);
+
+  const fetchQuizzes = async () => {
+    try {
+      setLoading(true);
+      
+      const allowedAccessLevels: ("free" | "basic" | "premium" | "private")[] = 
+        user?.subscriptionTier === 'premium' 
+          ? ['free', 'basic', 'premium'] 
+          : user?.subscriptionTier === 'basic'
+          ? ['free', 'basic']
+          : ['free'];
+
+      const { data, error } = await supabase
+        .from('quizzes')
+        .select('*')
+        .in('access_level', allowedAccessLevels)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Type assertion with validation for the questions field
+      const typedQuizzes = (data || []).map(quiz => ({
+        ...quiz,
+        questions: Array.isArray(quiz.questions) ? quiz.questions as Question[] : []
+      })) as DatabaseQuiz[];
+
+      setQuizzes(typedQuizzes);
+      
+      if (quizId) {
+        const targetQuiz = typedQuizzes.find(q => q.id === quizId);
+        if (targetQuiz) {
+          setSelectedQuiz(targetQuiz);
+        }
+      }
+    } catch (error: any) {
+      console.error('Error fetching quizzes:', error);
+      setError('Failed to load quizzes. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAnswerSelect = (questionIndex: number, answerIndex: number) => {
+    setSelectedAnswers({ ...selectedAnswers, [questionIndex]: answerIndex });
+  };
+
+  const handleSubmitQuiz = () => {
+    if (!selectedQuiz) return;
+
+    let correctAnswersCount = 0;
+    selectedQuiz.questions.forEach((question, index) => {
+      if (selectedAnswers[index] === question.correctAnswer) {
+        correctAnswersCount++;
+      }
+    });
+
+    setScore(correctAnswersCount);
+    setShowResults(true);
+    onComplete(correctAnswersCount, selectedQuiz.questions.length, selectedQuiz.id);
+  };
+
+  const handleNextQuestion = () => {
+    setCurrentQuestionIndex(prevIndex => Math.min(prevIndex + 1, selectedQuiz?.questions.length ? selectedQuiz.questions.length - 1 : 0));
+  };
+
+  const handlePreviousQuestion = () => {
+    setCurrentQuestionIndex(prevIndex => Math.max(prevIndex - 1, 0));
+  };
+
+  const handleQuizComplete = (score: number, total: number, quizId: string) => {
+    console.log(`Quiz ${quizId} completed with score: ${score}/${total}`);
+    setShowResults(false);
+    setSelectedQuiz(null);
+    setSelectedAnswers({});
+    setCurrentQuestionIndex(0);
+    setScore(0);
+    fetchQuizzes();
+  };
+
+  if (loading) {
+    return <div className="text-center">Loading quizzes...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500 text-center">{error}</div>;
+  }
+
+  if (!selectedQuiz) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-2xl font-semibold">Available Quizzes</h2>
+        {quizzes.length === 0 ? (
+          <p>No quizzes available at the moment.</p>
+        ) : (
+          <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {quizzes.map((quiz) => (
+              <li key={quiz.id} className="bg-card rounded-lg shadow-md p-4 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => setSelectedQuiz(quiz)}>
+                <h3 className="font-medium text-lg">{quiz.title}</h3>
+                <p className="text-sm text-muted-foreground">{quiz.description}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  }
+
+  const currentQuestion = selectedQuiz.questions[currentQuestionIndex];
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-semibold">{selectedQuiz.title}</h2>
+      <p className="text-muted-foreground">{selectedQuiz.description}</p>
+
+      <div className="bg-muted/50 rounded-lg p-4">
+        <h3 className="text-xl font-medium mb-2">Question {currentQuestionIndex + 1}/{selectedQuiz.questions.length}</h3>
+        <p>{currentQuestion.text}</p>
+
+        <div className="mt-4 space-y-2">
+          {currentQuestion.options.map((option, index) => (
+            <label key={index} className="flex items-center space-x-3">
+              <input
+                type="radio"
+                className="radio-sm"
+                name={`question-${currentQuestionIndex}`}
+                value={index}
+                checked={selectedAnswers[currentQuestionIndex] === index}
+                onChange={() => handleAnswerSelect(currentQuestionIndex, index)}
+              />
+              <span>{option}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex justify-between">
+        <Button variant="outline" onClick={handlePreviousQuestion} disabled={currentQuestionIndex === 0}>
+          Previous
+        </Button>
+        {currentQuestionIndex === selectedQuiz.questions.length - 1 ? (
+          <Button onClick={handleSubmitQuiz} disabled={Object.keys(selectedAnswers).length < selectedQuiz.questions.length}>
+            Submit Quiz
+          </Button>
+        ) : (
+          <Button onClick={handleNextQuestion}>Next</Button>
+        )}
+      </div>
+
+      {showResults && selectedQuiz && (
+        <div className="bg-green-100 border border-green-500 text-green-900 px-4 py-3 rounded-md">
+          <h4 className="font-semibold">Quiz Results</h4>
+          <p>You scored {score} out of {selectedQuiz.questions.length} correct answers!</p>
+          <Button onClick={() => handleQuizComplete(score, selectedQuiz.questions.length, selectedQuiz.id)}>
+            Close Results
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Library = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("saved");
-  const { toast } = useToast();
-  const [activeQuizId, setActiveQuizId] = useState<string>("");
-  const { getCompletedQuizIds, refetch: refetchProgress } = useUserQuizProgress();
+  const [selectedQuiz, setSelectedQuiz] = useState<DatabaseQuiz | null>(null);
 
-  // Sample saved content data (would come from API in a real app)
-  const savedVideos = mockVideos.slice(0, 4);
-  const saemOfferings = mockVideos.slice(4, 8).map(video => ({...video, isExclusive: true}));
-  
-  // Sample courses data
-  const courses = [
-    {
-      id: "course1",
-      title: "Beginner Piano Masterclass",
-      description: "Learn piano fundamentals from scratch",
-      instructor: "Saem",
-      duration: "8 weeks",
-      level: "beginner",
-      thumbnail: "/placeholder.svg",
-      enrolled: true,
-      progress: 35
-    },
-    {
-      id: "course2",
-      title: "Vocal Development for Pop Music",
-      description: "Discover your unique voice and expand your range",
-      instructor: "Lisa Wong",
-      duration: "6 weeks",
-      level: "intermediate",
-      thumbnail: "/placeholder.svg",
-      enrolled: true,
-      progress: 72
-    },
-    {
-      id: "course3",
-      title: "Music Production Fundamentals",
-      description: "Learn to produce professional tracks from home",
-      instructor: "James Rodriguez",
-      duration: "10 weeks",
-      level: "beginner",
-      thumbnail: "/placeholder.svg",
-      enrolled: false,
-      progress: 0
-    },
-    {
-      id: "course4",
-      title: "Advanced Guitar Techniques",
-      description: "Take your guitar skills to the next level",
-      instructor: "Saem",
-      duration: "12 weeks",
-      level: "advanced",
-      thumbnail: "/placeholder.svg",
-      enrolled: false,
-      progress: 0
-    }
-  ];
-  
-  // Sample offline resources
-  const offlineResources: Resource[] = [
-    {
-      id: "res1",
-      title: "Complete Guitar Chord Chart",
-      description: "A comprehensive chart of guitar chords for beginners to advanced players",
-      type: "chord_chart",
-      thumbnail: "/placeholder.svg",
-      fileSize: "2.4 MB",
-      dateAdded: "2 days ago",
-      tags: ["Guitar", "Chords", "Beginner"],
-      premium: false,
-      downloadUrl: "#",
-      views: 1245,
-      author: "Saem's Tunes",
-      offline: true
-    },
-    {
-      id: "res2",
-      title: "Piano Scales PDF Reference",
-      description: "All major and minor piano scales with fingering patterns",
-      type: "sheet_music",
-      thumbnail: "/placeholder.svg",
-      fileSize: "1.8 MB",
-      dateAdded: "1 week ago",
-      tags: ["Piano", "Scales", "Theory"],
-      premium: true,
-      downloadUrl: "#",
-      views: 789,
-      author: "Saem's Tunes",
-      offline: true
-    }
-  ];
-  
-  const EmptyState = ({ title, description, icon: Icon }) => (
-    <div className="text-center py-16">
-      <div className="bg-muted/30 rounded-full p-6 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-        <Icon className="h-8 w-8 text-muted-foreground" />
-      </div>
-      <h3 className="text-xl font-medium mb-2">{title}</h3>
-      <p className="text-muted-foreground max-w-md mx-auto mb-6">
-        {description}
-      </p>
-      <Button 
-        onClick={() => navigate("/discover")}
-        className="bg-gold hover:bg-gold-dark text-white"
-      >
-        Explore Content
-      </Button>
-    </div>
-  );
-
-  const handleExclusiveContent = (contentId) => {
-    // Redirect to payment page for premium content
-    navigate(`/subscriptions?contentType=exclusive&contentId=${contentId}`);
-  };
-
-  const CourseCard = ({ course }) => (
-    <Card className="overflow-hidden h-full flex flex-col">
-      <div className="relative aspect-video overflow-hidden">
-        <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
-        <div className="absolute top-2 right-2">
-          <Badge className={course.enrolled ? "bg-green-600" : "bg-gold"}>
-            {course.enrolled ? "Enrolled" : "Premium"}
-          </Badge>
-        </div>
-        <div className="absolute bottom-2 left-2">
-          <Badge variant="outline" className="bg-black/50 backdrop-blur-sm text-white capitalize">
-            {course.level}
-          </Badge>
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold mb-4">Unauthorized</h1>
+          <p className="text-muted-foreground">Please log in to access your library.</p>
+          <Button onClick={() => navigate("/login")}>Log In</Button>
         </div>
       </div>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg">{course.title}</CardTitle>
-        <CardDescription className="line-clamp-2">{course.description}</CardDescription>
-      </CardHeader>
-      <CardContent className="pb-4 flex-1">
-        <div className="flex justify-between text-sm text-muted-foreground mb-2">
-          <span>Instructor: {course.instructor}</span>
-          <span>{course.duration}</span>
-        </div>
-        {course.enrolled && (
-          <div className="mt-2">
-            <div className="text-sm text-muted-foreground mb-1 flex justify-between">
-              <span>Progress</span>
-              <span>{course.progress}%</span>
-            </div>
-            <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gold" 
-                style={{ width: `${course.progress}%` }}
-              ></div>
-            </div>
-          </div>
-        )}
-      </CardContent>
-      <div className="p-4 pt-0">
-        <Button 
-          className={cn("w-full", course.enrolled ? "bg-gold hover:bg-gold-dark" : "bg-muted-foreground")}
-          onClick={() => {
-            if (!course.enrolled) {
-              handleExclusiveContent(course.id);
-            } else {
-              navigate(`/learning-hub/${course.id}`);
-            }
-          }}
-        >
-          {course.enrolled ? "Continue Learning" : "Enroll Now"}
-        </Button>
-      </div>
-    </Card>
-  );
+    );
+  }
 
   const handleQuizComplete = (score: number, total: number, quizId: string) => {
-    toast({
-      title: "Quiz Completed",
-      description: `You scored ${score} out of ${total}! Keep learning and improving your music knowledge.`,
-    });
-    
-    // Refresh user progress to update completed quizzes
-    refetchProgress();
-    
-    // If not logged in, prompt to sign in to save progress
-    if (!user && score >= total * 0.7) {
-      setTimeout(() => {
-        toast({
-          title: "Great score! Sign in to save your progress",
-          description: "Create an account to track your quiz scores and unlock more content",
-          action: (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => navigate("/auth")}
-            >
-              Sign In
-            </Button>
-          ),
-        });
-      }, 1500);
-    }
+    console.log(`Quiz ${quizId} completed with score: ${score}/${total}`);
+    setSelectedQuiz(null);
   };
 
   return (
     <MainLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-proxima font-bold">Saem's Library</h1>
-            <p className="text-muted-foreground mt-1">
-              Exclusive content created by Saem's Tunes instructors
+      <motion.div className="space-y-8" {...pageTransition}>
+        <div className="text-center">
+          <h1 className="text-3xl md:text-4xl font-serif font-bold mb-4">
+            Your <span className="text-gold">Learning Library</span>
+          </h1>
+          <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
+            Access your courses, quizzes, and learning resources
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-card rounded-lg shadow-md p-6">
+            <div className="flex items-center space-x-3 mb-4">
+              <BookOpen className="text-gold h-6 w-6" />
+              <h2 className="text-xl font-semibold">Enrolled Courses</h2>
+            </div>
+            <p className="text-muted-foreground">
+              Start where you left off or explore new courses.
             </p>
-          </div>
-          {user && (
-            <Button
-              variant="outline"
-              onClick={() => navigate("/discover")}
-              className="hidden sm:flex"
-            >
-              <Music className="mr-2 h-4 w-4" />
-              Discover More
+            <Button className="mt-4 bg-gold hover:bg-gold/90 text-white w-full">
+              View Courses <GraduationCap className="ml-2 h-4 w-4" />
             </Button>
-          )}
-        </div>
-        
-        {/* Music Quiz Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            {activeQuizId ? (
-              <DynamicMusicQuiz 
-  quizId={activeQuizId}
-  onComplete={handleQuizComplete}
-  supabaseClient={supabase} // ✅ Pass the client here
-/>
+          </div>
 
-            ) : (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Select a Quiz</CardTitle>
-                  <CardDescription>Choose a quiz from the selection panel to begin</CardDescription>
-                </CardHeader>
-                <CardContent className="text-center py-8">
-                  <p className="text-muted-foreground">Pick a quiz topic from the right to start testing your music knowledge!</p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-          <div className="space-y-4">
-            <QuizSelection 
-              onQuizSelect={setActiveQuizId} 
-              activeQuizId={activeQuizId}
-              completedQuizIds={getCompletedQuizIds()}
-            />
-          </div>
-        </div>
-        
-        {/* Featured Saem's content */}
-        <div 
-          className="relative rounded-lg overflow-hidden h-48 md:h-64 bg-gradient-to-r from-gold/70 to-brown/70 mb-8 cursor-pointer"
-          onClick={() => handleExclusiveContent("master-class-guitar")}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent z-10"></div>
-          <img 
-            src="/placeholder.svg" 
-            alt="Featured Saem's content" 
-            className="absolute inset-0 w-full h-full object-cover" 
-          />
-          <div className="relative z-20 p-6 flex flex-col h-full justify-end">
-            <div className="inline-block bg-gold text-white px-2 py-1 rounded-md text-xs mb-2 w-fit">
-              EXCLUSIVE
+          <div className="bg-card rounded-lg shadow-md p-6">
+            <div className="flex items-center space-x-3 mb-4">
+              <ListChecks className="text-gold h-6 w-6" />
+              <h2 className="text-xl font-semibold">Practice Quizzes</h2>
             </div>
-            <h3 className="text-xl md:text-2xl font-proxima text-white font-bold mb-1">
-              Master Class: Advanced Guitar Techniques
-            </h3>
-            <p className="text-white/80 text-sm md:text-base max-w-lg">
-              Learn advanced techniques from Saem's top instructor
+            <p className="text-muted-foreground">
+              Test your knowledge and track your progress with quizzes.
             </p>
+            <Button className="mt-4 bg-gold hover:bg-gold/90 text-white w-full">
+              Start a Quiz <BookOpenCheck className="ml-2 h-4 w-4" />
+            </Button>
           </div>
         </div>
-        
-        {/* Music Courses Section */}
-        <div className="mb-8">
-          <h2 className="text-xl font-proxima font-semibold mb-4 flex items-center">
-            <GraduationCap className="h-5 w-5 text-gold mr-2" />
-            Music Courses
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {courses.map(course => (
-              <CourseCard key={course.id} course={course} />
-            ))}
-          </div>
-        </div>
-        
-        {/* Saem's exclusive content */}
-        <div className="mb-8">
-          <h2 className="text-xl font-proxima font-semibold mb-4 flex items-center">
-            <BookOpen className="h-5 w-5 text-gold mr-2" />
-            Exclusive Content
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {saemOfferings.map(video => (
-              <div 
-                key={video.id} 
-                className="cursor-pointer"
-                onClick={() => handleExclusiveContent(video.id)}
-              >
-                <VideoCardWrapper key={video.id} video={video} isPremium={true} />
-              </div>
-            ))}
-          </div>
-        </div>
-        
-        {/* Offline Resources Section */}
-        <div className="mb-8">
-          <h2 className="text-xl font-proxima font-semibold mb-4 flex items-center">
-            <BookOpen className="h-5 w-5 text-gold mr-2" />
-            Available Offline
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {offlineResources.map(resource => (
-              <ResourceCard 
-                key={resource.id} 
-                resource={resource} 
-                isBookmarked={true}
-                onBookmark={() => {
-                  toast({
-                    title: "Removed from offline storage",
-                    description: `${resource.title} is no longer available offline`,
-                  });
-                }}
-              />
-            ))}
-            <Card className="flex flex-col items-center justify-center p-8 border-dashed cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() => navigate("/resources")}>
-              <div className="bg-gold/10 p-4 rounded-full mb-4">
-                <BookOpen className="h-6 w-6 text-gold" />
-              </div>
-              <h3 className="font-medium mb-2">Save More Resources</h3>
-              <p className="text-center text-sm text-muted-foreground">
-                Browse our library to download more resources for offline use
-              </p>
-            </Card>
-          </div>
-        </div>
-        
-        <Tabs defaultValue="saved" className="w-full" onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-4">
-            <TabsTrigger value="saved">
-              <Bookmark className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Saved</span>
-            </TabsTrigger>
-            <TabsTrigger value="courses">
-              <BookOpen className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Courses</span>
-            </TabsTrigger>
-            <TabsTrigger value="history">
-              <Clock className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">History</span>
-            </TabsTrigger>
-            <TabsTrigger value="playlists">
-              <LibraryIcon className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Playlists</span>
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="saved" className="pt-4">
-            {savedVideos.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {savedVideos.map(video => (
-                  <VideoCardWrapper 
-                    key={video.id} 
-                    video={video}
-                    isPremium={video.isLocked}
-                    onClick={() => navigate(`/videos/${video.id}`)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <EmptyState 
-                title="No Saved Content" 
-                description="Start saving videos, lessons, and resources to access them quickly in your library."
-                icon={Bookmark}
-              />
-            )}
-          </TabsContent>
-          
-          <TabsContent value="courses" className="pt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {courses.filter(course => course.enrolled).map(course => (
-                <CourseCard key={course.id} course={course} />
-              ))}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="history" className="pt-4">
-            <EmptyState 
-              title="No Viewing History" 
-              description="Your recently watched Saem's content will appear here."
-              icon={Clock}
-            />
-          </TabsContent>
-          
-          <TabsContent value="playlists" className="pt-4">
-            <EmptyState 
-              title="No Playlists" 
-              description="Create playlists to organize your favorite Saem's content."
-              icon={LibraryIcon}
-            />
-          </TabsContent>
-        </Tabs>
 
-        {/* Legal Links Footer */}
-        <div className="flex justify-center space-x-4 pt-8 border-t">
-          <Button 
-            variant="link" 
-            size="sm"
-            onClick={() => navigate("/privacy")}
-            className="text-muted-foreground hover:text-gold"
-          >
-            Privacy Policy
-          </Button>
-          <span className="text-muted-foreground">•</span>
-          <Button 
-            variant="link" 
-            size="sm"
-            onClick={() => navigate("/terms")}
-            className="text-muted-foreground hover:text-gold"
-          >
-            Terms of Service
-          </Button>
-        </div>
-      </div>
+        {selectedQuiz && (
+          <DynamicMusicQuiz
+            quizId={selectedQuiz.id}
+            onComplete={handleQuizComplete}
+          />
+        )}
+      </motion.div>
     </MainLayout>
   );
 };
