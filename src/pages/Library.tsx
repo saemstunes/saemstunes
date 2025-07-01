@@ -42,7 +42,7 @@ const DynamicMusicQuiz: React.FC<MusicQuizProps> = ({ quizId, onComplete }) => {
   const [quizzes, setQuizzes] = useState<DatabaseQuiz[]>([]);
   const [selectedQuiz, setSelectedQuiz] = useState<DatabaseQuiz | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswers, setSelectedAnswers: any] = useState<{ [key: number]: number }>({});
+  const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({});
   const [showResults, setShowResults] = useState(false);
   const [score, setScore] = useState(0);
   const [loading, setLoading] = useState(true);
