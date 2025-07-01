@@ -4,7 +4,7 @@
   position: relative;
   border-radius: 16px;
   overflow: hidden;
-  padding: 3px 0; /* Thickness control */
+  padding: 2px 0; /* Thickness control */
 }
 
 .border-gradient-bottom {
