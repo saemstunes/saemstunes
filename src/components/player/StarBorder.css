@@ -2,9 +2,9 @@
 .star-border-container {
   display: block;
   position: relative;
-  border-radius: 24px;
+  border-radius: 18px;
   overflow: hidden;
-  padding: 2px 0; /* Thickness control */
+  padding: 1px 0; /* Thickness control */
 }
 
 .border-gradient-bottom {
@@ -33,7 +33,7 @@
 
 .inner-content {
   position: relative;
-  border-radius: 24px;
+  border-radius: 18px;
   z-index: 1;
 }
 
