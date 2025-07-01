@@ -70,8 +70,8 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <MediaStateProvider>
         <AudioPlayerProvider>
-          <MediaStateProvider>
           <TooltipProvider>
             <Toaster />
             <Sonner />
@@ -144,8 +144,8 @@ const App = () => {
               <GlobalMiniPlayer />
             </BrowserRouter>
           </TooltipProvider>
-         </MediaStateProvider>
         </AudioPlayerProvider>
+      </MediaStateProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
