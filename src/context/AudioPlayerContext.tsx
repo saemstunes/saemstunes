@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { useMediaState } from '@/components/idle-state/mediaStateContext';
 
 interface AudioTrack {
   id: string | number;
@@ -149,6 +150,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     });
 
     audio.addEventListener('ended', () => {
+       setMediaPlaying(false); // Add this line
       setState(prevState => ({
         ...prevState,
         isPlaying: false,
@@ -158,6 +160,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     });
 
     audio.addEventListener('error', () => {
+      setMediaPlaying(false); // Add this line
       console.error('Audio playback error');
       setState(prevState => ({
         ...prevState,
@@ -168,7 +171,11 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     audio.volume = state.isMuted ? 0 : state.volume;
   };
 
+  // Inside AudioPlayerProvider component:
+const { setMediaPlaying } = useMediaState();
+
   const playTrack = (track: AudioTrack, startTime: number = 0) => {
+    setMediaPlaying(true); // Add this line
     // If it's the same track, just resume
     if (state.currentTrack?.id === track.id && audioRef.current) {
       audioRef.current.currentTime = startTime || state.lastPlayedTime;
@@ -203,6 +210,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const pauseTrack = () => {
+    setMediaPlaying(false); // Add this line
     if (audioRef.current) {
       audioRef.current.pause();
       setState(prevState => ({
@@ -214,6 +222,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const resumeTrack = () => {
+    setMediaPlaying(true); // Add this line
     if (audioRef.current) {
       audioRef.current.play().then(() => {
         setState(prevState => ({
@@ -225,6 +234,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const stopTrack = () => {
+     setMediaPlaying(false); // Add this line
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
@@ -271,6 +281,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const clearPlayer = () => {
+    setMediaPlaying(false); // Add this line
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.remove();
