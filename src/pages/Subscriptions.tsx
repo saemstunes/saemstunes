@@ -58,12 +58,12 @@ const subscriptionPlans: SubscriptionPlan[] = [
 ];
 
 const Subscriptions = () => {
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
   const [annualMode, setAnnualMode] = useState(false);
   const { user } = useAuth();
 
   const handlePlanSelect = (planId: number) => {
-    setSelectedPlan(planId.toString());
+    setSelectedPlan(planId);
   };
 
   const currentPlan = user?.subscriptionTier || null;
