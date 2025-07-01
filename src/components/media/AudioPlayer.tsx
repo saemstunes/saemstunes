@@ -50,6 +50,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   showControls = true,
   compact = false
 }) => {
+  const { setMediaPlaying } = useMediaState();
   const [isRepeat, setIsRepeat] = useState(false);
   const [isShuffle, setIsShuffle] = useState(false);
   const [error, setError] = useState<string | null>(null);
