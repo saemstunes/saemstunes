@@ -9,7 +9,6 @@ import { CalendarClock, Music2, Search, BookOpenCheck, BookOpen, GraduationCap, 
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from '@/integrations/supabase/client';
-import { Database } from '@/types/supabase';
 
 // Define types for quizzes and questions
 interface Question {
@@ -42,16 +41,11 @@ const DynamicMusicQuiz: React.FC<MusicQuizProps> = ({ quizId, onComplete }) => {
   const [quizzes, setQuizzes] = useState<DatabaseQuiz[]>([]);
   const [selectedQuiz, setSelectedQuiz] = useState<DatabaseQuiz | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswers, setSelectedAnswers: any] = useState<{ [key: number]: number }>({});
+  const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({});
   const [showResults, setShowResults] = useState(false);
   const [score, setScore] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState({
-    difficulty: 'all',
-    category: 'all',
-    access: 'all'
-  });
 
   const { user } = useAuth();
 

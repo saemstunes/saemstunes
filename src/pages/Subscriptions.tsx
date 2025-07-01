@@ -1,178 +1,232 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { pageTransition } from "@/lib/animation-utils";
 import MainLayout from "@/components/layout/MainLayout";
-import PricingCard from "@/components/subscription/PricingCard";
-import { mockSubscriptionPlans } from "@/data/mockData";
+import PricingCard, { SubscriptionPlan } from "@/components/subscription/PricingCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Check, Crown, Music, Star, Users, Zap } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+
+const subscriptionPlans: SubscriptionPlan[] = [
+  {
+    id: 1,
+    name: "Basic",
+    description: "Perfect for beginners starting their musical journey",
+    price: 29.99,
+    features: [
+      "Access to basic lessons",
+      "Community forum access",
+      "Email support",
+      "Monthly progress reports",
+      "Basic music theory courses"
+    ]
+  },
+  {
+    id: 2,
+    name: "Premium",
+    description: "For serious learners who want comprehensive access",
+    price: 49.99,
+    features: [
+      "All Basic features",
+      "Advanced lessons & tutorials",
+      "1-on-1 monthly coaching session",
+      "Priority email support",
+      "Live group sessions",
+      "Sheet music downloads",
+      "Practice tracking tools"
+    ],
+    isRecommended: true
+  },
+  {
+    id: 3,
+    name: "Professional",
+    description: "For advanced musicians and music professionals",
+    price: 99.99,
+    features: [
+      "All Premium features",
+      "Weekly 1-on-1 coaching",
+      "Masterclass access",
+      "Performance opportunities",
+      "Industry networking events",
+      "Professional certification",
+      "Custom learning paths"
+    ]
+  }
+];
 
 const Subscriptions = () => {
-  const navigate = useNavigate();
-  const [selectedPlan, setSelectedPlan] = useState<string>('');
-  const [currentPlan, setCurrentPlan] = useState<string>('');
-  const [isAnnual, setIsAnnual] = useState(false);
-
-  useEffect(() => {
-    // Get current plan - convert to string for consistency
-    const userPlan = mockSubscriptionPlans.find(plan => plan.id.toString() === currentPlan);
-    if (userPlan) {
-      setCurrentPlan(userPlan.id.toString());
-    }
-  }, []);
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [annualMode, setAnnualMode] = useState(false);
+  const { user } = useAuth();
 
   const handlePlanSelect = (planId: number) => {
     setSelectedPlan(planId.toString());
   };
 
-  const filteredPlans = mockSubscriptionPlans.filter(plan => {
-    if (selectedPlan === 'all') return true;
-    return plan.id.toString() === selectedPlan;
-  });
+  const currentPlan = user?.subscriptionTier || null;
 
-  const getRecommendedPlan = () => {
-    return mockSubscriptionPlans.find(plan => plan.id === 2);
+  const isPlanActive = (planId: number) => {
+    return currentPlan === planId.toString();
   };
 
-  const handleUpgrade = (planId: string) => {
-    const numericPlanId = parseInt(planId, 10);
-    const plan = mockSubscriptionPlans.find(p => p.id === numericPlanId);
-    if (plan) {
-      navigate('/payment', { 
-        state: { 
-          planId: numericPlanId,
-          planName: plan.name,
-          price: plan.price 
-        } 
-      });
-    }
+  const getUpgradeText = (planId: number) => {
+    if (!currentPlan) return "Get Started";
+    
+    const currentPlanId = parseInt(currentPlan);
+    if (planId === currentPlanId) return "Current Plan";
+    if (planId < currentPlanId) return "Downgrade";
+    return "Upgrade";
   };
 
   return (
     <MainLayout>
-      <motion.div className="space-y-8" {...pageTransition}>
-        <div className="text-center">
-          <h1 className="text-3xl md:text-4xl font-serif font-bold mb-4">
-            Choose Your <span className="text-gold">Musical Journey</span>
+      <motion.div className="space-y-12" {...pageTransition}>
+        {/* Header Section */}
+        <div className="text-center space-y-4">
+          <h1 className="text-4xl md:text-5xl font-serif font-bold">
+            Choose Your <span className="text-gold">Music Journey</span>
           </h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-            Unlock your potential with our comprehensive music education platform
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            Unlock your musical potential with our comprehensive learning platform. 
+            Start your journey today with the perfect plan for your needs.
           </p>
         </div>
 
-        {/* Plan Toggle */}
-        <div className="flex justify-center">
-          <div className="bg-muted p-1 rounded-lg">
-            <Button
-              variant={!isAnnual ? "default" : "ghost"}
-              onClick={() => setIsAnnual(false)}
-              className="rounded-md"
-            >
-              Monthly
-            </Button>
-            <Button
-              variant={isAnnual ? "default" : "ghost"}
-              onClick={() => setIsAnnual(true)}
-              className="rounded-md"
-            >
+        {/* Annual/Monthly Toggle */}
+        <div className="flex items-center justify-center space-x-4">
+          <span className={`text-sm font-medium ${!annualMode ? 'text-foreground' : 'text-muted-foreground'}`}>
+            Monthly
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setAnnualMode(!annualMode)}
+            className={`relative rounded-full p-1 transition-all duration-200 ${
+              annualMode ? 'bg-gold text-white' : 'bg-muted'
+            }`}
+          >
+            <div className={`w-5 h-5 rounded-full transition-transform duration-200 ${
+              annualMode ? 'translate-x-5' : 'translate-x-0'
+            } bg-white`} />
+          </Button>
+          <div className="flex items-center space-x-2">
+            <span className={`text-sm font-medium ${annualMode ? 'text-foreground' : 'text-muted-foreground'}`}>
               Annual
-              <Badge variant="secondary" className="ml-2 bg-green-100 text-green-800">
-                Save 20%
-              </Badge>
-            </Button>
+            </span>
+            <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
+              Save 20%
+            </Badge>
           </div>
         </div>
 
         {/* Pricing Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {mockSubscriptionPlans.map((plan, index) => (
-            <motion.div
+          {subscriptionPlans.map((plan) => (
+            <PricingCard
               key={plan.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-            >
-              <PricingCard
-                plan={plan}
-                variant={plan.id === 2 ? "default" : "outline"}
-                isCurrentPlan={currentPlan === plan.id.toString()}
-                annualMode={isAnnual}
-                onPlanSelect={handlePlanSelect}
-                className={plan.id === 2 ? "scale-105 ring-2 ring-gold/30 shadow-2xl" : ""}
-              />
-            </motion.div>
+              plan={plan}
+              onPlanSelect={handlePlanSelect}
+              isCurrentPlan={isPlanActive(plan.id)}
+              annualMode={annualMode}
+              highlightRecommended={true}
+              className="h-full"
+            />
           ))}
         </div>
 
-        {/* Why Choose Us Section */}
-        <div className="bg-card border rounded-lg p-8">
-          <h2 className="text-2xl font-serif font-bold mb-4">Why Choose Our Platform?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="font-semibold text-lg mb-2">Personalized Learning</h3>
-              <p className="text-muted-foreground">
-                Our platform adapts to your skill level and learning pace, providing a customized experience.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg mb-2">Expert Instructors</h3>
-              <p className="text-muted-foreground">
-                Learn from seasoned musicians and educators with years of experience in their respective fields.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg mb-2">Vast Content Library</h3>
-              <p className="text-muted-foreground">
-                Access a wide range of lessons, exercises, and resources covering various instruments and genres.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg mb-2">Community Support</h3>
-              <p className="text-muted-foreground">
-                Connect with fellow musicians, share your progress, and receive feedback in a supportive community.
-              </p>
-            </div>
-          </div>
+        {/* Features Comparison */}
+        <div className="max-w-6xl mx-auto">
+          <Card>
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl font-bold">Compare All Features</CardTitle>
+              <CardDescription>
+                See what's included in each plan
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-4 px-2">Features</th>
+                      <th className="text-center py-4 px-2">Basic</th>
+                      <th className="text-center py-4 px-2">Premium</th>
+                      <th className="text-center py-4 px-2">Professional</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { feature: "Basic lessons", basic: true, premium: true, pro: true },
+                      { feature: "Community forum", basic: true, premium: true, pro: true },
+                      { feature: "Email support", basic: true, premium: true, pro: true },
+                      { feature: "Advanced tutorials", basic: false, premium: true, pro: true },
+                      { feature: "1-on-1 coaching", basic: false, premium: true, pro: true },
+                      { feature: "Live sessions", basic: false, premium: true, pro: true },
+                      { feature: "Masterclasses", basic: false, premium: false, pro: true },
+                      { feature: "Professional certification", basic: false, premium: false, pro: true },
+                    ].map((row, index) => (
+                      <tr key={index} className="border-b">
+                        <td className="py-3 px-2 font-medium">{row.feature}</td>
+                        <td className="text-center py-3 px-2">
+                          {row.basic ? <Check className="h-5 w-5 text-green-500 mx-auto" /> : "-"}
+                        </td>
+                        <td className="text-center py-3 px-2">
+                          {row.premium ? <Check className="h-5 w-5 text-green-500 mx-auto" /> : "-"}
+                        </td>
+                        <td className="text-center py-3 px-2">
+                          {row.pro ? <Check className="h-5 w-5 text-green-500 mx-auto" /> : "-"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* FAQ Section */}
-        <div className="bg-card border rounded-lg p-8">
-          <h2 className="text-2xl font-serif font-bold mb-4">Frequently Asked Questions</h2>
+        <div className="max-w-4xl mx-auto space-y-8">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold mb-4">Frequently Asked Questions</h2>
+            <p className="text-muted-foreground">
+              Everything you need to know about our subscription plans
+            </p>
+          </div>
+
           <div className="space-y-4">
-            <div>
-              <h3 className="font-semibold text-lg">What payment methods do you accept?</h3>
-              <p className="text-muted-foreground">
-                We accept major credit cards, debit cards, and PayPal.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg">Can I cancel my subscription at any time?</h3>
-              <p className="text-muted-foreground">
-                Yes, you can cancel your subscription at any time. Your access will continue until the end of the current billing cycle.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg">Is there a free trial available?</h3>
-              <p className="text-muted-foreground">
-                Yes, all our plans come with a 7-day free trial.
-              </p>
-            </div>
+            {[
+              {
+                q: "Can I change my plan anytime?",
+                a: "Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately, and we'll prorate any billing differences."
+              },
+              {
+                q: "What happens if I cancel my subscription?",
+                a: "You'll continue to have access to your plan features until the end of your current billing period. After that, you'll be moved to our free tier."
+              },
+              {
+                q: "Do you offer refunds?",
+                a: "We offer a 30-day money-back guarantee for all new subscribers. If you're not satisfied, contact us for a full refund."
+              },
+              {
+                q: "Are there any setup fees?",
+                a: "No hidden fees! The price you see is exactly what you'll pay. No setup fees, no activation charges."
+              }
+            ].map((faq, index) => (
+              <Card key={index}>
+                <CardHeader>
+                  <CardTitle className="text-lg">{faq.q}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">{faq.a}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
-
-        {/* Upgrade Button */}
-        {selectedPlan && selectedPlan !== currentPlan && (
-          <div className="text-center">
-            <Button
-              className="bg-gold hover:bg-gold-dark text-white"
-              size="lg"
-              onClick={() => handleUpgrade(selectedPlan)}
-            >
-              Upgrade to {mockSubscriptionPlans.find(plan => plan.id.toString() === selectedPlan)?.name}
-            </Button>
-          </div>
-        )}
       </motion.div>
     </MainLayout>
   );

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -96,10 +97,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
     itemId: plan.id.toString(),
     itemName: `${plan.name} Plan${orderType === 'one-time' ? ` - ${classCount} classes` : ''}`,
     amount: rawPrice,
-    currency: 'USD',
-    classCount,
-    planId: plan.id,
-    orderType: orderType
+    currency: 'USD'
   };
 
   return (
@@ -189,8 +187,6 @@ const PricingCard: React.FC<PricingCardProps> = ({
         isOpen={isPaymentOpen}
         onClose={() => setIsPaymentOpen(false)}
         paymentRequest={paymentRequest}
-        title={`Subscribe to ${plan.name}`}
-        description={`Get access to all ${plan.name} plan features`}
       />
     </>
   );

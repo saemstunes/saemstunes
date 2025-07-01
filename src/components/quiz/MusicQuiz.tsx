@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
@@ -14,7 +15,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Confetti } from '@/components/ui/confetti';
 
 interface Question {
   id: string;
@@ -84,7 +84,7 @@ const MusicQuiz: React.FC<MusicQuizProps> = ({ quizId, onComplete }) => {
       // Type assertion with validation for the questions field
       const typedQuizzes = (data || []).map(quiz => ({
         ...quiz,
-        questions: Array.isArray(quiz.questions) ? quiz.questions as Question[] : []
+        questions: Array.isArray(quiz.questions) ? quiz.questions as unknown as Question[] : []
       })) as DatabaseQuiz[];
 
       setQuizzes(typedQuizzes);
@@ -219,7 +219,6 @@ const MusicQuiz: React.FC<MusicQuizProps> = ({ quizId, onComplete }) => {
           </Button>
         )}
       </div>
-      {showResults && <Confetti />}
     </div>
   );
 };

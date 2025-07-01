@@ -1,7 +1,7 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { motion, useTransform, useSpring } from "framer-motion";
 import { Square } from "lucide-react";
-import * as Tone from "tone";
 
 interface ChromaGridProps {
   items?: {
@@ -27,20 +27,6 @@ interface ChromaGridProps {
 
 const ChromaGrid: React.FC<ChromaGridProps> = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const init = async () => {
-      if (Tone.context.state !== 'running') {
-        await Tone.start();
-      }
-    };
-
-    init();
-
-    return () => {
-      // Cleanup Tone.js resources if necessary
-    };
-  }, []);
 
   return (
     <>
