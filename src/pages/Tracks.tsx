@@ -282,27 +282,23 @@ const Tracks = () => {
     }
   };
 
-  // Track play count when user plays the featured track
-  const trackPlay = async (trackId: string) => {
-    if (!user || !trackId || trackId === 'featured-fallback') return;
+ const trackPlay = async (trackId: string) => {
+    if (!trackId || trackId === 'featured-fallback') return;
     
     try {
-      await supabase
-        .from('track_plays')
-        .insert({
-          track_id: trackId,
-          user_id: user.id,
-          played_at: new Date().toISOString()
-        });
+      await supabase.from('track_plays').insert({
+        track_id: trackId,
+        user_id: user?.id || null
+      });
     } catch (error) {
       console.error('Error tracking play:', error);
     }
   };
 
+  // Updated handlePlayNow function
   const handlePlayNow = () => {
     if (!featuredTrack) return;
     
-    // Track the play if it's a database track
     if (featuredTrack.id && featuredTrack.id !== 'featured-fallback') {
       trackPlay(featuredTrack.id);
     }
