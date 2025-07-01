@@ -78,7 +78,13 @@ const VideoCardWrapper: React.FC<VideoCardWrapperProps> = ({
         {/* Play button overlay */}
         {canAccess && (
           <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-            <div className="bg-white/90 rounded-full p-3">
+            div className={cn(
+              "rounded-full p-3",
+              // Light mode style
+              "bg-white/90 text-foreground",
+              // Dark mode style
+              "dark:bg-primary dark:text-primary-foreground"
+            )}>
               <Play className="h-6 w-6 text-foreground fill-current" />
             </div>
           </div>
