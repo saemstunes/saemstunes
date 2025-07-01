@@ -824,6 +824,7 @@ export type Database = {
       tracks: {
         Row: {
           access_level: string | null
+          approved: boolean | null
           audio_path: string
           cover_path: string | null
           created_at: string | null
@@ -834,6 +835,7 @@ export type Database = {
         }
         Insert: {
           access_level?: string | null
+          approved?: boolean | null
           audio_path: string
           cover_path?: string | null
           created_at?: string | null
@@ -844,6 +846,7 @@ export type Database = {
         }
         Update: {
           access_level?: string | null
+          approved?: boolean | null
           audio_path?: string
           cover_path?: string | null
           created_at?: string | null
