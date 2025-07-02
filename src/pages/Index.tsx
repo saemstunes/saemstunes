@@ -130,9 +130,9 @@ const ContentCarousel = ({ title, items, onViewAll }: any) => {
         </div>
       </div>
       
-      <div className="overflow-hidden">
+      <div className="overflow-x-auto">
         <motion.div
-          className="flex gap-3 sm:gap-4"
+          className="flex gap-3 sm:gap-4 w-max"
           animate={{ x: -currentIndex * (100 / itemsPerView) + '%' }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
           style={{ width: `${(items.length / itemsPerView) * 100}%` }}
