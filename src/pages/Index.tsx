@@ -57,22 +57,22 @@ const ContentCard = ({ title, instructor, duration, difficulty, isPopular, onCli
           Popular
         </div>
       )}
-      <div className="h-40 bg-gradient-to-br from-gold/20 to-purple-500/20 flex items-center justify-center relative overflow-hidden">
+      <div className="h-32 sm:h-40 bg-gradient-to-br from-gold/20 to-purple-500/20 flex items-center justify-center relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-        <PlayCircle className="h-12 w-12 text-white/80 group-hover:text-white group-hover:scale-110 transition-all duration-300" />
+        <PlayCircle className="h-10 w-10 text-white/80 group-hover:text-white group-hover:scale-110 transition-all duration-300" />
         <div className="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded">
           {duration}
         </div>
       </div>
     </div>
-    <div className="p-4">
-      <h3 className="font-semibold text-sm mb-2 line-clamp-2">{title}</h3>
+    <div className="p-3 sm:p-4">
+      <h3 className="font-semibold text-sm mb-1 sm:mb-2 line-clamp-2">{title}</h3>
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <div className="flex items-center gap-1">
           <User className="h-3 w-3" />
           {instructor}
         </div>
-        <span className="bg-gold/10 text-gold px-2 py-1 rounded-full text-xs font-medium">
+        <span className="bg-gold/10 text-gold px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium whitespace-nowrap">
           {difficulty}
         </span>
       </div>
@@ -82,36 +82,49 @@ const ContentCard = ({ title, instructor, duration, difficulty, isPopular, onCli
 
 const ContentCarousel = ({ title, items, onViewAll }: any) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const itemsPerView = 4;
+  const [itemsPerView, setItemsPerView] = useState(1);
   const maxIndex = Math.max(0, items.length - itemsPerView);
+
+  // Responsive items per view
+  useEffect(() => {
+    const updateItemsPerView = () => {
+      if (window.innerWidth < 640) setItemsPerView(1);
+      else if (window.innerWidth < 1024) setItemsPerView(2);
+      else setItemsPerView(4);
+    };
+    
+    updateItemsPerView();
+    window.addEventListener('resize', updateItemsPerView);
+    return () => window.removeEventListener('resize', updateItemsPerView);
+  }, []);
 
   const next = () => setCurrentIndex(prev => Math.min(prev + 1, maxIndex));
   const prev = () => setCurrentIndex(prev => Math.max(prev - 1, 0));
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-serif font-bold">{title}</h2>
-        <div className="flex items-center gap-2">
+        <h2 className="text-xl sm:text-2xl font-serif font-bold">{title}</h2>
+        <div className="flex items-center gap-1 sm:gap-2">
           <Button
             variant="ghost"
             size="sm"
             onClick={prev}
             disabled={currentIndex === 0}
-            className="h-8 w-8 p-0"
+            className="h-7 w-7 p-0"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-3.5 w-3.5" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={next}
             disabled={currentIndex === maxIndex}
-            className="h-8 w-8 p-0"
+            className="h-7 w-7 p-0"
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="outline" size="sm" onClick={onViewAll}>
+          <Button variant="outline" size="sm" onClick={onViewAll} className="text-xs sm:text-sm">
             View All
           </Button>
         </div>
@@ -119,13 +132,13 @@ const ContentCarousel = ({ title, items, onViewAll }: any) => {
       
       <div className="overflow-hidden">
         <motion.div
-          className="flex gap-4"
+          className="flex gap-3 sm:gap-4"
           animate={{ x: -currentIndex * (100 / itemsPerView) + '%' }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
           style={{ width: `${(items.length / itemsPerView) * 100}%` }}
         >
           {items.map((item: any, index: number) => (
-            <div key={index} style={{ width: `${100 / items.length}%` }} className="flex-shrink-0">
+            <div key={index} style={{ width: `${100 / itemsPerView}%` }} className="flex-shrink-0">
               <ContentCard {...item} />
             </div>
           ))}
@@ -242,20 +255,20 @@ const LandingPage = () => {
 
   return (
     <motion.div 
-      className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20"
+      className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20 overflow-x-hidden"
       {...pageTransition}
     >
-      {/* Hero Section - Music-First Experience */}
-      <section className="relative overflow-hidden py-8 px-4 sm:py-12 md:py-20">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden py-6 px-4 sm:py-12 md:py-20">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,215,0,0.1),transparent_70%)]"></div>
         
         <div className="relative z-10 max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12 items-center">
             
             {/* Left Column - Dynamic Content */}
-            <div className="space-y-6 lg:space-y-8 text-center lg:text-left">
+           <div className="space-y-4 sm:space-y-6 lg:space-y-8 text-center lg:text-left">
               <motion.div
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-gold/20 to-purple-500/20 backdrop-blur-sm border border-gold/20 text-gold px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium"
+                className="inline-flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-gold/20 to-purple-500/20 backdrop-blur-sm border border-gold/20 text-gold px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 whileHover={{ scale: 1.05 }}
