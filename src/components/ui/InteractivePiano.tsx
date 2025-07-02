@@ -6,32 +6,13 @@ interface PianoKey {
   note: string;
   type: 'white' | 'black';
   frequency: number;
-  offset?: number;
   keyboardKey?: string;
+  positionPercent?: number;
 }
 
 interface AudioState {
   context: AudioContext | null;
   gainNode: GainNode | null;
-  compressor: DynamicsCompressorNode | null;
-  reverb: ConvolverNode | null;
-}
-
-type NoteDuration = 'whole' | 'half' | 'quarter' | 'eighth' | 'sixteenth' | 'thirtysecond';
-
-const DURATION_RATIOS: Record<NoteDuration, number> = {
-  'whole': 4,
-  'half': 2,
-  'quarter': 1,
-  'eighth': 0.5,
-  'sixteenth': 0.25,
-  'thirtysecond': 0.125
-};
-
-interface MusicalNote {
-  note: string;
-  duration: NoteDuration;
-  dotted?: boolean;
 }
 
 const InteractivePiano: React.FC = () => {
@@ -52,43 +33,30 @@ const InteractivePiano: React.FC = () => {
   
   const audioState = useRef<AudioState>({
     context: null,
-    gainNode: null,
-    compressor: null,
-    reverb: null
+    gainNode: null
   });
   
-  const sustainedNotes = useRef<Set<string>>(new Set());
   const oscillators = useRef<Map<string, OscillatorNode>>(new Map());
   const noteStartTimes = useRef<Map<string, number>>(new Map());
   const demoTimeouts = useRef<NodeJS.Timeout[]>([]);
-  const keyReleaseTimes = useRef<Map<string, number>>(new Map());
-
-  const calculateDuration = useCallback((duration: NoteDuration, dotted = false): number => {
-    const quarterNoteMs = 60000 / tempo;
-    let ratio = DURATION_RATIOS[duration];
-    
-    if (dotted) ratio *= 1.5;
-    
-    return quarterNoteMs * ratio;
-  }, [tempo]);
 
   const keys = useMemo<PianoKey[]>(() => [
     { note: 'C', type: 'white', frequency: 261.63, keyboardKey: 'a' },
-    { note: 'C#', type: 'black', frequency: 277.18, keyboardKey: 'w' },
+    { note: 'C#', type: 'black', frequency: 277.18, keyboardKey: 'w', positionPercent: 7.5 },
     { note: 'D', type: 'white', frequency: 293.66, keyboardKey: 's' },
-    { note: 'D#', type: 'black', frequency: 311.13, keyboardKey: 'e' },
+    { note: 'D#', type: 'black', frequency: 311.13, keyboardKey: 'e', positionPercent: 17.5 },
     { note: 'E', type: 'white', frequency: 329.63, keyboardKey: 'd' },
     { note: 'F', type: 'white', frequency: 349.23, keyboardKey: 'f' },
-    { note: 'F#', type: 'black', frequency: 369.99, keyboardKey: 't' },
+    { note: 'F#', type: 'black', frequency: 369.99, keyboardKey: 't', positionPercent: 37.5 },
     { note: 'G', type: 'white', frequency: 392.00, keyboardKey: 'g' },
-    { note: 'G#', type: 'black', frequency: 415.30, keyboardKey: 'y' },
+    { note: 'G#', type: 'black', frequency: 415.30, keyboardKey: 'y', positionPercent: 47.5 },
     { note: 'A', type: 'white', frequency: 440.00, keyboardKey: 'h' },
-    { note: 'A#', type: 'black', frequency: 466.16, keyboardKey: 'u' },
+    { note: 'A#', type: 'black', frequency: 466.16, keyboardKey: 'u', positionPercent: 57.5 },
     { note: 'B', type: 'white', frequency: 493.88, keyboardKey: 'j' },
     { note: "C'", type: 'white', frequency: 523.25, keyboardKey: 'k' },
-    { note: "C#'", type: 'black', frequency: 554.37, keyboardKey: 'p' },
+    { note: "C#'", type: 'black', frequency: 554.37, keyboardKey: 'p', positionPercent: 77.5 },
     { note: "D'", type: 'white', frequency: 587.33, keyboardKey: 'l' },
-    { note: "D#'", type: 'black', frequency: 622.25, keyboardKey: '[' },
+    { note: "D#'", type: 'black', frequency: 622.25, keyboardKey: '[', positionPercent: 87.5 },
     { note: "E'", type: 'white', frequency: 659.25, keyboardKey: ';' }
   ], []);
 
@@ -97,32 +65,9 @@ const InteractivePiano: React.FC = () => {
       try {
         const context = new (window.AudioContext || (window as any).webkitAudioContext)();
         const gainNode = context.createGain();
-        const compressor = context.createDynamicsCompressor();
-        
-        const reverb = context.createConvolver();
-        const reverbGain = context.createGain();
-        
-        const impulseLength = context.sampleRate * 2;
-        const impulse = context.createBuffer(2, impulseLength, context.sampleRate);
-        for (let channel = 0; channel < 2; channel++) {
-          const channelData = impulse.getChannelData(channel);
-          for (let i = 0; i < impulseLength; i++) {
-            channelData[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / impulseLength, 2);
-          }
-        }
-        reverb.buffer = impulse;
-        
-        gainNode.connect(compressor);
-        compressor.connect(reverbGain);
-        reverbGain.connect(reverb);
-        reverb.connect(context.destination);
-        
-        compressor.connect(context.destination);
-        
-        gainNode.gain.setValueAtTime(volume, context.currentTime);
-        reverbGain.gain.setValueAtTime(0.3, context.currentTime);
-        
-        audioState.current = { context, gainNode, compressor, reverb };
+        gainNode.connect(context.destination);
+        gainNode.gain.value = volume;
+        audioState.current = { context, gainNode };
         
         const resumeAudio = async () => {
           if (context.state === 'suspended') {
@@ -133,9 +78,8 @@ const InteractivePiano: React.FC = () => {
 
         document.addEventListener('click', resumeAudio, { once: true });
         document.addEventListener('touchstart', resumeAudio, { once: true });
-        document.addEventListener('keydown', resumeAudio, { once: true });
       } catch (error) {
-        console.warn('Web Audio API not supported');
+        console.error('Audio initialization failed:', error);
       }
     };
     
@@ -148,24 +92,24 @@ const InteractivePiano: React.FC = () => {
       }
       demoTimeouts.current.forEach(timeout => clearTimeout(timeout));
     };
+  }, []);
+
+  useEffect(() => {
+    if (audioState.current.gainNode) {
+      audioState.current.gainNode.gain.value = volume;
+    }
   }, [volume]);
 
-  // CORRECTED AUDIO PLAYBACK FUNCTION
   const playAudioNote = useCallback(async (frequency: number, note: string) => {
     if (!audioState.current.context || !audioState.current.gainNode || isMuted) return;
 
     try {
       if (audioState.current.context.state === 'suspended') {
         await audioState.current.context.resume();
+        setAudioReady(true);
       }
-    } catch (error) {
-      console.warn('Failed to resume audio context:', error);
-      return;
-    }
 
-    try {
       const { context, gainNode } = audioState.current;
-      
       const existingOsc = oscillators.current.get(note);
       if (existingOsc) {
         existingOsc.stop();
@@ -174,60 +118,37 @@ const InteractivePiano: React.FC = () => {
 
       const oscillator = context.createOscillator();
       const noteGain = context.createGain();
-      const filter = context.createBiquadFilter();
-      
-      const adjustedFreq = frequency * Math.pow(2, octaveShift);
-      
-      oscillator.connect(filter);
-      filter.connect(noteGain);
+      oscillator.connect(noteGain);
       noteGain.connect(gainNode);
       
-      oscillator.frequency.setValueAtTime(adjustedFreq, context.currentTime);
+      const adjustedFreq = frequency * Math.pow(2, octaveShift);
+      oscillator.frequency.value = adjustedFreq;
       oscillator.type = waveform;
       
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(adjustedFreq * 4, context.currentTime);
-      filter.Q.setValueAtTime(0.5, context.currentTime);
+      const now = context.currentTime;
+      noteGain.gain.setValueAtTime(0, now);
+      noteGain.gain.linearRampToValueAtTime(volume, now + 0.01);
       
-      const attackTime = 0.01;
-      const decayTime = 0.1;
-      const sustainLevel = 0.6;
-      
-      noteGain.gain.setValueAtTime(0, context.currentTime);
-      noteGain.gain.linearRampToValueAtTime(volume * 0.5, context.currentTime + attackTime);
-      noteGain.gain.exponentialRampToValueAtTime(volume * sustainLevel, context.currentTime + attackTime + decayTime);
-      
-      oscillator.start(context.currentTime);
-      
+      oscillator.start(now);
       oscillators.current.set(note, oscillator);
-      sustainedNotes.current.add(note);
       noteStartTimes.current.set(note, Date.now());
       
     } catch (error) {
-      console.warn('Audio playback failed:', error);
+      console.error('Note playback failed:', error);
     }
   }, [volume, isMuted, waveform, octaveShift]);
 
   const stopNote = useCallback((note: string) => {
     const oscillator = oscillators.current.get(note);
     if (oscillator && audioState.current.context) {
-      const context = audioState.current.context;
-      
-      // Create a release envelope
+      const { context } = audioState.current;
       const noteGain = context.createGain();
-      oscillator.connect(noteGain);
-      noteGain.connect(audioState.current.gainNode!);
-      
-      noteGain.gain.setValueAtTime(noteGain.gain.value, context.currentTime);
+      noteGain.gain.setValueAtTime(volume, context.currentTime);
       noteGain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.3);
-      
       oscillator.stop(context.currentTime + 0.3);
-      
       oscillators.current.delete(note);
-      sustainedNotes.current.delete(note);
-      keyReleaseTimes.current.set(note, Date.now());
     }
-  }, []);
+  }, [volume]);
 
   const playNote = useCallback((note: string) => {
     const key = keys.find(k => k.note === note);
@@ -238,25 +159,6 @@ const InteractivePiano: React.FC = () => {
   }, [keys, playAudioNote]);
 
   const releaseNote = useCallback((note: string) => {
-    const key = keys.find(k => k.note === note);
-    if (!key) return;
-
-    const startTime = noteStartTimes.current.get(note);
-    if (startTime) {
-      const pressDuration = Date.now() - startTime;
-      if (pressDuration < 200 && !sustainPedal) {
-        stopNote(note);
-        setTimeout(() => {
-          setActiveKeys(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(note);
-            return newSet;
-          });
-        }, 100);
-        return;
-      }
-    }
-    
     if (!sustainPedal) {
       stopNote(note);
       setTimeout(() => {
@@ -267,112 +169,54 @@ const InteractivePiano: React.FC = () => {
         });
       }, 300);
     }
-  }, [keys, stopNote, sustainPedal]);
+  }, [sustainPedal, stopNote]);
 
-  // CORRECTED DEMO FUNCTION
   const playDemo = useCallback(async () => {
     if (isPlaying) return;
     
     setIsPlaying(true);
     setShowDemo(false);
-    
-    // Clear any previous timeouts
     demoTimeouts.current.forEach(timeout => clearTimeout(timeout));
     demoTimeouts.current = [];
     
-    // Ensure audio is ready before playing
     try {
       if (audioState.current.context?.state === 'suspended') {
         await audioState.current.context.resume();
         setAudioReady(true);
       }
-    } catch (error) {
-      console.warn('Failed to resume audio context for demo:', error);
-      setIsPlaying(false);
-      return;
-    }
-    
-    // Define melodies with musical note durations
-    const melodies: MusicalNote[][] = [
-      // Twinkle Twinkle Little Star
-      [
-        { note: 'C', duration: 'quarter' },
-        { note: 'C', duration: 'quarter' },
-        { note: 'G', duration: 'quarter' },
-        { note: 'G', duration: 'quarter' },
-        { note: 'A', duration: 'quarter' },
-        { note: 'A', duration: 'quarter' },
-        { note: 'G', duration: 'half' },
-        { note: 'F', duration: 'quarter' },
-        { note: 'F', duration: 'quarter' },
-        { note: 'E', duration: 'quarter' },
-        { note: 'E', duration: 'quarter' },
-        { note: 'D', duration: 'quarter' },
-        { note: 'D', duration: 'quarter' },
-        { note: 'C', duration: 'half' },
-      ],
-      // Simple scale with rhythm
-      [
-        { note: 'C', duration: 'eighth' },
-        { note: 'D', duration: 'eighth' },
-        { note: 'E', duration: 'quarter' },
-        { note: 'F', duration: 'eighth' },
-        { note: 'G', duration: 'eighth' },
-        { note: 'A', duration: 'quarter' },
-        { note: 'B', duration: 'eighth' },
-        { note: "C'", duration: 'eighth' },
-        { note: "C'", duration: 'quarter', dotted: true },
-        { note: 'C', duration: 'eighth' },
-        { note: 'F', duration: 'quarter' },
-      ],
-      // Chord progression
-      [
-        { note: 'C', duration: 'quarter' },
-        { note: 'E', duration: 'quarter' },
-        { note: 'G', duration: 'half' },
-        { note: 'F', duration: 'quarter' },
-        { note: 'A', duration: 'quarter' },
-        { note: "C'", duration: 'half' },
-        { note: 'G', duration: 'quarter' },
-        { note: 'B', duration: 'quarter' },
-        { note: "E'", duration: 'half' },
-        { note: 'C', duration: 'quarter' },
-        { note: 'E', duration: 'quarter' },
-        { note: 'G', duration: 'whole' },
-      ]
-    ];
-    
-    const melody = melodies[Math.floor(Math.random() * melodies.length)];
-    
-    let cumulativeTime = 0;
-    melody.forEach(({ note, duration, dotted }) => {
-      const noteDuration = calculateDuration(duration, dotted);
       
-      // Schedule note start
-      demoTimeouts.current.push(setTimeout(() => {
-        playNote(note);
-      }, cumulativeTime));
+      const melodies = [
+        ['C', 'D', 'E', 'F', 'G', 'A', 'B', "C'", 'B', 'A', 'G', 'F', 'E', 'D', 'C'],
+        ['C', 'E', 'G', "C'", 'G', 'E', 'C'],
+        ['C', 'E', 'G', 'F', 'A', "C'", 'G', 'B', "D'", 'C']
+      ];
       
-      // Schedule note release (if not sustained)
-      if (!sustainPedal) {
+      const melody = melodies[Math.floor(Math.random() * melodies.length)];
+      const noteDuration = 300;
+      
+      melody.forEach((note, index) => {
         demoTimeouts.current.push(setTimeout(() => {
-          releaseNote(note);
+          playNote(note);
+        }, index * noteDuration));
+        
+        demoTimeouts.current.push(setTimeout(() => {
           setActiveKeys(prev => {
             const newSet = new Set(prev);
             newSet.delete(note);
             return newSet;
           });
-        }, cumulativeTime + noteDuration));
-      }
+        }, index * noteDuration + noteDuration * 0.8));
+      });
       
-      cumulativeTime += noteDuration;
-    });
-    
-    // End of demo
-    demoTimeouts.current.push(setTimeout(() => {
+      demoTimeouts.current.push(setTimeout(() => {
+        setIsPlaying(false);
+      }, melody.length * noteDuration + 500));
+      
+    } catch (error) {
+      console.error('Demo playback failed:', error);
       setIsPlaying(false);
-    }, cumulativeTime + 500));
-  }, [isPlaying, playNote, releaseNote, sustainPedal, calculateDuration]);
+    }
+  }, [isPlaying, playNote]);
 
   useEffect(() => {
     const keyMap: Record<string, string> = {};
@@ -382,51 +226,45 @@ const InteractivePiano: React.FC = () => {
       }
     });
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const note = keyMap[event.key.toLowerCase()];
-      if (note && !pressedKeys.has(event.key.toLowerCase())) {
-        setPressedKeys(prev => new Set(prev).add(event.key.toLowerCase()));
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      const note = keyMap[key];
+      
+      if (note && !pressedKeys.has(key)) {
+        setPressedKeys(prev => new Set(prev).add(key));
         playNote(note);
       }
       
-      if (event.key === ' ') {
-        event.preventDefault();
+      if (key === ' ') {
+        e.preventDefault();
         playDemo();
       }
-      if (event.key === 'Shift') {
-        setSustainPedal(true);
-      }
-      if (event.key === 'ArrowUp') {
-        event.preventDefault();
+      if (e.key === 'Shift') setSustainPedal(true);
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
         setOctaveShift(prev => Math.min(prev + 1, 2));
       }
-      if (event.key === 'ArrowDown') {
-        event.preventDefault();
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
         setOctaveShift(prev => Math.max(prev - 1, -2));
       }
     };
 
-    const handleKeyUp = (event: KeyboardEvent) => {
-      const note = keyMap[event.key.toLowerCase()];
-      if (note && pressedKeys.has(event.key.toLowerCase())) {
+    const handleKeyUp = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      const note = keyMap[key];
+      
+      if (note && pressedKeys.has(key)) {
         setPressedKeys(prev => {
           const newSet = new Set(prev);
-          newSet.delete(event.key.toLowerCase());
+          newSet.delete(key);
           return newSet;
         });
         releaseNote(note);
       }
       
-      if (event.key === 'Shift') {
+      if (e.key === 'Shift') {
         setSustainPedal(false);
-        sustainedNotes.current.forEach(note => {
-          stopNote(note);
-          setActiveKeys(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(note);
-            return newSet;
-          });
-        });
       }
     };
 
@@ -436,25 +274,10 @@ const InteractivePiano: React.FC = () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [keys, playNote, releaseNote, pressedKeys, sustainPedal, stopNote, playDemo]);
+  }, [keys, playNote, releaseNote, pressedKeys, playDemo]);
 
   const whiteKeys = keys.filter(k => k.type === 'white');
   const blackKeys = keys.filter(k => k.type === 'black');
-
-  const getBlackKeyPosition = (blackKey: PianoKey) => {
-  const whiteKeyWidthPx = 32;
-  
-  switch (blackKey.note) {
-    case 'C#': return whiteKeyWidthPx * 0.75;
-    case 'D#': return whiteKeyWidthPx * 1.75;
-    case 'F#': return whiteKeyWidthPx * 3.25;
-    case 'G#': return whiteKeyWidthPx * 4.25;
-    case 'A#': return whiteKeyWidthPx * 5.25;
-    case "C#'": return whiteKeyWidthPx * 6.75;
-    case "D#'": return whiteKeyWidthPx * 7.75;
-    default: return 0;
-  }
-  };
 
   return (
     <motion.div
@@ -577,8 +400,8 @@ const InteractivePiano: React.FC = () => {
                 <label className="text-white/80 text-sm">Tempo: {tempo} BPM</label>
                 <input
                   type="range"
-                  min="40"
-                  max="240"
+                  min="60"
+                  max="180"
                   step="10"
                   value={tempo}
                   onChange={(e) => setTempo(parseInt(e.target.value))}
@@ -655,7 +478,7 @@ const InteractivePiano: React.FC = () => {
 
         <div className="relative flex justify-center touch-manipulation overflow-x-auto">
           <motion.div 
-            className="flex space-x-0.5 sm:space-x-1"
+            className="flex space-x-0.5 sm:space-x-1 relative"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.5 }}
@@ -664,13 +487,12 @@ const InteractivePiano: React.FC = () => {
               <motion.button
                 key={key.note}
                 className={`
-                  relative w-8 h-24 sm:w-10 sm:h-28 md:w-12 md:h-32 rounded-b-lg transition-all duration-150 transform-gpu
+                  relative w-8 h-24 sm:w-10 sm:h-28 md:w-12 md:h-32 rounded-b-lg transition-all duration-150
                   ${activeKeys.has(key.note)
-                    ? 'bg-gradient-to-b from-amber-400 to-amber-600 scale-95 shadow-xl shadow-amber-500/50' 
+                    ? 'bg-gradient-to-b from-amber-400 to-amber-600 shadow-xl shadow-amber-500/50 scale-95' 
                     : 'bg-gradient-to-b from-white to-gray-100 hover:from-gray-50 hover:to-gray-200 shadow-lg hover:shadow-xl'
                   }
                   active:scale-90 border border-gray-300 select-none
-                  ${isTouch ? 'touch-manipulation' : ''}
                 `}
                 onMouseDown={() => playNote(key.note)}
                 onMouseUp={() => releaseNote(key.note)}
@@ -698,23 +520,22 @@ const InteractivePiano: React.FC = () => {
             ))}
           </motion.div>
 
-          <div className="absolute top-0 left-0 flex pointer-events-none">
+          <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
             {blackKeys.map((key, index) => (
               <motion.button
                 key={key.note}
                 className={`
-                  absolute pointer-events-auto w-5 h-16 sm:w-6 sm:h-18 md:w-7 md:h-20 rounded-b-md transition-all duration-150 transform-gpu
+                  absolute pointer-events-auto w-5 h-16 sm:w-6 sm:h-18 md:w-7 md:h-20 rounded-b-md transition-all duration-150
                   ${activeKeys.has(key.note)
                     ? 'bg-gradient-to-b from-amber-400 to-amber-600 shadow-xl shadow-amber-500/50 scale-95' 
                     : 'bg-gradient-to-b from-gray-900 to-black hover:from-gray-800 hover:to-gray-900 shadow-lg'
                   }
                   active:scale-90 border border-gray-700 select-none
-                  ${isTouch ? 'touch-manipulation' : ''}
                 `}
                 style={{ 
-                  left: `${getBlackKeyPosition(key)}px`,
-                  zIndex: 10,
-                  transform: 'translateX(-50%)'
+                  left: `${key.positionPercent}%`,
+                  transform: 'translateX(-50%)',
+                  zIndex: 10
                 }}
                 onMouseDown={() => playNote(key.note)}
                 onMouseUp={() => releaseNote(key.note)}
