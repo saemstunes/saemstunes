@@ -307,7 +307,7 @@ const InteractivePiano: React.FC = () => {
         { note: 'A#', duration: 200 },
         { note: 'B', duration: 600 },
         { note: "C'", duration: 1000 },
-      ]
+      ],
       // 🎶 Twinkle Twinkle Little Star
   [
     { note: 'C', duration: 500 },
