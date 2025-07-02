@@ -17,6 +17,11 @@ interface AudioState {
   reverb: ConvolverNode | null;
 }
 
+interface DemoNote {
+  note: string;
+  duration: number; // Duration in milliseconds
+}
+
 const InteractivePiano: React.FC = () => {
   const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set());
   const [pressedKeys, setPressedKeys] = useState<Set<string>>(new Set());
@@ -40,6 +45,9 @@ const InteractivePiano: React.FC = () => {
   
   const sustainedNotes = useRef<Set<string>>(new Set());
   const oscillators = useRef<Map<string, OscillatorNode>>(new Map());
+  const noteStartTimes = useRef<Map<string, number>>(new Map());
+  const demoTimeouts = useRef<NodeJS.Timeout[]>([]);
+  const keyReleaseTimes = useRef<Map<string, number>>(new Map());
 
   // Corrected key mapping with requested keyboard shortcuts
   const keys = useMemo<PianoKey[]>(() => [
@@ -114,11 +122,13 @@ const InteractivePiano: React.FC = () => {
       if (audioState.current.context) {
         audioState.current.context.close();
       }
+      // Clear all demo timeouts on unmount
+      demoTimeouts.current.forEach(timeout => clearTimeout(timeout));
     };
   }, [volume]);
 
   // Audio playback with envelope and harmonics
-  const playAudioNote = useCallback((frequency: number, note: string, sustain = false) => {
+  const playAudioNote = useCallback((frequency: number, note: string, duration?: number) => {
     if (!audioState.current.context || !audioState.current.gainNode || isMuted) return;
 
     try {
@@ -151,33 +161,35 @@ const InteractivePiano: React.FC = () => {
       filter.frequency.setValueAtTime(adjustedFreq * 4, context.currentTime);
       filter.Q.setValueAtTime(0.5, context.currentTime);
       
-      // Enhanced envelope
+      // Enhanced envelope with sustain
       const attackTime = 0.01;
       const decayTime = 0.1;
-      const sustainLevel = sustain ? 0.6 : 0.4;
-      const releaseTime = sustain ? 2.0 : 0.8;
+      const sustainLevel = 0.6;
+      const releaseTime = sustainPedal ? 2.0 : (duration ? duration / 1000 * 0.8 : 0.8);
       
       noteGain.gain.setValueAtTime(0, context.currentTime);
       noteGain.gain.linearRampToValueAtTime(volume * 0.5, context.currentTime + attackTime);
       noteGain.gain.exponentialRampToValueAtTime(volume * sustainLevel, context.currentTime + attackTime + decayTime);
       
-      if (!sustain) {
-        noteGain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + releaseTime);
+      // Schedule note release
+      if (duration && !sustainPedal) {
+        const releaseStart = context.currentTime + (duration / 1000) * 0.2;
+        noteGain.gain.exponentialRampToValueAtTime(0.001, releaseStart + releaseTime);
+        oscillator.stop(releaseStart + releaseTime);
       }
       
       oscillator.start(context.currentTime);
       
-      if (sustain) {
-        oscillators.current.set(note, oscillator);
-        sustainedNotes.current.add(note);
-      } else {
-        oscillator.stop(context.currentTime + releaseTime);
-      }
+      oscillators.current.set(note, oscillator);
+      sustainedNotes.current.add(note);
+      
+      // Record start time for this note
+      noteStartTimes.current.set(note, Date.now());
       
     } catch (error) {
       console.warn('Audio playback failed:', error);
     }
-  }, [volume, isMuted, waveform, octaveShift]);
+  }, [volume, isMuted, waveform, octaveShift, sustainPedal]);
 
   const stopNote = useCallback((note: string) => {
     const oscillator = oscillators.current.get(note);
@@ -187,17 +199,45 @@ const InteractivePiano: React.FC = () => {
       oscillator.stop(audioState.current.context.currentTime + 0.3);
       oscillators.current.delete(note);
       sustainedNotes.current.delete(note);
+      
+      // Record release time for dynamics calculation
+      keyReleaseTimes.current.set(note, Date.now());
     }
   }, []);
 
-  const playNote = useCallback((note: string, sustain = false) => {
+  const playNote = useCallback((note: string, duration?: number) => {
     const key = keys.find(k => k.note === note);
     if (!key) return;
 
     setActiveKeys(prev => new Set(prev).add(note));
-    playAudioNote(key.frequency, note, sustain || sustainPedal);
+    playAudioNote(key.frequency, note, duration);
+  }, [keys, playAudioNote]);
+
+  const releaseNote = useCallback((note: string) => {
+    const key = keys.find(k => k.note === note);
+    if (!key) return;
+
+    // Calculate press duration for dynamic release
+    const startTime = noteStartTimes.current.get(note);
+    if (startTime) {
+      const pressDuration = Date.now() - startTime;
+      
+      // If note was pressed very briefly, treat as staccato
+      if (pressDuration < 200 && !sustainPedal) {
+        stopNote(note);
+        setTimeout(() => {
+          setActiveKeys(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(note);
+            return newSet;
+          });
+        }, 100);
+        return;
+      }
+    }
     
-    if (!sustain && !sustainPedal) {
+    if (!sustainPedal) {
+      stopNote(note);
       setTimeout(() => {
         setActiveKeys(prev => {
           const newSet = new Set(prev);
@@ -206,49 +246,213 @@ const InteractivePiano: React.FC = () => {
         });
       }, 300);
     }
-  }, [keys, playAudioNote, sustainPedal]);
+  }, [keys, stopNote, sustainPedal]);
 
-  // Demo with multiple melodies
+  // Demo with variable note durations and rhythms
   const playDemo = useCallback(() => {
     if (isPlaying) return;
     
     setIsPlaying(true);
     setShowDemo(false);
     
-    const melodies = [
-      ['C', 'D', 'E', 'F', 'G', 'A', 'B', "C'"], // Scale
-      ['C', 'E', 'G', "C'", 'G', 'E', 'C'], // Arpeggio
-      ['C', 'C', 'G', 'G', 'A', 'A', 'G'], // Twinkle Twinkle
-      ["C'", 'B', 'A', 'G', 'F', 'E', 'D', 'C'], // Descending scale
-      ['C', 'D#', 'G', 'A#', "C'", "D#'", "E'"], // Chromatic melody
-      // 🎶 Melody 1: Twinkle Twinkle Little Star (within C to E')
-      ['C', 'C', 'G', 'G', 'A', 'A', 'G', 'F', 'F', 'E', 'E', 'D', 'D', 'C', 'G', 'G', 'F', 'F', 'E', 'E', 'D', 'G', 'G', 'F', 'F', 'E', 'E', 'D', 'C', 'C', 'G', 'G', 'A', 'A', 'G'],
-      
-      // 🎸 Melody 2: Beat It – Michael Jackson riff simplified within C to E'
-      ['E', 'D', 'E', 'G', 'A', 'G', 'E', 'D', 'E', 'G', 'A', 'G', 'E', 'D', 'C'],
-      
-      // 🎼 Melody 3: Mary Had a Little Lamb (within C to E')
-      ['E', 'D', 'C', 'D', 'E', 'E', 'E', 'D', 'D', 'D', 'E', 'G', 'G', 'E', 'D', 'C', 'D', 'E', 'E', 'E', 'E', 'D', 'D', 'E', 'D', 'C'],
-      
-      // 🎶 Melody 4: Happy Birthday (first phrase) adjusted within C to E'
-      ['C', 'C', 'D', 'C', 'E', 'D', 'C', 'C', 'D', 'C', 'E', 'D'],
-      
-      // 🎹 Melody 5: Ode to Joy – Beethoven (first theme) within C to E'
-      ['E', 'E', 'F', 'G', 'G', 'F', 'E', 'D', 'C', 'C', 'D', 'E', 'E', 'D', 'D', 'E', 'E', 'F', 'G', 'G', 'F', 'E', 'D', 'C', 'C', 'D', 'E', 'D', 'C', 'C']
+    // Clear any previous timeouts
+    demoTimeouts.current.forEach(timeout => clearTimeout(timeout));
+    demoTimeouts.current = [];
     
+    // Define melodies with varied note durations
+    const melodies: DemoNote[][] = [
+      // Twinkle Twinkle Little Star
+      [
+        { note: 'C', duration: 500 },
+        { note: 'C', duration: 500 },
+        { note: 'G', duration: 500 },
+        { note: 'G', duration: 500 },
+        { note: 'A', duration: 500 },
+        { note: 'A', duration: 500 },
+        { note: 'G', duration: 1000 },
+        { note: 'F', duration: 500 },
+        { note: 'F', duration: 500 },
+        { note: 'E', duration: 500 },
+        { note: 'E', duration: 500 },
+        { note: 'D', duration: 500 },
+        { note: 'D', duration: 500 },
+        { note: 'C', duration: 1000 },
+      ],
+      // Jingle Bells
+      [
+        { note: 'E', duration: 500 },
+        { note: 'E', duration: 500 },
+        { note: 'E', duration: 1000 },
+        { note: 'E', duration: 500 },
+        { note: 'E', duration: 500 },
+        { note: 'E', duration: 1000 },
+        { note: 'E', duration: 500 },
+        { note: 'G', duration: 500 },
+        { note: 'C', duration: 500 },
+        { note: 'D', duration: 500 },
+        { note: 'E', duration: 1500 },
+      ],
+      // Chromatic scale with varied durations
+      [
+        { note: 'C', duration: 400 },
+        { note: 'C#', duration: 200 },
+        { note: 'D', duration: 400 },
+        { note: 'D#', duration: 200 },
+        { note: 'E', duration: 600 },
+        { note: 'F', duration: 300 },
+        { note: 'F#', duration: 300 },
+        { note: 'G', duration: 800 },
+        { note: 'G#', duration: 200 },
+        { note: 'A', duration: 400 },
+        { note: 'A#', duration: 200 },
+        { note: 'B', duration: 600 },
+        { note: "C'", duration: 1000 },
+      ]
+      // 🎶 Twinkle Twinkle Little Star
+  [
+    { note: 'C', duration: 500 },
+    { note: 'C', duration: 500 },
+    { note: 'G', duration: 500 },
+    { note: 'G', duration: 500 },
+    { note: 'A', duration: 500 },
+    { note: 'A', duration: 500 },
+    { note: 'G', duration: 1000 },
+    { note: 'F', duration: 500 },
+    { note: 'F', duration: 500 },
+    { note: 'E', duration: 500 },
+    { note: 'E', duration: 500 },
+    { note: 'D', duration: 500 },
+    { note: 'D', duration: 500 },
+    { note: 'C', duration: 1000 },
+  ],
+
+  // 🎸 Beat It – Michael Jackson riff (simplified within C to E')
+  [
+    { note: 'E', duration: 400 },
+    { note: 'D', duration: 400 },
+    { note: 'E', duration: 400 },
+    { note: 'G', duration: 400 },
+    { note: 'A', duration: 400 },
+    { note: 'G', duration: 400 },
+    { note: 'E', duration: 600 },
+    { note: 'D', duration: 400 },
+    { note: 'E', duration: 400 },
+    { note: 'G', duration: 400 },
+    { note: 'A', duration: 400 },
+    { note: 'G', duration: 400 },
+    { note: 'E', duration: 600 },
+    { note: 'D', duration: 400 },
+    { note: 'C', duration: 800 },
+  ],
+
+  // 🎼 Mary Had a Little Lamb
+  [
+    { note: 'E', duration: 400 },
+    { note: 'D', duration: 400 },
+    { note: 'C', duration: 400 },
+    { note: 'D', duration: 400 },
+    { note: 'E', duration: 400 },
+    { note: 'E', duration: 400 },
+    { note: 'E', duration: 800 },
+    { note: 'D', duration: 400 },
+    { note: 'D', duration: 400 },
+    { note: 'D', duration: 800 },
+    { note: 'E', duration: 400 },
+    { note: 'G', duration: 400 },
+    { note: 'G', duration: 800 },
+    { note: 'E', duration: 400 },
+    { note: 'D', duration: 400 },
+    { note: 'C', duration: 400 },
+    { note: 'D', duration: 400 },
+    { note: 'E', duration: 400 },
+    { note: 'E', duration: 400 },
+    { note: 'E', duration: 400 },
+    { note: 'E', duration: 400 },
+    { note: 'D', duration: 400 },
+    { note: 'D', duration: 400 },
+    { note: 'E', duration: 400 },
+    { note: 'D', duration: 400 },
+    { note: 'C', duration: 800 },
+  ],
+
+  // 🎶 Happy Birthday (first phrase within range)
+  [
+    { note: 'C', duration: 500 },
+    { note: 'C', duration: 500 },
+    { note: 'D', duration: 500 },
+    { note: 'C', duration: 500 },
+    { note: 'E', duration: 500 },
+    { note: 'D', duration: 1000 },
+    { note: 'C', duration: 500 },
+    { note: 'C', duration: 500 },
+    { note: 'D', duration: 500 },
+    { note: 'C', duration: 500 },
+    { note: 'E', duration: 500 },
+    { note: 'D', duration: 1000 },
+  ],
+
+  // 🎹 Ode to Joy – Beethoven (first theme within C to E')
+  [
+    { note: 'E', duration: 400 },
+    { note: 'E', duration: 400 },
+    { note: 'F', duration: 400 },
+    { note: 'G', duration: 400 },
+    { note: 'G', duration: 400 },
+    { note: 'F', duration: 400 },
+    { note: 'E', duration: 400 },
+    { note: 'D', duration: 400 },
+    { note: 'C', duration: 400 },
+    { note: 'C', duration: 400 },
+    { note: 'D', duration: 400 },
+    { note: 'E', duration: 400 },
+    { note: 'E', duration: 600 },
+    { note: 'D', duration: 200 },
+    { note: 'D', duration: 800 },
+    { note: 'E', duration: 400 },
+    { note: 'E', duration: 400 },
+    { note: 'F', duration: 400 },
+    { note: 'G', duration: 400 },
+    { note: 'G', duration: 400 },
+    { note: 'F', duration: 400 },
+    { note: 'E', duration: 400 },
+    { note: 'D', duration: 400 },
+    { note: 'C', duration: 400 },
+    { note: 'C', duration: 400 },
+    { note: 'D', duration: 400 },
+    { note: 'E', duration: 400 },
+    { note: 'D', duration: 400 },
+    { note: 'C', duration: 800 },
+  ]
     ];
     
     const melody = melodies[Math.floor(Math.random() * melodies.length)];
     
-    melody.forEach((note, index) => {
-      setTimeout(() => {
-        playNote(note);
-        if (index === melody.length - 1) {
-          setTimeout(() => setIsPlaying(false), 300);
-        }
-      }, index * 300);
+    let cumulativeTime = 0;
+    melody.forEach(({ note, duration }) => {
+      // Schedule note start
+      demoTimeouts.current.push(setTimeout(() => {
+        playNote(note, duration);
+      }, cumulativeTime));
+      
+      // Schedule note release (if not sustained)
+      if (!sustainPedal) {
+        demoTimeouts.current.push(setTimeout(() => {
+          setActiveKeys(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(note);
+            return newSet;
+          });
+        }, cumulativeTime + duration));
+      }
+      
+      cumulativeTime += duration;
     });
-  }, [isPlaying, playNote]);
+    
+    // End of demo
+    demoTimeouts.current.push(setTimeout(() => {
+      setIsPlaying(false);
+    }, cumulativeTime + 500));
+  }, [isPlaying, playNote, sustainPedal]);
 
   // Keyboard controls with new mappings
   useEffect(() => {
@@ -263,7 +467,7 @@ const InteractivePiano: React.FC = () => {
       const note = keyMap[event.key.toLowerCase()];
       if (note && !pressedKeys.has(event.key.toLowerCase())) {
         setPressedKeys(prev => new Set(prev).add(event.key.toLowerCase()));
-        playNote(note, true);
+        playNote(note);
       }
       
       // Special keys
@@ -292,14 +496,7 @@ const InteractivePiano: React.FC = () => {
           newSet.delete(event.key.toLowerCase());
           return newSet;
         });
-        if (!sustainPedal) {
-          stopNote(note);
-          setActiveKeys(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(note);
-            return newSet;
-          });
-        }
+        releaseNote(note);
       }
       
       if (event.key === 'Shift') {
@@ -322,7 +519,7 @@ const InteractivePiano: React.FC = () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [keys, playNote, stopNote, pressedKeys, sustainPedal]);
+  }, [keys, playNote, releaseNote, pressedKeys, sustainPedal, stopNote, playDemo]);
 
   const whiteKeys = keys.filter(k => k.type === 'white');
   const blackKeys = keys.filter(k => k.type === 'black');
@@ -549,8 +746,11 @@ const InteractivePiano: React.FC = () => {
                   active:scale-90 border border-gray-300 select-none
                   ${isTouch ? 'touch-manipulation' : ''}
                 `}
-                onClick={() => playNote(key.note)}
+                onMouseDown={() => playNote(key.note)}
+                onMouseUp={() => releaseNote(key.note)}
+                onMouseLeave={() => releaseNote(key.note)}
                 onTouchStart={() => playNote(key.note)}
+                onTouchEnd={() => releaseNote(key.note)}
                 onMouseEnter={() => setShowDemo(false)}
                 whileHover={{ y: -1 }}
                 whileTap={{ scale: 0.95 }}
@@ -591,8 +791,11 @@ const InteractivePiano: React.FC = () => {
                   zIndex: 10,
                   transform: 'translateX(-50%)'
                 }}
-                onClick={() => playNote(key.note)}
+                onMouseDown={() => playNote(key.note)}
+                onMouseUp={() => releaseNote(key.note)}
+                onMouseLeave={() => releaseNote(key.note)}
                 onTouchStart={() => playNote(key.note)}
+                onTouchEnd={() => releaseNote(key.note)}
                 whileHover={{ y: -1 }}
                 whileTap={{ scale: 0.95 }}
                 initial={{ y: 20, opacity: 0 }}
