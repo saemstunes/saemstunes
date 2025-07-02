@@ -150,8 +150,8 @@ const InteractivePiano: React.FC = () => {
     };
   }, [volume]);
 
-  // FIXED: Corrected duration handling
-  const playAudioNote = useCallback(async (frequency: number, note: string, durationMs?: number) => {
+  // CORRECTED AUDIO PLAYBACK FUNCTION
+  const playAudioNote = useCallback(async (frequency: number, note: string) => {
     if (!audioState.current.context || !audioState.current.gainNode || isMuted) return;
 
     try {
@@ -189,10 +189,6 @@ const InteractivePiano: React.FC = () => {
       filter.frequency.setValueAtTime(adjustedFreq * 4, context.currentTime);
       filter.Q.setValueAtTime(0.5, context.currentTime);
       
-      // FIXED: Proper duration handling
-      const durationSeconds = durationMs ? durationMs / 1000 : undefined;
-      const releaseTime = sustainPedal ? 2.0 : (durationSeconds ? durationSeconds * 0.8 : 0.8);
-      
       const attackTime = 0.01;
       const decayTime = 0.1;
       const sustainLevel = 0.6;
@@ -200,13 +196,6 @@ const InteractivePiano: React.FC = () => {
       noteGain.gain.setValueAtTime(0, context.currentTime);
       noteGain.gain.linearRampToValueAtTime(volume * 0.5, context.currentTime + attackTime);
       noteGain.gain.exponentialRampToValueAtTime(volume * sustainLevel, context.currentTime + attackTime + decayTime);
-      
-      // FIXED: Use durationSeconds instead of duration
-      if (durationSeconds && !sustainPedal) {
-        const releaseStart = context.currentTime + durationSeconds * 0.2;
-        noteGain.gain.exponentialRampToValueAtTime(0.001, releaseStart + releaseTime);
-        oscillator.stop(releaseStart + releaseTime);
-      }
       
       oscillator.start(context.currentTime);
       
@@ -217,26 +206,35 @@ const InteractivePiano: React.FC = () => {
     } catch (error) {
       console.warn('Audio playback failed:', error);
     }
-  }, [volume, isMuted, waveform, octaveShift, sustainPedal]);
+  }, [volume, isMuted, waveform, octaveShift]);
 
   const stopNote = useCallback((note: string) => {
     const oscillator = oscillators.current.get(note);
     if (oscillator && audioState.current.context) {
-      const noteGain = audioState.current.context.createGain();
-      noteGain.gain.exponentialRampToValueAtTime(0.001, audioState.current.context.currentTime + 0.3);
-      oscillator.stop(audioState.current.context.currentTime + 0.3);
+      const context = audioState.current.context;
+      
+      // Create a release envelope
+      const noteGain = context.createGain();
+      oscillator.connect(noteGain);
+      noteGain.connect(audioState.current.gainNode!);
+      
+      noteGain.gain.setValueAtTime(noteGain.gain.value, context.currentTime);
+      noteGain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.3);
+      
+      oscillator.stop(context.currentTime + 0.3);
+      
       oscillators.current.delete(note);
       sustainedNotes.current.delete(note);
       keyReleaseTimes.current.set(note, Date.now());
     }
   }, []);
 
-  const playNote = useCallback((note: string, durationMs?: number) => {
+  const playNote = useCallback((note: string) => {
     const key = keys.find(k => k.note === note);
     if (!key) return;
 
     setActiveKeys(prev => new Set(prev).add(note));
-    playAudioNote(key.frequency, note, durationMs);
+    playAudioNote(key.frequency, note);
   }, [keys, playAudioNote]);
 
   const releaseNote = useCallback((note: string) => {
@@ -271,14 +269,18 @@ const InteractivePiano: React.FC = () => {
     }
   }, [keys, stopNote, sustainPedal]);
 
+  // CORRECTED DEMO FUNCTION
   const playDemo = useCallback(async () => {
     if (isPlaying) return;
     
     setIsPlaying(true);
     setShowDemo(false);
+    
+    // Clear any previous timeouts
     demoTimeouts.current.forEach(timeout => clearTimeout(timeout));
     demoTimeouts.current = [];
     
+    // Ensure audio is ready before playing
     try {
       if (audioState.current.context?.state === 'suspended') {
         await audioState.current.context.resume();
@@ -290,7 +292,9 @@ const InteractivePiano: React.FC = () => {
       return;
     }
     
+    // Define melodies with musical note durations
     const melodies: MusicalNote[][] = [
+      // Twinkle Twinkle Little Star
       [
         { note: 'C', duration: 'quarter' },
         { note: 'C', duration: 'quarter' },
@@ -307,6 +311,7 @@ const InteractivePiano: React.FC = () => {
         { note: 'D', duration: 'quarter' },
         { note: 'C', duration: 'half' },
       ],
+      // Simple scale with rhythm
       [
         { note: 'C', duration: 'eighth' },
         { note: 'D', duration: 'eighth' },
@@ -320,6 +325,7 @@ const InteractivePiano: React.FC = () => {
         { note: 'C', duration: 'eighth' },
         { note: 'F', duration: 'quarter' },
       ],
+      // Chord progression
       [
         { note: 'C', duration: 'quarter' },
         { note: 'E', duration: 'quarter' },
@@ -342,12 +348,15 @@ const InteractivePiano: React.FC = () => {
     melody.forEach(({ note, duration, dotted }) => {
       const noteDuration = calculateDuration(duration, dotted);
       
+      // Schedule note start
       demoTimeouts.current.push(setTimeout(() => {
-        playNote(note, noteDuration);
+        playNote(note);
       }, cumulativeTime));
       
+      // Schedule note release (if not sustained)
       if (!sustainPedal) {
         demoTimeouts.current.push(setTimeout(() => {
+          releaseNote(note);
           setActiveKeys(prev => {
             const newSet = new Set(prev);
             newSet.delete(note);
@@ -359,10 +368,11 @@ const InteractivePiano: React.FC = () => {
       cumulativeTime += noteDuration;
     });
     
+    // End of demo
     demoTimeouts.current.push(setTimeout(() => {
       setIsPlaying(false);
     }, cumulativeTime + 500));
-  }, [isPlaying, playNote, sustainPedal, calculateDuration]);
+  }, [isPlaying, playNote, releaseNote, sustainPedal, calculateDuration]);
 
   useEffect(() => {
     const keyMap: Record<string, string> = {};
