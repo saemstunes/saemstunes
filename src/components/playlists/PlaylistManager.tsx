@@ -93,7 +93,7 @@ const PlaylistManager: React.FC = () => {
           description: playlist.description,
           category: playlist.category,
           user_id: user.id,
-          is_public: playlist.category === 'covers' || playlist.category === 'originals_by_saems_tunes',
+          is_public: playlist.category !== 'personal_playlist',
           play_count: Math.floor(Math.random() * 100),
           total_duration: Math.floor(Math.random() * 3600) + 600 // 10-70 minutes
         }));

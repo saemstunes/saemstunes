@@ -246,26 +246,26 @@ const LandingPage = () => {
       {...pageTransition}
     >
       {/* Hero Section - Music-First Experience */}
-      <section className="relative overflow-hidden py-12 px-6 md:py-20">
+      <section className="relative overflow-hidden py-8 px-4 sm:py-12 md:py-20">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,215,0,0.1),transparent_70%)]"></div>
         
         <div className="relative z-10 max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             
             {/* Left Column - Dynamic Content */}
-            <div className="space-y-8">
+            <div className="space-y-6 lg:space-y-8 text-center lg:text-left">
               <motion.div
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-gold/20 to-purple-500/20 backdrop-blur-sm border border-gold/20 text-gold px-4 py-2 rounded-full text-sm font-medium"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-gold/20 to-purple-500/20 backdrop-blur-sm border border-gold/20 text-gold px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 whileHover={{ scale: 1.05 }}
               >
-                <Zap className="h-4 w-4" />
+                <Zap className="h-3 w-3 sm:h-4 sm:w-4" />
                 Good {timeGreeting}! Ready to make music?
               </motion.div>
               
               <motion.h1 
-                className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold leading-tight"
+                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-bold leading-tight"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
@@ -277,7 +277,7 @@ const LandingPage = () => {
               </motion.h1>
               
               <motion.p 
-                className="text-lg text-muted-foreground max-w-xl leading-relaxed"
+                className="text-base sm:text-lg text-muted-foreground max-w-xl leading-relaxed mx-auto lg:mx-0"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
@@ -286,33 +286,33 @@ const LandingPage = () => {
               </motion.p>
               
               <motion.div 
-                className="flex flex-col sm:flex-row gap-4"
+                className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.3 }}
               >
                 <GlowingButton 
                   size="lg"
-                  className="text-lg px-8 py-3 group"
+                  className="text-base sm:text-lg px-6 sm:px-8 py-2.5 sm:py-3 group w-full sm:w-auto"
                   onClick={() => navigate("/videos")}
                 >
-                  <Play className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
+                  <Play className="mr-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:scale-110 transition-transform" />
                   Try Free Lesson
                 </GlowingButton>
                 <GlowingButton 
                   variant="secondary"
                   size="lg"
-                  className="text-lg px-8 py-3"
+                  className="text-base sm:text-lg px-6 sm:px-8 py-2.5 sm:py-3 w-full sm:w-auto"
                   onClick={() => navigate("/bookings")}
                 >
-                  <CalendarClock className="mr-2 h-5 w-5" />
+                  <CalendarClock className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                   Book Live Session
                 </GlowingButton>
               </motion.div>
 
               {/* Animated Stats */}
               <motion.div 
-                className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-8"
+                className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 pt-6 lg:pt-8"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
@@ -331,7 +331,7 @@ const LandingPage = () => {
 
             {/* Right Column - Interactive Piano */}
             <motion.div
-              className="flex justify-center"
+              className="flex justify-center order-first lg:order-last"
               initial={{ opacity: 0, scale: 0.8, rotateY: 15 }}
               animate={{ opacity: 1, scale: 1, rotateY: 0 }}
               transition={{ duration: 0.8, delay: 0.2, type: "spring", stiffness: 100 }}
@@ -343,8 +343,8 @@ const LandingPage = () => {
       </section>
 
       {/* Content Discovery - The Heart of the App */}
-      <section className="py-16 bg-gradient-to-b from-transparent to-muted/30">
-        <div className="container px-4 space-y-12">
+      <section className="py-12 sm:py-16 bg-gradient-to-b from-transparent to-muted/30">
+        <div className="container px-4 space-y-8 sm:space-y-12">
           
           {/* Popular Lessons Carousel */}
           <ContentCarousel
@@ -362,76 +362,76 @@ const LandingPage = () => {
 
           {/* Quick Access Actions */}
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-8 sm:mt-12"
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <FloatingCard className="p-6 text-center group cursor-pointer" onClick={() => navigate("/videos")}>
-              <div className="bg-gradient-to-br from-gold/20 to-gold/10 p-4 rounded-full w-fit mx-auto mb-4 group-hover:scale-110 transition-transform">
-                <BookOpen className="h-8 w-8 text-gold" />
+            <FloatingCard className="p-4 sm:p-6 text-center group cursor-pointer" onClick={() => navigate("/videos")}>
+              <div className="bg-gradient-to-br from-gold/20 to-gold/10 p-3 sm:p-4 rounded-full w-fit mx-auto mb-3 sm:mb-4 group-hover:scale-110 transition-transform">
+                <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-gold" />
               </div>
-              <h3 className="font-semibold mb-2">Browse Library</h3>
-              <p className="text-sm text-muted-foreground mb-4">500+ lessons across all instruments</p>
-              <Button variant="outline" size="sm">Explore Now</Button>
+              <h3 className="font-semibold mb-2 text-sm sm:text-base">Browse Library</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">500+ lessons across all instruments</p>
+              <Button variant="outline" size="sm" className="text-xs sm:text-sm">Explore Now</Button>
             </FloatingCard>
 
-            <FloatingCard className="p-6 text-center group cursor-pointer" onClick={() => navigate("/community")}>
-              <div className="bg-gradient-to-br from-purple-500/20 to-purple-500/10 p-4 rounded-full w-fit mx-auto mb-4 group-hover:scale-110 transition-transform">
-                <Users className="h-8 w-8 text-purple-600" />
+            <FloatingCard className="p-4 sm:p-6 text-center group cursor-pointer" onClick={() => navigate("/community")}>
+              <div className="bg-gradient-to-br from-purple-500/20 to-purple-500/10 p-3 sm:p-4 rounded-full w-fit mx-auto mb-3 sm:mb-4 group-hover:scale-110 transition-transform">
+                <Users className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600" />
               </div>
-              <h3 className="font-semibold mb-2">Join Community</h3>
-              <p className="text-sm text-muted-foreground mb-4">Connect with fellow musicians</p>
-              <Button variant="outline" size="sm">Join Now</Button>
+              <h3 className="font-semibold mb-2 text-sm sm:text-base">Join Community</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">Connect with fellow musicians</p>
+              <Button variant="outline" size="sm" className="text-xs sm:text-sm">Join Now</Button>
             </FloatingCard>
 
-            <FloatingCard className="p-6 text-center group cursor-pointer" onClick={() => navigate("/bookings")}>
-              <div className="bg-gradient-to-br from-green-500/20 to-green-500/10 p-4 rounded-full w-fit mx-auto mb-4 group-hover:scale-110 transition-transform">
-                <CalendarClock className="h-8 w-8 text-green-600" />
+            <FloatingCard className="p-4 sm:p-6 text-center group cursor-pointer sm:col-span-2 lg:col-span-1" onClick={() => navigate("/bookings")}>
+              <div className="bg-gradient-to-br from-green-500/20 to-green-500/10 p-3 sm:p-4 rounded-full w-fit mx-auto mb-3 sm:mb-4 group-hover:scale-110 transition-transform">
+                <CalendarClock className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
               </div>
-              <h3 className="font-semibold mb-2">Book Session</h3>
-              <p className="text-sm text-muted-foreground mb-4">1-on-1 with expert instructors</p>
-              <Button variant="outline" size="sm">Schedule Now</Button>
+              <h3 className="font-semibold mb-2 text-sm sm:text-base">Book Session</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">1-on-1 with expert instructors</p>
+              <Button variant="outline" size="sm" className="text-xs sm:text-sm">Schedule Now</Button>
             </FloatingCard>
           </motion.div>
         </div>
       </section>
 
       {/* Features - Why Choose Us */}
-      <section className="py-16">
+      <section className="py-12 sm:py-16">
         <div className="container px-4">
           <motion.div
-            className="text-center mb-12"
+            className="text-center mb-8 sm:mb-12"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold mb-4">
               Everything You Need to <span className="text-gold">Excel</span>
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
+            <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base md:text-lg">
               From complete beginner to advanced performer, we provide the tools, community, and expert guidance to accelerate your musical journey.
             </p>
           </motion.div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
             {features.map((feature, index) => (
               <FloatingCard
                 key={index}
                 delay={index * 0.1}
-                className="p-6 relative overflow-hidden group"
+                className="p-4 sm:p-6 relative overflow-hidden group"
               >
                 {feature.highlight && (
-                  <div className="absolute top-4 right-4 bg-gradient-to-r from-gold/20 to-gold/10 text-gold text-xs px-2 py-1 rounded-full font-medium border border-gold/20">
+                  <div className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-gradient-to-r from-gold/20 to-gold/10 text-gold text-xs px-2 py-1 rounded-full font-medium border border-gold/20">
                     {feature.highlight}
                   </div>
                 )}
                 
-                <div className="bg-gradient-to-br from-gold/20 to-gold/10 p-3 rounded-xl mb-4 w-fit group-hover:scale-110 transition-transform">
+                <div className="bg-gradient-to-br from-gold/20 to-gold/10 p-2.5 sm:p-3 rounded-xl mb-3 sm:mb-4 w-fit group-hover:scale-110 transition-transform">
                   {feature.icon}
                 </div>
-                <h3 className="text-lg font-semibold mb-3">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
+                <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">{feature.title}</h3>
+                <p className="text-muted-foreground text-sm sm:text-base">{feature.description}</p>
                 
                 <div className="absolute inset-0 bg-gradient-to-t from-gold/5 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
               </FloatingCard>
@@ -441,18 +441,18 @@ const LandingPage = () => {
       </section>
 
       {/* Simplified Pricing - Less Prominent */}
-      <section className="py-16 bg-muted/20">
+      <section className="py-12 sm:py-16 bg-muted/20">
         <div className="container px-4">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8 sm:mb-12">
             <motion.h2 
-              className="text-3xl font-serif font-bold mb-4"
+              className="text-2xl sm:text-3xl font-serif font-bold mb-4"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
               Choose Your Learning Path
             </motion.h2>
             <motion.p 
-              className="text-muted-foreground max-w-2xl mx-auto"
+              className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
@@ -462,7 +462,7 @@ const LandingPage = () => {
           </div>
           
           <div className="max-w-5xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
               {mockSubscriptionPlans.map((plan, index) => (
                 <motion.div
                   key={plan.id}
@@ -482,12 +482,12 @@ const LandingPage = () => {
           </div>
           
           <motion.div 
-            className="text-center mt-8"
+            className="text-center mt-6 sm:mt-8"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
           >
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground">
               ✨ 7-day free trial • Cancel anytime • No hidden fees • 30-day money-back guarantee
             </p>
           </motion.div>
