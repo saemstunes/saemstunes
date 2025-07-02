@@ -565,10 +565,10 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1">
-          <div className="container mx-auto py-6 px-4 lg:px-6 min-h-screen pb-24 lg:pb-6">
-            {children}
-          </div>
+     <main className="flex-1">
+  <div className="mx-auto w-full max-w-screen-2xl py-6 px-4 sm:px-6 min-h-[calc(100vh-6rem)] pb-24 lg:pb-6">
+    {children}
+  </div>
           
           {/* Fixed Position Elements */}
           <FloatingBackButton />
