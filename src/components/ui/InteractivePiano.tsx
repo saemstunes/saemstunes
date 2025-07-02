@@ -1,13 +1,14 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, Volume2, VolumeX, Info, Settings, Zap } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Info, Settings, Zap, X } from 'lucide-react';
 
 interface PianoKey {
   note: string;
   type: 'white' | 'black';
   frequency: number;
   keyboardKey?: string;
-  positionPercent?: number;
+  position: number; // Position as percentage from left
+  width: number; // Width as percentage
 }
 
 interface AudioState {
@@ -40,25 +41,34 @@ const InteractivePiano: React.FC = () => {
   const noteStartTimes = useRef<Map<string, number>>(new Map());
   const demoTimeouts = useRef<NodeJS.Timeout[]>([]);
 
-  const keys = useMemo<PianoKey[]>(() => [
-    { note: 'C', type: 'white', frequency: 261.63, keyboardKey: 'a' },
-    { note: 'C#', type: 'black', frequency: 277.18, keyboardKey: 'w', positionPercent: 7.5 },
-    { note: 'D', type: 'white', frequency: 293.66, keyboardKey: 's' },
-    { note: 'D#', type: 'black', frequency: 311.13, keyboardKey: 'e', positionPercent: 17.5 },
-    { note: 'E', type: 'white', frequency: 329.63, keyboardKey: 'd' },
-    { note: 'F', type: 'white', frequency: 349.23, keyboardKey: 'f' },
-    { note: 'F#', type: 'black', frequency: 369.99, keyboardKey: 't', positionPercent: 37.5 },
-    { note: 'G', type: 'white', frequency: 392.00, keyboardKey: 'g' },
-    { note: 'G#', type: 'black', frequency: 415.30, keyboardKey: 'y', positionPercent: 47.5 },
-    { note: 'A', type: 'white', frequency: 440.00, keyboardKey: 'h' },
-    { note: 'A#', type: 'black', frequency: 466.16, keyboardKey: 'u', positionPercent: 57.5 },
-    { note: 'B', type: 'white', frequency: 493.88, keyboardKey: 'j' },
-    { note: "C'", type: 'white', frequency: 523.25, keyboardKey: 'k' },
-    { note: "C#'", type: 'black', frequency: 554.37, keyboardKey: 'p', positionPercent: 77.5 },
-    { note: "D'", type: 'white', frequency: 587.33, keyboardKey: 'l' },
-    { note: "D#'", type: 'black', frequency: 622.25, keyboardKey: '[', positionPercent: 87.5 },
-    { note: "E'", type: 'white', frequency: 659.25, keyboardKey: ';' }
-  ], []);
+  // Percentage-based key positioning system
+  const keys = useMemo<PianoKey[]>(() => {
+    const whiteKeyWidth = 100 / 10; // 10 white keys total
+    const blackKeyWidth = whiteKeyWidth * 0.6;
+    
+    return [
+      // White keys positioned evenly
+      { note: 'C', type: 'white', frequency: 261.63, keyboardKey: 'a', position: 0, width: whiteKeyWidth },
+      { note: 'D', type: 'white', frequency: 293.66, keyboardKey: 's', position: whiteKeyWidth, width: whiteKeyWidth },
+      { note: 'E', type: 'white', frequency: 329.63, keyboardKey: 'd', position: whiteKeyWidth * 2, width: whiteKeyWidth },
+      { note: 'F', type: 'white', frequency: 349.23, keyboardKey: 'f', position: whiteKeyWidth * 3, width: whiteKeyWidth },
+      { note: 'G', type: 'white', frequency: 392.00, keyboardKey: 'g', position: whiteKeyWidth * 4, width: whiteKeyWidth },
+      { note: 'A', type: 'white', frequency: 440.00, keyboardKey: 'h', position: whiteKeyWidth * 5, width: whiteKeyWidth },
+      { note: 'B', type: 'white', frequency: 493.88, keyboardKey: 'j', position: whiteKeyWidth * 6, width: whiteKeyWidth },
+      { note: "C'", type: 'white', frequency: 523.25, keyboardKey: 'k', position: whiteKeyWidth * 7, width: whiteKeyWidth },
+      { note: "D'", type: 'white', frequency: 587.33, keyboardKey: 'l', position: whiteKeyWidth * 8, width: whiteKeyWidth },
+      { note: "E'", type: 'white', frequency: 659.25, keyboardKey: ';', position: whiteKeyWidth * 9, width: whiteKeyWidth },
+      
+      // Black keys positioned between white keys
+      { note: 'C#', type: 'black', frequency: 277.18, keyboardKey: 'w', position: whiteKeyWidth * 0.7, width: blackKeyWidth },
+      { note: 'D#', type: 'black', frequency: 311.13, keyboardKey: 'e', position: whiteKeyWidth * 1.7, width: blackKeyWidth },
+      { note: 'F#', type: 'black', frequency: 369.99, keyboardKey: 't', position: whiteKeyWidth * 3.7, width: blackKeyWidth },
+      { note: 'G#', type: 'black', frequency: 415.30, keyboardKey: 'y', position: whiteKeyWidth * 4.7, width: blackKeyWidth },
+      { note: 'A#', type: 'black', frequency: 466.16, keyboardKey: 'u', position: whiteKeyWidth * 5.7, width: blackKeyWidth },
+      { note: "C#'", type: 'black', frequency: 554.37, keyboardKey: 'p', position: whiteKeyWidth * 7.7, width: blackKeyWidth },
+      { note: "D#'", type: 'black', frequency: 622.25, keyboardKey: '[', position: whiteKeyWidth * 8.7, width: blackKeyWidth },
+    ];
+  }, []);
 
   useEffect(() => {
     const initAudio = async () => {
@@ -94,14 +104,15 @@ const InteractivePiano: React.FC = () => {
     };
   }, []);
 
+  // Volume and mute handling
   useEffect(() => {
     if (audioState.current.gainNode) {
-      audioState.current.gainNode.gain.value = volume;
+      audioState.current.gainNode.gain.value = isMuted ? 0 : volume;
     }
-  }, [volume]);
+  }, [volume, isMuted]);
 
   const playAudioNote = useCallback(async (frequency: number, note: string) => {
-    if (!audioState.current.context || !audioState.current.gainNode || isMuted) return;
+    if (!audioState.current.context || !audioState.current.gainNode) return;
 
     try {
       if (audioState.current.context.state === 'suspended') {
@@ -126,8 +137,9 @@ const InteractivePiano: React.FC = () => {
       oscillator.type = waveform;
       
       const now = context.currentTime;
+      const targetVolume = isMuted ? 0 : volume;
       noteGain.gain.setValueAtTime(0, now);
-      noteGain.gain.linearRampToValueAtTime(volume, now + 0.01);
+      noteGain.gain.linearRampToValueAtTime(targetVolume, now + 0.01);
       
       oscillator.start(now);
       oscillators.current.set(note, oscillator);
@@ -141,14 +153,14 @@ const InteractivePiano: React.FC = () => {
   const stopNote = useCallback((note: string) => {
     const oscillator = oscillators.current.get(note);
     if (oscillator && audioState.current.context) {
-      const { context } = audioState.current;
-      const noteGain = context.createGain();
-      noteGain.gain.setValueAtTime(volume, context.currentTime);
-      noteGain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.3);
-      oscillator.stop(context.currentTime + 0.3);
+      try {
+        oscillator.stop(audioState.current.context.currentTime + 0.3);
+      } catch (error) {
+        // Oscillator might already be stopped
+      }
       oscillators.current.delete(note);
     }
-  }, [volume]);
+  }, []);
 
   const playNote = useCallback((note: string) => {
     const key = keys.find(k => k.note === note);
@@ -171,6 +183,7 @@ const InteractivePiano: React.FC = () => {
     }
   }, [sustainPedal, stopNote]);
 
+  // Tempo-based demo timing
   const playDemo = useCallback(async () => {
     if (isPlaying) return;
     
@@ -188,11 +201,11 @@ const InteractivePiano: React.FC = () => {
       const melodies = [
         ['C', 'D', 'E', 'F', 'G', 'A', 'B', "C'", 'B', 'A', 'G', 'F', 'E', 'D', 'C'],
         ['C', 'E', 'G', "C'", 'G', 'E', 'C'],
-        ['C', 'E', 'G', 'F', 'A', "C'", 'G', 'B', "D'", 'C']
+        ['C', 'E', 'G', 'F', 'A', "C'", 'G', 'B', "D'", "C'"]
       ];
       
       const melody = melodies[Math.floor(Math.random() * melodies.length)];
-      const noteDuration = 300;
+      const noteDuration = 60000 / tempo / 2; // Use tempo for note duration
       
       melody.forEach((note, index) => {
         demoTimeouts.current.push(setTimeout(() => {
@@ -216,7 +229,7 @@ const InteractivePiano: React.FC = () => {
       console.error('Demo playback failed:', error);
       setIsPlaying(false);
     }
-  }, [isPlaying, playNote]);
+  }, [isPlaying, playNote, tempo]);
 
   useEffect(() => {
     const keyMap: Record<string, string> = {};
@@ -265,6 +278,19 @@ const InteractivePiano: React.FC = () => {
       
       if (e.key === 'Shift') {
         setSustainPedal(false);
+        // Release all sustained notes
+        activeKeys.forEach(note => {
+          if (!pressedKeys.has(keys.find(k => k.note === note)?.keyboardKey || '')) {
+            stopNote(note);
+            setTimeout(() => {
+              setActiveKeys(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(note);
+                return newSet;
+              });
+            }, 300);
+          }
+        });
       }
     };
 
@@ -274,14 +300,14 @@ const InteractivePiano: React.FC = () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [keys, playNote, releaseNote, pressedKeys, playDemo]);
+  }, [keys, playNote, releaseNote, pressedKeys, playDemo, activeKeys, stopNote]);
 
   const whiteKeys = keys.filter(k => k.type === 'white');
   const blackKeys = keys.filter(k => k.type === 'black');
 
   return (
     <motion.div
-      className="relative bg-gradient-to-b from-slate-900 via-slate-800 to-black p-3 sm:p-6 rounded-2xl shadow-2xl overflow-hidden w-full max-w-4xl mx-auto"
+      className="relative bg-gradient-to-b from-slate-900 via-slate-800 to-black p-3 sm:p-6 rounded-2xl shadow-2xl overflow-hidden w-full max-w-5xl mx-auto"
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
@@ -291,9 +317,11 @@ const InteractivePiano: React.FC = () => {
         }
       }}
     >
+      {/* Background effects */}
       <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-transparent to-purple-500/10 opacity-50" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,215,0,0.1),transparent_50%)]" />
       
+      {/* Floating particles */}
       {[...Array(6)].map((_, i) => (
         <motion.div
           key={i}
@@ -314,6 +342,7 @@ const InteractivePiano: React.FC = () => {
         />
       ))}
       
+      {/* Demo tooltip */}
       <AnimatePresence>
         {showDemo && (
           <motion.div
@@ -329,6 +358,7 @@ const InteractivePiano: React.FC = () => {
       </AnimatePresence>
       
       <div className="relative z-10">
+        {/* Control buttons */}
         <motion.div 
           className="flex flex-wrap justify-center items-center gap-2 mb-4"
           initial={{ opacity: 0, y: 20 }}
@@ -362,198 +392,317 @@ const InteractivePiano: React.FC = () => {
           
           <button
             onClick={() => setShowSettings(!showSettings)}
-            className="text-white/80 hover:text-white transition-colors p-1.5 rounded-full hover:bg-white/10"
+            className={`text-white/80 hover:text-white transition-colors p-1.5 rounded-full hover:bg-white/10 ${showSettings ? 'bg-white/20' : ''}`}
           >
             <Settings className="h-4 w-4" />
           </button>
           
           <button
             onClick={() => setShowKeyguide(!showKeyguide)}
-            className="text-white/80 hover:text-white transition-colors p-1.5 rounded-full hover:bg-white/10"
+            className={`text-white/80 hover:text-white transition-colors p-1.5 rounded-full hover:bg-white/10 ${showKeyguide ? 'bg-white/20' : ''}`}
           >
             <Info className="h-4 w-4" />
           </button>
         </motion.div>
 
+        {/* Settings Panel */}
         <AnimatePresence>
           {showSettings && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="bg-black/30 backdrop-blur-sm rounded-lg p-4 mb-4 space-y-3"
+              initial={{ opacity: 0, height: 0, scale: 0.95 }}
+              animate={{ opacity: 1, height: 'auto', scale: 1 }}
+              exit={{ opacity: 0, height: 0, scale: 0.95 }}
+              className="bg-gradient-to-br from-black/40 to-black/60 backdrop-blur-md rounded-xl p-6 mb-6 border border-white/10 shadow-2xl"
             >
-              <div className="flex items-center justify-between">
-                <label className="text-white/80 text-sm">Volume</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.1"
-                  value={volume}
-                  onChange={(e) => setVolume(parseFloat(e.target.value))}
-                  className="w-20 accent-amber-500"
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <label className="text-white/80 text-sm">Tempo: {tempo} BPM</label>
-                <input
-                  type="range"
-                  min="60"
-                  max="180"
-                  step="10"
-                  value={tempo}
-                  onChange={(e) => setTempo(parseInt(e.target.value))}
-                  className="w-24 accent-amber-500"
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <label className="text-white/80 text-sm">Waveform</label>
-                <select
-                  value={waveform}
-                  onChange={(e) => setWaveform(e.target.value as OscillatorType)}
-                  className="bg-black/50 text-white text-sm rounded px-2 py-1 border border-white/20"
-                >
-                  <option value="triangle">Triangle</option>
-                  <option value="sine">Sine</option>
-                  <option value="square">Square</option>
-                  <option value="sawtooth">Sawtooth</option>
-                </select>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <label className="text-white/80 text-sm">Octave {octaveShift > 0 ? '+' : ''}{octaveShift}</label>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => setOctaveShift(prev => Math.max(prev - 1, -2))}
-                    className="bg-white/10 text-white text-sm px-2 py-1 rounded hover:bg-white/20"
-                  >
-                    ↓
-                  </button>
-                  <button
-                    onClick={() => setOctaveShift(prev => Math.min(prev + 1, 2))}
-                    className="bg-white/10 text-white text-sm px-2 py-1 rounded hover:bg-white/20"
-                  >
-                    ↑
-                  </button>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <label className="text-white/80 text-sm">Sustain</label>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-white font-semibold text-lg flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Settings
+                </h3>
                 <button
-                  onClick={() => setSustainPedal(!sustainPedal)}
-                  className={`w-12 h-6 rounded-full transition-colors ${sustainPedal ? 'bg-amber-500' : 'bg-white/20'}`}
+                  onClick={() => setShowSettings(false)}
+                  className="text-white/60 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
                 >
-                  <div className={`w-5 h-5 bg-white rounded-full transition-transform ${sustainPedal ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                  <X className="h-4 w-4" />
                 </button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="text-white font-medium flex items-center gap-2">
+                        <Volume2 className="h-4 w-4" />
+                        Volume
+                      </label>
+                      <span className="text-amber-400 font-mono text-sm">
+                        {Math.round(volume * 100)}%
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={volume}
+                      onChange={(e) => setVolume(parseFloat(e.target.value))}
+                      className="w-full accent-amber-500 bg-white/10 rounded-lg"
+                    />
+                  </div>
+                  
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="text-white font-medium">Tempo</label>
+                      <span className="text-purple-400 font-mono text-sm">
+                        {tempo} BPM
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="60"
+                      max="180"
+                      step="10"
+                      value={tempo}
+                      onChange={(e) => setTempo(parseInt(e.target.value))}
+                      className="w-full accent-purple-500 bg-white/10 rounded-lg"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <label className="text-white font-medium block mb-3">Waveform</label>
+                    <select
+                      value={waveform}
+                      onChange={(e) => setWaveform(e.target.value as OscillatorType)}
+                      className="w-full bg-black/50 text-white rounded-lg px-3 py-2 border border-white/20 focus:border-blue-400 focus:outline-none"
+                    >
+                      <option value="triangle">Triangle</option>
+                      <option value="sine">Sine</option>
+                      <option value="square">Square</option>
+                      <option value="sawtooth">Sawtooth</option>
+                    </select>
+                  </div>
+                  
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="text-white font-medium">Octave</label>
+                      <span className="text-blue-400 font-mono text-sm">
+                        {octaveShift > 0 ? '+' : ''}{octaveShift}
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setOctaveShift(prev => Math.max(prev - 1, -2))}
+                        className="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 px-3 rounded-lg transition-colors font-medium"
+                        disabled={octaveShift <= -2}
+                      >
+                        ↓ Lower
+                      </button>
+                      <button
+                        onClick={() => setOctaveShift(0)}
+                        className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 py-2 px-3 rounded-lg transition-colors font-medium"
+                      >
+                        Reset
+                      </button>
+                      <button
+                        onClick={() => setOctaveShift(prev => Math.min(prev + 1, 2))}
+                        className="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 px-3 rounded-lg transition-colors font-medium"
+                        disabled={octaveShift >= 2}
+                      >
+                        ↑ Higher
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <label className="text-white font-medium">Sustain Pedal</label>
+                      <button
+                        onClick={() => setSustainPedal(!sustainPedal)}
+                        className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${
+                          sustainPedal ? 'bg-amber-500' : 'bg-white/20'
+                        }`}
+                      >
+                        <div className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform duration-300 ${
+                          sustainPedal ? 'translate-x-7' : 'translate-x-0'
+                        }`} />
+                      </button>
+                    </div>
+                    <p className="text-white/60 text-sm mt-2">
+                      Hold Shift key or toggle here
+                    </p>
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
+        {/* Keyguide Panel */}
         <AnimatePresence>
           {showKeyguide && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="bg-black/30 backdrop-blur-sm rounded-lg p-4 mb-4"
+              initial={{ opacity: 0, height: 0, scale: 0.95 }}
+              animate={{ opacity: 1, height: 'auto', scale: 1 }}
+              exit={{ opacity: 0, height: 0, scale: 0.95 }}
+              className="bg-gradient-to-br from-black/40 to-black/60 backdrop-blur-md rounded-xl p-6 mb-6 border border-white/10 shadow-2xl"
             >
-              <h3 className="text-white font-medium mb-2">Keyboard Controls</h3>
-              <div className="grid grid-cols-2 gap-2 text-sm text-white/80">
-                <div>ASDFGHJ: C-B</div>
-                <div>KL;: C'-E'</div>
-                <div>WETYUP[: Sharps</div>
-                <div>Space: Demo</div>
-                <div>Shift: Sustain</div>
-                <div>↑↓: Change octave</div>
-                <div>Settings: Volume/Tempo</div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-white font-semibold text-lg flex items-center gap-2">
+                  <Info className="h-5 w-5" />
+                  Keyboard Controls
+                </h3>
+                <button
+                  onClick={() => setShowKeyguide(false)}
+                  className="text-white/60 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                <div className="bg-white/5 rounded-lg p-3">
+                  <h4 className="text-amber-400 font-medium mb-2">Piano Keys</h4>
+                  <div className="space-y-1 text-white/80">
+                    <div><kbd className="bg-white/10 px-2 py-1 rounded text-xs">A S D F G H J</kbd> White keys (C-B)</div>
+                    <div><kbd className="bg-white/10 px-2 py-1 rounded text-xs">K L ;</kbd> High octave (C'-E')</div>
+                    <div><kbd className="bg-white/10 px-2 py-1 rounded text-xs">W E T Y U P [</kbd> Black keys (sharps)</div>
+                  </div>
+                </div>
+                
+                <div className="bg-white/5 rounded-lg p-3">
+                  <h4 className="text-purple-400 font-medium mb-2">Controls</h4>
+                  <div className="space-y-1 text-white/80">
+                    <div><kbd className="bg-white/10 px-2 py-1 rounded text-xs">Space</kbd> Play demo</div>
+                    <div><kbd className="bg-white/10 px-2 py-1 rounded text-xs">Shift</kbd> Sustain pedal</div>
+                    <div><kbd className="bg-white/10 px-2 py-1 rounded text-xs">↑ ↓</kbd> Change octave</div>
+                  </div>
+                </div>
+                
+                <div className="bg-white/5 rounded-lg p-3">
+                  <h4 className="text-blue-400 font-medium mb-2">Features</h4>
+                  <div className="space-y-1 text-white/80">
+                    <div>• Multiple waveforms</div>
+                    <div>• Volume & tempo control</div>
+                    <div>• Touch device support</div>
+                    <div>• Visual feedback</div>
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        <div className="relative flex justify-center touch-manipulation overflow-x-auto">
-          <motion.div 
-            className="flex space-x-0.5 sm:space-x-1 relative"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4, duration: 0.5 }}
-          >
-            {whiteKeys.map((key, index) => (
+        {/* Piano Keyboard */}
+        <div className="relative bg-gradient-to-b from-gray-800 to-gray-900 rounded-lg p-4 shadow-inner">
+          <div className="relative w-full h-32 sm:h-36 md:h-40 touch-none">
+            {/* White keys */}
+            {whiteKeys.map((key) => (
               <motion.button
                 key={key.note}
                 className={`
-                  relative w-8 h-24 sm:w-10 sm:h-28 md:w-12 md:h-32 rounded-b-lg transition-all duration-150
+                  absolute rounded-b-lg transition-all duration-150 select-none
                   ${activeKeys.has(key.note)
                     ? 'bg-gradient-to-b from-amber-400 to-amber-600 shadow-xl shadow-amber-500/50 scale-95' 
                     : 'bg-gradient-to-b from-white to-gray-100 hover:from-gray-50 hover:to-gray-200 shadow-lg hover:shadow-xl'
                   }
-                  active:scale-90 border border-gray-300 select-none
+                  active:scale-90 border border-gray-300
                 `}
+                style={{
+                  left: `${key.position}%`,
+                  width: `${key.width}%`,
+                  height: '100%',
+                }}
                 onMouseDown={() => playNote(key.note)}
                 onMouseUp={() => releaseNote(key.note)}
                 onMouseLeave={() => releaseNote(key.note)}
-                onTouchStart={() => playNote(key.note)}
-                onTouchEnd={() => releaseNote(key.note)}
-                onMouseEnter={() => setShowDemo(false)}
-                whileHover={{ y: -1 }}
-                whileTap={{ scale: 0.95 }}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  playNote(key.note);
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  releaseNote(key.note);
+                }}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.98 }}
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.5 + index * 0.05 }}
+                transition={{ 
+                  type: "spring", 
+                  stiffness: 300, 
+                  damping: 20,
+                  delay: 0.5 + whiteKeys.indexOf(key) * 0.03
+                }}
               >
                 <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-center">
-                  <span className="text-xs font-medium text-slate-700 block">
+                  <span className={`text-xs font-medium block ${
+                    activeKeys.has(key.note) ? 'text-amber-900' : 'text-slate-700'
+                  }`}>
                     {key.note}
                   </span>
                   {key.keyboardKey && (
-                    <span className="text-xs text-slate-500 block">
+                    <span className={`text-xs block ${
+                      activeKeys.has(key.note) ? 'text-amber-800' : 'text-slate-500'
+                    }`}>
                       {key.keyboardKey.toUpperCase()}
                     </span>
                   )}
                 </div>
               </motion.button>
             ))}
-          </motion.div>
 
-          <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-            {blackKeys.map((key, index) => (
+            {/* Black keys */}
+            {blackKeys.map((key) => (
               <motion.button
                 key={key.note}
                 className={`
-                  absolute pointer-events-auto w-5 h-16 sm:w-6 sm:h-18 md:w-7 md:h-20 rounded-b-md transition-all duration-150
+                  absolute rounded-b-md transition-all duration-150 select-none
                   ${activeKeys.has(key.note)
                     ? 'bg-gradient-to-b from-amber-400 to-amber-600 shadow-xl shadow-amber-500/50 scale-95' 
                     : 'bg-gradient-to-b from-gray-900 to-black hover:from-gray-800 hover:to-gray-900 shadow-lg'
                   }
-                  active:scale-90 border border-gray-700 select-none
+                  active:scale-90 border border-gray-700
                 `}
                 style={{ 
-                  left: `${key.positionPercent}%`,
-                  transform: 'translateX(-50%)',
+                  left: `${key.position}%`,
+                  width: `${key.width}%`,
+                  height: '65%',
                   zIndex: 10
                 }}
                 onMouseDown={() => playNote(key.note)}
                 onMouseUp={() => releaseNote(key.note)}
                 onMouseLeave={() => releaseNote(key.note)}
-                onTouchStart={() => playNote(key.note)}
-                onTouchEnd={() => releaseNote(key.note)}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  playNote(key.note);
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  releaseNote(key.note);
+                }}
                 whileHover={{ y: -1 }}
                 whileTap={{ scale: 0.95 }}
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.6 + index * 0.05 }}
+                transition={{ 
+                  type: "spring", 
+                  stiffness: 300, 
+                  damping: 20,
+                  delay: 0.6 + blackKeys.indexOf(key) * 0.03
+                }}
               >
                 <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-center">
-                  <span className="text-xs text-white font-medium block">
+                  <span className={`text-xs font-medium block ${
+                    activeKeys.has(key.note) ? 'text-amber-200' : 'text-white'
+                  }`}>
                     {key.note}
                   </span>
                   {key.keyboardKey && (
-                    <span className="text-xs text-white/60 block">
+                    <span className={`text-xs block ${
+                      activeKeys.has(key.note) ? 'text-amber-300' : 'text-white/60'
+                    }`}>
                       {key.keyboardKey.toUpperCase()}
                     </span>
                   )}
@@ -563,6 +712,7 @@ const InteractivePiano: React.FC = () => {
           </div>
         </div>
 
+        {/* Status indicators */}
         <motion.div 
           className="text-center mt-4 space-y-2"
           initial={{ opacity: 0, y: 20 }}
