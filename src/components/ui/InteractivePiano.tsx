@@ -17,25 +17,6 @@ interface AudioState {
   reverb: ConvolverNode | null;
 }
 
-// Musical note types with their duration ratios
-type NoteDuration = 'whole' | 'half' | 'quarter' | 'eighth' | 'sixteenth' | 'thirtysecond';
-
-// Duration ratios relative to a quarter note (crotchet)
-const DURATION_RATIOS: Record<NoteDuration, number> = {
-  'whole': 4,
-  'half': 2,
-  'quarter': 1,
-  'eighth': 0.5,
-  'sixteenth': 0.25,
-  'thirtysecond': 0.125
-};
-
-interface MusicalNote {
-  note: string;
-  duration: NoteDuration;
-  dotted?: boolean;
-}
-
 const InteractivePiano: React.FC = () => {
   const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set());
   const [pressedKeys, setPressedKeys] = useState<Set<string>>(new Set());
@@ -49,8 +30,6 @@ const InteractivePiano: React.FC = () => {
   const [sustainPedal, setSustainPedal] = useState(false);
   const [octaveShift, setOctaveShift] = useState(0);
   const [isTouch, setIsTouch] = useState(false);
-  const [tempo, setTempo] = useState(120); // Beats per minute (BPM)
-  const [audioReady, setAudioReady] = useState(false);
   
   const audioState = useRef<AudioState>({
     context: null,
@@ -61,20 +40,6 @@ const InteractivePiano: React.FC = () => {
   
   const sustainedNotes = useRef<Set<string>>(new Set());
   const oscillators = useRef<Map<string, OscillatorNode>>(new Map());
-  const noteStartTimes = useRef<Map<string, number>>(new Map());
-  const demoTimeouts = useRef<NodeJS.Timeout[]>([]);
-  const keyReleaseTimes = useRef<Map<string, number>>(new Map());
-
-  // Calculate duration in milliseconds based on note type and tempo
-  const calculateDuration = useCallback((duration: NoteDuration, dotted = false): number => {
-    const quarterNoteMs = 60000 / tempo; // Duration of a quarter note in ms
-    let ratio = DURATION_RATIOS[duration];
-    
-    // Apply dotting (add half the value again)
-    if (dotted) ratio *= 1.5;
-    
-    return quarterNoteMs * ratio;
-  }, [tempo]);
 
   // Corrected key mapping with requested keyboard shortcuts
   const keys = useMemo<PianoKey[]>(() => [
@@ -135,19 +100,6 @@ const InteractivePiano: React.FC = () => {
         reverbGain.gain.setValueAtTime(0.3, context.currentTime);
         
         audioState.current = { context, gainNode, compressor, reverb };
-        
-        // Set up a resume handler for user interaction
-        const resumeAudio = async () => {
-          if (context.state === 'suspended') {
-            await context.resume();
-          }
-          setAudioReady(true);
-        };
-
-        // Add resume handler for user interactions
-        document.addEventListener('click', resumeAudio, { once: true });
-        document.addEventListener('touchstart', resumeAudio, { once: true });
-        document.addEventListener('keydown', resumeAudio, { once: true });
       } catch (error) {
         console.warn('Web Audio API not supported');
       }
@@ -162,24 +114,12 @@ const InteractivePiano: React.FC = () => {
       if (audioState.current.context) {
         audioState.current.context.close();
       }
-      // Clear all demo timeouts on unmount
-      demoTimeouts.current.forEach(timeout => clearTimeout(timeout));
     };
   }, [volume]);
 
   // Audio playback with envelope and harmonics
-  const playAudioNote = useCallback(async (frequency: number, note: string, duration?: number) => {
+  const playAudioNote = useCallback((frequency: number, note: string, sustain = false) => {
     if (!audioState.current.context || !audioState.current.gainNode || isMuted) return;
-
-    // Ensure context is resumed
-    try {
-      if (audioState.current.context.state === 'suspended') {
-        await audioState.current.context.resume();
-      }
-    } catch (error) {
-      console.warn('Failed to resume audio context:', error);
-      return;
-    }
 
     try {
       const { context, gainNode } = audioState.current;
@@ -211,35 +151,33 @@ const InteractivePiano: React.FC = () => {
       filter.frequency.setValueAtTime(adjustedFreq * 4, context.currentTime);
       filter.Q.setValueAtTime(0.5, context.currentTime);
       
-      // Enhanced envelope with sustain
+      // Enhanced envelope
       const attackTime = 0.01;
       const decayTime = 0.1;
-      const sustainLevel = 0.6;
-      const releaseTime = sustainPedal ? 2.0 : (duration ? duration / 1000 * 0.8 : 0.8);
+      const sustainLevel = sustain ? 0.6 : 0.4;
+      const releaseTime = sustain ? 2.0 : 0.8;
       
       noteGain.gain.setValueAtTime(0, context.currentTime);
       noteGain.gain.linearRampToValueAtTime(volume * 0.5, context.currentTime + attackTime);
       noteGain.gain.exponentialRampToValueAtTime(volume * sustainLevel, context.currentTime + attackTime + decayTime);
       
-      // Schedule note release
-      if (duration && !sustainPedal) {
-        const releaseStart = context.currentTime + (duration / 1000) * 0.2;
-        noteGain.gain.exponentialRampToValueAtTime(0.001, releaseStart + releaseTime);
-        oscillator.stop(releaseStart + releaseTime);
+      if (!sustain) {
+        noteGain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + releaseTime);
       }
       
       oscillator.start(context.currentTime);
       
-      oscillators.current.set(note, oscillator);
-      sustainedNotes.current.add(note);
-      
-      // Record start time for this note
-      noteStartTimes.current.set(note, Date.now());
+      if (sustain) {
+        oscillators.current.set(note, oscillator);
+        sustainedNotes.current.add(note);
+      } else {
+        oscillator.stop(context.currentTime + releaseTime);
+      }
       
     } catch (error) {
       console.warn('Audio playback failed:', error);
     }
-  }, [volume, isMuted, waveform, octaveShift, sustainPedal]);
+  }, [volume, isMuted, waveform, octaveShift]);
 
   const stopNote = useCallback((note: string) => {
     const oscillator = oscillators.current.get(note);
@@ -249,45 +187,17 @@ const InteractivePiano: React.FC = () => {
       oscillator.stop(audioState.current.context.currentTime + 0.3);
       oscillators.current.delete(note);
       sustainedNotes.current.delete(note);
-      
-      // Record release time for dynamics calculation
-      keyReleaseTimes.current.set(note, Date.now());
     }
   }, []);
 
-  const playNote = useCallback((note: string, duration?: number) => {
+  const playNote = useCallback((note: string, sustain = false) => {
     const key = keys.find(k => k.note === note);
     if (!key) return;
 
     setActiveKeys(prev => new Set(prev).add(note));
-    playAudioNote(key.frequency, note, duration);
-  }, [keys, playAudioNote]);
-
-  const releaseNote = useCallback((note: string) => {
-    const key = keys.find(k => k.note === note);
-    if (!key) return;
-
-    // Calculate press duration for dynamic release
-    const startTime = noteStartTimes.current.get(note);
-    if (startTime) {
-      const pressDuration = Date.now() - startTime;
-      
-      // If note was pressed very briefly, treat as staccato
-      if (pressDuration < 200 && !sustainPedal) {
-        stopNote(note);
-        setTimeout(() => {
-          setActiveKeys(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(note);
-            return newSet;
-          });
-        }, 100);
-        return;
-      }
-    }
+    playAudioNote(key.frequency, note, sustain || sustainPedal);
     
-    if (!sustainPedal) {
-      stopNote(note);
+    if (!sustain && !sustainPedal) {
       setTimeout(() => {
         setActiveKeys(prev => {
           const newSet = new Set(prev);
@@ -296,111 +206,49 @@ const InteractivePiano: React.FC = () => {
         });
       }, 300);
     }
-  }, [keys, stopNote, sustainPedal]);
+  }, [keys, playAudioNote, sustainPedal]);
 
-  // Demo with musical rhythms and adjustable tempo
-  const playDemo = useCallback(async () => {
+  // Demo with multiple melodies
+  const playDemo = useCallback(() => {
     if (isPlaying) return;
     
     setIsPlaying(true);
     setShowDemo(false);
     
-    // Clear any previous timeouts
-    demoTimeouts.current.forEach(timeout => clearTimeout(timeout));
-    demoTimeouts.current = [];
+    const melodies = [
+      ['C', 'D', 'E', 'F', 'G', 'A', 'B', "C'"], // Scale
+      ['C', 'E', 'G', "C'", 'G', 'E', 'C'], // Arpeggio
+      ['C', 'C', 'G', 'G', 'A', 'A', 'G'], // Twinkle Twinkle
+      ["C'", 'B', 'A', 'G', 'F', 'E', 'D', 'C'], // Descending scale
+      ['C', 'D#', 'G', 'A#', "C'", "D#'", "E'"], // Chromatic melody
+      // 🎶 Melody 1: Twinkle Twinkle Little Star (within C to E')
+      ['C', 'C', 'G', 'G', 'A', 'A', 'G', 'F', 'F', 'E', 'E', 'D', 'D', 'C', 'G', 'G', 'F', 'F', 'E', 'E', 'D', 'G', 'G', 'F', 'F', 'E', 'E', 'D', 'C', 'C', 'G', 'G', 'A', 'A', 'G'],
+      
+      // 🎸 Melody 2: Beat It – Michael Jackson riff simplified within C to E'
+      ['E', 'D', 'E', 'G', 'A', 'G', 'E', 'D', 'E', 'G', 'A', 'G', 'E', 'D', 'C'],
+      
+      // 🎼 Melody 3: Mary Had a Little Lamb (within C to E')
+      ['E', 'D', 'C', 'D', 'E', 'E', 'E', 'D', 'D', 'D', 'E', 'G', 'G', 'E', 'D', 'C', 'D', 'E', 'E', 'E', 'E', 'D', 'D', 'E', 'D', 'C'],
+      
+      // 🎶 Melody 4: Happy Birthday (first phrase) adjusted within C to E'
+      ['C', 'C', 'D', 'C', 'E', 'D', 'C', 'C', 'D', 'C', 'E', 'D'],
+      
+      // 🎹 Melody 5: Ode to Joy – Beethoven (first theme) within C to E'
+      ['E', 'E', 'F', 'G', 'G', 'F', 'E', 'D', 'C', 'C', 'D', 'E', 'E', 'D', 'D', 'E', 'E', 'F', 'G', 'G', 'F', 'E', 'D', 'C', 'C', 'D', 'E', 'D', 'C', 'C']
     
-    // Ensure audio is ready before playing
-    try {
-      if (audioState.current.context?.state === 'suspended') {
-        await audioState.current.context.resume();
-        setAudioReady(true);
-      }
-    } catch (error) {
-      console.warn('Failed to resume audio context for demo:', error);
-      setIsPlaying(false);
-      return;
-    }
-    
-    // Define melodies with musical note durations
-    const melodies: MusicalNote[][] = [
-      // Twinkle Twinkle Little Star
-      [
-        { note: 'C', duration: 'quarter' },
-        { note: 'C', duration: 'quarter' },
-        { note: 'G', duration: 'quarter' },
-        { note: 'G', duration: 'quarter' },
-        { note: 'A', duration: 'quarter' },
-        { note: 'A', duration: 'quarter' },
-        { note: 'G', duration: 'half' },
-        { note: 'F', duration: 'quarter' },
-        { note: 'F', duration: 'quarter' },
-        { note: 'E', duration: 'quarter' },
-        { note: 'E', duration: 'quarter' },
-        { note: 'D', duration: 'quarter' },
-        { note: 'D', duration: 'quarter' },
-        { note: 'C', duration: 'half' },
-      ],
-      // Simple scale with rhythm
-      [
-        { note: 'C', duration: 'eighth' },
-        { note: 'D', duration: 'eighth' },
-        { note: 'E', duration: 'quarter' },
-        { note: 'F', duration: 'eighth' },
-        { note: 'G', duration: 'eighth' },
-        { note: 'A', duration: 'quarter' },
-        { note: 'B', duration: 'eighth' },
-        { note: "C'", duration: 'eighth' },
-        { note: "C'", duration: 'quarter', dotted: true },
-        { note: 'C', duration: 'eighth' },
-        { note: 'F', duration: 'quarter' },
-      ],
-      // Chord progression
-      [
-        { note: 'C', duration: 'quarter' },
-        { note: 'E', duration: 'quarter' },
-        { note: 'G', duration: 'half' },
-        { note: 'F', duration: 'quarter' },
-        { note: 'A', duration: 'quarter' },
-        { note: "C'", duration: 'half' },
-        { note: 'G', duration: 'quarter' },
-        { note: 'B', duration: 'quarter' },
-        { note: "E'", duration: 'half' },
-        { note: 'C', duration: 'quarter' },
-        { note: 'E', duration: 'quarter' },
-        { note: 'G', duration: 'whole' },
-      ]
     ];
     
     const melody = melodies[Math.floor(Math.random() * melodies.length)];
     
-    let cumulativeTime = 0;
-    melody.forEach(({ note, duration, dotted }) => {
-      const noteDuration = calculateDuration(duration, dotted);
-      
-      // Schedule note start
-      demoTimeouts.current.push(setTimeout(() => {
-        playNote(note, noteDuration);
-      }, cumulativeTime));
-      
-      // Schedule note release (if not sustained)
-      if (!sustainPedal) {
-        demoTimeouts.current.push(setTimeout(() => {
-          setActiveKeys(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(note);
-            return newSet;
-          });
-        }, cumulativeTime + noteDuration));
-      }
-      
-      cumulativeTime += noteDuration;
+    melody.forEach((note, index) => {
+      setTimeout(() => {
+        playNote(note);
+        if (index === melody.length - 1) {
+          setTimeout(() => setIsPlaying(false), 300);
+        }
+      }, index * 300);
     });
-    
-    // End of demo
-    demoTimeouts.current.push(setTimeout(() => {
-      setIsPlaying(false);
-    }, cumulativeTime + 500));
-  }, [isPlaying, playNote, sustainPedal, calculateDuration]);
+  }, [isPlaying, playNote]);
 
   // Keyboard controls with new mappings
   useEffect(() => {
@@ -415,7 +263,7 @@ const InteractivePiano: React.FC = () => {
       const note = keyMap[event.key.toLowerCase()];
       if (note && !pressedKeys.has(event.key.toLowerCase())) {
         setPressedKeys(prev => new Set(prev).add(event.key.toLowerCase()));
-        playNote(note);
+        playNote(note, true);
       }
       
       // Special keys
@@ -444,7 +292,14 @@ const InteractivePiano: React.FC = () => {
           newSet.delete(event.key.toLowerCase());
           return newSet;
         });
-        releaseNote(note);
+        if (!sustainPedal) {
+          stopNote(note);
+          setActiveKeys(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(note);
+            return newSet;
+          });
+        }
       }
       
       if (event.key === 'Shift') {
@@ -467,25 +322,25 @@ const InteractivePiano: React.FC = () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [keys, playNote, releaseNote, pressedKeys, sustainPedal, stopNote, playDemo]);
+  }, [keys, playNote, stopNote, pressedKeys, sustainPedal]);
 
   const whiteKeys = keys.filter(k => k.type === 'white');
   const blackKeys = keys.filter(k => k.type === 'black');
 
   // Calculate black key positions relative to white keys
   const getBlackKeyPosition = (blackKey: PianoKey) => {
-  const whiteKeyWidthPx = 32; // Adjust if your key width changes
-  
-  switch (blackKey.note) {
-    case 'C#': return whiteKeyWidthPx * 0.75; // Between C and D
-    case 'D#': return whiteKeyWidthPx * 1.75; // Between D and E
-    case 'F#': return whiteKeyWidthPx * 3.25; // Between F and G
-    case 'G#': return whiteKeyWidthPx * 4.25; // Between G and A
-    case 'A#': return whiteKeyWidthPx * 5.25; // Between A and B
-    case "C#'": return whiteKeyWidthPx * 6.75; // Between C' and D'
-    case "D#'": return whiteKeyWidthPx * 7.75; // Between D' and E'
-    default: return 0;
-  }
+    const whiteKeyWidthPx = 32; // Base width in pixels for calculations
+    
+    switch (blackKey.note) {
+      case 'C#': return whiteKeyWidthPx * 0.7; 
+      case 'D#': return whiteKeyWidthPx * 1.7; 
+      case 'F#': return whiteKeyWidthPx * 3.7; 
+      case 'G#': return whiteKeyWidthPx * 4.7; 
+      case 'A#': return whiteKeyWidthPx * 5.7; 
+      case "C#'": return whiteKeyWidthPx * 7.7; 
+      case "D#'": return whiteKeyWidthPx * 8.7;
+      default: return 0;
+    }
   };
 
   return (
@@ -494,12 +349,6 @@ const InteractivePiano: React.FC = () => {
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
-      onClick={() => {
-        // Try to resume audio on any click if not ready
-        if (!audioReady && audioState.current.context?.state === 'suspended') {
-          audioState.current.context.resume().then(() => setAudioReady(true));
-        }
-      }}
     >
       {/* Background effects */}
       <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-transparent to-purple-500/10 opacity-50" />
@@ -612,19 +461,6 @@ const InteractivePiano: React.FC = () => {
               </div>
               
               <div className="flex items-center justify-between">
-                <label className="text-white/80 text-sm">Tempo: {tempo} BPM</label>
-                <input
-                  type="range"
-                  min="40"
-                  max="240"
-                  step="10"
-                  value={tempo}
-                  onChange={(e) => setTempo(parseInt(e.target.value))}
-                  className="w-24 accent-amber-500"
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
                 <label className="text-white/80 text-sm">Waveform</label>
                 <select
                   value={waveform}
@@ -686,7 +522,7 @@ const InteractivePiano: React.FC = () => {
                 <div>Space: Demo</div>
                 <div>Shift: Sustain</div>
                 <div>↑↓: Change octave</div>
-                <div>Settings: Volume/Tempo</div>
+                <div>Settings: Volume/Wave</div>
               </div>
             </motion.div>
           )}
@@ -713,11 +549,8 @@ const InteractivePiano: React.FC = () => {
                   active:scale-90 border border-gray-300 select-none
                   ${isTouch ? 'touch-manipulation' : ''}
                 `}
-                onMouseDown={() => playNote(key.note)}
-                onMouseUp={() => releaseNote(key.note)}
-                onMouseLeave={() => releaseNote(key.note)}
+                onClick={() => playNote(key.note)}
                 onTouchStart={() => playNote(key.note)}
-                onTouchEnd={() => releaseNote(key.note)}
                 onMouseEnter={() => setShowDemo(false)}
                 whileHover={{ y: -1 }}
                 whileTap={{ scale: 0.95 }}
@@ -758,11 +591,8 @@ const InteractivePiano: React.FC = () => {
                   zIndex: 10,
                   transform: 'translateX(-50%)'
                 }}
-                onMouseDown={() => playNote(key.note)}
-                onMouseUp={() => releaseNote(key.note)}
-                onMouseLeave={() => releaseNote(key.note)}
+                onClick={() => playNote(key.note)}
                 onTouchStart={() => playNote(key.note)}
-                onTouchEnd={() => releaseNote(key.note)}
                 whileHover={{ y: -1 }}
                 whileTap={{ scale: 0.95 }}
                 initial={{ y: 20, opacity: 0 }}
@@ -803,9 +633,6 @@ const InteractivePiano: React.FC = () => {
                 Octave {octaveShift > 0 ? '+' : ''}{octaveShift}
               </span>
             )}
-            <span className="bg-purple-500/20 text-purple-400 px-2 py-1 rounded-full">
-              Tempo: {tempo} BPM
-            </span>
           </div>
           
           {/* Active notes display */}
