@@ -111,8 +111,28 @@ const InteractivePiano: React.FC = () => {
     }
   }, [volume, isMuted]);
 
+  // Improved mute toggle with immediate effect
+  const toggleMute = useCallback(() => {
+    const newMuted = !isMuted;
+    setIsMuted(newMuted);
+    
+    // Immediately stop all playing notes when muting
+    if (newMuted) {
+      oscillators.current.forEach((oscillator) => {
+        try {
+          oscillator.stop();
+        } catch (e) {
+          // Ignore stopping errors
+        }
+      });
+      oscillators.current.clear();
+      setActiveKeys(new Set());
+      setPressedKeys(new Set());
+    }
+  }, [isMuted]);
+
   const playAudioNote = useCallback(async (frequency: number, note: string) => {
-    if (!audioState.current.context || !audioState.current.gainNode) return;
+    if (!audioState.current.context || !audioState.current.gainNode || isMuted) return;
 
     try {
       if (audioState.current.context.state === 'suspended') {
@@ -150,25 +170,31 @@ const InteractivePiano: React.FC = () => {
     }
   }, [volume, isMuted, waveform, octaveShift]);
 
+  // Improved stopNote function without error-prone comment
   const stopNote = useCallback((note: string) => {
     const oscillator = oscillators.current.get(note);
     if (oscillator && audioState.current.context) {
+      const releaseTime = audioState.current.context.currentTime + 0.3;
       try {
-        oscillator.stop(audioState.current.context.currentTime + 0.3);
-      } catch (error) {
-        // Oscillator might already be stopped
+        // Only try to stop if oscillator hasn't already been stopped
+        if (oscillator.context.state !== 'closed') {
+          oscillator.stop(releaseTime);
+        }
+      } finally {
+        oscillators.current.delete(note);
       }
-      oscillators.current.delete(note);
     }
   }, []);
 
   const playNote = useCallback((note: string) => {
+    if (isMuted) return;
+    
     const key = keys.find(k => k.note === note);
     if (!key) return;
 
     setActiveKeys(prev => new Set(prev).add(note));
     playAudioNote(key.frequency, note);
-  }, [keys, playAudioNote]);
+  }, [keys, playAudioNote, isMuted]);
 
   const releaseNote = useCallback((note: string) => {
     if (!sustainPedal) {
@@ -185,7 +211,7 @@ const InteractivePiano: React.FC = () => {
 
   // Tempo-based demo timing
   const playDemo = useCallback(async () => {
-    if (isPlaying) return;
+    if (isPlaying || isMuted) return;
     
     setIsPlaying(true);
     setShowDemo(false);
@@ -229,7 +255,7 @@ const InteractivePiano: React.FC = () => {
       console.error('Demo playback failed:', error);
       setIsPlaying(false);
     }
-  }, [isPlaying, playNote, tempo]);
+  }, [isPlaying, playNote, tempo, isMuted]);
 
   useEffect(() => {
     const keyMap: Record<string, string> = {};
@@ -367,7 +393,7 @@ const InteractivePiano: React.FC = () => {
         >
           <button
             onClick={playDemo}
-            disabled={isPlaying}
+            disabled={isPlaying || isMuted}
             className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 text-white border border-amber-500/30 backdrop-blur-sm transition-all duration-300 px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-2 disabled:opacity-50"
           >
             {isPlaying ? (
@@ -384,8 +410,10 @@ const InteractivePiano: React.FC = () => {
           </button>
           
           <button
-            onClick={() => setIsMuted(!isMuted)}
-            className="text-white/80 hover:text-white transition-colors p-1.5 rounded-full hover:bg-white/10"
+            onClick={toggleMute}
+            className={`text-white/80 hover:text-white transition-colors p-1.5 rounded-full hover:bg-white/10 ${
+              isMuted ? 'bg-red-500/20 text-red-300' : ''
+            }`}
           >
             {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
           </button>
@@ -594,121 +622,108 @@ const InteractivePiano: React.FC = () => {
           )}
         </AnimatePresence>
 
-        {/* Piano Keyboard */}
+        {/* Piano Keyboard - Responsive to container size */}
         <div className="relative bg-gradient-to-b from-gray-800 to-gray-900 rounded-lg p-4 shadow-inner">
-          <div className="relative w-full h-32 sm:h-36 md:h-40 touch-none">
-            {/* White keys */}
-            {whiteKeys.map((key) => (
-              <motion.button
-                key={key.note}
-                className={`
-                  absolute rounded-b-lg transition-all duration-150 select-none
-                  ${activeKeys.has(key.note)
-                    ? 'bg-gradient-to-b from-amber-400 to-amber-600 shadow-xl shadow-amber-500/50 scale-95' 
-                    : 'bg-gradient-to-b from-white to-gray-100 hover:from-gray-50 hover:to-gray-200 shadow-lg hover:shadow-xl'
-                  }
-                  active:scale-90 border border-gray-300
-                `}
-                style={{
-                  left: `${key.position}%`,
-                  width: `${key.width}%`,
-                  height: '100%',
-                }}
-                onMouseDown={() => playNote(key.note)}
-                onMouseUp={() => releaseNote(key.note)}
-                onMouseLeave={() => releaseNote(key.note)}
-                onTouchStart={(e) => {
-                  e.preventDefault();
-                  playNote(key.note);
-                }}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  releaseNote(key.note);
-                }}
-                whileHover={{ y: -2 }}
-                whileTap={{ scale: 0.98 }}
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ 
-                  type: "spring", 
-                  stiffness: 300, 
-                  damping: 20,
-                  delay: 0.5 + whiteKeys.indexOf(key) * 0.03
-                }}
-              >
-                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-center">
-                  <span className={`text-xs font-medium block ${
-                    activeKeys.has(key.note) ? 'text-amber-900' : 'text-slate-700'
-                  }`}>
-                    {key.note}
-                  </span>
-                  {key.keyboardKey && (
-                    <span className={`text-xs block ${
-                      activeKeys.has(key.note) ? 'text-amber-800' : 'text-slate-500'
+          {/* Responsive container that maintains aspect ratio */}
+          <div className="relative w-full pb-[25%] min-h-[150px] sm:min-h-[180px] md:min-h-[200px]">
+            <div className="absolute inset-0">
+              {/* White keys */}
+              {whiteKeys.map((key) => (
+                <motion.button
+                  key={key.note}
+                  className={`
+                    absolute rounded-b-lg transition-all duration-150 select-none
+                    ${activeKeys.has(key.note)
+                      ? 'bg-gradient-to-b from-amber-400 to-amber-600 shadow-xl shadow-amber-500/50 scale-95' 
+                      : 'bg-gradient-to-b from-white to-gray-100 hover:from-gray-50 hover:to-gray-200 shadow-lg hover:shadow-xl'
+                    }
+                    active:scale-90 border border-gray-300
+                  `}
+                  style={{
+                    left: `${key.position}%`,
+                    width: `${key.width}%`,
+                    height: '100%',
+                  }}
+                  onMouseDown={() => playNote(key.note)}
+                  onMouseUp={() => releaseNote(key.note)}
+                  onMouseLeave={() => releaseNote(key.note)}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    playNote(key.note);
+                  }}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    releaseNote(key.note);
+                  }}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-center">
+                    <span className={`text-xs font-medium block ${
+                      activeKeys.has(key.note) ? 'text-amber-900' : 'text-slate-700'
                     }`}>
-                      {key.keyboardKey.toUpperCase()}
+                      {key.note}
                     </span>
-                  )}
-                </div>
-              </motion.button>
-            ))}
+                    {key.keyboardKey && (
+                      <span className={`text-xs block ${
+                        activeKeys.has(key.note) ? 'text-amber-800' : 'text-slate-500'
+                      }`}>
+                        {key.keyboardKey.toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                </motion.button>
+              ))}
 
-            {/* Black keys */}
-            {blackKeys.map((key) => (
-              <motion.button
-                key={key.note}
-                className={`
-                  absolute rounded-b-md transition-all duration-150 select-none
-                  ${activeKeys.has(key.note)
-                    ? 'bg-gradient-to-b from-amber-400 to-amber-600 shadow-xl shadow-amber-500/50 scale-95' 
-                    : 'bg-gradient-to-b from-gray-900 to-black hover:from-gray-800 hover:to-gray-900 shadow-lg'
-                  }
-                  active:scale-90 border border-gray-700
-                `}
-                style={{ 
-                  left: `${key.position}%`,
-                  width: `${key.width}%`,
-                  height: '65%',
-                  zIndex: 10
-                }}
-                onMouseDown={() => playNote(key.note)}
-                onMouseUp={() => releaseNote(key.note)}
-                onMouseLeave={() => releaseNote(key.note)}
-                onTouchStart={(e) => {
-                  e.preventDefault();
-                  playNote(key.note);
-                }}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  releaseNote(key.note);
-                }}
-                whileHover={{ y: -1 }}
-                whileTap={{ scale: 0.95 }}
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ 
-                  type: "spring", 
-                  stiffness: 300, 
-                  damping: 20,
-                  delay: 0.6 + blackKeys.indexOf(key) * 0.03
-                }}
-              >
-                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-center">
-                  <span className={`text-xs font-medium block ${
-                    activeKeys.has(key.note) ? 'text-amber-200' : 'text-white'
-                  }`}>
-                    {key.note}
-                  </span>
-                  {key.keyboardKey && (
-                    <span className={`text-xs block ${
-                      activeKeys.has(key.note) ? 'text-amber-300' : 'text-white/60'
+              {/* Black keys */}
+              {blackKeys.map((key) => (
+                <motion.button
+                  key={key.note}
+                  className={`
+                    absolute rounded-b-md transition-all duration-150 select-none
+                    ${activeKeys.has(key.note)
+                      ? 'bg-gradient-to-b from-amber-400 to-amber-600 shadow-xl shadow-amber-500/50 scale-95' 
+                      : 'bg-gradient-to-b from-gray-900 to-black hover:from-gray-800 hover:to-gray-900 shadow-lg'
+                    }
+                    active:scale-90 border border-gray-700
+                  `}
+                  style={{ 
+                    left: `${key.position}%`,
+                    width: `${key.width}%`,
+                    height: '65%',
+                    zIndex: 10
+                  }}
+                  onMouseDown={() => playNote(key.note)}
+                  onMouseUp={() => releaseNote(key.note)}
+                  onMouseLeave={() => releaseNote(key.note)}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    playNote(key.note);
+                  }}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    releaseNote(key.note);
+                  }}
+                  whileHover={{ y: -1 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-center">
+                    <span className={`text-xs font-medium block ${
+                      activeKeys.has(key.note) ? 'text-amber-200' : 'text-white'
                     }`}>
-                      {key.keyboardKey.toUpperCase()}
+                      {key.note}
                     </span>
-                  )}
-                </div>
-              </motion.button>
-            ))}
+                    {key.keyboardKey && (
+                      <span className={`text-xs block ${
+                        activeKeys.has(key.note) ? 'text-amber-300' : 'text-white/60'
+                      }`}>
+                        {key.keyboardKey.toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                </motion.button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -734,10 +749,15 @@ const InteractivePiano: React.FC = () => {
             <span className="bg-purple-500/20 text-purple-400 px-2 py-1 rounded-full">
               Tempo: {tempo} BPM
             </span>
+            {isMuted && (
+              <span className="bg-red-500/20 text-red-400 px-2 py-1 rounded-full">
+                Muted
+              </span>
+            )}
           </div>
           
           <AnimatePresence>
-            {activeKeys.size > 0 && (
+            {activeKeys.size > 0 && !isMuted && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
