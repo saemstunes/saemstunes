@@ -17,7 +17,7 @@ interface AudioState {
   reverb: ConvolverNode | null;
 }
 
-const EnhancedPiano: React.FC = () => {
+const InteractivePiano: React.FC = () => {
   const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set());
   const [pressedKeys, setPressedKeys] = useState<Set<string>>(new Set());
   const [isPlaying, setIsPlaying] = useState(false);
@@ -41,23 +41,30 @@ const EnhancedPiano: React.FC = () => {
   const sustainedNotes = useRef<Set<string>>(new Set());
   const oscillators = useRef<Map<string, OscillatorNode>>(new Map());
 
-  // Enhanced key mapping with more intuitive layout
+  // Corrected key mapping with requested keyboard shortcuts
   const keys = useMemo<PianoKey[]>(() => [
+    // First octave (C to B)
     { note: 'C', type: 'white', frequency: 261.63, keyboardKey: 'a' },
-    { note: 'C#', type: 'black', frequency: 277.18, offset: 30, keyboardKey: 'w' },
+    { note: 'C#', type: 'black', frequency: 277.18, keyboardKey: 'w' },
     { note: 'D', type: 'white', frequency: 293.66, keyboardKey: 's' },
-    { note: 'D#', type: 'black', frequency: 311.13, offset: 78, keyboardKey: 'e' },
+    { note: 'D#', type: 'black', frequency: 311.13, keyboardKey: 'e' },
     { note: 'E', type: 'white', frequency: 329.63, keyboardKey: 'd' },
     { note: 'F', type: 'white', frequency: 349.23, keyboardKey: 'f' },
-    { note: 'F#', type: 'black', frequency: 369.99, offset: 174, keyboardKey: 't' },
+    { note: 'F#', type: 'black', frequency: 369.99, keyboardKey: 't' },
     { note: 'G', type: 'white', frequency: 392.00, keyboardKey: 'g' },
-    { note: 'G#', type: 'black', frequency: 415.30, offset: 222, keyboardKey: 'y' },
+    { note: 'G#', type: 'black', frequency: 415.30, keyboardKey: 'y' },
     { note: 'A', type: 'white', frequency: 440.00, keyboardKey: 'h' },
-    { note: 'A#', type: 'black', frequency: 466.16, offset: 270, keyboardKey: 'u' },
-    { note: 'B', type: 'white', frequency: 493.88, keyboardKey: 'j' }
+    { note: 'A#', type: 'black', frequency: 466.16, keyboardKey: 'u' },
+    { note: 'B', type: 'white', frequency: 493.88, keyboardKey: 'j' },
+    // Second octave (C' to E')
+    { note: "C'", type: 'white', frequency: 523.25, keyboardKey: 'k' },
+    { note: "C#'", type: 'black', frequency: 554.37, keyboardKey: 'p' },
+    { note: "D'", type: 'white', frequency: 587.33, keyboardKey: 'l' },
+    { note: "D#'", type: 'black', frequency: 622.25, keyboardKey: '[' },
+    { note: "E'", type: 'white', frequency: 659.25, keyboardKey: ';' }
   ], []);
 
-  // Enhanced audio initialization with effects
+  // Audio initialization with effects
   useEffect(() => {
     const initAudio = async () => {
       try {
@@ -110,7 +117,7 @@ const EnhancedPiano: React.FC = () => {
     };
   }, [volume]);
 
-  // Enhanced audio playback with better envelope and harmonics
+  // Audio playback with envelope and harmonics
   const playAudioNote = useCallback((frequency: number, note: string, sustain = false) => {
     if (!audioState.current.context || !audioState.current.gainNode || isMuted) return;
 
@@ -201,7 +208,7 @@ const EnhancedPiano: React.FC = () => {
     }
   }, [keys, playAudioNote, sustainPedal]);
 
-  // Enhanced demo with multiple melodies
+  // Demo with multiple melodies
   const playDemo = useCallback(() => {
     if (isPlaying) return;
     
@@ -209,9 +216,11 @@ const EnhancedPiano: React.FC = () => {
     setShowDemo(false);
     
     const melodies = [
-      ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'C'], // Scale
-      ['C', 'E', 'G', 'C', 'G', 'E', 'C'], // Arpeggio
+      ['C', 'D', 'E', 'F', 'G', 'A', 'B', "C'"], // Scale
+      ['C', 'E', 'G', "C'", 'G', 'E', 'C'], // Arpeggio
       ['C', 'C', 'G', 'G', 'A', 'A', 'G'], // Twinkle Twinkle
+      ["C'", 'B', 'A', 'G', 'F', 'E', 'D', 'C'], // Descending scale
+      ['C', 'D#', 'G', 'A#', "C'", "D#'", "E'"], // Chromatic melody
     ];
     
     const melody = melodies[Math.floor(Math.random() * melodies.length)];
@@ -226,7 +235,7 @@ const EnhancedPiano: React.FC = () => {
     });
   }, [isPlaying, playNote]);
 
-  // Enhanced keyboard controls
+  // Keyboard controls with new mappings
   useEffect(() => {
     const keyMap: Record<string, string> = {};
     keys.forEach(key => {
@@ -303,14 +312,30 @@ const EnhancedPiano: React.FC = () => {
   const whiteKeys = keys.filter(k => k.type === 'white');
   const blackKeys = keys.filter(k => k.type === 'black');
 
+  // Calculate black key positions relative to white keys
+  const getBlackKeyPosition = (blackKey: PianoKey) => {
+    const whiteKeyWidthPx = 32; // Base width in pixels for calculations
+    
+    switch (blackKey.note) {
+      case 'C#': return whiteKeyWidthPx * 0.7; 
+      case 'D#': return whiteKeyWidthPx * 1.7; 
+      case 'F#': return whiteKeyWidthPx * 3.7; 
+      case 'G#': return whiteKeyWidthPx * 4.7; 
+      case 'A#': return whiteKeyWidthPx * 5.7; 
+      case "C#'": return whiteKeyWidthPx * 7.7; 
+      case "D#'": return whiteKeyWidthPx * 8.7;
+      default: return 0;
+    }
+  };
+
   return (
     <motion.div
-      className="relative bg-gradient-to-b from-slate-900 via-slate-800 to-black p-3 sm:p-6 rounded-2xl shadow-2xl overflow-hidden w-full max-w-lg mx-auto"
+      className="relative bg-gradient-to-b from-slate-900 via-slate-800 to-black p-3 sm:p-6 rounded-2xl shadow-2xl overflow-hidden w-full max-w-4xl mx-auto"
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
     >
-      {/* Enhanced background effects */}
+      {/* Background effects */}
       <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-transparent to-purple-500/10 opacity-50" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,215,0,0.1),transparent_50%)]" />
       
@@ -351,7 +376,7 @@ const EnhancedPiano: React.FC = () => {
       </AnimatePresence>
       
       <div className="relative z-10">
-        {/* Enhanced control panel */}
+        {/* Control panel */}
         <motion.div 
           className="flex flex-wrap justify-center items-center gap-2 mb-4"
           initial={{ opacity: 0, y: 20 }}
@@ -476,17 +501,20 @@ const EnhancedPiano: React.FC = () => {
             >
               <h3 className="text-white font-medium mb-2">Keyboard Controls</h3>
               <div className="grid grid-cols-2 gap-2 text-sm text-white/80">
-                <div>A-J keys: Play notes</div>
+                <div>ASDFGHJ: C-B</div>
+                <div>KL;: C'-E'</div>
+                <div>WETYUP[: Sharps</div>
                 <div>Space: Demo</div>
-                <div>Shift: Sustain pedal</div>
+                <div>Shift: Sustain</div>
                 <div>↑↓: Change octave</div>
+                <div>Settings: Volume/Wave</div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Enhanced Piano Keys */}
-        <div className="relative flex justify-center touch-manipulation">
+        {/* Piano Keys */}
+        <div className="relative flex justify-center touch-manipulation overflow-x-auto">
           {/* White Keys */}
           <motion.div 
             className="flex space-x-0.5 sm:space-x-1"
@@ -530,12 +558,12 @@ const EnhancedPiano: React.FC = () => {
           </motion.div>
 
           {/* Black Keys Overlay */}
-          <div className="absolute top-0 flex pointer-events-none">
+          <div className="absolute top-0 left-0 flex pointer-events-none">
             {blackKeys.map((key, index) => (
               <motion.button
                 key={key.note}
                 className={`
-                  relative pointer-events-auto w-5 h-16 sm:w-6 sm:h-18 md:w-7 md:h-20 rounded-b-md transition-all duration-150 transform-gpu
+                  absolute pointer-events-auto w-5 h-16 sm:w-6 sm:h-18 md:w-7 md:h-20 rounded-b-md transition-all duration-150 transform-gpu
                   ${activeKeys.has(key.note)
                     ? 'bg-gradient-to-b from-amber-400 to-amber-600 shadow-xl shadow-amber-500/50 scale-95' 
                     : 'bg-gradient-to-b from-gray-900 to-black hover:from-gray-800 hover:to-gray-900 shadow-lg'
@@ -544,8 +572,9 @@ const EnhancedPiano: React.FC = () => {
                   ${isTouch ? 'touch-manipulation' : ''}
                 `}
                 style={{ 
-                  marginLeft: `${(key.offset || 0) * 0.8}px`,
-                  zIndex: 10 
+                  left: `${getBlackKeyPosition(key)}px`,
+                  zIndex: 10,
+                  transform: 'translateX(-50%)'
                 }}
                 onClick={() => playNote(key.note)}
                 onTouchStart={() => playNote(key.note)}
@@ -570,7 +599,7 @@ const EnhancedPiano: React.FC = () => {
           </div>
         </div>
 
-        {/* Enhanced status display */}
+        {/* Status display */}
         <motion.div 
           className="text-center mt-4 space-y-2"
           initial={{ opacity: 0, y: 20 }}
@@ -578,7 +607,7 @@ const EnhancedPiano: React.FC = () => {
           transition={{ delay: 0.8 }}
         >
           <div className="flex flex-wrap items-center justify-center gap-2 text-xs sm:text-sm">
-            <span className="text-white/80">Enhanced Piano</span>
+            <span className="text-white/80">Interactive Piano</span>
             {sustainPedal && (
               <span className="bg-amber-500/20 text-amber-400 px-2 py-1 rounded-full">
                 Sustain ON
@@ -613,4 +642,4 @@ const EnhancedPiano: React.FC = () => {
   );
 };
 
-export default EnhancedPiano;
+export default InteractivePiano;
