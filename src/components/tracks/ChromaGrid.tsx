@@ -465,7 +465,7 @@ export const ChromaGrid = ({
         ))}
       </div>
 
-      <style jsx>{`
+      <style>{`
         .line-clamp-1 {
           display: -webkit-box;
           -webkit-line-clamp: 1;
