@@ -246,9 +246,10 @@ const Library = () => {
           <div className="lg:col-span-2">
             {activeQuizId ? (
               <DynamicMusicQuiz 
-                quizId={activeQuizId}
-                onComplete={handleQuizComplete}
-              />
+  quizId={activeQuizId}
+  onComplete={handleQuizComplete}
+  supabaseClient={supabase} // ✅ Pass the client here
+/>
 
             ) : (
               <Card>

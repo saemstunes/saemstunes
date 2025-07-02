@@ -30,77 +30,6 @@ export type Database = {
         }
         Relationships: []
       }
-      artist_followers: {
-        Row: {
-          artist_id: string | null
-          followed_at: string | null
-          id: string
-          user_id: string | null
-        }
-        Insert: {
-          artist_id?: string | null
-          followed_at?: string | null
-          id?: string
-          user_id?: string | null
-        }
-        Update: {
-          artist_id?: string | null
-          followed_at?: string | null
-          id?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "artist_followers_artist_id_fkey"
-            columns: ["artist_id"]
-            isOneToOne: false
-            referencedRelation: "artists"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      artists: {
-        Row: {
-          bio: string | null
-          created_at: string | null
-          follower_count: number | null
-          genre: string[] | null
-          id: string
-          location: string | null
-          name: string
-          profile_image_url: string | null
-          social_links: Json | null
-          updated_at: string | null
-          verified_status: boolean | null
-        }
-        Insert: {
-          bio?: string | null
-          created_at?: string | null
-          follower_count?: number | null
-          genre?: string[] | null
-          id?: string
-          location?: string | null
-          name: string
-          profile_image_url?: string | null
-          social_links?: Json | null
-          updated_at?: string | null
-          verified_status?: boolean | null
-        }
-        Update: {
-          bio?: string | null
-          created_at?: string | null
-          follower_count?: number | null
-          genre?: string[] | null
-          id?: string
-          location?: string | null
-          name?: string
-          profile_image_url?: string | null
-          social_links?: Json | null
-          updated_at?: string | null
-          verified_status?: boolean | null
-        }
-        Relationships: []
-      }
       bookings: {
         Row: {
           created_at: string
@@ -192,44 +121,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
-      }
-      course_enrollments: {
-        Row: {
-          completed_at: string | null
-          enrolled_at: string | null
-          id: string
-          last_accessed: string | null
-          learning_path_id: string | null
-          progress_percentage: number | null
-          user_id: string | null
-        }
-        Insert: {
-          completed_at?: string | null
-          enrolled_at?: string | null
-          id?: string
-          last_accessed?: string | null
-          learning_path_id?: string | null
-          progress_percentage?: number | null
-          user_id?: string | null
-        }
-        Update: {
-          completed_at?: string | null
-          enrolled_at?: string | null
-          id?: string
-          last_accessed?: string | null
-          learning_path_id?: string | null
-          progress_percentage?: number | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "course_enrollments_learning_path_id_fkey"
-            columns: ["learning_path_id"]
-            isOneToOne: false
-            referencedRelation: "learning_paths"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       email_breach_checks: {
         Row: {
@@ -363,47 +254,6 @@ export type Database = {
         }
         Relationships: []
       }
-      lesson_progress: {
-        Row: {
-          completed: boolean | null
-          created_at: string | null
-          id: string
-          last_position: number | null
-          updated_at: string | null
-          user_id: string | null
-          video_content_id: string | null
-          watched_duration: number | null
-        }
-        Insert: {
-          completed?: boolean | null
-          created_at?: string | null
-          id?: string
-          last_position?: number | null
-          updated_at?: string | null
-          user_id?: string | null
-          video_content_id?: string | null
-          watched_duration?: number | null
-        }
-        Update: {
-          completed?: boolean | null
-          created_at?: string | null
-          id?: string
-          last_position?: number | null
-          updated_at?: string | null
-          user_id?: string | null
-          video_content_id?: string | null
-          watched_duration?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "lesson_progress_video_content_id_fkey"
-            columns: ["video_content_id"]
-            isOneToOne: false
-            referencedRelation: "video_content"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       likes: {
         Row: {
           created_at: string | null
@@ -430,13 +280,6 @@ export type Database = {
           },
           {
             foreignKeyName: "likes_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "likes_user_id_profiles_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -658,87 +501,6 @@ export type Database = {
           },
         ]
       }
-      playlist_tracks: {
-        Row: {
-          added_at: string | null
-          id: string
-          playlist_id: string | null
-          position: number
-          track_id: string | null
-        }
-        Insert: {
-          added_at?: string | null
-          id?: string
-          playlist_id?: string | null
-          position: number
-          track_id?: string | null
-        }
-        Update: {
-          added_at?: string | null
-          id?: string
-          playlist_id?: string | null
-          position?: number
-          track_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "playlist_tracks_playlist_id_fkey"
-            columns: ["playlist_id"]
-            isOneToOne: false
-            referencedRelation: "playlists"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "playlist_tracks_track_id_fkey"
-            columns: ["track_id"]
-            isOneToOne: false
-            referencedRelation: "tracks"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      playlists: {
-        Row: {
-          category: string | null
-          cover_art_url: string | null
-          created_at: string | null
-          description: string | null
-          id: string
-          is_public: boolean | null
-          name: string
-          play_count: number | null
-          total_duration: number | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          category?: string | null
-          cover_art_url?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_public?: boolean | null
-          name: string
-          play_count?: number | null
-          total_duration?: number | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          category?: string | null
-          cover_art_url?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_public?: boolean | null
-          name?: string
-          play_count?: number | null
-          total_duration?: number | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       practice_logs: {
         Row: {
           created_at: string
@@ -939,30 +701,6 @@ export type Database = {
         }
         Relationships: []
       }
-      resource_categories: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          icon: string | null
-          id: string
-          name: string
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          icon?: string | null
-          id?: string
-          name: string
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          icon?: string | null
-          id?: string
-          name?: string
-        }
-        Relationships: []
-      }
       security_events: {
         Row: {
           breach_count: number | null
@@ -1083,46 +821,9 @@ export type Database = {
           },
         ]
       }
-      track_plays: {
-        Row: {
-          id: number
-          played_at: string
-          track_id: string
-          user_id: string | null
-        }
-        Insert: {
-          id?: number
-          played_at?: string
-          track_id: string
-          user_id?: string | null
-        }
-        Update: {
-          id?: number
-          played_at?: string
-          track_id?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "track_plays_track_id_fkey"
-            columns: ["track_id"]
-            isOneToOne: false
-            referencedRelation: "tracks"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "track_plays_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       tracks: {
         Row: {
           access_level: string | null
-          approved: boolean | null
           audio_path: string
           cover_path: string | null
           created_at: string | null
@@ -1133,7 +834,6 @@ export type Database = {
         }
         Insert: {
           access_level?: string | null
-          approved?: boolean | null
           audio_path: string
           cover_path?: string | null
           created_at?: string | null
@@ -1144,7 +844,6 @@ export type Database = {
         }
         Update: {
           access_level?: string | null
-          approved?: boolean | null
           audio_path?: string
           cover_path?: string | null
           created_at?: string | null
@@ -1214,7 +913,6 @@ export type Database = {
           description: string | null
           duration: number | null
           id: string
-          resource_category: string | null
           tags: string[] | null
           thumbnail_url: string | null
           title: string
@@ -1229,7 +927,6 @@ export type Database = {
           description?: string | null
           duration?: number | null
           id?: string
-          resource_category?: string | null
           tags?: string[] | null
           thumbnail_url?: string | null
           title: string
@@ -1244,22 +941,13 @@ export type Database = {
           description?: string | null
           duration?: number | null
           id?: string
-          resource_category?: string | null
           tags?: string[] | null
           thumbnail_url?: string | null
           title?: string
           updated_at?: string
           youtube_url?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "video_content_resource_category_fkey"
-            columns: ["resource_category"]
-            isOneToOne: false
-            referencedRelation: "resource_categories"
-            referencedColumns: ["name"]
-          },
-        ]
+        Relationships: []
       }
       weak_passwords: {
         Row: {
