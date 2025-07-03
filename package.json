@@ -51,7 +51,7 @@
     "disposable-email-domains": "^1.0.62",
     "dotenv": "^16.5.0",
     "embla-carousel-react": "^8.3.0",
-    "framer-motion": "^12.8.0",
+    "framer-motion": "^12.23.0",
     "gsap": "^3.13.0",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.462.0",
