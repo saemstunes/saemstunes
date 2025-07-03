@@ -402,7 +402,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       </div>
 
       {/* Custom CSS for extra small screens */}
-      <style jsx>{`
+      <style>{`
         @media (max-width: 475px) {
           .xs\\:block { display: block !important; }
           .xs\\:flex { display: flex !important; }
