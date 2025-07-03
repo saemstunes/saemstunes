@@ -49,12 +49,6 @@ const MusicTools: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Improved swipe detection for mobile
-  useEffect(() => {
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    setIsTouch(isMobile);
-  }, []);
-
   return (
     <div 
       {...handlers}
