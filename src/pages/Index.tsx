@@ -35,7 +35,7 @@ const FloatingCard = ({ children, delay = 0, className = "", onClick }: any) => 
 const GlowingButton = ({ children, variant = "primary", className = "", ...props }: any) => {
   const variants = {
     primary: "bg-gradient-to-r from-gold to-gold-dark hover:from-gold-dark hover:to-gold text-white shadow-lg shadow-gold/25 hover:shadow-gold/40",
-    secondary: "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-500 text-white shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40"
+    secondary: "bg-gradient-to-r from-gold-light to-gold hover:from-gold hover:to-gold-light text-white shadow-lg shadow-gold/25 hover:shadow-gold/40"
   };
 
   return (
@@ -57,7 +57,7 @@ const ContentCard = ({ title, instructor, duration, difficulty, isPopular, onCli
           Popular
         </div>
       )}
-      <div className="h-32 sm:h-40 bg-gradient-to-br from-gold/20 to-purple-500/20 flex items-center justify-center relative overflow-hidden">
+      <div className="h-32 sm:h-40 bg-gradient-to-br from-gold/20 to-gold/10 flex items-center justify-center relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
         <PlayCircle className="h-10 w-10 text-white/80 group-hover:text-white group-hover:scale-110 transition-all duration-300" />
         <div className="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded">
@@ -268,7 +268,7 @@ const LandingPage = () => {
             {/* Left Column */}
             <div className="space-y-4 sm:space-y-6 lg:space-y-8 text-center lg:text-left">
               <motion.div
-                className="inline-flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-gold/20 to-purple-500/20 backdrop-blur-sm border border-gold/20 text-gold px-3 py-1 rounded-full text-xs font-medium"
+                className="inline-flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-gold/20 to-gold/10 backdrop-blur-sm border border-gold/20 text-gold px-3 py-1 rounded-full text-xs font-medium"
               >
                 <Zap className="h-3 w-3" />
                 Good {timeGreeting}! Ready to make music?
@@ -327,11 +327,11 @@ const LandingPage = () => {
               </motion.div>
             </div>
 
-            {/* Right Column - Interactive Piano */}
+            {/* Right Column - Swipable Interactive Tools */}
             <motion.div
               className="flex justify-center order-first lg:order-last py-4 sm:py-0"
             >
-              <InteractivePiano className="scale-90 sm:scale-100" />
+              <InteractivePiano />
             </motion.div>
           </div>
         </div>

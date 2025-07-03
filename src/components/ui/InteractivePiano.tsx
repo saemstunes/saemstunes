@@ -145,7 +145,7 @@ const InteractivePiano: React.FC = () => {
   }, [volume, isMuted]);
 
   // Enhanced audio playback with envelope, harmonics, and filter
-  const playAudioNote = useCallback(async (frequency: number, note: string) => {
+  const playAudioNote = useCallback(async (frequency: number, note: string, velocity = 0.5) => {
     if (!audioState.current.context || !audioState.current.gainNode || isMuted) return;
 
     try {
@@ -181,15 +181,16 @@ const InteractivePiano: React.FC = () => {
       filter.frequency.setValueAtTime(adjustedFreq * 4, context.currentTime);
       filter.Q.setValueAtTime(0.5, context.currentTime);
       
-      // Enhanced envelope
+      // Enhanced envelope with velocity sensitivity
       const attackTime = 0.01;
       const decayTime = 0.1;
       const sustainLevel = sustainPedal ? 0.6 : 0.4;
       const releaseTime = sustainPedal ? 2.0 : 0.8;
+      const velocityMultiplier = Math.max(0.1, Math.min(1.0, velocity));
       
       noteGain.gain.setValueAtTime(0, context.currentTime);
-      noteGain.gain.linearRampToValueAtTime(volume * 0.5, context.currentTime + attackTime);
-      noteGain.gain.exponentialRampToValueAtTime(volume * sustainLevel, context.currentTime + attackTime + decayTime);
+      noteGain.gain.linearRampToValueAtTime(volume * velocityMultiplier * 0.8, context.currentTime + attackTime);
+      noteGain.gain.exponentialRampToValueAtTime(volume * velocityMultiplier * sustainLevel, context.currentTime + attackTime + decayTime);
       
       if (!sustainPedal) {
         noteGain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + releaseTime);
@@ -221,13 +222,13 @@ const InteractivePiano: React.FC = () => {
     }
   }, []);
 
-  const playNote = useCallback((note: string) => {
+  const playNote = useCallback((note: string, velocity = 0.5) => {
     const key = keys.find(k => k.note === note);
     if (!key) return;
 
     setActiveKeys(prev => new Set(prev).add(note));
-    playAudioNote(key.frequency, note);
-  }, [keys, playAudioNote]);
+    playAudioNote(key.frequency * Math.pow(2, octaveShift), note, velocity);
+  }, [keys, playAudioNote, octaveShift]);
 
   const releaseNote = useCallback((note: string) => {
     if (!sustainPedal) {
