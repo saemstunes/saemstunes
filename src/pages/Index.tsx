@@ -260,7 +260,7 @@ const LandingPage = () => {
     >
       {/* Hero Section */}
       <section className="relative overflow-hidden py-6 px-4 sm:py-12 md:py-20">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,215,0,0.1),transparent_70%)]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,215,0,0.1),transparent_70%)] pointer-events-none"></div>
         
         <div className="relative z-10 max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12 items-center">
