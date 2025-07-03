@@ -20,6 +20,7 @@ const InteractiveGuitar: React.FC = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [audioReady, setAudioReady] = useState(false);
+  const [isPlayingDemo, setIsPlayingDemo] = useState(false);
   
   const audioState = useRef<AudioState>({
     context: null,
@@ -27,123 +28,27 @@ const InteractiveGuitar: React.FC = () => {
   });
   
   const oscillators = useRef<Map<string, OscillatorNode>>(new Map());
+  const demoTimeout = useRef<NodeJS.Timeout | null>(null);
+  const activeNoteKeysByString = useRef<Map<number, string>>(new Map());
+
+  // Generate frets dynamically to reduce code duplication
+  const generateFrets = (baseFreq: number, count: number = 13) => {
+    return Array.from({ length: count }, (_, i) => {
+      const freq = baseFreq * Math.pow(2, i / 12);
+      const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+      const noteIndex = (i + notes.indexOf('C')) % 12;
+      return { note: notes[noteIndex], frequency: freq };
+    });
+  };
 
   // Guitar strings with standard tuning (E A D G B E)
   const strings: GuitarString[] = [
-    { 
-      note: 'E', 
-      openFreq: 82.41,
-      frets: [
-        { note: 'E', frequency: 82.41 },
-        { note: 'F', frequency: 87.31 },
-        { note: 'F#', frequency: 92.50 },
-        { note: 'G', frequency: 98.00 },
-        { note: 'G#', frequency: 103.83 },
-        { note: 'A', frequency: 110.00 },
-        { note: 'A#', frequency: 116.54 },
-        { note: 'B', frequency: 123.47 },
-        { note: 'C', frequency: 130.81 },
-        { note: 'C#', frequency: 138.59 },
-        { note: 'D', frequency: 146.83 },
-        { note: 'D#', frequency: 155.56 },
-        { note: 'E', frequency: 164.81 }
-      ]
-    },
-    {
-      note: 'A',
-      openFreq: 110.00,
-      frets: [
-        { note: 'A', frequency: 110.00 },
-        { note: 'A#', frequency: 116.54 },
-        { note: 'B', frequency: 123.47 },
-        { note: 'C', frequency: 130.81 },
-        { note: 'C#', frequency: 138.59 },
-        { note: 'D', frequency: 146.83 },
-        { note: 'D#', frequency: 155.56 },
-        { note: 'E', frequency: 164.81 },
-        { note: 'F', frequency: 174.61 },
-        { note: 'F#', frequency: 185.00 },
-        { note: 'G', frequency: 196.00 },
-        { note: 'G#', frequency: 207.65 },
-        { note: 'A', frequency: 220.00 }
-      ]
-    },
-    {
-      note: 'D',
-      openFreq: 146.83,
-      frets: [
-        { note: 'D', frequency: 146.83 },
-        { note: 'D#', frequency: 155.56 },
-        { note: 'E', frequency: 164.81 },
-        { note: 'F', frequency: 174.61 },
-        { note: 'F#', frequency: 185.00 },
-        { note: 'G', frequency: 196.00 },
-        { note: 'G#', frequency: 207.65 },
-        { note: 'A', frequency: 220.00 },
-        { note: 'A#', frequency: 233.08 },
-        { note: 'B', frequency: 246.94 },
-        { note: 'C', frequency: 261.63 },
-        { note: 'C#', frequency: 277.18 },
-        { note: 'D', frequency: 293.66 }
-      ]
-    },
-    {
-      note: 'G',
-      openFreq: 196.00,
-      frets: [
-        { note: 'G', frequency: 196.00 },
-        { note: 'G#', frequency: 207.65 },
-        { note: 'A', frequency: 220.00 },
-        { note: 'A#', frequency: 233.08 },
-        { note: 'B', frequency: 246.94 },
-        { note: 'C', frequency: 261.63 },
-        { note: 'C#', frequency: 277.18 },
-        { note: 'D', frequency: 293.66 },
-        { note: 'D#', frequency: 311.13 },
-        { note: 'E', frequency: 329.63 },
-        { note: 'F', frequency: 349.23 },
-        { note: 'F#', frequency: 369.99 },
-        { note: 'G', frequency: 392.00 }
-      ]
-    },
-    {
-      note: 'B',
-      openFreq: 246.94,
-      frets: [
-        { note: 'B', frequency: 246.94 },
-        { note: 'C', frequency: 261.63 },
-        { note: 'C#', frequency: 277.18 },
-        { note: 'D', frequency: 293.66 },
-        { note: 'D#', frequency: 311.13 },
-        { note: 'E', frequency: 329.63 },
-        { note: 'F', frequency: 349.23 },
-        { note: 'F#', frequency: 369.99 },
-        { note: 'G', frequency: 392.00 },
-        { note: 'G#', frequency: 415.30 },
-        { note: 'A', frequency: 440.00 },
-        { note: 'A#', frequency: 466.16 },
-        { note: 'B', frequency: 493.88 }
-      ]
-    },
-    {
-      note: 'E',
-      openFreq: 329.63,
-      frets: [
-        { note: 'E', frequency: 329.63 },
-        { note: 'F', frequency: 349.23 },
-        { note: 'F#', frequency: 369.99 },
-        { note: 'G', frequency: 392.00 },
-        { note: 'G#', frequency: 415.30 },
-        { note: 'A', frequency: 440.00 },
-        { note: 'A#', frequency: 466.16 },
-        { note: 'B', frequency: 493.88 },
-        { note: 'C', frequency: 523.25 },
-        { note: 'C#', frequency: 554.37 },
-        { note: 'D', frequency: 587.33 },
-        { note: 'D#', frequency: 622.25 },
-        { note: 'E', frequency: 659.25 }
-      ]
-    }
+    { note: 'E', openFreq: 82.41, frets: generateFrets(82.41) },
+    { note: 'A', openFreq: 110.00, frets: generateFrets(110.00) },
+    { note: 'D', openFreq: 146.83, frets: generateFrets(146.83) },
+    { note: 'G', openFreq: 196.00, frets: generateFrets(196.00) },
+    { note: 'B', openFreq: 246.94, frets: generateFrets(246.94) },
+    { note: 'E', openFreq: 329.63, frets: generateFrets(329.63) }
   ];
 
   // Initialize audio context
@@ -178,6 +83,9 @@ const InteractiveGuitar: React.FC = () => {
       if (audioState.current.context) {
         audioState.current.context.close();
       }
+      if (demoTimeout.current) {
+        clearTimeout(demoTimeout.current);
+      }
     };
   }, []);
 
@@ -188,7 +96,21 @@ const InteractiveGuitar: React.FC = () => {
     }
   }, [volume, isMuted]);
 
-  // Play guitar note with realistic envelope
+  // Stop all notes
+  const stopAllNotes = useCallback(() => {
+    oscillators.current.forEach(osc => {
+      try {
+        osc.stop();
+      } catch (e) {
+        console.warn('Error stopping oscillator:', e);
+      }
+    });
+    oscillators.current.clear();
+    setActiveNotes(new Set());
+    activeNoteKeysByString.current.clear();
+  }, []);
+
+  // Play guitar note with improved realism
   const playNote = useCallback(async (frequency: number, stringIndex: number, fretIndex: number) => {
     if (!audioState.current.context || !audioState.current.gainNode || isMuted) return;
 
@@ -202,10 +124,18 @@ const InteractiveGuitar: React.FC = () => {
       const noteKey = `${stringIndex}-${fretIndex}`;
       
       // Stop existing note on this string
-      const existingOsc = oscillators.current.get(noteKey);
-      if (existingOsc) {
-        existingOsc.stop();
-        oscillators.current.delete(noteKey);
+      const existingKey = activeNoteKeysByString.current.get(stringIndex);
+      if (existingKey) {
+        const existingOsc = oscillators.current.get(existingKey);
+        if (existingOsc) {
+          existingOsc.stop();
+          oscillators.current.delete(existingKey);
+        }
+        setActiveNotes(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(existingKey);
+          return newSet;
+        });
       }
 
       // Create oscillator for plucked string sound
@@ -217,30 +147,32 @@ const InteractiveGuitar: React.FC = () => {
       filter.connect(noteGain);
       noteGain.connect(gainNode);
       
-      // Guitar-like waveform and filtering
+      // Improved guitar-like waveform
       oscillator.type = 'sawtooth';
       oscillator.frequency.setValueAtTime(frequency, context.currentTime);
       
-      // Low-pass filter for warmth
+      // Dynamic filtering for warmth
       filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(frequency * 4, context.currentTime);
-      filter.Q.setValueAtTime(1.5, context.currentTime);
+      filter.frequency.setValueAtTime(2000 + (frequency * 2), context.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(500 + frequency, context.currentTime + 1.5);
       
-      // Guitar envelope: quick attack, slow decay
+      // Realistic guitar envelope
+      const now = context.currentTime;
       const attackTime = 0.005;
-      const decayTime = 1.5;
+      const decayTime = 0.5;
       const sustainLevel = 0.2;
-      const releaseTime = 2.0;
+      const releaseTime = 1.5;
       
-      noteGain.gain.setValueAtTime(0, context.currentTime);
-      noteGain.gain.linearRampToValueAtTime(volume * 0.8, context.currentTime + attackTime);
-      noteGain.gain.exponentialRampToValueAtTime(volume * sustainLevel, context.currentTime + attackTime + decayTime);
-      noteGain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + releaseTime);
+      noteGain.gain.setValueAtTime(0, now);
+      noteGain.gain.linearRampToValueAtTime(volume * 0.8, now + attackTime);
+      noteGain.gain.exponentialRampToValueAtTime(volume * sustainLevel, now + attackTime + decayTime);
+      noteGain.gain.exponentialRampToValueAtTime(0.001, now + attackTime + decayTime + releaseTime);
       
-      oscillator.start(context.currentTime);
-      oscillator.stop(context.currentTime + releaseTime);
+      oscillator.start(now);
+      oscillator.stop(now + attackTime + decayTime + releaseTime);
       
       oscillators.current.set(noteKey, oscillator);
+      activeNoteKeysByString.current.set(stringIndex, noteKey);
       
       setActiveNotes(prev => new Set(prev).add(noteKey));
       
@@ -252,48 +184,94 @@ const InteractiveGuitar: React.FC = () => {
           return newSet;
         });
         oscillators.current.delete(noteKey);
-      }, releaseTime * 1000);
+        if (activeNoteKeysByString.current.get(stringIndex) === noteKey) {
+          activeNoteKeysByString.current.delete(stringIndex);
+        }
+      }, (attackTime + decayTime + releaseTime) * 1000);
       
     } catch (error) {
       console.error('Note playback failed:', error);
     }
   }, [volume, isMuted]);
 
-  // Play common chord progressions
+  // Play chord progressions with cancellation support
   const playDemo = useCallback(async () => {
+    if (isPlayingDemo) {
+      setIsPlayingDemo(false);
+      if (demoTimeout.current) {
+        clearTimeout(demoTimeout.current);
+      }
+      stopAllNotes();
+      return;
+    }
+
+    setIsPlayingDemo(true);
+    stopAllNotes();
+
     const chords = [
       // G Major chord
       [
-        { string: 0, fret: 3 }, // G on low E string
-        { string: 1, fret: 2 }, // B on A string 
-        { string: 2, fret: 0 }, // D open
-        { string: 3, fret: 0 }, // G open
-        { string: 4, fret: 0 }, // B open
-        { string: 5, fret: 3 }  // G on high E string
+        { string: 0, fret: 3 }, 
+        { string: 1, fret: 2 }, 
+        { string: 2, fret: 0 },
+        { string: 3, fret: 0 },
+        { string: 4, fret: 0 },
+        { string: 5, fret: 3 }
       ],
       // C Major chord
       [
-        { string: 1, fret: 3 }, // C on A string
-        { string: 2, fret: 2 }, // E on D string
-        { string: 3, fret: 0 }, // G open
-        { string: 4, fret: 1 }, // C on B string
-        { string: 5, fret: 0 }  // E open
+        { string: 1, fret: 3 },
+        { string: 2, fret: 2 },
+        { string: 3, fret: 0 },
+        { string: 4, fret: 1 },
+        { string: 5, fret: 0 }
+      ],
+      // D Major chord
+      [
+        { string: 0, fret: 2 },
+        { string: 1, fret: 3 },
+        { string: 2, fret: 2 },
+        { string: 3, fret: 0 }
+      ],
+      // Em chord
+      [
+        { string: 0, fret: 0 },
+        { string: 1, fret: 2 },
+        { string: 2, fret: 2 },
+        { string: 3, fret: 0 },
+        { string: 4, fret: 0 },
+        { string: 5, fret: 0 }
       ]
     ];
 
-    for (const chord of chords) {
+    const playChord = async (chordIndex: number) => {
+      if (!isPlayingDemo) return;
+      
+      const chord = chords[chordIndex];
+      stopAllNotes();
+      
       // Strum the chord
       for (let i = 0; i < chord.length; i++) {
         setTimeout(() => {
+          if (!isPlayingDemo) return;
           const { string, fret } = chord[i];
           const freq = strings[string].frets[fret].frequency;
           playNote(freq, string, fret);
-        }, i * 50); // Slight delay between strings for realistic strum
+        }, i * 60);
       }
       
-      await new Promise(resolve => setTimeout(resolve, 2000));
-    }
-  }, [playNote]);
+      demoTimeout.current = setTimeout(() => {
+        playChord((chordIndex + 1) % chords.length);
+      }, 2500);
+    };
+
+    playChord(0);
+  }, [playNote, isPlayingDemo, stopAllNotes, strings]);
+
+  // Check if a string has active notes
+  const isStringActive = (stringIndex: number) => {
+    return Array.from(activeNotes).some(key => key.startsWith(`${stringIndex}-`));
+  };
 
   return (
     <motion.div
@@ -319,8 +297,12 @@ const InteractiveGuitar: React.FC = () => {
             className="bg-amber-600/20 hover:bg-amber-600/30 text-white border border-amber-400/30 backdrop-blur-sm"
             size="sm"
           >
-            <Play className="h-4 w-4 mr-2" />
-            Play Demo
+            {isPlayingDemo ? (
+              <Pause className="h-4 w-4 mr-2" />
+            ) : (
+              <Play className="h-4 w-4 mr-2" />
+            )}
+            {isPlayingDemo ? 'Stop Demo' : 'Play Demo'}
           </Button>
           
           <Button
@@ -331,7 +313,63 @@ const InteractiveGuitar: React.FC = () => {
           >
             {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
           </Button>
+          
+          <Button
+            onClick={stopAllNotes}
+            variant="ghost"
+            size="sm"
+            className="text-white/80 hover:text-white"
+          >
+            <RotateCcw className="h-4 w-4" />
+          </Button>
+          
+          <Button
+            onClick={() => setShowSettings(!showSettings)}
+            variant="ghost"
+            size="sm"
+            className="text-white/80 hover:text-white"
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
         </motion.div>
+
+        {/* Settings Panel */}
+        <AnimatePresence>
+          {showSettings && (
+            <motion.div 
+              className="absolute top-0 left-0 w-full h-full bg-amber-900/90 backdrop-blur-sm z-20 p-4 rounded-2xl flex flex-col justify-center items-center gap-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <h3 className="text-amber-200 text-xl font-bold">Settings</h3>
+              <div className="w-64">
+                <label className="text-amber-200 mb-2 block">Volume: {Math.round(volume * 100)}%</label>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={volume}
+                  onChange={(e) => {
+                    const newVolume = parseFloat(e.target.value);
+                    setVolume(newVolume);
+                    if (isMuted && newVolume > 0) {
+                      setIsMuted(false);
+                    }
+                  }}
+                  className="w-full accent-amber-500"
+                />
+              </div>
+              <Button 
+                onClick={() => setShowSettings(false)}
+                className="bg-amber-600 hover:bg-amber-700 text-white"
+              >
+                Close Settings
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Guitar Neck */}
         <div className="relative">
@@ -356,11 +394,13 @@ const InteractiveGuitar: React.FC = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: stringIndex * 0.1 }}
               >
-                {/* String line */}
+                {/* String line with vibration effect */}
                 <div 
-                  className={`absolute w-full h-0.5 bg-gradient-to-r from-gray-400 to-gray-300 ${
-                    stringIndex < 3 ? 'h-1' : 'h-0.5'
-                  }`}
+                  className={`absolute w-full h-0.5 bg-gradient-to-r transition-all duration-300 ${
+                    isStringActive(stringIndex) 
+                      ? 'from-yellow-300 to-amber-300 shadow-[0_0_8px_rgba(255,215,0,0.8)]' 
+                      : 'from-gray-400 to-gray-300'
+                  } ${stringIndex < 3 ? 'h-1' : 'h-0.5'}`}
                   style={{ top: '50%', transform: 'translateY(-50%)' }}
                 />
                 
@@ -376,7 +416,7 @@ const InteractiveGuitar: React.FC = () => {
                       key={fretIndex}
                       className={`flex-1 h-8 border-r border-amber-600/30 flex items-center justify-center transition-all duration-200 ${
                         activeNotes.has(`${stringIndex}-${fretIndex}`)
-                          ? 'bg-gold/40 scale-110 shadow-lg'
+                          ? 'bg-yellow-400/40 scale-110 shadow-lg'
                           : 'hover:bg-amber-600/20'
                       }`}
                       onClick={() => playNote(fret.frequency, stringIndex, fretIndex)}
@@ -387,7 +427,7 @@ const InteractiveGuitar: React.FC = () => {
                       )}
                       {fretIndex > 0 && activeNotes.has(`${stringIndex}-${fretIndex}`) && (
                         <motion.div
-                          className="w-3 h-3 bg-gold rounded-full"
+                          className="w-3 h-3 bg-yellow-400 rounded-full"
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           exit={{ scale: 0 }}
@@ -409,11 +449,12 @@ const InteractiveGuitar: React.FC = () => {
           transition={{ delay: 0.8 }}
         >
           <p className="text-amber-200 text-sm mb-2">
-            Click on the frets to play notes
+            Click on frets to play notes • Mute with volume icon • Stop all with reset icon
           </p>
-          <div className="flex items-center justify-center gap-4 text-xs text-amber-300/80">
+          <div className="flex items-center justify-center gap-4 text-xs text-amber-300/80 flex-wrap">
             <span>🎸 Standard Tuning (E-A-D-G-B-E)</span>
-            <span>🎵 Try the demo for chord progressions</span>
+            <span>🎵 Demo plays G-C-D-Em progression</span>
+            <span>🔊 Adjust volume in settings</span>
           </div>
         </motion.div>
       </div>
