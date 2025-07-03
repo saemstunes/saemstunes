@@ -2,8 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSwipeable } from 'react-swipeable';
 import { Guitar, Piano, ArrowLeft, ArrowRight, RotateCcw, Settings, Info, Zap, X } from 'lucide-react';
-import InteractivePiano from './InteractivePiano';
-import InteractiveGuitar from './InteractiveGuitar';
+import InteractivePiano from '@/components/ui/InteractivePiano';
+import InteractiveGuitar from '@/components/ui/InteractiveGuitar';
 
 const MusicTools: React.FC = () => {
   const [activeInstrument, setActiveInstrument] = useState<'piano' | 'guitar'>('piano');
