@@ -1,11 +1,10 @@
-import { useEffect, useState, useCallback, useMemo, lazy, Suspense } from "react";
+import { useEffect, useState, useCallback, useMemo, memo } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
   Music, Play, Users, BookOpen, CalendarClock, ArrowRight, 
-  Volume2, Star, Award, Clock, TrendingUp, Zap, User, 
-  PlayCircle, ChevronLeft, ChevronRight, Heart, Share2 
+  Volume2, Star, Award, TrendingUp, Zap, User, PlayCircle
 } from "lucide-react";
 import MainLayout from "@/components/layout/MainLayout";
 import DashboardStats from "@/components/dashboard/DashboardStats";
@@ -13,16 +12,11 @@ import RecommendedContent from "@/components/dashboard/RecommendedContent";
 import UpcomingBookings from "@/components/dashboard/UpcomingBookings";
 import { mockSubscriptionPlans } from "@/data/mockData";
 import PricingCard from "@/components/subscription/PricingCard";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { pageTransition } from "@/lib/animation-utils";
 import { useMediaQuery } from "react-responsive";
-import { throttle } from "lodash-es";
-import ErrorBoundary from "@/components/ErrorBoundary";
 
-// Lazy load heavy components
-const InteractivePiano = lazy(() => import("@/components/ui/InteractivePiano"));
-
-// Memoized UI Components =====================================================
+// Memoized components ========================================================
 const FloatingCard = memo(({ children, delay = 0, className = "", onClick }: any) => (
   <motion.div
     initial={{ opacity: 0, y: 20, scale: 0.9 }}
@@ -84,39 +78,27 @@ const ContentCard = memo(({ title, instructor, duration, difficulty, isPopular, 
   </FloatingCard>
 ));
 
-// Optimized Carousel Component ===============================================
+// Optimized Carousel =========================================================
 const ContentCarousel = memo(({ title, items, onViewAll }: any) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsPerView, setItemsPerView] = useState(1);
   const maxIndex = Math.max(0, items.length - itemsPerView);
 
-  // Calculate carousel width efficiently
-  const carouselWidth = useMemo(() => `${(items.length / itemsPerView) * 100}%`, [items.length, itemsPerView]);
-  
-  // Throttled resize handler
-  const updateItemsPerView = useCallback(throttle(() => {
-    if (window.innerWidth < 640) setItemsPerView(1);
-    else if (window.innerWidth < 1024) setItemsPerView(2);
-    else setItemsPerView(4);
-  }, 200), []);
-
+  // Responsive calculation
   useEffect(() => {
+    const updateItemsPerView = () => {
+      if (window.innerWidth < 640) setItemsPerView(1);
+      else if (window.innerWidth < 1024) setItemsPerView(2);
+      else setItemsPerView(4);
+    };
+    
     updateItemsPerView();
     window.addEventListener('resize', updateItemsPerView);
     return () => window.removeEventListener('resize', updateItemsPerView);
-  }, [updateItemsPerView]);
+  }, []);
 
-  const next = useCallback(() => setCurrentIndex(prev => Math.min(prev + 1, maxIndex)), [maxIndex]);
-  const prev = useCallback(() => setCurrentIndex(prev => Math.max(prev - 1, 0)), []);
-
-  // Memoized carousel items
-  const carouselItems = useMemo(() => 
-    items.map((item: any, index: number) => (
-      <div key={index} style={{ width: `${100 / itemsPerView}%` }} className="flex-shrink-0">
-        <ContentCard {...item} />
-      </div>
-    ))
-  , [items, itemsPerView]);
+  const next = () => setCurrentIndex(prev => Math.min(prev + 1, maxIndex));
+  const prev = () => setCurrentIndex(prev => Math.max(prev - 1, 0));
 
   return (
     <div className="space-y-3 sm:space-y-4">
@@ -129,9 +111,8 @@ const ContentCarousel = memo(({ title, items, onViewAll }: any) => {
             onClick={prev}
             disabled={currentIndex === 0}
             className="h-7 w-7 p-0"
-            aria-label="Previous items"
           >
-            <ChevronLeft className="h-3.5 w-3.5" />
+            &lt;
           </Button>
           <Button
             variant="ghost"
@@ -139,9 +120,8 @@ const ContentCarousel = memo(({ title, items, onViewAll }: any) => {
             onClick={next}
             disabled={currentIndex === maxIndex}
             className="h-7 w-7 p-0"
-            aria-label="Next items"
           >
-            <ChevronRight className="h-3.5 w-3.5" />
+            &gt;
           </Button>
           <Button variant="outline" size="sm" onClick={onViewAll} className="text-xs sm:text-sm">
             View All
@@ -154,17 +134,20 @@ const ContentCarousel = memo(({ title, items, onViewAll }: any) => {
           className="flex gap-3 sm:gap-4 w-max"
           animate={{ x: -currentIndex * (100 / itemsPerView) + '%' }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
-          style={{ width: carouselWidth }}
-          role="list"
+          style={{ width: `${(items.length / itemsPerView) * 100}%` }}
         >
-          {carouselItems}
+          {items.map((item: any, index: number) => (
+            <div key={index} style={{ width: `${100 / itemsPerView}%` }} className="flex-shrink-0">
+              <ContentCard {...item} />
+            </div>
+          ))}
         </motion.div>
       </div>
     </div>
   );
 });
 
-// Optimized Counter Component ================================================
+// Optimized Counter ==========================================================
 const StatsCounter = memo(({ number, label, icon, delay = 0 }: any) => {
   const [count, setCount] = useState(0);
   const finalNumber = parseInt(number.replace(/[^\d]/g, ''));
@@ -172,7 +155,7 @@ const StatsCounter = memo(({ number, label, icon, delay = 0 }: any) => {
   useEffect(() => {
     let counter: NodeJS.Timeout;
     const timer = setTimeout(() => {
-      const increment = Math.ceil(finalNumber / 30);
+      const increment = finalNumber / 30;
       counter = setInterval(() => {
         setCount(prev => {
           const next = prev + increment;
@@ -211,7 +194,7 @@ const StatsCounter = memo(({ number, label, icon, delay = 0 }: any) => {
   );
 });
 
-// Landing Page Component =====================================================
+// Landing Page ===============================================================
 const LandingPage = () => {
   const navigate = useNavigate();
   const [timeGreeting, setTimeGreeting] = useState('');
@@ -223,14 +206,12 @@ const LandingPage = () => {
     { title: "Jazz Piano Improvisation", instructor: "David Chen", duration: "25:15", difficulty: "Advanced", isPopular: false },
     { title: "Vocal Warm-up Exercises", instructor: "Emily Davis", duration: "8:20", difficulty: "Beginner", isPopular: false },
     { title: "Blues Guitar Techniques", instructor: "Tom Wilson", duration: "22:10", difficulty: "Intermediate", isPopular: true },
-    { title: "Music Theory Essentials", instructor: "Dr. Lisa Brown", duration: "35:40", difficulty: "Beginner", isPopular: false }
   ], []);
 
   const newReleases = useMemo(() => [
     { title: "Advanced Drum Patterns", instructor: "Alex Turner", duration: "15:30", difficulty: "Advanced", isPopular: false },
     { title: "Classical Guitar Etudes", instructor: "Maria Santos", duration: "28:15", difficulty: "Intermediate", isPopular: false },
     { title: "Electronic Music Production", instructor: "DJ Marcus", duration: "42:20", difficulty: "Intermediate", isPopular: true },
-    { title: "Songwriting Workshop", instructor: "Jennifer Lee", duration: "33:45", difficulty: "Beginner", isPopular: false }
   ], []);
 
   const stats = useMemo(() => [
@@ -356,15 +337,24 @@ const LandingPage = () => {
               </motion.div>
             </div>
 
-            {/* Right Column - Swipable Interactive Tools */}
+            {/* Right Column */}
             <motion.div
               className="flex justify-center order-first lg:order-last py-4 sm:py-0"
             >
-              <Suspense fallback={<div className="bg-muted rounded-xl w-full h-64 animate-pulse" />}>
-                <ErrorBoundary fallback={<div>Piano failed to load</div>}>
-                  <InteractivePiano />
-                </ErrorBoundary>
-              </Suspense>
+              <div className="bg-gradient-to-br from-gold/20 to-gold/10 rounded-xl w-full h-64 flex items-center justify-center">
+                <div className="text-center p-6">
+                  <Music className="h-12 w-12 text-gold mx-auto mb-4" />
+                  <h3 className="text-xl font-bold mb-2">Interactive Piano</h3>
+                  <p className="text-muted-foreground mb-4">Experience our learning tools</p>
+                  <Button 
+                    variant="outline" 
+                    className="border-gold text-gold hover:bg-gold/10"
+                    onClick={() => navigate("/lessons")}
+                  >
+                    Explore Instruments
+                  </Button>
+                </div>
+              </div>
             </motion.div>
           </div>
         </div>
@@ -541,10 +531,10 @@ const LandingPage = () => {
       </section>
     </motion.div>
   );
-};
+});
 
 // Dashboard Component ========================================================
-const Dashboard = () => {
+const Dashboard = memo(() => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isDesktop = useMediaQuery({ minWidth: 1024 });
@@ -635,7 +625,7 @@ const Dashboard = () => {
       )}
     </div>
   );
-};
+});
 
 // Main Component =============================================================
 const Index = () => {
@@ -662,11 +652,9 @@ const Index = () => {
 
   return (
     <MainLayout>
-      <ErrorBoundary fallback={<div className="p-6 text-red-500">Page failed to load</div>}>
-        {user ? <Dashboard /> : <LandingPage />}
-      </ErrorBoundary>
+      {user ? <Dashboard /> : <LandingPage />}
     </MainLayout>
   );
-};
+});
 
-export default memo(Index);
+export default Index;
