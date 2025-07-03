@@ -1,5 +1,4 @@
-
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, lazy, Suspense } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -16,10 +15,15 @@ import { mockSubscriptionPlans } from "@/data/mockData";
 import PricingCard from "@/components/subscription/PricingCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { pageTransition } from "@/lib/animation-utils";
-import InteractivePiano from "@/components/ui/InteractivePiano";
+import { useMediaQuery } from "react-responsive";
+import { throttle } from "lodash-es";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
-// React Bits inspired components
-const FloatingCard = ({ children, delay = 0, className = "", onClick }: any) => (
+// Lazy load heavy components
+const InteractivePiano = lazy(() => import("@/components/ui/InteractivePiano"));
+
+// Memoized UI Components =====================================================
+const FloatingCard = memo(({ children, delay = 0, className = "", onClick }: any) => (
   <motion.div
     initial={{ opacity: 0, y: 20, scale: 0.9 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -30,9 +34,9 @@ const FloatingCard = ({ children, delay = 0, className = "", onClick }: any) => 
   >
     {children}
   </motion.div>
-);
+));
 
-const GlowingButton = ({ children, variant = "primary", className = "", ...props }: any) => {
+const GlowingButton = memo(({ children, variant = "primary", className = "", ...props }: any) => {
   const variants = {
     primary: "bg-gradient-to-r from-gold to-gold-dark hover:from-gold-dark hover:to-gold text-white shadow-lg shadow-gold/25 hover:shadow-gold/40",
     secondary: "bg-gradient-to-r from-gold-light to-gold hover:from-gold hover:to-gold-light text-white shadow-lg shadow-gold/25 hover:shadow-gold/40"
@@ -46,9 +50,9 @@ const GlowingButton = ({ children, variant = "primary", className = "", ...props
       {children}
     </Button>
   );
-};
+});
 
-const ContentCard = ({ title, instructor, duration, difficulty, isPopular, onClick }: any) => (
+const ContentCard = memo(({ title, instructor, duration, difficulty, isPopular, onClick }: any) => (
   <FloatingCard className="p-0 overflow-hidden group cursor-pointer" onClick={onClick}>
     <div className="relative">
       {isPopular && (
@@ -78,28 +82,41 @@ const ContentCard = ({ title, instructor, duration, difficulty, isPopular, onCli
       </div>
     </div>
   </FloatingCard>
-);
+));
 
-const ContentCarousel = ({ title, items, onViewAll }: any) => {
+// Optimized Carousel Component ===============================================
+const ContentCarousel = memo(({ title, items, onViewAll }: any) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsPerView, setItemsPerView] = useState(1);
   const maxIndex = Math.max(0, items.length - itemsPerView);
 
-  // Responsive items per view
+  // Calculate carousel width efficiently
+  const carouselWidth = useMemo(() => `${(items.length / itemsPerView) * 100}%`, [items.length, itemsPerView]);
+  
+  // Throttled resize handler
+  const updateItemsPerView = useCallback(throttle(() => {
+    if (window.innerWidth < 640) setItemsPerView(1);
+    else if (window.innerWidth < 1024) setItemsPerView(2);
+    else setItemsPerView(4);
+  }, 200), []);
+
   useEffect(() => {
-    const updateItemsPerView = () => {
-      if (window.innerWidth < 640) setItemsPerView(1);
-      else if (window.innerWidth < 1024) setItemsPerView(2);
-      else setItemsPerView(4);
-    };
-    
     updateItemsPerView();
     window.addEventListener('resize', updateItemsPerView);
     return () => window.removeEventListener('resize', updateItemsPerView);
-  }, []);
+  }, [updateItemsPerView]);
 
-  const next = () => setCurrentIndex(prev => Math.min(prev + 1, maxIndex));
-  const prev = () => setCurrentIndex(prev => Math.max(prev - 1, 0));
+  const next = useCallback(() => setCurrentIndex(prev => Math.min(prev + 1, maxIndex)), [maxIndex]);
+  const prev = useCallback(() => setCurrentIndex(prev => Math.max(prev - 1, 0)), []);
+
+  // Memoized carousel items
+  const carouselItems = useMemo(() => 
+    items.map((item: any, index: number) => (
+      <div key={index} style={{ width: `${100 / itemsPerView}%` }} className="flex-shrink-0">
+        <ContentCard {...item} />
+      </div>
+    ))
+  , [items, itemsPerView]);
 
   return (
     <div className="space-y-3 sm:space-y-4">
@@ -112,6 +129,7 @@ const ContentCarousel = ({ title, items, onViewAll }: any) => {
             onClick={prev}
             disabled={currentIndex === 0}
             className="h-7 w-7 p-0"
+            aria-label="Previous items"
           >
             <ChevronLeft className="h-3.5 w-3.5" />
           </Button>
@@ -121,6 +139,7 @@ const ContentCarousel = ({ title, items, onViewAll }: any) => {
             onClick={next}
             disabled={currentIndex === maxIndex}
             className="h-7 w-7 p-0"
+            aria-label="Next items"
           >
             <ChevronRight className="h-3.5 w-3.5" />
           </Button>
@@ -135,27 +154,26 @@ const ContentCarousel = ({ title, items, onViewAll }: any) => {
           className="flex gap-3 sm:gap-4 w-max"
           animate={{ x: -currentIndex * (100 / itemsPerView) + '%' }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
-          style={{ width: `${(items.length / itemsPerView) * 100}%` }}
+          style={{ width: carouselWidth }}
+          role="list"
         >
-          {items.map((item: any, index: number) => (
-            <div key={index} style={{ width: `${100 / itemsPerView}%` }} className="flex-shrink-0">
-              <ContentCard {...item} />
-            </div>
-          ))}
+          {carouselItems}
         </motion.div>
       </div>
     </div>
   );
-};
+});
 
-const StatsCounter = ({ number, label, icon, delay = 0 }: any) => {
+// Optimized Counter Component ================================================
+const StatsCounter = memo(({ number, label, icon, delay = 0 }: any) => {
   const [count, setCount] = useState(0);
   const finalNumber = parseInt(number.replace(/[^\d]/g, ''));
 
   useEffect(() => {
+    let counter: NodeJS.Timeout;
     const timer = setTimeout(() => {
-      const increment = finalNumber / 30;
-      const counter = setInterval(() => {
+      const increment = Math.ceil(finalNumber / 30);
+      counter = setInterval(() => {
         setCount(prev => {
           const next = prev + increment;
           if (next >= finalNumber) {
@@ -165,10 +183,12 @@ const StatsCounter = ({ number, label, icon, delay = 0 }: any) => {
           return next;
         });
       }, 50);
-      return () => clearInterval(counter);
     }, delay);
     
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      clearInterval(counter);
+    };
   }, [finalNumber, delay]);
 
   return (
@@ -189,44 +209,38 @@ const StatsCounter = ({ number, label, icon, delay = 0 }: any) => {
       <div className="text-sm text-muted-foreground">{label}</div>
     </motion.div>
   );
-};
+});
 
+// Landing Page Component =====================================================
 const LandingPage = () => {
   const navigate = useNavigate();
   const [timeGreeting, setTimeGreeting] = useState('');
 
-  useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) setTimeGreeting('Morning');
-    else if (hour < 17) setTimeGreeting('Afternoon');
-    else setTimeGreeting('Evening');
-  }, []);
-
-  // Mock data for content
-  const popularLessons = [
+  // Memoized data
+  const popularLessons = useMemo(() => [
     { title: "Piano Basics: Your First Chord", instructor: "Sarah Johnson", duration: "12:30", difficulty: "Beginner", isPopular: true },
     { title: "Guitar Fingerpicking Fundamentals", instructor: "Mike Rodriguez", duration: "18:45", difficulty: "Intermediate", isPopular: true },
     { title: "Jazz Piano Improvisation", instructor: "David Chen", duration: "25:15", difficulty: "Advanced", isPopular: false },
     { title: "Vocal Warm-up Exercises", instructor: "Emily Davis", duration: "8:20", difficulty: "Beginner", isPopular: false },
     { title: "Blues Guitar Techniques", instructor: "Tom Wilson", duration: "22:10", difficulty: "Intermediate", isPopular: true },
     { title: "Music Theory Essentials", instructor: "Dr. Lisa Brown", duration: "35:40", difficulty: "Beginner", isPopular: false }
-  ];
+  ], []);
 
-  const newReleases = [
+  const newReleases = useMemo(() => [
     { title: "Advanced Drum Patterns", instructor: "Alex Turner", duration: "15:30", difficulty: "Advanced", isPopular: false },
     { title: "Classical Guitar Etudes", instructor: "Maria Santos", duration: "28:15", difficulty: "Intermediate", isPopular: false },
     { title: "Electronic Music Production", instructor: "DJ Marcus", duration: "42:20", difficulty: "Intermediate", isPopular: true },
     { title: "Songwriting Workshop", instructor: "Jennifer Lee", duration: "33:45", difficulty: "Beginner", isPopular: false }
-  ];
+  ], []);
 
-  const stats = [
+  const stats = useMemo(() => [
     { number: "2,500+", label: "Active Students", icon: <Users className="h-6 w-6" /> },
     { number: "15", label: "Expert Instructors", icon: <Award className="h-6 w-6" /> },
     { number: "95%", label: "Success Rate", icon: <Star className="h-6 w-6" /> },
     { number: "500+", label: "Video Lessons", icon: <Play className="h-6 w-6" /> },
-  ];
+  ], []);
 
-  const features = [
+  const features = useMemo(() => [
     {
       icon: <Music className="h-6 w-6 text-gold" />,
       title: "Live 1-on-1 Sessions",
@@ -251,7 +265,22 @@ const LandingPage = () => {
       description: "Connect with musicians worldwide, share progress, and get feedback.",
       highlight: "24/7 Active"
     },
-  ];
+  ], []);
+
+  // Navigation handlers
+  const handleViewPopular = useCallback(() => navigate("/videos?filter=popular"), [navigate]);
+  const handleViewNew = useCallback(() => navigate("/videos?filter=new"), [navigate]);
+  const handleSignup = useCallback(() => navigate("/signup"), [navigate]);
+  const handleBookings = useCallback(() => navigate("/bookings"), [navigate]);
+  const handleVideos = useCallback(() => navigate("/videos"), [navigate]);
+  const handleCommunity = useCallback(() => navigate("/community"), [navigate]);
+
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) setTimeGreeting('Morning');
+    else if (hour < 17) setTimeGreeting('Afternoon');
+    else setTimeGreeting('Evening');
+  }, []);
 
   return (
     <motion.div 
@@ -295,7 +324,7 @@ const LandingPage = () => {
                 <GlowingButton 
                   size="lg"
                   className="text-sm sm:text-base px-5 py-2.5 group w-full sm:w-auto"
-                  onClick={() => navigate("/videos")}
+                  onClick={handleVideos}
                 >
                   <Play className="mr-2 h-4 w-4 group-hover:scale-110" />
                   Try Free Lesson
@@ -304,7 +333,7 @@ const LandingPage = () => {
                   variant="secondary"
                   size="lg"
                   className="text-sm sm:text-base px-5 py-2.5 w-full sm:w-auto"
-                  onClick={() => navigate("/bookings")}
+                  onClick={handleBookings}
                 >
                   <CalendarClock className="mr-2 h-4 w-4" />
                   Book Live Session
@@ -331,7 +360,11 @@ const LandingPage = () => {
             <motion.div
               className="flex justify-center order-first lg:order-last py-4 sm:py-0"
             >
-              <InteractivePiano />
+              <Suspense fallback={<div className="bg-muted rounded-xl w-full h-64 animate-pulse" />}>
+                <ErrorBoundary fallback={<div>Piano failed to load</div>}>
+                  <InteractivePiano />
+                </ErrorBoundary>
+              </Suspense>
             </motion.div>
           </div>
         </div>
@@ -343,20 +376,20 @@ const LandingPage = () => {
           <ContentCarousel
             title="🔥 Trending Lessons"
             items={popularLessons}
-            onViewAll={() => navigate("/videos?filter=popular")}
+            onViewAll={handleViewPopular}
           />
 
           <ContentCarousel
             title="✨ Just Released"
             items={newReleases}
-            onViewAll={() => navigate("/videos?filter=new")}
+            onViewAll={handleViewNew}
           />
 
           {/* Quick Access Actions */}
           <motion.div
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mt-6 sm:mt-8"
           >
-            <FloatingCard className="p-3 sm:p-4 text-center group cursor-pointer" onClick={() => navigate("/videos")}>
+            <FloatingCard className="p-3 sm:p-4 text-center group cursor-pointer" onClick={handleVideos}>
               <div className="bg-gradient-to-br from-gold/20 to-gold/10 p-2.5 sm:p-3 rounded-full w-fit mx-auto mb-2 sm:mb-3 group-hover:scale-110">
                 <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-gold" />
               </div>
@@ -365,7 +398,7 @@ const LandingPage = () => {
               <Button variant="outline" size="sm" className="text-xs sm:text-sm">Explore Now</Button>
             </FloatingCard>
 
-            <FloatingCard className="p-3 sm:p-4 text-center group cursor-pointer" onClick={() => navigate("/community")}>
+            <FloatingCard className="p-3 sm:p-4 text-center group cursor-pointer" onClick={handleCommunity}>
               <div className="bg-gradient-to-br from-purple-500/20 to-purple-500/10 p-2.5 sm:p-3 rounded-full w-fit mx-auto mb-2 sm:mb-3 group-hover:scale-110">
                 <Users className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
               </div>
@@ -374,7 +407,7 @@ const LandingPage = () => {
               <Button variant="outline" size="sm" className="text-xs sm:text-sm">Join Now</Button>
             </FloatingCard>
 
-            <FloatingCard className="p-3 sm:p-4 text-center group cursor-pointer sm:col-span-2 lg:col-span-1" onClick={() => navigate("/bookings")}>
+            <FloatingCard className="p-3 sm:p-4 text-center group cursor-pointer sm:col-span-2 lg:col-span-1" onClick={handleBookings}>
               <div className="bg-gradient-to-br from-green-500/20 to-green-500/10 p-2.5 sm:p-3 rounded-full w-fit mx-auto mb-2 sm:mb-3 group-hover:scale-110">
                 <CalendarClock className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
               </div>
@@ -488,7 +521,7 @@ const LandingPage = () => {
             <GlowingButton 
               variant="primary"
               size="lg"
-              onClick={() => navigate("/signup")}
+              onClick={handleSignup}
               className="text-base px-8 py-3"
             >
               Start Free Trial
@@ -497,7 +530,7 @@ const LandingPage = () => {
             <GlowingButton 
               variant="secondary"
               size="lg"
-              onClick={() => navigate("/videos")}
+              onClick={handleVideos}
               className="text-base px-8 py-3"
             >
               <Volume2 className="mr-2 h-5 w-5" />
@@ -510,11 +543,46 @@ const LandingPage = () => {
   );
 };
 
+// Dashboard Component ========================================================
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isDesktop = useMediaQuery({ minWidth: 1024 });
+
+  const handleManageSubscription = useCallback(() => navigate("/subscriptions"), [navigate]);
+  const handleBookSession = useCallback(() => navigate("/bookings"), [navigate]);
 
   if (!user) return null;
+
+  // Subscription Status Component
+  const SubscriptionStatus = useMemo(() => (
+    user.subscribed ? (
+      <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
+        <div className="flex items-center">
+          <div className="bg-green-500 rounded-full p-1 mr-2 sm:mr-3">
+            <BookOpen className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
+          </div>
+          <div>
+            <h3 className="font-medium text-green-800 text-sm sm:text-base">
+              {user.subscriptionTier ? user.subscriptionTier.charAt(0).toUpperCase() + user.subscriptionTier.slice(1) : 'Active'} Plan
+            </h3>
+            <p className="text-xs sm:text-sm text-green-600">Access to all premium content</p>
+          </div>
+        </div>
+      </div>
+    ) : (
+      <div>
+        <p className="text-muted-foreground text-sm mb-3 sm:mb-4">
+          Upgrade to access premium content and features.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+          {mockSubscriptionPlans.map((plan) => (
+            <PricingCard key={plan.id} plan={plan} variant="outline" className="h-full" />
+          ))}
+        </div>
+      </div>
+    )
+  ), [user.subscribed, user.subscriptionTier]);
 
   return (
     <div className="space-y-6">
@@ -522,7 +590,7 @@ const Dashboard = () => {
         <h1 className="text-xl sm:text-2xl font-serif font-bold">Welcome, {user.name}</h1>
         <Button
           className="bg-gold hover:bg-gold-dark text-white py-2 text-sm sm:text-base"
-          onClick={() => navigate("/bookings")}
+          onClick={handleBookSession}
         >
           <CalendarClock className="mr-2 h-4 w-4" />
           Book a Session
@@ -536,55 +604,45 @@ const Dashboard = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 sm:mb-4">
           <h2 className="text-lg sm:text-xl font-proxima font-semibold">Your Subscription</h2>
           {user.subscribed && (
-            <Button variant="outline" size="sm" onClick={() => navigate("/subscriptions")}>
+            <Button variant="outline" size="sm" onClick={handleManageSubscription}>
               Manage
             </Button>
           )}
         </div>
         
-        {user.subscribed ? (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
-            <div className="flex items-center">
-              <div className="bg-green-500 rounded-full p-1 mr-2 sm:mr-3">
-                <BookOpen className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
-              </div>
-              <div>
-                <h3 className="font-medium text-green-800 text-sm sm:text-base">
-                  {user.subscriptionTier ? user.subscriptionTier.charAt(0).toUpperCase() + user.subscriptionTier.slice(1) : 'Active'} Plan
-                </h3>
-                <p className="text-xs sm:text-sm text-green-600">Access to all premium content</p>
-              </div>
-            </div>
+        {SubscriptionStatus}
+      </div>
+
+      {/* Responsive Layout */}
+      {isDesktop ? (
+        <div className="grid grid-cols-3 gap-6">
+          <div className="col-span-2">
+            <RecommendedContent />
           </div>
-        ) : (
           <div>
-            <p className="text-muted-foreground text-sm mb-3 sm:mb-4">
-              Upgrade to access premium content and features.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-              {mockSubscriptionPlans.map((plan) => (
-                <PricingCard key={plan.id} plan={plan} variant="outline" className="h-full" />
-              ))}
-            </div>
+            <h2 className="text-lg sm:text-xl font-serif font-semibold mb-3 sm:mb-4">Upcoming Sessions</h2>
+            <UpcomingBookings />
           </div>
-        )}
-      </div>
-
-      <RecommendedContent />
-
-      <div className="mt-6">
-        <h2 className="text-lg sm:text-xl font-serif font-semibold mb-3 sm:mb-4">Upcoming Sessions</h2>
-        <UpcomingBookings />
-      </div>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          <RecommendedContent />
+          <div>
+            <h2 className="text-lg sm:text-xl font-serif font-semibold mb-3 sm:mb-4">Upcoming Sessions</h2>
+            <UpcomingBookings />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
+// Main Component =============================================================
 const Index = () => {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect to login if accessing protected dashboard areas
+  // Redirect logic
   useEffect(() => {
     if (!isLoading && !user && window.location.pathname !== "/") {
       navigate("/login");
@@ -604,9 +662,11 @@ const Index = () => {
 
   return (
     <MainLayout>
-      {user ? <Dashboard /> : <LandingPage />}
+      <ErrorBoundary fallback={<div className="p-6 text-red-500">Page failed to load</div>}>
+        {user ? <Dashboard /> : <LandingPage />}
+      </ErrorBoundary>
     </MainLayout>
   );
 };
 
-export default Index;
+export default memo(Index);
