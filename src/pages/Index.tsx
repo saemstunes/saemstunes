@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+
+import { useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Music, Play, BookOpen, CalendarClock, ArrowRight } from "lucide-react";
+import { Music, Play, Users, Book, BookOpen, CalendarClock, ArrowRight } from "lucide-react";
 import MainLayout from "@/components/layout/MainLayout";
 import DashboardStats from "@/components/dashboard/DashboardStats";
 import RecommendedContent from "@/components/dashboard/RecommendedContent";
@@ -11,10 +12,10 @@ import { mockSubscriptionPlans } from "@/data/mockData";
 import PricingCard from "@/components/subscription/PricingCard";
 import { motion } from "framer-motion";
 import { pageTransition } from "@/lib/animation-utils";
-import { useMediaQuery } from "react-responsive";
 
-// Common Features Component
-const FeaturesSection = () => {
+const LandingPage = () => {
+  const navigate = useNavigate();
+
   const features = [
     {
       icon: <Music className="h-6 w-6 text-gold" />,
@@ -38,117 +39,13 @@ const FeaturesSection = () => {
     },
   ];
 
-  return (
-    <section className="py-16 bg-muted/30">
-      <div className="container px-4">
-        <h2 className="text-3xl font-serif font-bold text-center mb-12">
-          Why Choose <span className="text-gold">Saem's Tunes</span>
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {features.map((feature, index) => (
-            <motion.div 
-              key={index} 
-              className="bg-card p-6 rounded-lg shadow-sm flex flex-col items-center text-center"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              whileHover={{ y: -5, transition: { duration: 0.3 } }}
-            >
-              <div className="bg-gold/10 p-3 rounded-full mb-4">
-                {feature.icon}
-              </div>
-              <h3 className="text-lg font-medium mb-2">{feature.title}</h3>
-              <p className="text-muted-foreground">{feature.description}</p>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// Common Pricing Section
-const PricingSection = () => {
-  const getSubscriptionPlanVariant = (index: number) => {
-    return index === 1 ? "default" : "outline";
+  // Updated variant and colors for better light mode contrast
+  const getSubscriptionPlanVariant = (index: number, plan: any) => {
+    if (index === 1) return "default"; // Middle plan is already good
+    
+    // Use light variant for side plans in light mode for better contrast
+    return "outline";
   };
-
-  return (
-    <section className="py-16">
-      <div className="container px-4">
-        <h2 className="text-3xl font-serif font-bold text-center mb-4">
-          Subscription Plans
-        </h2>
-        <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
-          Choose a plan that works for you and start your musical journey today. All plans include access to our community and support.
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {mockSubscriptionPlans.map((plan, index) => (
-            <motion.div
-              key={plan.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.2 }}
-              whileHover={{ y: -8, transition: { duration: 0.3 } }}
-            >
-              <PricingCard 
-                plan={plan} 
-                variant={getSubscriptionPlanVariant(index)}
-                className={index !== 1 ? "shadow-lg border-gold/40 dark:border-gold/20" : ""}
-              />
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// Common CTA Section
-const CTASection = () => {
-  const navigate = useNavigate();
-
-  return (
-    <section className="py-16 bg-gold/10">
-      <div className="container px-4 text-center">
-        <motion.h2 
-          className="text-3xl font-serif font-bold mb-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          Ready to Start Your Musical Journey?
-        </motion.h2>
-        <motion.p 
-          className="text-muted-foreground mb-8 max-w-2xl mx-auto"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          Join Saem's Tunes today and discover the joy of learning music with our expert tutors and comprehensive resources.
-        </motion.p>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-        >
-          <Button 
-            size="lg"
-            className="bg-gold hover:bg-gold-dark text-white"
-            onClick={() => navigate("/signup")}
-          >
-            Sign Up Now
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        </motion.div>
-      </div>
-    </section>
-  );
-};
-
-// Landing Page Component
-const LandingPage = () => {
-  const navigate = useNavigate();
 
   return (
     <motion.div 
@@ -200,183 +97,171 @@ const LandingPage = () => {
         </div>
       </section>
 
-      <FeaturesSection />
-      <PricingSection />
-      <CTASection />
+      {/* Features Section */}
+      <section className="py-16 bg-muted/30">
+        <div className="container px-4">
+          <h2 className="text-3xl font-serif font-bold text-center mb-12">
+            Why Choose <span className="text-gold">Saem's Tunes</span>
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {features.map((feature, index) => (
+              <motion.div 
+                key={index} 
+                className="bg-card p-6 rounded-lg shadow-sm flex flex-col items-center text-center"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                whileHover={{ y: -5, transition: { duration: 0.3 } }}
+              >
+                <div className="bg-gold/10 p-3 rounded-full mb-4">
+                  {feature.icon}
+                </div>
+                <h3 className="text-lg font-medium mb-2">{feature.title}</h3>
+                <p className="text-muted-foreground">{feature.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section - Updated for better light mode contrast */}
+      <section className="py-16">
+        <div className="container px-4">
+          <h2 className="text-3xl font-serif font-bold text-center mb-4">
+            Subscription Plans
+          </h2>
+          <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
+            Choose a plan that works for you and start your musical journey today. All plans include access to our community and support.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {mockSubscriptionPlans.map((plan, index) => (
+              <motion.div
+                key={plan.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.2 }}
+                whileHover={{ y: -8, transition: { duration: 0.3 } }}
+              >
+                <PricingCard 
+                  plan={plan} 
+                  variant={getSubscriptionPlanVariant(index, plan)}
+                  className={index !== 1 ? "shadow-lg border-gold/40 dark:border-gold/20" : ""}
+                />
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16 bg-gold/10">
+        <div className="container px-4 text-center">
+          <motion.h2 
+            className="text-3xl font-serif font-bold mb-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            Ready to Start Your Musical Journey?
+          </motion.h2>
+          <motion.p 
+            className="text-muted-foreground mb-8 max-w-2xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            Join Saem's Tunes today and discover the joy of learning music with our expert tutors and comprehensive resources.
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            <Button 
+              size="lg"
+              className="bg-gold hover:bg-gold-dark text-white"
+              onClick={() => navigate("/signup")}
+            >
+              Sign Up Now
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </motion.div>
+        </div>
+      </section>
     </motion.div>
   );
 };
 
-// Subscription Management Component
-const SubscriptionSection = ({ user }: { user: any }) => {
-  const navigate = useNavigate();
-
-  return (
-    <div className="bg-card border rounded-lg p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-proxima font-semibold">Your Subscription</h2>
-        {user.subscribed && (
-          <Button variant="outline" onClick={() => navigate("/subscriptions")}>
-            Manage Subscription
-          </Button>
-        )}
-      </div>
-      
-      {user.subscribed ? (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <div className="flex items-center">
-            <div className="bg-green-500 rounded-full p-1 mr-3">
-              <BookOpen className="h-4 w-4 text-white" />
-            </div>
-            <div>
-              <h3 className="font-medium text-green-800">
-                {user.subscriptionTier ? 
-                  `${user.subscriptionTier.charAt(0).toUpperCase()}${user.subscriptionTier.slice(1)} Subscription` : 
-                  'Active Subscription'}
-              </h3>
-              <p className="text-sm text-green-600">You have access to all premium content</p>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div>
-          <p className="text-muted-foreground mb-4">
-            Upgrade your account to access premium content, advanced lessons, and exclusive features.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {mockSubscriptionPlans.map((plan) => (
-              <PricingCard key={plan.id} plan={plan} variant="outline" />
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Dashboard Component with Responsive Layout
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [isDesktop, setIsDesktop] = useState(false);
-  const desktopCheck = useMediaQuery({ minWidth: 1024 });
-
-  useEffect(() => {
-    setIsDesktop(desktopCheck);
-  }, [desktopCheck]);
 
   if (!user) return null;
 
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <motion.h1 
-          className="text-3xl font-serif font-bold"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
+        <h1 className="text-3xl font-serif font-bold">Welcome, {user.name}</h1>
+        <Button
+          className="bg-gold hover:bg-gold-dark text-white w-full md:w-auto"
+          onClick={() => navigate("/bookings")}
         >
-          Welcome, {user.name}
-        </motion.h1>
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-        >
-          <Button
-            className="bg-gold hover:bg-gold-dark text-white w-full md:w-auto"
-            onClick={() => navigate("/bookings")}
-          >
-            <CalendarClock className="mr-2 h-5 w-5" />
-            Book a Session
-          </Button>
-        </motion.div>
+          <CalendarClock className="mr-2 h-5 w-5" />
+          Book a Session
+        </Button>
       </div>
 
-      {/* Responsive Layout */}
-      {isDesktop ? (
-        // Desktop Layout (1024px+)
-        <div className="grid grid-cols-3 gap-8">
-          <div className="col-span-2 space-y-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-            >
-              <DashboardStats role={user.role} />
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-            >
-              <RecommendedContent />
-            </motion.div>
-          </div>
-          
-          <div className="space-y-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.2 }}
-            >
-              <SubscriptionSection user={user} />
-            </motion.div>
-            
-            <motion.div
-              className="bg-card border rounded-lg p-6"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.3 }}
-            >
-              <h2 className="text-xl font-serif font-semibold mb-4">Upcoming Sessions</h2>
-              <UpcomingBookings />
-            </motion.div>
-          </div>
+      <DashboardStats role={user.role} />
+
+      {/* Subscription Management for Authenticated Users */}
+      <div className="bg-card border rounded-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-proxima font-semibold">Your Subscription</h2>
+          {user.subscribed && (
+            <Button variant="outline" onClick={() => navigate("/subscriptions")}>
+              Manage Subscription
+            </Button>
+          )}
         </div>
-      ) : (
-        // Mobile/Tablet Layout
-        <div className="space-y-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <DashboardStats role={user.role} />
-          </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-          >
-            <SubscriptionSection user={user} />
-          </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            <RecommendedContent />
-          </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-          >
-            <h2 className="text-xl font-serif font-semibold mb-4">Upcoming Sessions</h2>
-            <UpcomingBookings />
-          </motion.div>
-        </div>
-      )}
+        
+        {user.subscribed ? (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <div className="bg-green-500 rounded-full p-1 mr-3">
+                <BookOpen className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <h3 className="font-medium text-green-800">
+                  {user.subscriptionTier ? user.subscriptionTier.charAt(0).toUpperCase() + user.subscriptionTier.slice(1) : 'Active'} Subscription
+                </h3>
+                <p className="text-sm text-green-600">You have access to all premium content</p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <p className="text-muted-foreground mb-4">
+              Upgrade your account to access premium content, advanced lessons, and exclusive features.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {mockSubscriptionPlans.map((plan) => (
+                <PricingCard key={plan.id} plan={plan} variant="outline" />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <RecommendedContent />
+
+      <div className="mt-8">
+        <h2 className="text-xl font-serif font-semibold mb-4">Upcoming Sessions</h2>
+        <UpcomingBookings />
+      </div>
     </div>
   );
 };
 
-// Main Index Component
 const Index = () => {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
@@ -401,17 +286,7 @@ const Index = () => {
 
   return (
     <MainLayout>
-      {user ? (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Dashboard />
-        </motion.div>
-      ) : (
-        <LandingPage />
-      )}
+      {user ? <Dashboard /> : <LandingPage />}
     </MainLayout>
   );
 };
