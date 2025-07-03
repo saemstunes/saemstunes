@@ -12,7 +12,7 @@ const MusicTools: React.FC = () => {
   const [swipeSensitivity, setSwipeSensitivity] = useState(5);
   const containerRef = useRef<HTMLDivElement>(null);
   
-  // Swipe handlers
+  // Enhanced swipe handlers with better touch detection
   const handlers = useSwipeable({
     onSwipedLeft: () => {
       if (activeInstrument === 'piano') {
@@ -24,18 +24,21 @@ const MusicTools: React.FC = () => {
         setActiveInstrument('piano');
       }
     },
-    delta: 50 - (swipeSensitivity * 4), // Adjust sensitivity
+    delta: 50 - (swipeSensitivity * 4),
     preventDefaultTouchmoveEvent: true,
-    trackMouse: true,
+    trackTouch: true,
+    trackMouse: false, // Disable mouse tracking to prevent conflicts
+    rotationAngle: 0, // Strictly horizontal swipes
   });
 
   // Reset both instruments
   const handleReset = () => {
-    if (activeInstrument === 'piano') {
-      window.dispatchEvent(new CustomEvent('reset-piano'));
-    } else {
-      window.dispatchEvent(new CustomEvent('reset-guitar'));
-    }
+    console.log(`Resetting ${activeInstrument}`);
+    const eventName = activeInstrument === 'piano' 
+      ? 'reset-piano' 
+      : 'reset-guitar';
+    
+    window.dispatchEvent(new CustomEvent(eventName));
   };
 
   // Close tutorial after 5 seconds
@@ -46,21 +49,28 @@ const MusicTools: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Improved swipe detection for mobile
+  useEffect(() => {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    setIsTouch(isMobile);
+  }, []);
+
   return (
     <div 
       {...handlers}
       className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl shadow-2xl overflow-hidden w-full max-w-5xl mx-auto p-4 sm:p-6"
       ref={containerRef}
+      style={{ touchAction: 'pan-y' }} // Critical for swipe to work
     >
-      {/* Background effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-transparent to-purple-500/10 opacity-50" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,215,0,0.1),transparent_70%)]" />
+      {/* Background effects - reduced z-index */}
+      <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-transparent to-purple-500/10 opacity-50 z-0" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,215,0,0.1),transparent_70%)] z-0" />
       
-      {/* Floating particles */}
+      {/* Floating particles - reduced z-index */}
       {[...Array(6)].map((_, i) => (
         <motion.div
           key={i}
-          className="absolute w-1 h-1 bg-amber-400/30 rounded-full"
+          className="absolute w-1 h-1 bg-amber-400/30 rounded-full z-0"
           style={{
             left: `${20 + i * 15}%`,
             top: `${10 + i * 10}%`,
@@ -77,8 +87,8 @@ const MusicTools: React.FC = () => {
         />
       ))}
       
-      {/* Navigation Controls */}
-      <div className="flex justify-between items-center mb-6 z-10 relative">
+      {/* Navigation Controls - increased z-index */}
+      <div className="flex justify-between items-center mb-6 z-20 relative">
         <div className="flex items-center gap-2">
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -132,14 +142,14 @@ const MusicTools: React.FC = () => {
         </div>
       </div>
       
-      {/* Tutorial Tooltip */}
+      {/* Tutorial Tooltip - increased z-index */}
       <AnimatePresence>
         {showTutorial && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="absolute top-16 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-amber-500/20 to-orange-500/20 backdrop-blur-sm border border-amber-500/30 rounded-full px-4 py-2 text-white text-sm font-medium z-20 shadow-lg flex items-center"
+            className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-amber-500/20 to-orange-500/20 backdrop-blur-sm border border-amber-500/30 rounded-full px-4 py-2 text-white text-sm font-medium z-30 shadow-lg flex items-center"
           >
             <Zap className="inline w-4 h-4 mr-2" />
             <span>
@@ -157,14 +167,14 @@ const MusicTools: React.FC = () => {
         )}
       </AnimatePresence>
       
-      {/* Settings Panel */}
+      {/* Settings Panel - increased z-index */}
       <AnimatePresence>
         {showSettings && (
           <motion.div
             initial={{ opacity: 0, height: 0, scale: 0.95 }}
             animate={{ opacity: 1, height: 'auto', scale: 1 }}
             exit={{ opacity: 0, height: 0, scale: 0.95 }}
-            className="bg-gradient-to-br from-black/40 to-black/60 backdrop-blur-md rounded-xl p-6 mb-6 border border-white/10 shadow-2xl z-20 relative"
+            className="bg-gradient-to-br from-black/40 to-black/60 backdrop-blur-md rounded-xl p-6 mb-6 border border-white/10 shadow-2xl z-30 relative"
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-white font-semibold text-lg flex items-center gap-2">
@@ -248,8 +258,8 @@ const MusicTools: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Instrument Container with Swipe Indicators */}
-      <div className="relative">
+      {/* Instrument Container with Swipe Indicators - increased z-index */}
+      <div className="relative z-10">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeInstrument}
