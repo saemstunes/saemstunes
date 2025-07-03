@@ -444,7 +444,7 @@ const InteractivePiano: React.FC = () => {
             exit={{ opacity: 0, y: -20 }}
             className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-amber-500/20 to-orange-500/20 backdrop-blur-sm border border-amber-500/30 rounded-full px-4 py-2 text-white text-sm font-medium z-20 shadow-lg"
           >
-            <Zap className="inline w-4 w-4 mr-2" />
+            <Zap className="inline w-4 h-4 mr-2" />
             {isTouch ? 'Tap to play!' : 'Click or use keyboard!'}
           </motion.div>
         )}
