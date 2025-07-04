@@ -1,8 +1,16 @@
-
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Pause, Volume2, VolumeX, Info, Settings, Zap, X, RotateCcw, Clock } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+
+interface PianoKey {
+  note: string;
+  type: 'white' | 'black';
+  frequency: number;
+  keyboardKey?: string;
+  position: number;
+  width: number;
+}
 
 interface AudioState {
   context: AudioContext | null;
@@ -11,25 +19,18 @@ interface AudioState {
   reverb: ConvolverNode | null;
 }
 
-interface NoteInfo {
-  note: string;
-  frequency: number;
-  octave: number;
-  keyBinding?: string;
-}
-
 const InteractivePiano: React.FC = () => {
-  const [activeNotes, setActiveNotes] = useState<Set<string>>(new Set());
-  const [volume, setVolume] = useState(0.5);
+  const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set());
+  const [isPlayingDemo, setIsPlayingDemo] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [audioReady, setAudioReady] = useState(false);
-  const [isPlayingDemo, setIsPlayingDemo] = useState(false);
   const [showKeyguide, setShowKeyguide] = useState(false);
-  const [showDemo, setShowDemo] = useState(true);
-  const [tempo, setTempo] = useState(120);
+  const [volume, setVolume] = useState(0.5);
   const [waveform, setWaveform] = useState<OscillatorType>('sine');
-  const [isTouch, setIsTouch] = useState(false);
+  const [sustainPedal, setSustainPedal] = useState(false);
+  const [octaveShift, setOctaveShift] = useState(0);
+  const [audioReady, setAudioReady] = useState(false);
+  const [tempo, setTempo] = useState(120);
   const [noteBeingHeld, setNoteBeingHeld] = useState<string | null>(null);
   const [noteDuration, setNoteDuration] = useState(0);
   const [rhythmValue, setRhythmValue] = useState<string>('Quarter note');
@@ -43,6 +44,7 @@ const InteractivePiano: React.FC = () => {
   });
   
   const oscillators = useRef<Map<string, OscillatorNode>>(new Map());
+  const sustainedNotes = useRef<Set<string>>(new Set());
   const demoTimeouts = useRef<NodeJS.Timeout[]>([]);
   const noteStartTime = useRef<number>(0);
   const durationTimer = useRef<NodeJS.Timeout | null>(null);
@@ -59,7 +61,7 @@ const InteractivePiano: React.FC = () => {
 
   // Calculate duration based on current tempo
   const getNoteDurationMs = (beats: number) => {
-    return (beats * 60000) / tempo; // Convert beats to milliseconds
+    return (beats * 60000) / tempo;
   };
 
   // Classify held duration into nearest note value
@@ -82,36 +84,34 @@ const InteractivePiano: React.FC = () => {
     return closest[0];
   };
 
-  // Piano layout with 3 octaves
-  const notes: NoteInfo[] = [
-    // Octave 4
-    { note: 'C', frequency: 261.63, octave: 4, keyBinding: 'a' },
-    { note: 'C#', frequency: 277.18, octave: 4, keyBinding: 'w' },
-    { note: 'D', frequency: 293.66, octave: 4, keyBinding: 's' },
-    { note: 'D#', frequency: 311.13, octave: 4, keyBinding: 'e' },
-    { note: 'E', frequency: 329.63, octave: 4, keyBinding: 'd' },
-    { note: 'F', frequency: 349.23, octave: 4, keyBinding: 'f' },
-    { note: 'F#', frequency: 369.99, octave: 4, keyBinding: 't' },
-    { note: 'G', frequency: 392.00, octave: 4, keyBinding: 'g' },
-    { note: 'G#', frequency: 415.30, octave: 4, keyBinding: 'y' },
-    { note: 'A', frequency: 440.00, octave: 4, keyBinding: 'h' },
-    { note: 'A#', frequency: 466.16, octave: 4, keyBinding: 'u' },
-    { note: 'B', frequency: 493.88, octave: 4, keyBinding: 'j' },
+  // Piano layout with 2 octaves
+  const keys: PianoKey[] = useRef(() => {
+    const whiteKeyWidth = 100 / 10;
+    const blackKeyWidth = whiteKeyWidth * 0.6;
     
-    // Octave 5
-    { note: 'C', frequency: 523.25, octave: 5, keyBinding: 'k' },
-    { note: 'C#', frequency: 554.37, octave: 5, keyBinding: 'o' },
-    { note: 'D', frequency: 587.33, octave: 5, keyBinding: 'l' },
-    { note: 'D#', frequency: 622.25, octave: 5, keyBinding: 'p' },
-    { note: 'E', frequency: 659.25, octave: 5 },
-    { note: 'F', frequency: 698.46, octave: 5 },
-    { note: 'F#', frequency: 739.99, octave: 5 },
-    { note: 'G', frequency: 783.99, octave: 5 },
-    { note: 'G#', frequency: 830.61, octave: 5 },
-    { note: 'A', frequency: 880.00, octave: 5 },
-    { note: 'A#', frequency: 932.33, octave: 5 },
-    { note: 'B', frequency: 987.77, octave: 5 },
-  ];
+    return [
+      // White keys
+      { note: 'C', type: 'white', frequency: 261.63, keyboardKey: 'a', position: 0, width: whiteKeyWidth },
+      { note: 'D', type: 'white', frequency: 293.66, keyboardKey: 's', position: whiteKeyWidth, width: whiteKeyWidth },
+      { note: 'E', type: 'white', frequency: 329.63, keyboardKey: 'd', position: whiteKeyWidth * 2, width: whiteKeyWidth },
+      { note: 'F', type: 'white', frequency: 349.23, keyboardKey: 'f', position: whiteKeyWidth * 3, width: whiteKeyWidth },
+      { note: 'G', type: 'white', frequency: 392.00, keyboardKey: 'g', position: whiteKeyWidth * 4, width: whiteKeyWidth },
+      { note: 'A', type: 'white', frequency: 440.00, keyboardKey: 'h', position: whiteKeyWidth * 5, width: whiteKeyWidth },
+      { note: 'B', type: 'white', frequency: 493.88, keyboardKey: 'j', position: whiteKeyWidth * 6, width: whiteKeyWidth },
+      { note: "C'", type: 'white', frequency: 523.25, keyboardKey: 'k', position: whiteKeyWidth * 7, width: whiteKeyWidth },
+      { note: "D'", type: 'white', frequency: 587.33, keyboardKey: 'l', position: whiteKeyWidth * 8, width: whiteKeyWidth },
+      { note: "E'", type: 'white', frequency: 659.25, keyboardKey: ';', position: whiteKeyWidth * 9, width: whiteKeyWidth },
+      
+      // Black keys
+      { note: 'C#', type: 'black', frequency: 277.18, keyboardKey: 'w', position: whiteKeyWidth * 0.7, width: blackKeyWidth },
+      { note: 'D#', type: 'black', frequency: 311.13, keyboardKey: 'e', position: whiteKeyWidth * 1.7, width: blackKeyWidth },
+      { note: 'F#', type: 'black', frequency: 369.99, keyboardKey: 't', position: whiteKeyWidth * 3.7, width: blackKeyWidth },
+      { note: 'G#', type: 'black', frequency: 415.30, keyboardKey: 'y', position: whiteKeyWidth * 4.7, width: blackKeyWidth },
+      { note: 'A#', type: 'black', frequency: 466.16, keyboardKey: 'u', position: whiteKeyWidth * 5.7, width: blackKeyWidth },
+      { note: "C#'", type: 'black', frequency: 554.37, keyboardKey: 'o', position: whiteKeyWidth * 7.7, width: blackKeyWidth },
+      { note: "D#'", type: 'black', frequency: 622.25, keyboardKey: 'p', position: whiteKeyWidth * 8.7, width: blackKeyWidth },
+    ];
+  }).current;
 
   // Enhanced audio initialization
   useEffect(() => {
@@ -121,9 +121,11 @@ const InteractivePiano: React.FC = () => {
         const gainNode = context.createGain();
         const compressor = context.createDynamicsCompressor();
         
+        // Create reverb effect
         const reverb = context.createConvolver();
         const reverbGain = context.createGain();
         
+        // Simple reverb impulse response
         const impulseLength = context.sampleRate * 2;
         const impulse = context.createBuffer(2, impulseLength, context.sampleRate);
         for (let channel = 0; channel < 2; channel++) {
@@ -134,6 +136,7 @@ const InteractivePiano: React.FC = () => {
         }
         reverb.buffer = impulse;
         
+        // Connect audio graph
         gainNode.connect(compressor);
         compressor.connect(reverbGain);
         reverbGain.connect(reverb);
@@ -160,7 +163,6 @@ const InteractivePiano: React.FC = () => {
     };
     
     initAudio();
-    setIsTouch('ontouchstart' in window);
     
     return () => {
       if (audioState.current.context) {
@@ -190,7 +192,8 @@ const InteractivePiano: React.FC = () => {
       }
     });
     oscillators.current.clear();
-    setActiveNotes(new Set());
+    sustainedNotes.current.clear();
+    setActiveKeys(new Set());
     setNoteBeingHeld(null);
     setNoteDuration(0);
     if (durationTimer.current) {
@@ -198,61 +201,8 @@ const InteractivePiano: React.FC = () => {
     }
   }, []);
 
-  // Reset handler for piano
-  useEffect(() => {
-    const resetHandler = () => {
-      stopAllNotes();
-      setIsPlayingDemo(false);
-      setActiveNotes(new Set());
-      setNoteDuration(0);
-      setRhythmValue('Quarter note');
-    };
-    
-    window.addEventListener('reset-piano', resetHandler);
-    return () => {
-      window.removeEventListener('reset-piano', resetHandler);
-    };
-  }, [stopAllNotes]);
-
-  // Enhanced note press handling with duration tracking
-  const handleNotePress = (noteInfo: NoteInfo) => {
-    const noteKey = `${noteInfo.note}${noteInfo.octave}`;
-    noteStartTime.current = Date.now();
-    setNoteBeingHeld(noteKey);
-    setNoteDuration(0);
-    
-    // Start duration tracking
-    const updateDuration = () => {
-      if (noteBeingHeld === noteKey) {
-        const currentDuration = Date.now() - noteStartTime.current;
-        setNoteDuration(currentDuration);
-        setRhythmValue(`${classifyDuration(currentDuration)} (${(currentDuration / 1000).toFixed(1)}s)`);
-        durationTimer.current = setTimeout(updateDuration, 50);
-      }
-    };
-    updateDuration();
-    
-    playNote(noteInfo);
-  };
-
-  // Enhanced note release handling
-  const handleNoteRelease = (noteInfo: NoteInfo) => {
-    const noteKey = `${noteInfo.note}${noteInfo.octave}`;
-    if (noteBeingHeld === noteKey) {
-      const finalDuration = Date.now() - noteStartTime.current;
-      const finalRhythm = classifyDuration(finalDuration);
-      setRhythmValue(`${finalRhythm} (${(finalDuration / 1000).toFixed(1)}s)`);
-      setNoteBeingHeld(null);
-      if (durationTimer.current) {
-        clearTimeout(durationTimer.current);
-      }
-    }
-    
-    stopNote(noteInfo);
-  };
-
-  // Play piano note with enhanced realism
-  const playNote = useCallback(async (noteInfo: NoteInfo) => {
+  // Enhanced audio playback with envelope, harmonics, and filter
+  const playAudioNote = useCallback(async (noteInfo: PianoKey, velocity = 0.5) => {
     if (!audioState.current.context || !audioState.current.gainNode || isMuted) return;
 
     try {
@@ -262,106 +212,237 @@ const InteractivePiano: React.FC = () => {
       }
 
       const { context, gainNode } = audioState.current;
-      const noteKey = `${noteInfo.note}${noteInfo.octave}`;
-      
-      // Stop existing note if playing
-      const existingOsc = oscillators.current.get(noteKey);
+      const existingOsc = oscillators.current.get(noteInfo.note);
       if (existingOsc) {
         existingOsc.stop();
-        oscillators.current.delete(noteKey);
+        oscillators.current.delete(noteInfo.note);
       }
 
+      // Create primary oscillator
       const oscillator = context.createOscillator();
       const noteGain = context.createGain();
       const filter = context.createBiquadFilter();
+      
+      // Apply octave shift
+      const adjustedFreq = noteInfo.frequency * Math.pow(2, octaveShift);
       
       oscillator.connect(filter);
       filter.connect(noteGain);
       noteGain.connect(gainNode);
       
+      oscillator.frequency.setValueAtTime(adjustedFreq, context.currentTime);
       oscillator.type = waveform;
-      oscillator.frequency.setValueAtTime(noteInfo.frequency, context.currentTime);
       
-      // Piano-like filtering
+      // Subtle filter for warmth
       filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(noteInfo.frequency * 4, context.currentTime);
+      filter.frequency.setValueAtTime(adjustedFreq * 4, context.currentTime);
+      filter.Q.setValueAtTime(0.5, context.currentTime);
       
-      // Piano envelope
-      const now = context.currentTime;
+      // Enhanced envelope with velocity sensitivity
       const attackTime = 0.01;
-      const sustainLevel = 0.3;
+      const decayTime = 0.1;
+      const sustainLevel = sustainPedal ? 0.6 : 0.4;
+      const releaseTime = sustainPedal ? 2.0 : 0.8;
+      const velocityMultiplier = Math.max(0.1, Math.min(1.0, velocity));
       
-      noteGain.gain.setValueAtTime(0, now);
-      noteGain.gain.linearRampToValueAtTime(volume, now + attackTime);
-      noteGain.gain.exponentialRampToValueAtTime(volume * sustainLevel, now + attackTime + 0.1);
+      noteGain.gain.setValueAtTime(0, context.currentTime);
+      noteGain.gain.linearRampToValueAtTime(volume * velocityMultiplier * 0.8, context.currentTime + attackTime);
+      noteGain.gain.exponentialRampToValueAtTime(volume * velocityMultiplier * sustainLevel, context.currentTime + attackTime + decayTime);
       
-      oscillator.start(now);
-      
-      oscillators.current.set(noteKey, oscillator);
-      setActiveNotes(prev => new Set(prev).add(noteKey));
-      
-    } catch (error) {
-      console.error('Note playback failed:', error);
-    }
-  }, [volume, isMuted, waveform]);
-
-  // Stop individual note
-  const stopNote = useCallback((noteInfo: NoteInfo) => {
-    const noteKey = `${noteInfo.note}${noteInfo.octave}`;
-    const oscillator = oscillators.current.get(noteKey);
-    
-    if (oscillator && audioState.current.context) {
-      const now = audioState.current.context.currentTime;
-      const noteGain = oscillator.context.createGain();
-      
-      // Quick fade out
-      try {
-        oscillator.stop(now + 0.1);
-      } catch (e) {
-        console.warn('Error stopping oscillator:', e);
+      if (!sustainPedal) {
+        noteGain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + releaseTime);
       }
       
-      oscillators.current.delete(noteKey);
-      setActiveNotes(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(noteKey);
-        return newSet;
-      });
+      oscillator.start(context.currentTime);
+      
+      if (sustainPedal) {
+        oscillators.current.set(noteInfo.note, oscillator);
+        sustainedNotes.current.add(noteInfo.note);
+      } else {
+        oscillator.stop(context.currentTime + releaseTime);
+      }
+      
+      return oscillator;
+    } catch (error) {
+      console.error('Note playback failed:', error);
+      return null;
+    }
+  }, [volume, isMuted, waveform, octaveShift, sustainPedal]);
+
+  const stopNote = useCallback((note: string) => {
+    const oscillator = oscillators.current.get(note);
+    if (oscillator && audioState.current.context) {
+      const { context } = audioState.current;
+      const noteGain = context.createGain();
+      noteGain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.3);
+      oscillator.stop(context.currentTime + 0.3);
+      oscillators.current.delete(note);
+      sustainedNotes.current.delete(note);
     }
   }, []);
 
-  // Keyboard event handling (hidden on mobile)
-  useEffect(() => {
-    if (isMobile) return; // Don't add keyboard listeners on mobile
+  // Enhanced note press handling with duration tracking
+  const handleNotePress = (key: PianoKey) => {
+    noteStartTime.current = Date.now();
+    setNoteBeingHeld(key.note);
+    setNoteDuration(0);
     
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const key = event.key.toLowerCase();
-      const noteInfo = notes.find(n => n.keyBinding === key);
-      if (noteInfo && !activeNotes.has(`${noteInfo.note}${noteInfo.octave}`)) {
-        event.preventDefault();
+    // Start duration tracking
+    const updateDuration = () => {
+      if (noteBeingHeld === key.note) {
+        const currentDuration = Date.now() - noteStartTime.current;
+        setNoteDuration(currentDuration);
+        setRhythmValue(`${classifyDuration(currentDuration)} (${(currentDuration / 1000).toFixed(1)}s)`);
+        durationTimer.current = setTimeout(updateDuration, 50);
+      }
+    };
+    updateDuration();
+    
+    playAudioNote(key);
+    setActiveKeys(prev => new Set(prev).add(key.note));
+  };
+
+  // Enhanced note release handling
+  const handleNoteRelease = (key: PianoKey) => {
+    if (noteBeingHeld === key.note) {
+      const finalDuration = Date.now() - noteStartTime.current;
+      const finalRhythm = classifyDuration(finalDuration);
+      setRhythmValue(`${finalRhythm} (${(finalDuration / 1000).toFixed(1)}s)`);
+      setNoteBeingHeld(null);
+      if (durationTimer.current) {
+        clearTimeout(durationTimer.current);
+      }
+    }
+    
+    if (!sustainPedal) {
+      stopNote(key.note);
+      setTimeout(() => {
+        setActiveKeys(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(key.note);
+          return newSet;
+        });
+      }, 300);
+    }
+  };
+
+  // Tempo-based demo timing
+  const playDemo = useCallback(async () => {
+    if (isPlayingDemo || isMuted) return;
+    
+    setIsPlayingDemo(true);
+    demoTimeouts.current.forEach(timeout => clearTimeout(timeout));
+    demoTimeouts.current = [];
+    
+    try {
+      if (audioState.current.context?.state === 'suspended') {
+        await audioState.current.context.resume();
+        setAudioReady(true);
+      }
+      
+      const melodies = [
+        ['C', 'C', 'G', 'G', 'A', 'A', 'G'],
+        ['E', 'D', 'E', 'G', 'A', 'G', 'E', 'D'],
+        ['E', 'D', 'C', 'D', 'E', 'E', 'E', 'D', 'D', 'D'],
+        ['C', 'C', 'D', 'C', 'E', 'D'],
+        ['E', 'E', 'F', 'G', 'G', 'F', 'E', 'D', 'C', 'C']
+      ];
+      
+      const melody = melodies[Math.floor(Math.random() * melodies.length)];
+      const noteDuration = 60000 / tempo / 2;
+      
+      melody.forEach((note, index) => {
+        demoTimeouts.current.push(setTimeout(() => {
+          const key = keys.find(k => k.note === note);
+          if (key) {
+            handleNotePress(key);
+          }
+        }, index * noteDuration));
+        
+        demoTimeouts.current.push(setTimeout(() => {
+          const key = keys.find(k => k.note === note);
+          if (key) {
+            handleNoteRelease(key);
+          }
+        }, index * noteDuration + noteDuration * 0.8));
+      });
+      
+      demoTimeouts.current.push(setTimeout(() => {
+        setIsPlayingDemo(false);
+      }, melody.length * noteDuration + 500));
+      
+    } catch (error) {
+      console.error('Demo playback failed:', error);
+      setIsPlayingDemo(false);
+    }
+  }, [isPlayingDemo, tempo, isMuted, keys]);
+
+  // Keyboard event handling
+  useEffect(() => {
+    const keyMap: Record<string, PianoKey> = {};
+    keys.forEach(key => {
+      if (key.keyboardKey) {
+        keyMap[key.keyboardKey] = key;
+      }
+    });
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      const noteInfo = keyMap[key];
+      
+      if (noteInfo && !activeKeys.has(noteInfo.note)) {
         handleNotePress(noteInfo);
+      }
+      
+      if (key === ' ') {
+        e.preventDefault();
+        playDemo();
+      }
+      if (e.key === 'Shift') setSustainPedal(true);
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setOctaveShift(prev => Math.min(prev + 1, 2));
+      }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setOctaveShift(prev => Math.max(prev - 1, -2));
       }
     };
 
-    const handleKeyUp = (event: KeyboardEvent) => {
-      const key = event.key.toLowerCase();
-      const noteInfo = notes.find(n => n.keyBinding === key);
+    const handleKeyUp = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      const noteInfo = keyMap[key];
+      
       if (noteInfo) {
-        event.preventDefault();
         handleNoteRelease(noteInfo);
+      }
+      
+      if (e.key === 'Shift') {
+        setSustainPedal(false);
+        // Release all sustained notes
+        sustainedNotes.current.forEach(note => {
+          stopNote(note);
+          setTimeout(() => {
+            setActiveKeys(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(note);
+              return newSet;
+            });
+          }, 300);
+        });
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
-    
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [activeNotes, isMobile, handleNotePress, handleNoteRelease]);
+  }, [activeKeys, keys, playDemo, stopNote]);
 
-  const isBlackKey = (note: string) => note.includes('#');
+  const whiteKeys = keys.filter(k => k.type === 'white');
+  const blackKeys = keys.filter(k => k.type === 'black');
 
   return (
     <motion.div
@@ -393,6 +474,16 @@ const InteractivePiano: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
+          <button
+            onClick={playDemo}
+            disabled={isPlayingDemo || isMuted}
+            className={`text-white/80 hover:text-white transition-colors p-1.5 rounded-full hover:bg-white/10 ${
+              isPlayingDemo ? 'bg-blue-500/20' : ''
+            }`}
+          >
+            {isPlayingDemo ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+          </button>
+          
           <button
             onClick={() => setIsMuted(!isMuted)}
             className={`text-white/80 hover:text-white transition-colors p-1.5 rounded-full hover:bg-white/10 ${
@@ -456,7 +547,7 @@ const InteractivePiano: React.FC = () => {
                         <Volume2 className="h-4 w-4" />
                         Volume
                       </label>
-                      <span className="text-blue-400 font-mono text-sm">
+                      <span className="text-primary font-mono text-sm">
                         {Math.round(volume * 100)}%
                       </span>
                     </div>
@@ -467,7 +558,7 @@ const InteractivePiano: React.FC = () => {
                       step="0.1"
                       value={volume}
                       onChange={(e) => setVolume(parseFloat(e.target.value))}
-                      className="w-full accent-blue-500 bg-white/10 rounded-lg"
+                      className="w-full accent-primary bg-white/10 rounded-lg"
                     />
                   </div>
                   
@@ -509,12 +600,53 @@ const InteractivePiano: React.FC = () => {
                   </div>
                   
                   <div className="bg-white/5 rounded-lg p-4">
-                    <label className="text-white font-medium block mb-3">Rhythm Feedback</label>
-                    <div className="bg-black/50 text-white rounded-lg px-3 py-2 border border-white/20 text-center">
-                      <span className="text-blue-400">
-                        {rhythmValue || 'Press and hold keys'}
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="text-white font-medium">Octave</label>
+                      <span className="text-blue-400 font-mono text-sm">
+                        {octaveShift > 0 ? '+' : ''}{octaveShift}
                       </span>
                     </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setOctaveShift(prev => Math.max(prev - 1, -2))}
+                        className="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 px-3 rounded-lg transition-colors font-medium"
+                        disabled={octaveShift <= -2}
+                      >
+                        ↓ Lower
+                      </button>
+                      <button
+                        onClick={() => setOctaveShift(0)}
+                        className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 py-2 px-3 rounded-lg transition-colors font-medium"
+                      >
+                        Reset
+                      </button>
+                      <button
+                        onClick={() => setOctaveShift(prev => Math.min(prev + 1, 2))}
+                        className="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 px-3 rounded-lg transition-colors font-medium"
+                        disabled={octaveShift >= 2}
+                      >
+                        ↑ Higher
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <label className="text-white font-medium">Sustain Pedal</label>
+                      <button
+                        onClick={() => setSustainPedal(!sustainPedal)}
+                        className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${
+                          sustainPedal ? 'bg-primary' : 'bg-white/20'
+                        }`}
+                      >
+                        <div className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform duration-300 ${
+                          sustainPedal ? 'translate-x-7' : 'translate-x-0'
+                        }`} />
+                      </button>
+                    </div>
+                    <p className="text-white/60 text-sm mt-2">
+                      Hold Shift key or toggle here
+                    </p>
                   </div>
                 </div>
               </div>
@@ -522,110 +654,143 @@ const InteractivePiano: React.FC = () => {
           )}
         </AnimatePresence>
 
-        {/* Keyboard shortcuts guide - Hidden on mobile */}
-        {!isMobile && (
-          <AnimatePresence>
-            {showKeyguide && (
-              <motion.div
-                initial={{ opacity: 0, height: 0, scale: 0.95 }}
-                animate={{ opacity: 1, height: 'auto', scale: 1 }}
-                exit={{ opacity: 0, height: 0, scale: 0.95 }}
-                className="bg-gradient-to-br from-black/40 to-black/60 backdrop-blur-md rounded-xl p-6 mb-6 border border-white/10 shadow-2xl"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-white font-semibold text-lg flex items-center gap-2">
-                    <Info className="h-5 w-5" />
-                    Keyboard Shortcuts
-                  </h3>
-                  <button
-                    onClick={() => setShowKeyguide(false)}
-                    className="text-white/60 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-                
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-                  {notes.filter(n => n.keyBinding).map((noteInfo) => (
-                    <div key={`${noteInfo.note}${noteInfo.octave}`} className="flex items-center justify-between bg-white/5 rounded px-2 py-1">
-                      <span className="text-white/80">{noteInfo.note}{noteInfo.octave}</span>
-                      <kbd className="bg-white/10 px-1 py-0.5 rounded text-xs font-mono">
-                        {noteInfo.keyBinding?.toUpperCase()}
-                      </kbd>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        )}
-
-        {/* Piano Keys */}
-        <div className="relative bg-gradient-to-b from-gray-800 to-gray-900 rounded-xl p-4 shadow-inner">
-          <div className="flex relative">
-            {notes.map((noteInfo, index) => {
-              const noteKey = `${noteInfo.note}${noteInfo.octave}`;
-              const isActive = activeNotes.has(noteKey);
-              const isHeld = noteBeingHeld === noteKey;
-              
-              if (isBlackKey(noteInfo.note)) {
-                return (
-                  <motion.button
-                    key={noteKey}
-                    className={`absolute w-8 h-32 bg-gradient-to-b from-gray-900 to-black rounded-b-lg border border-gray-700 shadow-lg z-10 transition-all duration-75 ${
-                      isActive || isHeld
-                        ? 'from-blue-400 to-blue-600 shadow-blue-400/50 scale-95'
-                        : 'hover:from-gray-800 hover:to-gray-900'
-                    }`}
-                    style={{
-                      left: `${(index - notes.filter((n, i) => i < index && isBlackKey(n.note)).length) * 40 - 16}px`,
-                    }}
-                    onMouseDown={() => handleNotePress(noteInfo)}
-                    onMouseUp={() => handleNoteRelease(noteInfo)}
-                    onMouseLeave={() => handleNoteRelease(noteInfo)}
-                    onTouchStart={() => handleNotePress(noteInfo)}
-                    onTouchEnd={() => handleNoteRelease(noteInfo)}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    {!isMobile && noteInfo.keyBinding && (
-                      <span className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-gray-400 text-xs font-mono">
-                        {noteInfo.keyBinding.toUpperCase()}
-                      </span>
-                    )}
-                  </motion.button>
-                );
-              }
-              
-              return (
-                <motion.button
-                  key={noteKey}
-                  className={`w-10 h-48 bg-gradient-to-b from-white to-gray-100 border border-gray-300 shadow-lg transition-all duration-75 ${
-                    isActive || isHeld
-                      ? 'from-blue-200 to-blue-300 shadow-blue-400/50 scale-95'
-                      : 'hover:from-gray-50 hover:to-gray-200'
-                  } ${index === 0 ? 'rounded-l' : ''} ${index === notes.filter(n => !isBlackKey(n.note)).length - 1 ? 'rounded-r' : ''}`}
-                  onMouseDown={() => handleNotePress(noteInfo)}
-                  onMouseUp={() => handleNoteRelease(noteInfo)}
-                  onMouseLeave={() => handleNoteRelease(noteInfo)}
-                  onTouchStart={() => handleNotePress(noteInfo)}
-                  onTouchEnd={() => handleNoteRelease(noteInfo)}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.95 }}
+        {/* Keyguide Panel */}
+        <AnimatePresence>
+          {showKeyguide && !isMobile && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, scale: 0.95 }}
+              animate={{ opacity: 1, height: 'auto', scale: 1 }}
+              exit={{ opacity: 0, height: 0, scale: 0.95 }}
+              className="bg-gradient-to-br from-black/40 to-black/60 backdrop-blur-md rounded-xl p-6 mb-6 border border-white/10 shadow-2xl"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-white font-semibold text-lg flex items-center gap-2">
+                  <Info className="h-5 w-5" />
+                  Keyboard Shortcuts
+                </h3>
+                <button
+                  onClick={() => setShowKeyguide(false)}
+                  className="text-white/60 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
                 >
-                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-center">
-                    <div className="text-gray-600 text-xs font-semibold">
-                      {noteInfo.note}{noteInfo.octave}
-                    </div>
-                    {!isMobile && noteInfo.keyBinding && (
-                      <div className="text-gray-400 text-xs font-mono mt-1">
-                        {noteInfo.keyBinding.toUpperCase()}
-                      </div>
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                {keys.filter(k => k.keyboardKey).map((key) => (
+                  <div key={key.note} className="flex items-center justify-between bg-white/5 rounded px-2 py-1">
+                    <span className="text-white/80">{key.note}</span>
+                    <kbd className="bg-white/10 px-1 py-0.5 rounded text-xs font-mono">
+                      {key.keyboardKey?.toUpperCase()}
+                    </kbd>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Piano Keyboard */}
+        <div className="relative bg-gradient-to-b from-gray-800 to-gray-900 rounded-lg p-4 shadow-inner">
+          <div className="relative w-full pb-[25%] min-h-[150px] sm:min-h-[180px] md:min-h-[200px]">
+            <div className="absolute inset-0">
+              {/* White keys */}
+              {whiteKeys.map((key) => (
+                <motion.button
+                  key={key.note}
+                  className={`
+                    absolute rounded-b-lg transition-all duration-150 select-none
+                    ${activeKeys.has(key.note)
+                      ? 'bg-gradient-to-b from-primary-400 to-primary-600 shadow-xl shadow-primary-500/50 scale-95' 
+                      : 'bg-gradient-to-b from-white to-gray-100 hover:from-gray-50 hover:to-gray-200 shadow-lg hover:shadow-xl'
+                    }
+                    active:scale-90 border border-gray-300
+                  `}
+                  style={{
+                    left: `${key.position}%`,
+                    width: `${key.width}%`,
+                    height: '100%',
+                  }}
+                  onMouseDown={() => handleNotePress(key)}
+                  onMouseUp={() => handleNoteRelease(key)}
+                  onMouseLeave={() => handleNoteRelease(key)}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    handleNotePress(key);
+                  }}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    handleNoteRelease(key);
+                  }}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-center">
+                    <span className={`text-xs font-medium block ${
+                      activeKeys.has(key.note) ? 'text-primary-900' : 'text-slate-700'
+                    }`}>
+                      {key.note}
+                    </span>
+                    {!isMobile && key.keyboardKey && (
+                      <span className={`text-xs block ${
+                        activeKeys.has(key.note) ? 'text-primary-800' : 'text-slate-500'
+                      }`}>
+                        {key.keyboardKey.toUpperCase()}
+                      </span>
                     )}
                   </div>
                 </motion.button>
-              );
-            })}
+              ))}
+
+              {/* Black keys */}
+              {blackKeys.map((key) => (
+                <motion.button
+                  key={key.note}
+                  className={`
+                    absolute rounded-b-md transition-all duration-150 select-none
+                    ${activeKeys.has(key.note)
+                      ? 'bg-gradient-to-b from-primary-400 to-primary-600 shadow-xl shadow-primary-500/50 scale-95' 
+                      : 'bg-gradient-to-b from-gray-900 to-black hover:from-gray-800 hover:to-gray-900 shadow-lg'
+                    }
+                    active:scale-90 border border-gray-700
+                  `}
+                  style={{ 
+                    left: `${key.position}%`,
+                    width: `${key.width}%`,
+                    height: '65%',
+                    zIndex: 10
+                  }}
+                  onMouseDown={() => handleNotePress(key)}
+                  onMouseUp={() => handleNoteRelease(key)}
+                  onMouseLeave={() => handleNoteRelease(key)}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    handleNotePress(key);
+                  }}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    handleNoteRelease(key);
+                  }}
+                  whileHover={{ y: -1 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-center">
+                    <span className={`text-xs font-medium block ${
+                      activeKeys.has(key.note) ? 'text-primary-200' : 'text-white'
+                    }`}>
+                      {key.note}
+                    </span>
+                    {!isMobile && key.keyboardKey && (
+                      <span className={`text-xs block ${
+                        activeKeys.has(key.note) ? 'text-primary-300' : 'text-white/60'
+                      }`}>
+                        {key.keyboardKey.toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                </motion.button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -638,35 +803,37 @@ const InteractivePiano: React.FC = () => {
         >
           <div className="flex flex-wrap items-center justify-center gap-2 text-xs sm:text-sm">
             <span className="text-white/80">Interactive Piano</span>
-            {isMuted && (
-              <span className="bg-red-500/20 text-red-400 px-2 py-1 rounded-full">
-                Muted
+            {sustainPedal && (
+              <span className="bg-primary/20 text-primary-400 px-2 py-1 rounded-full">
+                Sustain ON
+              </span>
+            )}
+            {octaveShift !== 0 && (
+              <span className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full">
+                Octave {octaveShift > 0 ? '+' : ''}{octaveShift}
               </span>
             )}
             <span className="bg-purple-500/20 text-purple-400 px-2 py-1 rounded-full">
               Tempo: {tempo} BPM
             </span>
-            <span className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full">
-              {waveform} Wave
-            </span>
-            {!isMobile && (
-              <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded-full">
-                Keyboard Ready
+            {isMuted && (
+              <span className="bg-red-500/20 text-red-400 px-2 py-1 rounded-full">
+                Muted
               </span>
             )}
           </div>
           
           <AnimatePresence>
-            {activeNotes.size > 0 && !isMuted && (
+            {activeKeys.size > 0 && !isMuted && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-sm rounded-full px-3 py-1.5 text-white text-sm border border-blue-500/30"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-primary/20 to-purple-500/20 backdrop-blur-sm rounded-full px-3 py-1.5 text-white text-sm border border-primary/30"
               >
                 <span>🎹 Playing</span>
                 <span className="font-medium">
-                  {Array.from(activeNotes).length} notes
+                  {Array.from(activeKeys).join(', ')}
                 </span>
               </motion.div>
             )}
