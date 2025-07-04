@@ -11,13 +11,15 @@ import { supabase } from '@/integrations/supabase/client';
 interface Playlist {
   id: string;
   name: string;
-  description?: string;
-  cover_art_url?: string;
-  category: 'covers' | 'originals_by_saems_tunes' | 'personal_playlist';
-  is_public: boolean;
-  play_count: number;
-  total_duration: number;
-  created_at: string;
+  description?: string | null;
+  cover_art_url?: string | null;
+  category: string | null;
+  is_public: boolean | null;
+  play_count: number | null;
+  total_duration: number | null;
+  created_at: string | null;
+  updated_at: string | null;
+  user_id: string | null;
   track_count?: number;
 }
 
@@ -98,14 +100,15 @@ const PlaylistGrid: React.FC<PlaylistGridProps> = ({
     }
   };
 
-  const formatDuration = (seconds: number) => {
+  const formatDuration = (seconds: number | null) => {
+    if (!seconds) return '0m';
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     if (hours > 0) return `${hours}h ${minutes}m`;
     return `${minutes}m`;
   };
 
-  const getCategoryColor = (category: string) => {
+  const getCategoryColor = (category: string | null) => {
     switch (category) {
       case 'covers': return 'bg-blue-500/10 text-blue-700 dark:text-blue-300';
       case 'originals_by_saems_tunes': return 'bg-gold/10 text-gold-dark dark:text-gold-light';
@@ -113,7 +116,7 @@ const PlaylistGrid: React.FC<PlaylistGridProps> = ({
     }
   };
 
-  const getCategoryLabel = (category: string) => {
+  const getCategoryLabel = (category: string | null) => {
     switch (category) {
       case 'covers': return 'Covers';
       case 'originals_by_saems_tunes': return "Saem's Originals";
@@ -208,7 +211,7 @@ const PlaylistGrid: React.FC<PlaylistGridProps> = ({
                 <Music className="h-3 w-3" />
                 {playlist.track_count || 0} tracks
               </span>
-              {playlist.total_duration > 0 && (
+              {playlist.total_duration && playlist.total_duration > 0 && (
                 <span className="flex items-center gap-1">
                   <Clock className="h-3 w-3" />
                   {formatDuration(playlist.total_duration)}
