@@ -184,7 +184,7 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
     },
     {
       name: "Profile",
-      href: "/profile",
+      href: "/auth",
       icon: User,
       roles: ["student", "adult", "parent", "teacher", "admin"],
     },
