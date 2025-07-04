@@ -44,6 +44,7 @@
     "@sina_byn/re-audio": "^2.0.3",
     "@supabase/supabase-js": "^2.50.2",
     "@tanstack/react-query": "^5.56.2",
+    "@uidotdev/usehooks": "^2.4.1",
     "caniuse-lite": "^1.0.30001726",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
