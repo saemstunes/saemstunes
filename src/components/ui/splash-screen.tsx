@@ -5,16 +5,16 @@ import { motion, AnimatePresence } from "framer-motion";
 
 // Animation easings - centralized configuration
 const EASINGS = {
-  standard: [0.4, 0.0, 0.2, 1],
-  decelerate: [0.0, 0.0, 0.2, 1],
-  accelerate: [0.4, 0.0, 1, 1],
+  standard: [0.4, 0.0, 0.2, 1] as const,
+  decelerate: [0.0, 0.0, 0.2, 1] as const,
+  accelerate: [0.4, 0.0, 1, 1] as const,
 };
 
 // Animation configurations - extracted for reusability
 const ANIMATION_CONFIGS = {
   pulseRing: {
     duration: 3,
-    ease: "easeOut",
+    ease: "easeOut" as const,
     repeat: Infinity,
   },
   glowEffect: {
@@ -23,14 +23,14 @@ const ANIMATION_CONFIGS = {
     repeatType: "reverse" as const,
   },
   logoRotation: {
-    rotate: { duration: 20, repeat: Infinity, ease: "linear" },
+    rotate: { duration: 20, repeat: Infinity, ease: "linear" as const },
     boxShadow: { duration: 3, repeat: Infinity, repeatType: "reverse" as const },
   },
   progressShine: {
     duration: 1.5,
     repeat: Infinity,
     repeatDelay: 2,
-    ease: "easeInOut",
+    ease: "easeInOut" as const,
   },
 };
 
@@ -221,7 +221,10 @@ const SplashScreen = ({
                     `0 0 30px 5px rgba(${THEME_COLORS.primaryRgb}, 0.1)`,
                   ],
                 }}
-                transition={ANIMATION_CONFIGS.logoRotation}
+                transition={{
+                  rotate: { duration: 20, repeat: Infinity, ease: "linear" },
+                  boxShadow: { duration: 3, repeat: Infinity, repeatType: "reverse" },
+                }}
               />
 
               {/* Inner rotating border */}
@@ -299,7 +302,7 @@ const SplashScreen = ({
                       transition={{
                         duration: note.duration,
                         delay: note.delay,
-                        ease: [0.25, 0.46, 0.45, 0.94], // Custom easing
+                        ease: EASINGS.standard,
                         repeat: Infinity,
                         repeatDelay: 2 + Math.random() * 2,
                       }}
