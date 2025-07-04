@@ -50,6 +50,11 @@ import Subscriptions from "./pages/Subscriptions";
 import ComingSoon from "./pages/ComingSoon";
 import Tracks from "@/pages/Tracks";
 import AudioPlayer from "./pages/AudioPlayer";
+// Missing imports from the first file
+import Artists from "./pages/Artists";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import MusicShowcase from "./pages/MusicShowcase";
 
 const queryClient = new QueryClient();
 
@@ -113,6 +118,10 @@ const App = () => {
                   <Route path="/subscriptions" element={<Subscriptions />} />
                   <Route path="/music-tools" element={<MusicTools />} />
                   
+                  {/* Missing routes from the first file */}
+                  <Route path="/artists" element={<Artists />} />
+                  <Route path="/learning-hub/:moduleId" element={<LearningModulePage />} />
+                  
                   {/* Protected Routes */}
                   <Route path="/bookings" element={
                     <ProtectedRoute requiredRoles={["student", "adult", "parent"]}>
@@ -120,6 +129,11 @@ const App = () => {
                     </ProtectedRoute>
                   } />
                   <Route path="/book/:id" element={
+                    <ProtectedRoute requiredRoles={["student", "adult", "parent"]}>
+                      <BookTutor />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/book-tutor" element={
                     <ProtectedRoute requiredRoles={["student", "adult", "parent"]}>
                       <BookTutor />
                     </ProtectedRoute>
