@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSwipeable } from 'react-swipeable';
-import { Guitar, Piano, ArrowLeft, ArrowRight, RotateCcw, Settings, Info, Zap, X, Music, Timer } from 'lucide-react';
+import { Guitar, Piano, ArrowLeft, ArrowRight, RotateCcw, Settings, Info, Zap, X, Plus, MessageCircle } from 'lucide-react';
 import InteractivePiano from '@/components/ui/InteractivePiano';
 import InteractiveGuitar from '@/components/ui/InteractiveGuitar';
 import Metronome from '@/components/music-tools/Metronome';
@@ -13,9 +13,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 const MusicTools: React.FC = () => {
   // State for tools management
-  const [activeTool, setActiveTool] = useState<'piano' | 'guitar' | 'metronome' | 'pitch-finder'>('piano');
+  const [activeTool, setActiveTool] = useState<'piano' | 'guitar' | 'metronome' | 'pitch-finder' | 'suggest-tool'>('piano');
   const [showTutorial, setShowTutorial] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+  const [showSuggestionModal, setShowSuggestionModal] = useState(false);
+  const [suggestion, setSuggestion] = useState('');
   const [swipeSensitivity, setSwipeSensitivity] = useState(5);
   const [selectedCategory, setSelectedCategory] = useState('instruments');
   const containerRef = useRef<HTMLDivElement>(null);
@@ -43,7 +45,7 @@ const MusicTools: React.FC = () => {
     {
       id: 'metronome',
       name: 'Metronome',
-      icon: Timer,
+      icon: RotateCcw,
       category: 'tools',
       description: 'Keep perfect time while practicing',
       component: Metronome,
@@ -57,6 +59,16 @@ const MusicTools: React.FC = () => {
       description: 'Tune your instruments with precision',
       component: PitchFinder,
       color: 'bg-orange-500'
+    },
+    // Suggest Tool placeholder
+    {
+      id: 'suggest-tool',
+      name: 'Suggest a Tool',
+      icon: Plus,
+      category: 'feedback',
+      description: 'Help us improve our toolkit',
+      component: () => null,
+      color: 'bg-amber-500'
     }
   ];
 
@@ -90,7 +102,21 @@ const MusicTools: React.FC = () => {
 
   // Reset current tool
   const handleReset = () => {
-    window.dispatchEvent(new CustomEvent(`reset-${activeTool}`));
+    if (activeTool !== 'suggest-tool') {
+      window.dispatchEvent(new CustomEvent(`reset-${activeTool}`));
+    }
+  };
+
+  // Handle suggestion submission
+  const handleSuggestionSubmit = () => {
+    console.log('Tool suggestion submitted:', suggestion);
+    // Here you would typically send the suggestion to your backend
+    setShowSuggestionModal(false);
+    setSuggestion('');
+    
+    // Show confirmation
+    setShowTutorial(true);
+    setTimeout(() => setShowTutorial(false), 3000);
   };
 
   // Close tutorial after 5 seconds
@@ -166,7 +192,13 @@ const MusicTools: React.FC = () => {
                   ? 'bg-amber-500 text-white' 
                   : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
               }`}
-              onClick={() => setActiveTool(tool.id as any)}
+              onClick={() => {
+                if (tool.id === 'suggest-tool') {
+                  setShowSuggestionModal(true);
+                } else {
+                  setActiveTool(tool.id as any);
+                }
+              }}
             >
               <tool.icon className="h-5 w-5" />
             </motion.button>
@@ -179,6 +211,7 @@ const MusicTools: React.FC = () => {
             whileTap={{ scale: 0.95 }}
             className="p-2 bg-slate-700 text-slate-300 hover:bg-slate-600 rounded-full transition-colors"
             onClick={handleReset}
+            disabled={activeTool === 'suggest-tool'}
           >
             <RotateCcw className="h-5 w-5" />
           </motion.button>
@@ -203,7 +236,13 @@ const MusicTools: React.FC = () => {
         {filteredTools.map((tool) => (
           <button
             key={tool.id}
-            onClick={() => setActiveTool(tool.id as any)}
+            onClick={() => {
+              if (tool.id === 'suggest-tool') {
+                setShowSuggestionModal(true);
+              } else {
+                setActiveTool(tool.id as any);
+              }
+            }}
             className={`w-3 h-3 rounded-full transition-colors ${
               activeTool === tool.id ? 'bg-amber-500' : 'bg-slate-700'
             }`}
@@ -226,6 +265,8 @@ const MusicTools: React.FC = () => {
                 ? 'Play with keyboard or swipe for guitar →' 
                 : activeTool === 'guitar'
                 ? '← Swipe for piano or tap frets to play'
+                : activeTool === 'suggest-tool'
+                ? 'Tap the + icon to suggest new tools!'
                 : 'Swipe left/right to switch between tools'}
             </span>
             <button 
@@ -364,7 +405,25 @@ const MusicTools: React.FC = () => {
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 className="h-full"
               >
-                {React.createElement(currentTool.component)}
+                {activeTool === 'suggest-tool' ? (
+                  <div className="h-full flex flex-col items-center justify-center p-6 text-center">
+                    <div className="bg-gradient-to-r from-amber-500/20 to-purple-500/20 p-6 rounded-full mb-6">
+                      <Plus className="h-12 w-12 text-amber-400 mx-auto" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-3">Have an idea?</h3>
+                    <p className="text-slate-300 mb-6 max-w-md">
+                      We're always looking to improve our toolkit. Suggest a new music tool or feature you'd like to see!
+                    </p>
+                    <Button 
+                      className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+                      onClick={() => setShowSuggestionModal(true)}
+                    >
+                      Suggest a Tool
+                    </Button>
+                  </div>
+                ) : (
+                  React.createElement(currentTool.component)
+                )}
               </motion.div>
             </AnimatePresence>
             
@@ -398,13 +457,78 @@ const MusicTools: React.FC = () => {
                 ? '6-string Guitar' 
                 : activeTool === 'metronome'
                 ? 'Adjustable Metronome'
-                : 'Precision Tuner'}
+                : activeTool === 'pitch-finder'
+                ? 'Precision Tuner'
+                : 'Your Ideas Matter'}
           </span>
         </div>
         <div>
           Swipe or tap icons to switch tools
         </div>
       </div>
+      
+      {/* Suggestion Modal */}
+      <AnimatePresence>
+        {showSuggestionModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setShowSuggestionModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-700 max-w-md w-full p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5 text-amber-400" />
+                  Suggest a New Tool
+                </h3>
+                <button
+                  onClick={() => setShowSuggestionModal(false)}
+                  className="text-slate-400 hover:text-white transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <p className="text-slate-300">
+                  What music tool would you like to see in our app? Describe your idea below:
+                </p>
+                
+                <textarea
+                  value={suggestion}
+                  onChange={(e) => setSuggestion(e.target.value)}
+                  className="w-full bg-slate-700/50 border border-slate-600 rounded-lg p-3 text-white min-h-[120px] focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  placeholder="I'd love to see a tool for..."
+                />
+                
+                <div className="flex justify-end gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowSuggestionModal(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+                    onClick={handleSuggestionSubmit}
+                    disabled={!suggestion.trim()}
+                  >
+                    Submit Idea
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
