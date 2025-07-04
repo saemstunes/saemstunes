@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, Volume2, VolumeX, Info, Settings, Zap, X, RotateCcw, Clock } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Info, Settings, X, RotateCcw, Clock } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface PianoKey {
@@ -18,6 +18,35 @@ interface AudioState {
   compressor: DynamicsCompressorNode | null;
   reverb: ConvolverNode | null;
 }
+
+// Define piano keys as a constant array
+const PIANO_KEYS: PianoKey[] = (() => {
+  const whiteKeyWidth = 100 / 10;
+  const blackKeyWidth = whiteKeyWidth * 0.6;
+  
+  return [
+    // White keys
+    { note: 'C', type: 'white', frequency: 261.63, keyboardKey: 'a', position: 0, width: whiteKeyWidth },
+    { note: 'D', type: 'white', frequency: 293.66, keyboardKey: 's', position: whiteKeyWidth, width: whiteKeyWidth },
+    { note: 'E', type: 'white', frequency: 329.63, keyboardKey: 'd', position: whiteKeyWidth * 2, width: whiteKeyWidth },
+    { note: 'F', type: 'white', frequency: 349.23, keyboardKey: 'f', position: whiteKeyWidth * 3, width: whiteKeyWidth },
+    { note: 'G', type: 'white', frequency: 392.00, keyboardKey: 'g', position: whiteKeyWidth * 4, width: whiteKeyWidth },
+    { note: 'A', type: 'white', frequency: 440.00, keyboardKey: 'h', position: whiteKeyWidth * 5, width: whiteKeyWidth },
+    { note: 'B', type: 'white', frequency: 493.88, keyboardKey: 'j', position: whiteKeyWidth * 6, width: whiteKeyWidth },
+    { note: "C'", type: 'white', frequency: 523.25, keyboardKey: 'k', position: whiteKeyWidth * 7, width: whiteKeyWidth },
+    { note: "D'", type: 'white', frequency: 587.33, keyboardKey: 'l', position: whiteKeyWidth * 8, width: whiteKeyWidth },
+    { note: "E'", type: 'white', frequency: 659.25, keyboardKey: ';', position: whiteKeyWidth * 9, width: whiteKeyWidth },
+    
+    // Black keys
+    { note: 'C#', type: 'black', frequency: 277.18, keyboardKey: 'w', position: whiteKeyWidth * 0.7, width: blackKeyWidth },
+    { note: 'D#', type: 'black', frequency: 311.13, keyboardKey: 'e', position: whiteKeyWidth * 1.7, width: blackKeyWidth },
+    { note: 'F#', type: 'black', frequency: 369.99, keyboardKey: 't', position: whiteKeyWidth * 3.7, width: blackKeyWidth },
+    { note: 'G#', type: 'black', frequency: 415.30, keyboardKey: 'y', position: whiteKeyWidth * 4.7, width: blackKeyWidth },
+    { note: 'A#', type: 'black', frequency: 466.16, keyboardKey: 'u', position: whiteKeyWidth * 5.7, width: blackKeyWidth },
+    { note: "C#'", type: 'black', frequency: 554.37, keyboardKey: 'o', position: whiteKeyWidth * 7.7, width: blackKeyWidth },
+    { note: "D#'", type: 'black', frequency: 622.25, keyboardKey: 'p', position: whiteKeyWidth * 8.7, width: blackKeyWidth },
+  ];
+})();
 
 const InteractivePiano: React.FC = () => {
   const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set());
@@ -84,35 +113,9 @@ const InteractivePiano: React.FC = () => {
     return closest[0];
   };
 
-  // Piano layout with 2 octaves
-  const keys: PianoKey[] = useRef(() => {
-    const whiteKeyWidth = 100 / 10;
-    const blackKeyWidth = whiteKeyWidth * 0.6;
-    
-    return [
-      // White keys
-      { note: 'C', type: 'white', frequency: 261.63, keyboardKey: 'a', position: 0, width: whiteKeyWidth },
-      { note: 'D', type: 'white', frequency: 293.66, keyboardKey: 's', position: whiteKeyWidth, width: whiteKeyWidth },
-      { note: 'E', type: 'white', frequency: 329.63, keyboardKey: 'd', position: whiteKeyWidth * 2, width: whiteKeyWidth },
-      { note: 'F', type: 'white', frequency: 349.23, keyboardKey: 'f', position: whiteKeyWidth * 3, width: whiteKeyWidth },
-      { note: 'G', type: 'white', frequency: 392.00, keyboardKey: 'g', position: whiteKeyWidth * 4, width: whiteKeyWidth },
-      { note: 'A', type: 'white', frequency: 440.00, keyboardKey: 'h', position: whiteKeyWidth * 5, width: whiteKeyWidth },
-      { note: 'B', type: 'white', frequency: 493.88, keyboardKey: 'j', position: whiteKeyWidth * 6, width: whiteKeyWidth },
-      { note: "C'", type: 'white', frequency: 523.25, keyboardKey: 'k', position: whiteKeyWidth * 7, width: whiteKeyWidth },
-      { note: "D'", type: 'white', frequency: 587.33, keyboardKey: 'l', position: whiteKeyWidth * 8, width: whiteKeyWidth },
-      { note: "E'", type: 'white', frequency: 659.25, keyboardKey: ';', position: whiteKeyWidth * 9, width: whiteKeyWidth },
-      
-      // Black keys
-      { note: 'C#', type: 'black', frequency: 277.18, keyboardKey: 'w', position: whiteKeyWidth * 0.7, width: blackKeyWidth },
-      { note: 'D#', type: 'black', frequency: 311.13, keyboardKey: 'e', position: whiteKeyWidth * 1.7, width: blackKeyWidth },
-      { note: 'F#', type: 'black', frequency: 369.99, keyboardKey: 't', position: whiteKeyWidth * 3.7, width: blackKeyWidth },
-      { note: 'G#', type: 'black', frequency: 415.30, keyboardKey: 'y', position: whiteKeyWidth * 4.7, width: blackKeyWidth },
-      { note: 'A#', type: 'black', frequency: 466.16, keyboardKey: 'u', position: whiteKeyWidth * 5.7, width: blackKeyWidth },
-      { note: "C#'", type: 'black', frequency: 554.37, keyboardKey: 'o', position: whiteKeyWidth * 7.7, width: blackKeyWidth },
-      { note: "D#'", type: 'black', frequency: 622.25, keyboardKey: 'p', position: whiteKeyWidth * 8.7, width: blackKeyWidth },
-    ];
-  }).current;
-
+  // Use the constant keys array
+  const keys = PIANO_KEYS;
+  
   // Enhanced audio initialization
   useEffect(() => {
     const initAudio = async () => {
