@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useSwipeable } from 'react-swipeable';
-import { ChevronLeft, ChevronRight, Music, Volume2, Timer, Tuning } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Music, Volume2, Timer, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -49,7 +49,7 @@ const MusicTools = () => {
     {
       id: 'pitch-finder',
       name: 'Pitch Finder',
-      icon: Tuning,
+      icon: Settings,
       category: 'tuning',
       description: 'Tune your instruments with precision',
       component: PitchFinder,

@@ -28,6 +28,8 @@ import MainLayout from '@/components/layout/MainLayout';
 import MusicToolsCarousel from '@/components/ui/MusicToolsCarousel';
 import SocialMediaContainer from '@/components/social/SocialMediaContainer';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { useMediaQuery } from 'react-responsive';
+import _ from 'lodash-es';
 
 // Sample data for demonstration
 const featuredTracks = [
@@ -69,8 +71,9 @@ const stats = [
 
 const Index = () => {
   const { user } = useAuth();
-  const { currentTrack, isPlaying, togglePlayPause } = useAudioPlayer();
+  const { state, pauseTrack, resumeTrack } = useAudioPlayer();
   const [currentTrackId, setCurrentTrackId] = useState<string | null>(null);
+  const isMobile = useMediaQuery({ maxWidth: 768 });
 
   // Enhanced animations
   const containerVariants = {
@@ -98,6 +101,14 @@ const Index = () => {
     // Integration with audio player context would go here
   };
 
+  const togglePlayPause = () => {
+    if (state.isPlaying) {
+      pauseTrack();
+    } else {
+      resumeTrack();
+    }
+  };
+
   return (
     <ErrorBoundary>
       <MainLayout>
@@ -107,31 +118,31 @@ const Index = () => {
         >
           {/* Hero Section */}
           <motion.section 
-            className="relative pt-8 pb-12 px-4 sm:px-6 lg:px-8"
+            className="relative pt-6 pb-8 px-4 sm:px-6 lg:px-8"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
           >
             <div className="max-w-7xl mx-auto">
-              <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+              <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 items-center">
                 {/* Left Content */}
                 <motion.div 
-                  className="space-y-6"
+                  className="space-y-4 sm:space-y-6"
                   variants={itemVariants}
                 >
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     <motion.div
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.2 }}
                     >
-                      <Badge className="bg-gold/10 text-gold-dark hover:bg-gold/20 mb-4">
+                      <Badge className="bg-gold/10 text-gold-dark hover:bg-gold/20 mb-3 sm:mb-4">
                         🎵 New Releases Available
                       </Badge>
                     </motion.div>
                     
                     <motion.h1 
-                      className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold leading-tight"
+                      className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-serif font-bold leading-tight"
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.3 }}
@@ -142,7 +153,7 @@ const Index = () => {
                     </motion.h1>
                     
                     <motion.p 
-                      className="text-lg text-muted-foreground max-w-lg leading-relaxed"
+                      className="text-base sm:text-lg text-muted-foreground max-w-lg leading-relaxed"
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.4 }}
@@ -153,31 +164,31 @@ const Index = () => {
                   </div>
 
                   <motion.div 
-                    className="flex flex-col sm:flex-row gap-4"
+                    className="flex flex-col sm:flex-row gap-3 sm:gap-4"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
                   >
                     <Button 
-                      size="lg" 
-                      className="bg-gold hover:bg-gold-dark text-white px-8 py-3 rounded-full font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                      size={isMobile ? "default" : "lg"}
+                      className="bg-gold hover:bg-gold-dark text-white px-6 sm:px-8 py-2 sm:py-3 rounded-full font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
                     >
-                      <Play className="mr-2 h-5 w-5" />
+                      <Play className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                       Start Listening
                     </Button>
                     <Button 
-                      size="lg" 
+                      size={isMobile ? "default" : "lg"}
                       variant="outline" 
-                      className="border-gold text-gold hover:bg-gold hover:text-white px-8 py-3 rounded-full font-semibold transition-all duration-300"
+                      className="border-gold text-gold hover:bg-gold hover:text-white px-6 sm:px-8 py-2 sm:py-3 rounded-full font-semibold transition-all duration-300"
                     >
-                      <Users className="mr-2 h-5 w-5" />
+                      <Users className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                       Join Community
                     </Button>
                   </motion.div>
 
                   {/* Stats Row */}
                   <motion.div 
-                    className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-8"
+                    className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 pt-6 sm:pt-8"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.6 }}
@@ -189,8 +200,8 @@ const Index = () => {
                         whileHover={{ scale: 1.05 }}
                         transition={{ type: "spring", stiffness: 300 }}
                       >
-                        <stat.icon className={`h-6 w-6 mx-auto mb-2 ${stat.color}`} />
-                        <div className="font-bold text-lg">{stat.value}</div>
+                        <stat.icon className={`h-5 w-5 sm:h-6 sm:w-6 mx-auto mb-1 sm:mb-2 ${stat.color}`} />
+                        <div className="font-bold text-sm sm:text-lg">{stat.value}</div>
                         <div className="text-xs text-muted-foreground">{stat.label}</div>
                       </motion.div>
                     ))}
@@ -199,16 +210,16 @@ const Index = () => {
 
                 {/* Right Content - Music Tools Carousel */}
                 <motion.div 
-                  className="relative"
+                  className="relative mt-6 lg:mt-0"
                   variants={itemVariants}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.4, duration: 0.8 }}
                 >
-                  <div className="bg-gradient-to-br from-gold/10 to-gold/5 rounded-3xl p-6 shadow-2xl">
+                  <div className="bg-gradient-to-br from-gold/10 to-gold/5 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl">
                     <Suspense fallback={
-                      <div className="h-96 flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-gold border-t-transparent"></div>
+                      <div className="h-64 sm:h-96 flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-4 border-gold border-t-transparent"></div>
                       </div>
                     }>
                       <MusicToolsCarousel />
@@ -221,7 +232,7 @@ const Index = () => {
 
           {/* Featured Tracks Section */}
           <motion.section 
-            className="py-12 px-4 sm:px-6 lg:px-8"
+            className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8"
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
@@ -229,18 +240,18 @@ const Index = () => {
           >
             <div className="max-w-7xl mx-auto">
               <motion.div 
-                className="text-center mb-12"
+                className="text-center mb-8 sm:mb-12"
                 variants={itemVariants}
               >
-                <h2 className="text-3xl sm:text-4xl font-serif font-bold mb-4">
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold mb-3 sm:mb-4">
                   Featured <span className="text-gold">Tracks</span>
                 </h2>
-                <p className="text-muted-foreground max-w-2xl mx-auto">
+                <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base">
                   Discover our latest inspirational music that touches hearts and lifts spirits
                 </p>
               </motion.div>
 
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {featuredTracks.map((track, index) => (
                   <motion.div
                     key={track.id}
@@ -254,36 +265,36 @@ const Index = () => {
                           <img 
                             src={track.coverUrl} 
                             alt={track.title}
-                            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                            className="w-full h-40 sm:h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                          <div className="absolute bottom-4 left-4 right-4">
-                            <Badge className="mb-2 bg-gold/90 text-white">
+                          <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 right-3 sm:right-4">
+                            <Badge className="mb-2 bg-gold/90 text-white text-xs">
                               {track.category}
                             </Badge>
-                            <h3 className="font-semibold text-white mb-1">{track.title}</h3>
-                            <p className="text-white/80 text-sm">{track.artist}</p>
+                            <h3 className="font-semibold text-white mb-1 text-sm sm:text-base">{track.title}</h3>
+                            <p className="text-white/80 text-xs sm:text-sm">{track.artist}</p>
                           </div>
                           <Button
                             size="icon"
-                            className="absolute top-4 right-4 bg-white/20 hover:bg-white/30 backdrop-blur-sm"
+                            className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-white/20 hover:bg-white/30 backdrop-blur-sm h-8 w-8 sm:h-10 sm:w-10"
                             onClick={() => handleTrackPlay(track.id)}
                           >
                             {currentTrackId === track.id ? (
-                              <Pause className="h-4 w-4" />
+                              <Pause className="h-3 w-3 sm:h-4 sm:w-4" />
                             ) : (
-                              <Play className="h-4 w-4" />
+                              <Play className="h-3 w-3 sm:h-4 sm:w-4" />
                             )}
                           </Button>
                         </div>
                         
-                        <div className="p-4 flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground flex items-center gap-1">
+                        <div className="p-3 sm:p-4 flex items-center justify-between">
+                          <span className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
                             <Clock className="h-3 w-3" />
                             {track.duration}
                           </span>
-                          <Button size="sm" variant="ghost">
-                            <Heart className="h-4 w-4" />
+                          <Button size="sm" variant="ghost" className="h-8 w-8 sm:h-auto sm:w-auto">
+                            <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
                           </Button>
                         </div>
                       </CardContent>
@@ -293,7 +304,7 @@ const Index = () => {
               </div>
 
               <motion.div 
-                className="text-center mt-8"
+                className="text-center mt-6 sm:mt-8"
                 variants={itemVariants}
               >
                 <Button 
@@ -312,7 +323,7 @@ const Index = () => {
 
           {/* Call to Action Section */}
           <motion.section 
-            className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-gold/10 to-gold/5"
+            className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-gold/10 to-gold/5"
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
@@ -320,27 +331,27 @@ const Index = () => {
           >
             <div className="max-w-4xl mx-auto text-center">
               <motion.div variants={itemVariants}>
-                <h2 className="text-3xl sm:text-4xl font-serif font-bold mb-6">
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold mb-4 sm:mb-6">
                   Ready to Begin Your <span className="text-gold">Musical Journey</span>?
                 </h2>
-                <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+                <p className="text-sm sm:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto">
                   Join thousands of music lovers who have found inspiration, peace, 
                   and connection through our curated collection of Christian music.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
                   <Button 
-                    size="lg"
-                    className="bg-gold hover:bg-gold-dark text-white px-8 py-3 rounded-full font-semibold"
+                    size={isMobile ? "default" : "lg"}
+                    className="bg-gold hover:bg-gold-dark text-white px-6 sm:px-8 py-2 sm:py-3 rounded-full font-semibold"
                   >
-                    <Zap className="mr-2 h-5 w-5" />
+                    <Zap className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                     Get Started Free
                   </Button>
                   <Button 
-                    size="lg"
+                    size={isMobile ? "default" : "lg"}
                     variant="outline"
-                    className="border-gold text-gold hover:bg-gold hover:text-white px-8 py-3 rounded-full font-semibold"
+                    className="border-gold text-gold hover:bg-gold hover:text-white px-6 sm:px-8 py-2 sm:py-3 rounded-full font-semibold"
                   >
-                    <Headphones className="mr-2 h-5 w-5" />
+                    <Headphones className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                     Explore Catalog
                   </Button>
                 </div>
