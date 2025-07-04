@@ -1,611 +1,366 @@
 
-import { useEffect, useState, useCallback, useMemo } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Music, Play, Users, BookOpen, CalendarClock, ArrowRight, 
-  Volume2, Star, Award, Clock, TrendingUp, Zap, User, 
-  PlayCircle, ChevronLeft, ChevronRight, Heart, Share2 
-} from "lucide-react";
-import MainLayout from "@/components/layout/MainLayout";
-import DashboardStats from "@/components/dashboard/DashboardStats";
-import RecommendedContent from "@/components/dashboard/RecommendedContent";
-import UpcomingBookings from "@/components/dashboard/UpcomingBookings";
-import { mockSubscriptionPlans } from "@/data/mockData";
-import PricingCard from "@/components/subscription/PricingCard";
-import { motion, AnimatePresence } from "framer-motion";
-import { pageTransition } from "@/lib/animation-utils";
-import InteractivePiano from "@/components/ui/InteractivePiano";
+  Play, 
+  Pause, 
+  SkipForward, 
+  Shuffle, 
+  Heart, 
+  Music, 
+  Headphones,
+  Star,
+  TrendingUp,
+  Users,
+  Award,
+  Zap,
+  Clock,
+  ChevronRight
+} from 'lucide-react';
 
-// React Bits inspired components
-const FloatingCard = ({ children, delay = 0, className = "", onClick }: any) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20, scale: 0.9 }}
-    animate={{ opacity: 1, y: 0, scale: 1 }}
-    transition={{ duration: 0.6, delay, type: "spring", stiffness: 100 }}
-    whileHover={{ y: -5, scale: 1.02, transition: { duration: 0.2 } }}
-    className={`bg-white/80 dark:bg-card/80 backdrop-blur-sm border border-white/20 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 ${className}`}
-    onClick={onClick}
-  >
-    {children}
-  </motion.div>
-);
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/context/AuthContext';
+import { useAudioPlayer } from '@/context/AudioPlayerContext';
+import { pageTransition } from '@/lib/animation-utils';
+import MainLayout from '@/components/layout/MainLayout';
+import MusicToolsCarousel from '@/components/ui/MusicToolsCarousel';
+import SocialMediaContainer from '@/components/social/SocialMediaContainer';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import { useMediaQuery } from 'react-responsive';
+import _ from 'lodash-es';
 
-const GlowingButton = ({ children, variant = "primary", className = "", ...props }: any) => {
-  const variants = {
-    primary: "bg-gradient-to-r from-gold to-gold-dark hover:from-gold-dark hover:to-gold text-white shadow-lg shadow-gold/25 hover:shadow-gold/40",
-    secondary: "bg-gradient-to-r from-gold-light to-gold hover:from-gold hover:to-gold-light text-white shadow-lg shadow-gold/25 hover:shadow-gold/40"
+// Sample data for demonstration
+const featuredTracks = [
+  {
+    id: '1',
+    title: 'Heaven\'s Melody',
+    artist: 'Saem\'s Tunes',
+    duration: '3:42',
+    coverUrl: '/placeholder.svg',
+    category: 'Gospel',
+    isPlaying: false
+  },
+  {
+    id: '2',
+    title: 'Praise Anthem',
+    artist: 'Saem\'s Tunes', 
+    duration: '4:15',
+    coverUrl: '/placeholder.svg',
+    category: 'Worship',
+    isPlaying: false
+  },
+  {
+    id: '3',
+    title: 'Faith Journey',
+    artist: 'Saem\'s Tunes',
+    duration: '3:58',
+    coverUrl: '/placeholder.svg',
+    category: 'Inspirational',
+    isPlaying: false
+  }
+];
+
+const stats = [
+  { icon: Users, label: 'Active Listeners', value: '12.5K', color: 'text-blue-500' },
+  { icon: Music, label: 'Songs Available', value: '150+', color: 'text-green-500' },
+  { icon: Award, label: 'Awards Won', value: '8', color: 'text-gold' },
+  { icon: Star, label: '5-Star Reviews', value: '2.8K', color: 'text-yellow-500' }
+];
+
+const Index = () => {
+  const { user } = useAuth();
+  const { state, pauseTrack, resumeTrack } = useAudioPlayer();
+  const [currentTrackId, setCurrentTrackId] = useState<string | null>(null);
+  const isMobile = useMediaQuery({ maxWidth: 768 });
+
+  // Enhanced animations
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        duration: 0.6,
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5 }
+    }
+  };
+
+  const handleTrackPlay = (trackId: string) => {
+    setCurrentTrackId(trackId);
+    // Integration with audio player context would go here
+  };
+
+  const togglePlayPause = () => {
+    if (state.isPlaying) {
+      pauseTrack();
+    } else {
+      resumeTrack();
+    }
   };
 
   return (
-    <Button
-      className={`${variants[variant]} transform hover:scale-105 transition-all duration-300 ${className}`}
-      {...props}
-    >
-      {children}
-    </Button>
-  );
-};
-
-const ContentCard = ({ title, instructor, duration, difficulty, isPopular, onClick }: any) => (
-  <FloatingCard className="p-0 overflow-hidden group cursor-pointer" onClick={onClick}>
-    <div className="relative">
-      {isPopular && (
-        <div className="absolute top-3 left-3 z-10 bg-gold text-white text-xs px-2 py-1 rounded-full font-medium flex items-center gap-1">
-          <TrendingUp className="h-3 w-3" />
-          Popular
-        </div>
-      )}
-      <div className="h-32 sm:h-40 bg-gradient-to-br from-gold/20 to-gold/10 flex items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-        <PlayCircle className="h-10 w-10 text-white/80 group-hover:text-white group-hover:scale-110 transition-all duration-300" />
-        <div className="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded">
-          {duration}
-        </div>
-      </div>
-    </div>
-    <div className="p-3 sm:p-4">
-      <h3 className="font-semibold text-sm mb-1 sm:mb-2 line-clamp-2">{title}</h3>
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <div className="flex items-center gap-1">
-          <User className="h-3 w-3" />
-          {instructor}
-        </div>
-        <span className="bg-gold/10 text-gold px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium whitespace-nowrap">
-          {difficulty}
-        </span>
-      </div>
-    </div>
-  </FloatingCard>
-);
-
-const ContentCarousel = ({ title, items, onViewAll }: any) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [itemsPerView, setItemsPerView] = useState(1);
-  const maxIndex = Math.max(0, items.length - itemsPerView);
-
-  // Responsive items per view
-  useEffect(() => {
-    const updateItemsPerView = () => {
-      if (window.innerWidth < 640) setItemsPerView(1);
-      else if (window.innerWidth < 1024) setItemsPerView(2);
-      else setItemsPerView(4);
-    };
-    
-    updateItemsPerView();
-    window.addEventListener('resize', updateItemsPerView);
-    return () => window.removeEventListener('resize', updateItemsPerView);
-  }, []);
-
-  const next = () => setCurrentIndex(prev => Math.min(prev + 1, maxIndex));
-  const prev = () => setCurrentIndex(prev => Math.max(prev - 1, 0));
-
-  return (
-    <div className="space-y-3 sm:space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl sm:text-2xl font-serif font-bold">{title}</h2>
-        <div className="flex items-center gap-1 sm:gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={prev}
-            disabled={currentIndex === 0}
-            className="h-7 w-7 p-0"
-          >
-            <ChevronLeft className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={next}
-            disabled={currentIndex === maxIndex}
-            className="h-7 w-7 p-0"
-          >
-            <ChevronRight className="h-3.5 w-3.5" />
-          </Button>
-          <Button variant="outline" size="sm" onClick={onViewAll} className="text-xs sm:text-sm">
-            View All
-          </Button>
-        </div>
-      </div>
-      
-      <div className="overflow-x-auto">
-        <motion.div
-          className="flex gap-3 sm:gap-4 w-max"
-          animate={{ x: -currentIndex * (100 / itemsPerView) + '%' }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
-          style={{ width: `${(items.length / itemsPerView) * 100}%` }}
+    <ErrorBoundary>
+      <MainLayout>
+        <motion.div 
+          className="min-h-screen bg-gradient-to-br from-background via-background to-gold/5"
+          {...pageTransition}
         >
-          {items.map((item: any, index: number) => (
-            <div key={index} style={{ width: `${100 / itemsPerView}%` }} className="flex-shrink-0">
-              <ContentCard {...item} />
-            </div>
-          ))}
-        </motion.div>
-      </div>
-    </div>
-  );
-};
-
-const StatsCounter = ({ number, label, icon, delay = 0 }: any) => {
-  const [count, setCount] = useState(0);
-  const finalNumber = parseInt(number.replace(/[^\d]/g, ''));
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const increment = finalNumber / 30;
-      const counter = setInterval(() => {
-        setCount(prev => {
-          const next = prev + increment;
-          if (next >= finalNumber) {
-            clearInterval(counter);
-            return finalNumber;
-          }
-          return next;
-        });
-      }, 50);
-      return () => clearInterval(counter);
-    }, delay);
-    
-    return () => clearTimeout(timer);
-  }, [finalNumber, delay]);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.5 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.5, delay }}
-      className="text-center group"
-    >
-      <div className="flex items-center justify-center text-gold mb-2 group-hover:scale-110 transition-transform">
-        {icon}
-      </div>
-      <div className="text-2xl font-bold">
-        {number.includes('+') ? Math.floor(count).toLocaleString() + '+' : 
-         number.includes('%') ? Math.floor(count) + '%' : 
-         Math.floor(count).toLocaleString()}
-      </div>
-      <div className="text-sm text-muted-foreground">{label}</div>
-    </motion.div>
-  );
-};
-
-const LandingPage = () => {
-  const navigate = useNavigate();
-  const [timeGreeting, setTimeGreeting] = useState('');
-
-  useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) setTimeGreeting('Morning');
-    else if (hour < 17) setTimeGreeting('Afternoon');
-    else setTimeGreeting('Evening');
-  }, []);
-
-  // Mock data for content
-  const popularLessons = [
-    { title: "Piano Basics: Your First Chord", instructor: "Sarah Johnson", duration: "12:30", difficulty: "Beginner", isPopular: true },
-    { title: "Guitar Fingerpicking Fundamentals", instructor: "Mike Rodriguez", duration: "18:45", difficulty: "Intermediate", isPopular: true },
-    { title: "Jazz Piano Improvisation", instructor: "David Chen", duration: "25:15", difficulty: "Advanced", isPopular: false },
-    { title: "Vocal Warm-up Exercises", instructor: "Emily Davis", duration: "8:20", difficulty: "Beginner", isPopular: false },
-    { title: "Blues Guitar Techniques", instructor: "Tom Wilson", duration: "22:10", difficulty: "Intermediate", isPopular: true },
-    { title: "Music Theory Essentials", instructor: "Dr. Lisa Brown", duration: "35:40", difficulty: "Beginner", isPopular: false }
-  ];
-
-  const newReleases = [
-    { title: "Advanced Drum Patterns", instructor: "Alex Turner", duration: "15:30", difficulty: "Advanced", isPopular: false },
-    { title: "Classical Guitar Etudes", instructor: "Maria Santos", duration: "28:15", difficulty: "Intermediate", isPopular: false },
-    { title: "Electronic Music Production", instructor: "DJ Marcus", duration: "42:20", difficulty: "Intermediate", isPopular: true },
-    { title: "Songwriting Workshop", instructor: "Jennifer Lee", duration: "33:45", difficulty: "Beginner", isPopular: false }
-  ];
-
-  const stats = [
-    { number: "2,500+", label: "Active Students", icon: <Users className="h-6 w-6" /> },
-    { number: "15", label: "Expert Instructors", icon: <Award className="h-6 w-6" /> },
-    { number: "95%", label: "Success Rate", icon: <Star className="h-6 w-6" /> },
-    { number: "500+", label: "Video Lessons", icon: <Play className="h-6 w-6" /> },
-  ];
-
-  const features = [
-    {
-      icon: <Music className="h-6 w-6 text-gold" />,
-      title: "Live 1-on-1 Sessions",
-      description: "Personal coaching with professional musicians tailored to your pace and style.",
-      highlight: "Most Booked"
-    },
-    {
-      icon: <Play className="h-6 w-6 text-gold" />,
-      title: "Interactive Video Library",
-      description: "500+ lessons with play-along features, slow-motion practice, and loop controls.",
-      highlight: "Updated Weekly"
-    },
-    {
-      icon: <BookOpen className="h-6 w-6 text-gold" />,
-      title: "Sheet Music & Resources",
-      description: "Professional arrangements, tabs, and practice materials for every skill level.",
-      highlight: "1000+ Downloads"
-    },
-    {
-      icon: <Users className="h-6 w-6 text-gold" />,
-      title: "Community Hub",
-      description: "Connect with musicians worldwide, share progress, and get feedback.",
-      highlight: "24/7 Active"
-    },
-  ];
-
-  return (
-    <motion.div 
-      className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20 overflow-x-hidden"
-      {...pageTransition}
-    >
-      {/* Hero Section */}
-      <section className="relative overflow-hidden py-6 px-4 sm:py-12 md:py-20">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,215,0,0.1),transparent_70%)]"></div>
-        
-        <div className="relative z-10 max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12 items-center">
-            
-            {/* Left Column */}
-            <div className="space-y-4 sm:space-y-6 lg:space-y-8 text-center lg:text-left">
-              <motion.div
-                className="inline-flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-gold/20 to-gold/10 backdrop-blur-sm border border-gold/20 text-gold px-3 py-1 rounded-full text-xs font-medium"
-              >
-                <Zap className="h-3 w-3" />
-                Good {timeGreeting}! Ready to make music?
-              </motion.div>
-              
-              <motion.h1 
-                className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif font-bold leading-tight"
-              >
-                Master Music with
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold to-gold-dark block">
-                  Expert Guidance
-                </span>
-              </motion.h1>
-              
-              <motion.p 
-                className="text-sm sm:text-base text-muted-foreground max-w-xl leading-relaxed mx-auto lg:mx-0"
-              >
-                Join <strong>2,500+ students</strong> learning through personalized 1-on-1 sessions.
-              </motion.p>
-              
-              <motion.div 
-                className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start"
-              >
-                <GlowingButton 
-                  size="lg"
-                  className="text-sm sm:text-base px-5 py-2.5 group w-full sm:w-auto"
-                  onClick={() => navigate("/videos")}
-                >
-                  <Play className="mr-2 h-4 w-4 group-hover:scale-110" />
-                  Try Free Lesson
-                </GlowingButton>
-                <GlowingButton 
-                  variant="secondary"
-                  size="lg"
-                  className="text-sm sm:text-base px-5 py-2.5 w-full sm:w-auto"
-                  onClick={() => navigate("/bookings")}
-                >
-                  <CalendarClock className="mr-2 h-4 w-4" />
-                  Book Live Session
-                </GlowingButton>
-              </motion.div>
-
-              {/* Animated Stats */}
-              <motion.div 
-                className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6 pt-4 lg:pt-6"
-              >
-                {stats.map((stat, index) => (
-                  <StatsCounter
-                    key={index}
-                    number={stat.number}
-                    label={stat.label}
-                    icon={stat.icon}
-                    delay={index * 0.1}
-                  />
-                ))}
-              </motion.div>
-            </div>
-
-            {/* Right Column - Swipable Interactive Tools */}
-            <motion.div
-              className="flex justify-center order-first lg:order-last py-4 sm:py-0"
-            >
-              <InteractivePiano />
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Content Discovery */}
-      <section className="py-8 sm:py-12 bg-gradient-to-b from-transparent to-muted/30">
-        <div className="container px-4 space-y-6 sm:space-y-8">
-          <ContentCarousel
-            title="🔥 Trending Lessons"
-            items={popularLessons}
-            onViewAll={() => navigate("/videos?filter=popular")}
-          />
-
-          <ContentCarousel
-            title="✨ Just Released"
-            items={newReleases}
-            onViewAll={() => navigate("/videos?filter=new")}
-          />
-
-          {/* Quick Access Actions */}
-          <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mt-6 sm:mt-8"
+          {/* Hero Section */}
+          <motion.section 
+            className="relative pt-6 pb-8 px-4 sm:px-6 lg:px-8"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
           >
-            <FloatingCard className="p-3 sm:p-4 text-center group cursor-pointer" onClick={() => navigate("/videos")}>
-              <div className="bg-gradient-to-br from-gold/20 to-gold/10 p-2.5 sm:p-3 rounded-full w-fit mx-auto mb-2 sm:mb-3 group-hover:scale-110">
-                <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-gold" />
-              </div>
-              <h3 className="font-semibold mb-1 text-sm sm:text-base">Browse Library</h3>
-              <p className="text-xs text-muted-foreground mb-2 sm:mb-3">500+ lessons across instruments</p>
-              <Button variant="outline" size="sm" className="text-xs sm:text-sm">Explore Now</Button>
-            </FloatingCard>
-
-            <FloatingCard className="p-3 sm:p-4 text-center group cursor-pointer" onClick={() => navigate("/community")}>
-              <div className="bg-gradient-to-br from-purple-500/20 to-purple-500/10 p-2.5 sm:p-3 rounded-full w-fit mx-auto mb-2 sm:mb-3 group-hover:scale-110">
-                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
-              </div>
-              <h3 className="font-semibold mb-1 text-sm sm:text-base">Join Community</h3>
-              <p className="text-xs text-muted-foreground mb-2 sm:mb-3">Connect with musicians</p>
-              <Button variant="outline" size="sm" className="text-xs sm:text-sm">Join Now</Button>
-            </FloatingCard>
-
-            <FloatingCard className="p-3 sm:p-4 text-center group cursor-pointer sm:col-span-2 lg:col-span-1" onClick={() => navigate("/bookings")}>
-              <div className="bg-gradient-to-br from-green-500/20 to-green-500/10 p-2.5 sm:p-3 rounded-full w-fit mx-auto mb-2 sm:mb-3 group-hover:scale-110">
-                <CalendarClock className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
-              </div>
-              <h3 className="font-semibold mb-1 text-sm sm:text-base">Book Session</h3>
-              <p className="text-xs text-muted-foreground mb-2 sm:mb-3">1-on-1 with experts</p>
-              <Button variant="outline" size="sm" className="text-xs sm:text-sm">Schedule Now</Button>
-            </FloatingCard>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Features - Why Choose Us */}
-      <section className="py-8 sm:py-12">
-        <div className="container px-4">
-          <motion.div
-            className="text-center mb-6 sm:mb-10"
-          >
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-serif font-bold mb-3">
-              Everything You Need to <span className="text-gold">Excel</span>
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto text-xs sm:text-sm">
-              From complete beginner to advanced performer, we provide tools and expert guidance.
-            </p>
-          </motion.div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            {features.map((feature, index) => (
-              <FloatingCard
-                key={index}
-                delay={index * 0.1}
-                className="p-3 sm:p-4 relative overflow-hidden group"
-              >
-                {feature.highlight && (
-                  <div className="absolute top-2 right-2 bg-gradient-to-r from-gold/20 to-gold/10 text-gold text-2xs px-1.5 py-0.5 rounded-full font-medium border border-gold/20">
-                    {feature.highlight}
+            <div className="max-w-7xl mx-auto">
+              <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 items-center">
+                {/* Left Content */}
+                <motion.div 
+                  className="space-y-4 sm:space-y-6"
+                  variants={itemVariants}
+                >
+                  <div className="space-y-3 sm:space-y-4">
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.2 }}
+                    >
+                      <Badge className="bg-gold/10 text-gold-dark hover:bg-gold/20 mb-3 sm:mb-4">
+                        🎵 New Releases Available
+                      </Badge>
+                    </motion.div>
+                    
+                    <motion.h1 
+                      className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-serif font-bold leading-tight"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                    >
+                      <span className="text-foreground">Making Music,</span>
+                      <br />
+                      <span className="text-gold">Representing Christ</span>
+                    </motion.h1>
+                    
+                    <motion.p 
+                      className="text-base sm:text-lg text-muted-foreground max-w-lg leading-relaxed"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 }}
+                    >
+                      Discover soul-stirring music that uplifts, inspires, and connects you 
+                      to the divine. Join our community of believers through the power of music.
+                    </motion.p>
                   </div>
-                )}
-                
-                <div className="bg-gradient-to-br from-gold/20 to-gold/10 p-2 rounded-lg mb-2 sm:mb-3 w-fit group-hover:scale-110">
-                  {feature.icon}
-                </div>
-                <h3 className="text-sm sm:text-base font-semibold mb-1 sm:mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground text-xs sm:text-sm">{feature.description}</p>
-              </FloatingCard>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* Simplified Pricing */}
-      <section className="py-8 sm:py-12 bg-muted/20">
-        <div className="container px-4">
-          <div className="text-center mb-6 sm:mb-10">
-            <motion.h2 
-              className="text-xl sm:text-2xl font-serif font-bold mb-3"
-            >
-              Choose Your Learning Path
-            </motion.h2>
-            <motion.p 
-              className="text-muted-foreground max-w-2xl mx-auto text-xs sm:text-sm"
-            >
-              Start free, then unlock premium features when ready.
-            </motion.p>
-          </div>
-          
-          <div className="max-w-5xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-              {mockSubscriptionPlans.map((plan, index) => (
-                <motion.div
-                  key={plan.id}
-                  whileHover={{ y: -5, transition: { duration: 0.3 } }}
-                >
-                  <PricingCard 
-                    plan={plan} 
-                    variant={index === 1 ? "default" : "outline"}
-                    className={index === 1 ? "ring-1 ring-gold/30 shadow-lg shadow-gold/10" : "h-full"}
-                  />
+                  <motion.div 
+                    className="flex flex-col sm:flex-row gap-3 sm:gap-4"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    <Button 
+                      size={isMobile ? "default" : "lg"}
+                      className="bg-gold hover:bg-gold-dark text-white px-6 sm:px-8 py-2 sm:py-3 rounded-full font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    >
+                      <Play className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                      Start Listening
+                    </Button>
+                    <Button 
+                      size={isMobile ? "default" : "lg"}
+                      variant="outline" 
+                      className="border-gold text-gold hover:bg-gold hover:text-white px-6 sm:px-8 py-2 sm:py-3 rounded-full font-semibold transition-all duration-300"
+                    >
+                      <Users className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                      Join Community
+                    </Button>
+                  </motion.div>
+
+                  {/* Stats Row */}
+                  <motion.div 
+                    className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 pt-6 sm:pt-8"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 }}
+                  >
+                    {stats.map((stat, index) => (
+                      <motion.div
+                        key={stat.label}
+                        className="text-center"
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                      >
+                        <stat.icon className={`h-5 w-5 sm:h-6 sm:w-6 mx-auto mb-1 sm:mb-2 ${stat.color}`} />
+                        <div className="font-bold text-sm sm:text-lg">{stat.value}</div>
+                        <div className="text-xs text-muted-foreground">{stat.label}</div>
+                      </motion.div>
+                    ))}
+                  </motion.div>
                 </motion.div>
-              ))}
-            </div>
-          </div>
-          
-          <motion.div 
-            className="text-center mt-4 sm:mt-6"
-          >
-            <p className="text-2xs sm:text-xs text-muted-foreground">
-              ✨ 7-day free trial • Cancel anytime
-            </p>
-          </motion.div>
-        </div>
-      </section>
 
-      {/* Final CTA */}
-      <section className="py-12 sm:py-16 bg-gradient-to-r from-gold/10 via-purple-500/5 to-gold/10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,215,0,0.1),transparent_50%)] opacity-50"></div>
-        
-        <div className="container px-4 text-center relative z-10">
-          <motion.h2 
-            className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold mb-4 sm:mb-6"
-          >
-            Your Musical Journey Starts <span className="text-gold">Now</span>
-          </motion.h2>
-          <motion.p 
-            className="text-muted-foreground mb-6 sm:mb-8 max-w-3xl mx-auto text-sm sm:text-base leading-relaxed"
-          >
-            Join thousands of students who've transformed their musical abilities.
-          </motion.p>
-          <motion.div
-            className="flex flex-col sm:flex-row gap-4 justify-center"
-          >
-            <GlowingButton 
-              variant="primary"
-              size="lg"
-              onClick={() => navigate("/signup")}
-              className="text-base px-8 py-3"
-            >
-              Start Free Trial
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </GlowingButton>
-            <GlowingButton 
-              variant="secondary"
-              size="lg"
-              onClick={() => navigate("/videos")}
-              className="text-base px-8 py-3"
-            >
-              <Volume2 className="mr-2 h-5 w-5" />
-              Free Content
-            </GlowingButton>
-          </motion.div>
-        </div>
-      </section>
-    </motion.div>
-  );
-};
-
-const Dashboard = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-
-  if (!user) return null;
-
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <h1 className="text-xl sm:text-2xl font-serif font-bold">Welcome, {user.name}</h1>
-        <Button
-          className="bg-gold hover:bg-gold-dark text-white py-2 text-sm sm:text-base"
-          onClick={() => navigate("/bookings")}
-        >
-          <CalendarClock className="mr-2 h-4 w-4" />
-          Book a Session
-        </Button>
-      </div>
-
-      <DashboardStats role={user.role} />
-
-      {/* Subscription Management */}
-      <div className="bg-card border rounded-lg p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 sm:mb-4">
-          <h2 className="text-lg sm:text-xl font-proxima font-semibold">Your Subscription</h2>
-          {user.subscribed && (
-            <Button variant="outline" size="sm" onClick={() => navigate("/subscriptions")}>
-              Manage
-            </Button>
-          )}
-        </div>
-        
-        {user.subscribed ? (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
-            <div className="flex items-center">
-              <div className="bg-green-500 rounded-full p-1 mr-2 sm:mr-3">
-                <BookOpen className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
-              </div>
-              <div>
-                <h3 className="font-medium text-green-800 text-sm sm:text-base">
-                  {user.subscriptionTier ? user.subscriptionTier.charAt(0).toUpperCase() + user.subscriptionTier.slice(1) : 'Active'} Plan
-                </h3>
-                <p className="text-xs sm:text-sm text-green-600">Access to all premium content</p>
+                {/* Right Content - Music Tools Carousel */}
+                <motion.div 
+                  className="relative mt-6 lg:mt-0"
+                  variants={itemVariants}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.4, duration: 0.8 }}
+                >
+                  <div className="bg-gradient-to-br from-gold/10 to-gold/5 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl">
+                    <Suspense fallback={
+                      <div className="h-64 sm:h-96 flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-4 border-gold border-t-transparent"></div>
+                      </div>
+                    }>
+                      <MusicToolsCarousel />
+                    </Suspense>
+                  </div>
+                </motion.div>
               </div>
             </div>
-          </div>
-        ) : (
-          <div>
-            <p className="text-muted-foreground text-sm mb-3 sm:mb-4">
-              Upgrade to access premium content and features.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-              {mockSubscriptionPlans.map((plan) => (
-                <PricingCard key={plan.id} plan={plan} variant="outline" className="h-full" />
-              ))}
+          </motion.section>
+
+          {/* Featured Tracks Section */}
+          <motion.section 
+            className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8"
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+          >
+            <div className="max-w-7xl mx-auto">
+              <motion.div 
+                className="text-center mb-8 sm:mb-12"
+                variants={itemVariants}
+              >
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold mb-3 sm:mb-4">
+                  Featured <span className="text-gold">Tracks</span>
+                </h2>
+                <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base">
+                  Discover our latest inspirational music that touches hearts and lifts spirits
+                </p>
+              </motion.div>
+
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                {featuredTracks.map((track, index) => (
+                  <motion.div
+                    key={track.id}
+                    variants={itemVariants}
+                    whileHover={{ scale: 1.02 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-card to-card/80">
+                      <CardContent className="p-0">
+                        <div className="relative">
+                          <img 
+                            src={track.coverUrl} 
+                            alt={track.title}
+                            className="w-full h-40 sm:h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                          <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 right-3 sm:right-4">
+                            <Badge className="mb-2 bg-gold/90 text-white text-xs">
+                              {track.category}
+                            </Badge>
+                            <h3 className="font-semibold text-white mb-1 text-sm sm:text-base">{track.title}</h3>
+                            <p className="text-white/80 text-xs sm:text-sm">{track.artist}</p>
+                          </div>
+                          <Button
+                            size="icon"
+                            className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-white/20 hover:bg-white/30 backdrop-blur-sm h-8 w-8 sm:h-10 sm:w-10"
+                            onClick={() => handleTrackPlay(track.id)}
+                          >
+                            {currentTrackId === track.id ? (
+                              <Pause className="h-3 w-3 sm:h-4 sm:w-4" />
+                            ) : (
+                              <Play className="h-3 w-3 sm:h-4 sm:w-4" />
+                            )}
+                          </Button>
+                        </div>
+                        
+                        <div className="p-3 sm:p-4 flex items-center justify-between">
+                          <span className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {track.duration}
+                          </span>
+                          <Button size="sm" variant="ghost" className="h-8 w-8 sm:h-auto sm:w-auto">
+                            <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+
+              <motion.div 
+                className="text-center mt-6 sm:mt-8"
+                variants={itemVariants}
+              >
+                <Button 
+                  variant="outline" 
+                  className="border-gold text-gold hover:bg-gold hover:text-white"
+                >
+                  View All Tracks
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+              </motion.div>
             </div>
-          </div>
-        )}
-      </div>
+          </motion.section>
 
-      <RecommendedContent />
+          {/* Social Media Section */}
+          <SocialMediaContainer />
 
-      <div className="mt-6">
-        <h2 className="text-lg sm:text-xl font-serif font-semibold mb-3 sm:mb-4">Upcoming Sessions</h2>
-        <UpcomingBookings />
-      </div>
-    </div>
-  );
-};
-
-const Index = () => {
-  const { user, isLoading } = useAuth();
-  const navigate = useNavigate();
-
-  // Redirect to login if accessing protected dashboard areas
-  useEffect(() => {
-    if (!isLoading && !user && window.location.pathname !== "/") {
-      navigate("/login");
-    }
-  }, [user, isLoading, navigate]);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <MainLayout>
-      {user ? <Dashboard /> : <LandingPage />}
-    </MainLayout>
+          {/* Call to Action Section */}
+          <motion.section 
+            className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-gold/10 to-gold/5"
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+          >
+            <div className="max-w-4xl mx-auto text-center">
+              <motion.div variants={itemVariants}>
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold mb-4 sm:mb-6">
+                  Ready to Begin Your <span className="text-gold">Musical Journey</span>?
+                </h2>
+                <p className="text-sm sm:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto">
+                  Join thousands of music lovers who have found inspiration, peace, 
+                  and connection through our curated collection of Christian music.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+                  <Button 
+                    size={isMobile ? "default" : "lg"}
+                    className="bg-gold hover:bg-gold-dark text-white px-6 sm:px-8 py-2 sm:py-3 rounded-full font-semibold"
+                  >
+                    <Zap className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                    Get Started Free
+                  </Button>
+                  <Button 
+                    size={isMobile ? "default" : "lg"}
+                    variant="outline"
+                    className="border-gold text-gold hover:bg-gold hover:text-white px-6 sm:px-8 py-2 sm:py-3 rounded-full font-semibold"
+                  >
+                    <Headphones className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                    Explore Catalog
+                  </Button>
+                </div>
+              </motion.div>
+            </div>
+          </motion.section>
+        </motion.div>
+      </MainLayout>
+    </ErrorBoundary>
   );
 };
 
