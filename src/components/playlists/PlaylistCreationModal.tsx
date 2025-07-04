@@ -1,251 +1,256 @@
-
-import React, { useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Upload, Music, Users, Heart, Image as ImageIcon } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { X, Upload, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 
 interface PlaylistCreationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onPlaylistCreated: (playlist: any) => void;
+  onSuccess: () => void;
 }
 
 const PlaylistCreationModal: React.FC<PlaylistCreationModalProps> = ({
   isOpen,
   onClose,
-  onPlaylistCreated
+  onSuccess
 }) => {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<'covers' | 'originals_by_saems_tunes' | 'personal_playlist'>('personal_playlist');
-  const [isPublic, setIsPublic] = useState(false);
-  const [coverArtUrl, setCoverArtUrl] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const { toast } = useToast();
+  
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    category: 'personal_playlist' as 'covers' | 'originals_by_saems_tunes' | 'personal_playlist',
+    isPublic: false
+  });
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [loading, setLoading] = useState(false);
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setCoverFile(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    }
+  };
 
+  const uploadCoverArt = async (file: File): Promise<string | null> => {
     try {
-      setIsLoading(true);
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `playlist-covers/${fileName}`;
-
+      const fileName = `${user?.id}-${Date.now()}.${fileExt}`;
+      
       const { error: uploadError } = await supabase.storage
-        .from('uploads')
-        .upload(filePath, file);
+        .from('tracks')
+        .upload(`playlist-covers/${fileName}`, file);
 
       if (uploadError) throw uploadError;
 
       const { data } = supabase.storage
-        .from('uploads')
-        .getPublicUrl(filePath);
+        .from('tracks')
+        .getPublicUrl(`playlist-covers/${fileName}`);
 
-      setCoverArtUrl(data.publicUrl);
+      return data.publicUrl;
     } catch (error) {
-      toast({
-        title: "Upload failed",
-        description: "Failed to upload cover art",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
+      console.error('Error uploading cover art:', error);
+      return null;
     }
   };
 
-  const handleCreatePlaylist = async () => {
-    if (!name.trim() || !user) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+
+    if (!formData.name.trim()) {
+      toast({
+        title: "Error",
+        description: "Playlist name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
 
     try {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .from('playlists')
-        .insert({
-          name: name.trim(),
-          description: description.trim() || null,
-          category,
-          cover_art_url: coverArtUrl || null,
-          is_public: isPublic,
-          user_id: user.id
-        })
-        .select()
-        .single();
+      let coverArtUrl = null;
+      
+      if (coverFile) {
+        coverArtUrl = await uploadCoverArt(coverFile);
+      }
+
+      const { error } = await supabase.from('playlists').insert({
+        name: formData.name.trim(),
+        description: formData.description.trim() || null,
+        category: formData.category,
+        user_id: user.id,
+        is_public: formData.isPublic,
+        cover_art_url: coverArtUrl,
+        play_count: 0,
+        total_duration: 0
+      });
 
       if (error) throw error;
 
-      onPlaylistCreated(data);
       toast({
-        title: "Playlist created",
-        description: `${name} has been created successfully`
+        title: "Success",
+        description: "Playlist created successfully!",
       });
-      onClose();
-      resetForm();
+
+      // Reset form
+      setFormData({
+        name: '',
+        description: '',
+        category: 'personal_playlist',
+        isPublic: false
+      });
+      setCoverFile(null);
+      setPreviewUrl('');
+      
+      onSuccess();
     } catch (error) {
+      console.error('Error creating playlist:', error);
       toast({
-        title: "Creation failed",
+        title: "Error",
         description: "Failed to create playlist",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const resetForm = () => {
-    setName('');
-    setDescription('');
-    setCategory('personal_playlist');
-    setIsPublic(false);
-    setCoverArtUrl('');
-  };
-
-  const getCategoryIcon = (cat: string) => {
-    switch (cat) {
-      case 'covers': return <Music className="h-4 w-4" />;
-      case 'originals_by_saems_tunes': return <Heart className="h-4 w-4" />;
-      default: return <Users className="h-4 w-4" />;
+  const handleClose = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
     }
+    onClose();
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={onClose}
-        >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-card rounded-xl shadow-2xl p-6 w-full max-w-md"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-serif font-bold">Create Playlist</h2>
-              <Button variant="ghost" size="icon" onClick={onClose}>
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Create New Playlist</DialogTitle>
+        </DialogHeader>
 
-            <div className="space-y-4">
-              {/* Cover Art */}
-              <div className="flex flex-col items-center space-y-3">
-                <div 
-                  className="w-32 h-32 border-2 border-dashed border-gold/30 rounded-lg flex items-center justify-center cursor-pointer hover:border-gold/50 transition-colors"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  {coverArtUrl ? (
-                    <img src={coverArtUrl} alt="Cover" className="w-full h-full object-cover rounded-lg" />
-                  ) : (
-                    <div className="text-center">
-                      <ImageIcon className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-sm text-muted-foreground">Add Cover</p>
-                    </div>
-                  )}
-                </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-              </div>
-
-              {/* Name */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">Name *</label>
-                <Input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter playlist name"
-                  className="bg-muted/50"
-                />
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">Description</label>
-                <Textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Describe your playlist"
-                  className="bg-muted/50 resize-none"
-                  rows={3}
-                />
-              </div>
-
-              {/* Category */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">Category</label>
-                <Select value={category} onValueChange={(value: any) => setCategory(value)}>
-                  <SelectTrigger className="bg-muted/50">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="personal_playlist">
-                      <div className="flex items-center gap-2">
-                        {getCategoryIcon('personal_playlist')}
-                        Personal Playlist
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="covers">
-                      <div className="flex items-center gap-2">
-                        {getCategoryIcon('covers')}
-                        Covers
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="originals_by_saems_tunes">
-                      <div className="flex items-center gap-2">
-                        {getCategoryIcon('originals_by_saems_tunes')}
-                        Saem's Originals
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Privacy */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <label className="text-sm font-medium">Make Public</label>
-                  <p className="text-xs text-muted-foreground">Others can discover this playlist</p>
-                </div>
-                <Switch checked={isPublic} onCheckedChange={setIsPublic} />
-              </div>
-            </div>
-
-            <div className="flex gap-3 mt-6">
-              <Button variant="outline" onClick={onClose} className="flex-1">
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleCreatePlaylist} 
-                disabled={!name.trim() || isLoading}
-                className="flex-1 bg-gold hover:bg-gold-dark"
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Cover Art Upload */}
+          <div>
+            <Label htmlFor="cover-upload">Cover Art (Optional)</Label>
+            <div className="mt-2">
+              <input
+                id="cover-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              <label
+                htmlFor="cover-upload"
+                className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
               >
-                {isLoading ? 'Creating...' : 'Create'}
-              </Button>
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt="Cover preview"
+                    className="w-full h-full object-cover rounded-lg"
+                  />
+                ) : (
+                  <>
+                    <Image className="h-8 w-8 text-muted-foreground mb-2" />
+                    <span className="text-sm text-muted-foreground">Click to upload cover art</span>
+                  </>
+                )}
+              </label>
             </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+          </div>
+
+          {/* Playlist Name */}
+          <div>
+            <Label htmlFor="name">Playlist Name *</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Enter playlist name"
+              required
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Describe your playlist..."
+              rows={3}
+            />
+          </div>
+
+          {/* Category */}
+          <div>
+            <Label htmlFor="category">Category</Label>
+            <Select
+              value={formData.category}
+              onValueChange={(value: 'covers' | 'originals_by_saems_tunes' | 'personal_playlist') =>
+                setFormData({ ...formData, category: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="personal_playlist">Personal Playlist</SelectItem>
+                <SelectItem value="covers">Covers</SelectItem>
+                <SelectItem value="originals_by_saems_tunes">Saem's Originals</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Public/Private Toggle */}
+          <div className="flex items-center justify-between">
+            <div>
+              <Label htmlFor="public">Make Public</Label>
+              <p className="text-sm text-muted-foreground">
+                Allow others to discover and listen to this playlist
+              </p>
+            </div>
+            <Switch
+              id="public"
+              checked={formData.isPublic}
+              onCheckedChange={(checked) => setFormData({ ...formData, isPublic: checked })}
+            />
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4">
+            <Button type="button" variant="outline" onClick={handleClose} className="flex-1">
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={loading || !formData.name.trim()}
+              className="flex-1 bg-gold hover:bg-gold-dark text-white"
+            >
+              {loading ? "Creating..." : "Create Playlist"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 };
 
