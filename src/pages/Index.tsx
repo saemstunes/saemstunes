@@ -59,7 +59,7 @@ const FEATURED_TRACKS = [
     artist: "Saem's Tunes",
     plays: 2543,
     likes: 189,
-    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Cover_Tracks/Pale%20Ulipo%20cover.m4a",
+    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Cover_Tracks/Pale%20Ulipo%20cover.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvQ292ZXJfVHJhY2tzL1BhbGUgVWxpcG8gY292ZXIubTRhIiwiaWF0IjoxNzQ5OTYwMjQ1LCJleHAiOjE3ODE0OTYyNDV9.3vv7kkkTTw2uRXG_HEItaCZ5xC6dbgcucC-PYjJKXLA",
     description: "Beautiful acoustic cover with heartfelt vocals"
   },
   {
