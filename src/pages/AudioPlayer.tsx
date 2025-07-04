@@ -18,6 +18,12 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import AudioPlayer from '@/components/media/AudioPlayer';
 import { useMediaState } from '@/components/idle-state/mediaStateContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'; // Fixed import path
 
 interface AudioTrack {
   id: string | number;
