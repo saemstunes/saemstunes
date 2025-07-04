@@ -194,17 +194,13 @@ const StatsSection = () => (
 const TrackCard = ({ track, onPlay, onShare }) => (
   <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-105">
     <CardContent className="p-4">
-      <div className="relative mb-4">
-        <ResponsiveImage
-          src={track.imageSrc}
-          alt={track.title}
-          width={300}
-          height={300}
-          mobileWidth={280}
-          mobileHeight={280}
-          className="w-full aspect-square object-cover rounded-lg"
-        />
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-lg flex items-center justify-center">
+      <div className="relative mb-4 aspect-square">
+  <img
+    src={track.imageSrc}
+    alt={track.title}
+    className="w-full h-full object-cover rounded-lg"
+  />
+       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-lg flex items-center justify-center">
           <Button
             size="icon"
             className="opacity-0 group-hover:opacity-100 transition-opacity bg-primary hover:bg-primary/90"
