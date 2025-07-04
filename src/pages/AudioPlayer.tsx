@@ -369,10 +369,6 @@ useEffect(() => {
                       <ResponsiveImage
                         src={trackData.artwork || '/placeholder.svg'}
                         alt={trackData.name}
-                        width={320}
-                        height={320}
-                        mobileWidth={280}
-                        mobileHeight={280}
                         className="w-80 h-80 md:w-80 md:h-80 sm:w-72 sm:h-72 rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                       <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
