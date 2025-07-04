@@ -3,152 +3,114 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { AuthProvider } from "@/context/AuthContext";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AudioPlayerProvider } from "@/context/AudioPlayerContext";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import SplashScreen from "@/components/ui/splash-screen";
-import GlobalMiniPlayer from "@/components/player/GlobalMiniPlayer";
-import Admin from "@/pages/Admin";
+import { AuthProvider } from "@/context/AuthContext";
+import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
+import Artists from "./pages/Artists";
+import MusicTools from "./pages/MusicTools";
+import Library from "./pages/Library";
+import Tracks from "./pages/Tracks";
+import Discover from "./pages/Discover";
+import Auth from "./pages/Auth";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import Auth from "./pages/Auth"; 
-import VerificationWaiting from "./pages/VerificationWaiting";
+import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
+import Subscriptions from "./pages/Subscriptions";
+import Payment from "./pages/Payment";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import BookTutor from "./pages/BookTutor";
+import Bookings from "./pages/Bookings";
 import Videos from "./pages/Videos";
 import VideoDetail from "./pages/VideoDetail";
 import Resources from "./pages/Resources";
 import ResourceDetail from "./pages/ResourceDetail";
-import Bookings from "./pages/Bookings";
-import BookTutor from "./pages/BookTutor";
-import Profile from "./pages/Profile";
-import NotFound from "./pages/NotFound";
-import Search from "./pages/Search";
-import Unauthorized from "./pages/Unauthorized";
-import Discover from "./pages/Discover";
-import Library from "./pages/Library";
-import Community from "./pages/Community";
-import Player from "./pages/Player";
-import ArtistProfile from "./pages/ArtistProfile";
+import MusicShowcase from "./pages/MusicShowcase";
 import LearningHub from "./pages/LearningHub";
 import LearningModulePage from "./pages/LearningModulePage";
+import Community from "./pages/Community";
 import Notifications from "./pages/Notifications";
-import FollowUs from "./pages/FollowUs";
-import ContactUs from "./pages/ContactUs";
-import SupportUs from "./pages/SupportUs";
-import Settings from "./pages/Settings";
+import Search from "./pages/Search";
 import Services from "./pages/Services";
-import Payment from "./pages/Payment";
-import PaymentSuccess from "./pages/PaymentSuccess";
-import MusicTools from "./pages/MusicTools";
-import AuthCallback from "@/components/auth/AuthCallback";
-import UserDetails from "./pages/UserDetails";
+import ContactUs from "./pages/ContactUs";
+import FollowUs from "./pages/FollowUs";
+import SupportUs from "./pages/SupportUs";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
-import IdleStateManager from "@/components/idle-state/IdleStateManager";
-import { MediaStateProvider } from '@/components/idle-state/mediaStateContext';
-import Subscriptions from "./pages/Subscriptions";
 import ComingSoon from "./pages/ComingSoon";
-import Tracks from "@/pages/Tracks";
+import NotFound from "./pages/NotFound";
+import Unauthorized from "./pages/Unauthorized";
+import VerificationWaiting from "./pages/VerificationWaiting";
+import UserDetails from "./pages/UserDetails";
+import Admin from "./pages/Admin";
+import Player from "./pages/Player";
 import AudioPlayer from "./pages/AudioPlayer";
+import ArtistProfile from "./pages/ArtistProfile";
 
 const queryClient = new QueryClient();
 
-const App = () => {
-  const [loading, setLoading] = useState(true);
-  
-  useEffect(() => {
-    // Simulate loading resources
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 2000);
-    
-    return () => clearTimeout(timer);
-  }, []);
-
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <MediaStateProvider>
-        <AudioPlayerProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <SplashScreen loading={loading} />
-            <BrowserRouter>
-              <IdleStateManager idleTime={60000} />
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/admin" element={<Admin />} />
-                <Route path="/login" element={<Auth />} />
-                <Route path="/signup" element={<Auth />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/verification-waiting" element={<VerificationWaiting />} />
-                <Route path="/terms" element={<Terms />} />
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/unauthorized" element={<Unauthorized />} />
-                <Route path="/auth/callback" element={<AuthCallback />} />
-                <Route path="/videos" element={<Videos />} />
-                <Route path="/videos/:id" element={<VideoDetail />} />
-                <Route path="/resources" element={<Resources />} />
-                <Route path="/resources/:id" element={<ResourceDetail />} />
-                <Route path="/search" element={<Search />} />
-                <Route path="/discover" element={<Discover />} />
-                <Route path="/library" element={<Library />} />
-                <Route path="/community" element={<Community />} />
-                <Route path="/tracks" element={<Tracks />} />
-                <Route path="/music-showcase" element={<Navigate to="/tracks" replace />} />
-                <Route path="/player" element={<Player />} />
-                <Route path="/learning-hub" element={<LearningHub />} />
-                <Route path="/learning-hub/:id" element={<LearningModulePage />} />
-                <Route path="/learning-module/:id" element={<LearningModulePage />} />
-                <Route path="/artist/:id" element={<ArtistProfile />} />
-                <Route path="/notifications" element={<Notifications />} />
-                <Route path="/follow-us" element={<FollowUs />} />
-                <Route path="/contact-us" element={<ContactUs />} />
-                <Route path="/support-us" element={<SupportUs />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/services" element={<Services />} />
-                <Route path="/payment" element={<Payment />} />
-                <Route path="/payment-success" element={<PaymentSuccess />} />
-                <Route path="/subscriptions" element={<Subscriptions />} />
-                <Route path="/music-tools" element={<MusicTools />} />
-                
-                {/* Protected Routes */}
-                <Route path="/bookings" element={
-                  <ProtectedRoute requiredRoles={["student", "adult", "parent"]}>
-                    <Bookings />
-                  </ProtectedRoute>
-                } />
-                <Route path="/book/:id" element={
-                  <ProtectedRoute requiredRoles={["student", "adult", "parent"]}>
-                    <BookTutor />
-                  </ProtectedRoute>
-                } />
-                <Route path="/profile" element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                } />
-                <Route path="/user-details" element={
-                  <ProtectedRoute>
-                    <UserDetails />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/coming-soon" element={<ComingSoon />} />
-                <Route path="/audio-player/:id" element={<AudioPlayer />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <GlobalMiniPlayer />
-            </BrowserRouter>
-          </TooltipProvider>
-        </AudioPlayerProvider>
-      </MediaStateProvider>
-      </AuthProvider>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <TooltipProvider>
+          <BrowserRouter>
+            <AuthProvider>
+              <AudioPlayerProvider>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/artists" element={<Artists />} />
+                  <Route path="/music-tools" element={<MusicTools />} />
+                  <Route path="/library" element={<Library />} />
+                  <Route path="/tracks" element={<Tracks />} />
+                  <Route path="/discover" element={<Discover />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<Signup />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/subscriptions" element={<Subscriptions />} />
+                  <Route path="/payment" element={<Payment />} />
+                  <Route path="/payment-success" element={<PaymentSuccess />} />
+                  <Route path="/book-tutor" element={<BookTutor />} />
+                  <Route path="/bookings" element={<Bookings />} />
+                  <Route path="/videos" element={<Videos />} />
+                  <Route path="/videos/:id" element={<VideoDetail />} />
+                  <Route path="/resources" element={<Resources />} />
+                  <Route path="/resources/:id" element={<ResourceDetail />} />
+                  <Route path="/music-showcase" element={<MusicShowcase />} />
+                  <Route path="/learning-hub" element={<LearningHub />} />
+                  <Route path="/learning-hub/:moduleId" element={<LearningModulePage />} />
+                  <Route path="/community" element={<Community />} />
+                  <Route path="/notifications" element={<Notifications />} />
+                  <Route path="/search" element={<Search />} />
+                  <Route path="/services" element={<Services />} />
+                  <Route path="/contact-us" element={<ContactUs />} />
+                  <Route path="/follow-us" element={<FollowUs />} />
+                  <Route path="/support-us" element={<SupportUs />} />
+                  <Route path="/terms" element={<Terms />} />
+                  <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/coming-soon" element={<ComingSoon />} />
+                  <Route path="/unauthorized" element={<Unauthorized />} />
+                  <Route path="/verification-waiting" element={<VerificationWaiting />} />
+                  <Route path="/user-details" element={<UserDetails />} />
+                  <Route path="/admin" element={<Admin />} />
+                  <Route path="/player" element={<Player />} />
+                  <Route path="/audio-player" element={<AudioPlayer />} />
+                  <Route path="/artist/:id" element={<ArtistProfile />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+                <Toaster />
+                <Sonner />
+              </AudioPlayerProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
-};
+}
 
 export default App;

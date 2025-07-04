@@ -1,20 +1,37 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { X, Upload, Type, Palette, Download, Undo, Redo, Square, Circle } from 'lucide-react';
+
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Upload, 
+  Download, 
+  Palette, 
+  Type, 
+  Square, 
+  Circle, 
+  Image as ImageIcon,
+  Undo,
+  Redo,
+  Save,
+  X,
+  Plus,
+  Minus,
+  RotateCw,
+  Crop,
+  Filter
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/context/AuthContext';
 
 interface CoverArtCustomizerProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (coverUrl: string) => void;
-  playlistId?: string;
+  onSave: (imageData: string) => void;
+  initialImage?: string;
 }
 
 interface TextLayer {
@@ -25,196 +42,109 @@ interface TextLayer {
   fontSize: number;
   color: string;
   fontFamily: string;
+  opacity: number;
+}
+
+interface FilterState {
+  brightness: number;
+  contrast: number;
+  saturation: number;
+  blur: number;
+  hue: number;
 }
 
 const CoverArtCustomizer: React.FC<CoverArtCustomizerProps> = ({
   isOpen,
   onClose,
-  onSuccess,
-  playlistId
+  onSave,
+  initialImage
 }) => {
-  const { user } = useAuth();
-  const { toast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [backgroundImage, setBackgroundImage] = useState<HTMLImageElement | null>(null);
   const [backgroundColor, setBackgroundColor] = useState('#1a1a1a');
+  const [gradientColors, setGradientColors] = useState(['#1a1a1a', '#3a3a3a']);
+  const [backgroundType, setBackgroundType] = useState<'solid' | 'gradient' | 'image'>('solid');
   const [textLayers, setTextLayers] = useState<TextLayer[]>([]);
-  const [selectedLayer, setSelectedLayer] = useState<string | null>(null);
-  const [newText, setNewText] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [history, setHistory] = useState<ImageData[]>([]);
+  const [selectedLayerId, setSelectedLayerId] = useState<string | null>(null);
+  const [filters, setFilters] = useState<FilterState>({
+    brightness: 100,
+    contrast: 100,
+    saturation: 100,
+    blur: 0,
+    hue: 0
+  });
+  const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
 
+  // Templates
   const templates = [
     {
-      name: 'Dark Gradient',
-      background: 'linear-gradient(135deg, #1a1a1a 0%, #4a4a4a 100%)'
+      id: 'gospel-classic',
+      name: 'Gospel Classic',
+      background: { type: 'gradient', colors: ['#2D1B69', '#11152A'] },
+      category: 'gospel'
     },
     {
-      name: 'Gold Gradient',
-      background: 'linear-gradient(135deg, #A67C00 0%, #FFD700 100%)'
+      id: 'modern-worship',
+      name: 'Modern Worship',
+      background: { type: 'gradient', colors: ['#667eea', '#764ba2'] },
+      category: 'worship'
     },
     {
-      name: 'Purple Gradient',
-      background: 'linear-gradient(135deg, #6B46C1 0%, #A855F7 100%)'
+      id: 'acoustic-warm',
+      name: 'Acoustic Warm',
+      background: { type: 'gradient', colors: ['#f093fb', '#f5576c'] },
+      category: 'acoustic'
     },
     {
-      name: 'Ocean Blue',
-      background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)'
+      id: 'minimal-gold',
+      name: 'Minimal Gold',
+      background: { type: 'gradient', colors: ['#A67C00', '#D4A936'] },
+      category: 'minimal'
+    },
+    {
+      id: 'dark-elegance',
+      name: 'Dark Elegance',
+      background: { type: 'solid', color: '#0a0a0a' },
+      category: 'dark'
+    },
+    {
+      id: 'bright-energy',
+      name: 'Bright Energy',
+      background: { type: 'gradient', colors: ['#FF6B6B', '#4ECDC4'] },
+      category: 'energetic'
     }
   ];
 
   const fonts = [
-    'Arial, sans-serif',
-    'Georgia, serif',
-    'Impact, sans-serif',
-    'Courier New, monospace',
-    'Comic Sans MS, cursive'
+    'Arial', 'Georgia', 'Times New Roman', 'Helvetica', 'Verdana',
+    'Impact', 'Comic Sans MS', 'Trebuchet MS', 'Palatino', 'Garamond'
   ];
 
+  // Initialize canvas
   useEffect(() => {
-    if (isOpen && canvasRef.current) {
-      initializeCanvas();
+    if (isOpen) {
+      drawCanvas();
     }
-  }, [isOpen]);
+  }, [isOpen, backgroundImage, backgroundColor, gradientColors, backgroundType, textLayers, filters]);
 
-  const initializeCanvas = () => {
+  // Save to history
+  const saveToHistory = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
-    canvas.width = 600;
-    canvas.height = 600;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Set initial background
-    ctx.fillStyle = backgroundColor;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    saveToHistory();
-  };
+    const dataURL = canvas.toDataURL();
+    setHistory(prev => {
+      const newHistory = prev.slice(0, historyIndex + 1);
+      newHistory.push(dataURL);
+      return newHistory.slice(-20); // Keep last 20 states
+    });
+    setHistoryIndex(prev => prev + 1);
+  }, [historyIndex]);
 
-  const saveToHistory = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(imageData);
-    
-    setHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
-  };
-
-  const undo = () => {
-    if (historyIndex > 0) {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      setHistoryIndex(historyIndex - 1);
-      ctx.putImageData(history[historyIndex - 1], 0, 0);
-    }
-  };
-
-  const redo = () => {
-    if (historyIndex < history.length - 1) {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      setHistoryIndex(historyIndex + 1);
-      ctx.putImageData(history[historyIndex + 1], 0, 0);
-    }
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        setBackgroundImage(img);
-        drawCanvas();
-      };
-      img.src = event.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const applyTemplate = (template: typeof templates[0]) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Create gradient from template
-    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-    
-    if (template.background.includes('linear-gradient')) {
-      // Parse gradient colors (simplified)
-      if (template.name === 'Gold Gradient') {
-        gradient.addColorStop(0, '#A67C00');
-        gradient.addColorStop(1, '#FFD700');
-      } else if (template.name === 'Purple Gradient') {
-        gradient.addColorStop(0, '#6B46C1');
-        gradient.addColorStop(1, '#A855F7');
-      } else if (template.name === 'Ocean Blue') {
-        gradient.addColorStop(0, '#1e40af');
-        gradient.addColorStop(1, '#3b82f6');
-      } else {
-        gradient.addColorStop(0, '#1a1a1a');
-        gradient.addColorStop(1, '#4a4a4a');
-      }
-    }
-
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    drawTextLayers();
-    saveToHistory();
-  };
-
-  const addTextLayer = () => {
-    if (!newText.trim()) return;
-
-    const layer: TextLayer = {
-      id: `text-${Date.now()}`,
-      text: newText,
-      x: 300,
-      y: 300,
-      fontSize: 48,
-      color: '#ffffff',
-      fontFamily: fonts[0]
-    };
-
-    setTextLayers([...textLayers, layer]);
-    setNewText('');
-    drawCanvas();
-    saveToHistory();
-  };
-
-  const updateTextLayer = (id: string, updates: Partial<TextLayer>) => {
-    setTextLayers(layers =>
-      layers.map(layer =>
-        layer.id === id ? { ...layer, ...updates } : layer
-      )
-    );
-    drawCanvas();
-  };
-
-  const drawCanvas = () => {
+  // Draw canvas
+  const drawCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -222,285 +152,515 @@ const CoverArtCustomizer: React.FC<CoverArtCustomizerProps> = ({
     if (!ctx) return;
 
     // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, 600, 600);
+
+    // Apply filters
+    ctx.filter = `brightness(${filters.brightness}%) contrast(${filters.contrast}%) saturate(${filters.saturation}%) blur(${filters.blur}px) hue-rotate(${filters.hue}deg)`;
 
     // Draw background
-    if (backgroundImage) {
-      ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
-    } else {
+    if (backgroundType === 'solid') {
       ctx.fillStyle = backgroundColor;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, 600, 600);
+    } else if (backgroundType === 'gradient') {
+      const gradient = ctx.createLinearGradient(0, 0, 600, 600);
+      gradient.addColorStop(0, gradientColors[0]);
+      gradient.addColorStop(1, gradientColors[1]);
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 600, 600);
+    } else if (backgroundType === 'image' && backgroundImage) {
+      ctx.drawImage(backgroundImage, 0, 0, 600, 600);
     }
 
-    drawTextLayers();
-  };
+    // Reset filter for text
+    ctx.filter = 'none';
 
-  const drawTextLayers = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
+    // Draw text layers
     textLayers.forEach(layer => {
+      ctx.save();
+      ctx.globalAlpha = layer.opacity;
       ctx.font = `${layer.fontSize}px ${layer.fontFamily}`;
       ctx.fillStyle = layer.color;
       ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      
-      // Add text shadow for better visibility
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-      ctx.shadowBlur = 4;
-      ctx.shadowOffsetX = 2;
-      ctx.shadowOffsetY = 2;
-      
       ctx.fillText(layer.text, layer.x, layer.y);
-      
-      // Reset shadow
-      ctx.shadowColor = 'transparent';
-      ctx.shadowBlur = 0;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 0;
-
-      // Draw selection outline if selected
-      if (selectedLayer === layer.id) {
-        ctx.strokeStyle = '#FFD700';
-        ctx.lineWidth = 2;
-        const metrics = ctx.measureText(layer.text);
-        const width = metrics.width;
-        const height = layer.fontSize;
-        ctx.strokeRect(
-          layer.x - width / 2 - 5,
-          layer.y - height / 2 - 5,
-          width + 10,
-          height + 10
-        );
-      }
+      ctx.restore();
     });
+  }, [backgroundImage, backgroundColor, gradientColors, backgroundType, textLayers, filters]);
+
+  // Handle file upload
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        setBackgroundImage(img);
+        setBackgroundType('image');
+        saveToHistory();
+      };
+      img.src = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
   };
 
-  const exportCover = async () => {
+  // Add text layer
+  const addTextLayer = () => {
+    const newLayer: TextLayer = {
+      id: Date.now().toString(),
+      text: 'New Text',
+      x: 300,
+      y: 300,
+      fontSize: 32,
+      color: '#ffffff',
+      fontFamily: 'Arial',
+      opacity: 1
+    };
+    setTextLayers(prev => [...prev, newLayer]);
+    setSelectedLayerId(newLayer.id);
+    saveToHistory();
+  };
+
+  // Update text layer
+  const updateTextLayer = (id: string, updates: Partial<TextLayer>) => {
+    setTextLayers(prev => prev.map(layer => 
+      layer.id === id ? { ...layer, ...updates } : layer
+    ));
+  };
+
+  // Delete text layer
+  const deleteTextLayer = (id: string) => {
+    setTextLayers(prev => prev.filter(layer => layer.id !== id));
+    if (selectedLayerId === id) {
+      setSelectedLayerId(null);
+    }
+    saveToHistory();
+  };
+
+  // Apply template
+  const applyTemplate = (template: any) => {
+    if (template.background.type === 'solid') {
+      setBackgroundType('solid');
+      setBackgroundColor(template.background.color);
+    } else if (template.background.type === 'gradient') {
+      setBackgroundType('gradient');
+      setGradientColors(template.background.colors);
+    }
+    saveToHistory();
+  };
+
+  // Export canvas
+  const exportCanvas = (format: 'png' | 'jpg' = 'png', quality = 1) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    setLoading(true);
+    const dataURL = canvas.toDataURL(`image/${format}`, quality);
+    const link = document.createElement('a');
+    link.download = `cover-art.${format}`;
+    link.href = dataURL;
+    link.click();
+  };
 
-    try {
-      // Convert canvas to blob
-      const blob = await new Promise<Blob>((resolve) => {
-        canvas.toBlob((blob) => {
-          resolve(blob!);
-        }, 'image/png', 0.9);
-      });
+  // Save and close
+  const handleSave = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const dataURL = canvas.toDataURL('image/png');
+    onSave(dataURL);
+    onClose();
+  };
 
-      // Upload to Supabase
-      const fileName = `playlist-cover-${Date.now()}.png`;
-      const { error: uploadError } = await supabase.storage
-        .from('tracks')
-        .upload(`playlist-covers/${fileName}`, blob);
-
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage
-        .from('tracks')
-        .getPublicUrl(`playlist-covers/${fileName}`);
-
-      // Update playlist if playlistId provided
-      if (playlistId) {
-        await supabase
-          .from('playlists')
-          .update({ cover_art_url: data.publicUrl })
-          .eq('id', playlistId);
-      }
-
-      toast({
-        title: "Success",
-        description: "Cover art created successfully!",
-      });
-
-      onSuccess(data.publicUrl);
-    } catch (error) {
-      console.error('Error exporting cover:', error);
-      toast({
-        title: "Error",
-        description: "Failed to export cover art",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+  // Undo/Redo
+  const undo = () => {
+    if (historyIndex > 0) {
+      setHistoryIndex(prev => prev - 1);
+      // Apply previous state logic here
     }
   };
 
-  const selectedLayerData = textLayers.find(layer => layer.id === selectedLayer);
+  const redo = () => {
+    if (historyIndex < history.length - 1) {
+      setHistoryIndex(prev => prev + 1);
+      // Apply next state logic here
+    }
+  };
+
+  const selectedLayer = textLayers.find(layer => layer.id === selectedLayerId);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Cover Art Customizer</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Palette className="h-5 w-5 text-gold" />
+            Cover Art Customizer
+          </DialogTitle>
         </DialogHeader>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Canvas */}
+          {/* Canvas Area */}
           <div className="lg:col-span-2">
-            <div className="relative">
-              <canvas
-                ref={canvasRef}
-                className="border border-border rounded-lg max-w-full h-auto"
-                style={{ maxHeight: '400px' }}
-              />
-            </div>
-            
-            {/* Canvas Controls */}
-            <div className="flex gap-2 mt-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={undo}
-                disabled={historyIndex <= 0}
-              >
-                <Undo className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={redo}
-                disabled={historyIndex >= history.length - 1}
-              >
-                <Redo className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={exportCover}
-                disabled={loading}
-                className="ml-auto bg-gold hover:bg-gold-dark text-white"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                {loading ? 'Exporting...' : 'Export'}
-              </Button>
-            </div>
+            <Card>
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">Canvas (600x600)</CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" variant="outline" onClick={undo} disabled={historyIndex <= 0}>
+                      <Undo className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={redo} disabled={historyIndex >= history.length - 1}>
+                      <Redo className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => exportCanvas('png')}>
+                      <Download className="h-4 w-4" />
+                      PNG
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => exportCanvas('jpg', 0.9)}>
+                      <Download className="h-4 w-4" />
+                      JPG
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="flex justify-center">
+                <div className="relative border-2 border-border rounded-lg overflow-hidden">
+                  <canvas
+                    ref={canvasRef}
+                    width={600}
+                    height={600}
+                    className="max-w-full h-auto"
+                    onClick={(e) => {
+                      const rect = canvasRef.current?.getBoundingClientRect();
+                      if (!rect) return;
+                      const x = ((e.clientX - rect.left) / rect.width) * 600;
+                      const y = ((e.clientY - rect.top) / rect.height) * 600;
+                      
+                      if (selectedLayer) {
+                        updateTextLayer(selectedLayerId!, { x, y });
+                      }
+                    }}
+                  />
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
-          {/* Controls Panel */}
-          <div className="space-y-6">
-            {/* Background */}
-            <div>
-              <Label>Background</Label>
-              <div className="space-y-3 mt-2">
-                <div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                    id="bg-upload"
-                  />
-                  <Button variant="outline" className="w-full" asChild>
-                    <label htmlFor="bg-upload" className="cursor-pointer">
-                      <Upload className="h-4 w-4 mr-2" />
-                      Upload Image
-                    </label>
-                  </Button>
-                </div>
-                
-                <div>
-                  <Label>Color</Label>
-                  <input
-                    type="color"
-                    value={backgroundColor}
-                    onChange={(e) => {
-                      setBackgroundColor(e.target.value);
-                      drawCanvas();
-                    }}
-                    className="w-full h-10 rounded border border-border"
-                  />
-                </div>
-              </div>
-            </div>
+          {/* Controls */}
+          <div className="space-y-4">
+            <Tabs defaultValue="background" className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="background" className="text-xs">BG</TabsTrigger>
+                <TabsTrigger value="text" className="text-xs">Text</TabsTrigger>
+                <TabsTrigger value="filters" className="text-xs">FX</TabsTrigger>
+                <TabsTrigger value="templates" className="text-xs">Templates</TabsTrigger>
+              </TabsList>
 
-            {/* Templates */}
-            <div>
-              <Label>Templates</Label>
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                {templates.map((template) => (
-                  <Button
-                    key={template.name}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => applyTemplate(template)}
-                    className="text-xs"
-                  >
-                    {template.name}
-                  </Button>
-                ))}
-              </div>
-            </div>
+              {/* Background Tab */}
+              <TabsContent value="background" className="space-y-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Background</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant={backgroundType === 'solid' ? 'default' : 'outline'}
+                        onClick={() => setBackgroundType('solid')}
+                      >
+                        <Square className="h-4 w-4 mr-1" />
+                        Solid
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={backgroundType === 'gradient' ? 'default' : 'outline'}
+                        onClick={() => setBackgroundType('gradient')}
+                      >
+                        <Circle className="h-4 w-4 mr-1" />
+                        Gradient
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={backgroundType === 'image' ? 'default' : 'outline'}
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <ImageIcon className="h-4 w-4 mr-1" />
+                        Image
+                      </Button>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                      />
+                    </div>
 
-            {/* Text */}
-            <div>
-              <Label>Add Text</Label>
-              <div className="space-y-3 mt-2">
-                <div className="flex gap-2">
-                  <Input
-                    value={newText}
-                    onChange={(e) => setNewText(e.target.value)}
-                    placeholder="Enter text"
-                    onKeyPress={(e) => e.key === 'Enter' && addTextLayer()}
-                  />
-                  <Button onClick={addTextLayer} disabled={!newText.trim()}>
-                    <Type className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                {/* Text Layers */}
-                {textLayers.map((layer) => (
-                  <div
-                    key={layer.id}
-                    className={`p-3 border rounded cursor-pointer ${
-                      selectedLayer === layer.id ? 'border-gold bg-gold/10' : 'border-border'
-                    }`}
-                    onClick={() => setSelectedLayer(layer.id)}
-                  >
-                    <div className="text-sm font-medium">{layer.text}</div>
-                    {selectedLayer === layer.id && (
-                      <div className="space-y-2 mt-2">
-                        <div>
-                          <Label className="text-xs">Font Size</Label>
-                          <Slider
-                            value={[layer.fontSize]}
-                            onValueChange={([value]) => updateTextLayer(layer.id, { fontSize: value })}
-                            min={12}
-                            max={120}
-                            step={2}
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-xs">Color</Label>
-                          <input
-                            type="color"
-                            value={layer.color}
-                            onChange={(e) => updateTextLayer(layer.id, { color: e.target.value })}
-                            className="w-full h-8 rounded border border-border"
-                          />
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setTextLayers(layers => layers.filter(l => l.id !== layer.id));
-                            setSelectedLayer(null);
-                            drawCanvas();
-                          }}
-                          className="w-full text-destructive"
-                        >
-                          Remove
-                        </Button>
+                    {backgroundType === 'solid' && (
+                      <div>
+                        <label className="text-sm font-medium">Color</label>
+                        <input
+                          type="color"
+                          value={backgroundColor}
+                          onChange={(e) => setBackgroundColor(e.target.value)}
+                          className="w-full h-10 rounded border"
+                        />
                       </div>
                     )}
-                  </div>
-                ))}
-              </div>
+
+                    {backgroundType === 'gradient' && (
+                      <div className="space-y-2">
+                        <div>
+                          <label className="text-sm font-medium">Color 1</label>
+                          <input
+                            type="color"
+                            value={gradientColors[0]}
+                            onChange={(e) => setGradientColors([e.target.value, gradientColors[1]])}
+                            className="w-full h-8 rounded border"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">Color 2</label>
+                          <input
+                            type="color"
+                            value={gradientColors[1]}
+                            onChange={(e) => setGradientColors([gradientColors[0], e.target.value])}
+                            className="w-full h-8 rounded border"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Text Tab */}
+              <TabsContent value="text" className="space-y-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm">Text Layers</CardTitle>
+                      <Button size="sm" onClick={addTextLayer}>
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-2 max-h-40 overflow-y-auto">
+                    {textLayers.map((layer) => (
+                      <div
+                        key={layer.id}
+                        className={`p-2 border rounded cursor-pointer ${
+                          selectedLayerId === layer.id ? 'border-gold bg-gold/10' : 'border-border'
+                        }`}
+                        onClick={() => setSelectedLayerId(layer.id)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm truncate">{layer.text}</span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteTextLayer(layer.id);
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                {selectedLayer && (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">Edit Text</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div>
+                        <label className="text-sm font-medium">Text</label>
+                        <Input
+                          value={selectedLayer.text}
+                          onChange={(e) => updateTextLayer(selectedLayerId!, { text: e.target.value })}
+                          className="mt-1"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium">Font</label>
+                        <select
+                          value={selectedLayer.fontFamily}
+                          onChange={(e) => updateTextLayer(selectedLayerId!, { fontFamily: e.target.value })}
+                          className="w-full mt-1 p-2 border rounded"
+                        >
+                          {fonts.map(font => (
+                            <option key={font} value={font}>{font}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium">Size: {selectedLayer.fontSize}px</label>
+                        <Slider
+                          value={[selectedLayer.fontSize]}
+                          onValueChange={([value]) => updateTextLayer(selectedLayerId!, { fontSize: value })}
+                          min={12}
+                          max={120}
+                          step={1}
+                          className="mt-1"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium">Color</label>
+                        <input
+                          type="color"
+                          value={selectedLayer.color}
+                          onChange={(e) => updateTextLayer(selectedLayerId!, { color: e.target.value })}
+                          className="w-full h-8 rounded border mt-1"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium">Opacity: {Math.round(selectedLayer.opacity * 100)}%</label>
+                        <Slider
+                          value={[selectedLayer.opacity]}
+                          onValueChange={([value]) => updateTextLayer(selectedLayerId!, { opacity: value })}
+                          min={0}
+                          max={1}
+                          step={0.1}
+                          className="mt-1"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+
+              {/* Filters Tab */}
+              <TabsContent value="filters" className="space-y-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Image Filters</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">Brightness: {filters.brightness}%</label>
+                      <Slider
+                        value={[filters.brightness]}
+                        onValueChange={([value]) => setFilters(prev => ({ ...prev, brightness: value }))}
+                        min={0}
+                        max={200}
+                        step={5}
+                        className="mt-1"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium">Contrast: {filters.contrast}%</label>
+                      <Slider
+                        value={[filters.contrast]}
+                        onValueChange={([value]) => setFilters(prev => ({ ...prev, contrast: value }))}
+                        min={0}
+                        max={200}
+                        step={5}
+                        className="mt-1"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium">Saturation: {filters.saturation}%</label>
+                      <Slider
+                        value={[filters.saturation]}
+                        onValueChange={([value]) => setFilters(prev => ({ ...prev, saturation: value }))}
+                        min={0}
+                        max={200}
+                        step={5}
+                        className="mt-1"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium">Blur: {filters.blur}px</label>
+                      <Slider
+                        value={[filters.blur]}
+                        onValueChange={([value]) => setFilters(prev => ({ ...prev, blur: value }))}
+                        min={0}
+                        max={10}
+                        step={0.5}
+                        className="mt-1"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium">Hue: {filters.hue}°</label>
+                      <Slider
+                        value={[filters.hue]}
+                        onValueChange={([value]) => setFilters(prev => ({ ...prev, hue: value }))}
+                        min={0}
+                        max={360}
+                        step={5}
+                        className="mt-1"
+                      />
+                    </div>
+
+                    <Button
+                      onClick={() => setFilters({
+                        brightness: 100,
+                        contrast: 100,
+                        saturation: 100,
+                        blur: 0,
+                        hue: 0
+                      })}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      Reset Filters
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Templates Tab */}
+              <TabsContent value="templates" className="space-y-4">
+                <div className="grid grid-cols-2 gap-2 max-h-80 overflow-y-auto">
+                  {templates.map((template) => (
+                    <Card
+                      key={template.id}
+                      className="cursor-pointer hover:border-gold transition-colors"
+                      onClick={() => applyTemplate(template)}
+                    >
+                      <CardContent className="p-3">
+                        <div
+                          className="w-full h-20 rounded mb-2"
+                          style={{
+                            background: template.background.type === 'gradient'
+                              ? `linear-gradient(135deg, ${template.background.colors[0]}, ${template.background.colors[1]})`
+                              : template.background.color
+                          }}
+                        />
+                        <div className="text-xs font-medium">{template.name}</div>
+                        <Badge variant="outline" className="text-xs mt-1">
+                          {template.category}
+                        </Badge>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </TabsContent>
+            </Tabs>
+
+            {/* Action Buttons */}
+            <div className="flex gap-2">
+              <Button onClick={onClose} variant="outline" className="flex-1">
+                Cancel
+              </Button>
+              <Button onClick={handleSave} className="flex-1 bg-gold hover:bg-gold-dark text-white">
+                <Save className="mr-2 h-4 w-4" />
+                Save
+              </Button>
             </div>
           </div>
         </div>
