@@ -19,10 +19,7 @@ import {
 } from "lucide-react";
 import { ResponsiveImage } from "@/components/ui/responsive-image";
 import CountUp from "@/components/tracks/CountUp";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { motion } from "framer-motion";
-import { TrackCard } from "@/components/tracks/TrackCard";
-import { QuickActionCard } from "@/components/ui/QuickActionCard";
 import { useWindowSize } from "@uidotdev/usehooks";
 
 // Constants
@@ -100,8 +97,8 @@ const FEATURED_TRACKS = [
 // Custom hook for orientation detection
 const useWindowOrientation = () => {
   const windowSize = useWindowSize();
-  const isMobile = useIsMobile();
   
+  const isMobile = windowSize.width ? windowSize.width < 768 : false;
   const isLandscape = windowSize.width && windowSize.height 
     ? windowSize.width > windowSize.height 
     : false;
@@ -194,6 +191,60 @@ const StatsSection = () => (
   </section>
 );
 
+const TrackCard = ({ track, onPlay, onShare }) => (
+  <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-105">
+    <CardContent className="p-4">
+      <div className="relative mb-4">
+        <ResponsiveImage
+          src={track.imageSrc}
+          alt={track.title}
+          width={300}
+          height={300}
+          mobileWidth={280}
+          mobileHeight={280}
+          className="w-full aspect-square object-cover rounded-lg"
+        />
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-lg flex items-center justify-center">
+          <Button
+            size="icon"
+            className="opacity-0 group-hover:opacity-100 transition-opacity bg-primary hover:bg-primary/90"
+            onClick={() => onPlay(track)}
+          >
+            <Play className="h-5 w-5" />
+          </Button>
+        </div>
+      </div>
+      
+      <div className="space-y-2">
+        <h3 className="font-semibold text-foreground line-clamp-1">{track.title}</h3>
+        <p className="text-sm text-muted-foreground line-clamp-1">{track.artist}</p>
+        
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1">
+              <Headphones className="h-3 w-3" />
+              <CountUp to={track.plays} separator="," />
+            </span>
+            <span className="flex items-center gap-1">
+              <Heart className="h-3 w-3" />
+              <CountUp to={track.likes} separator="," />
+            </span>
+          </div>
+          
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-6 w-6"
+            onClick={() => onShare(track)}
+          >
+            <Share className="h-3 w-3" />
+          </Button>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
+
 const FeaturedTracksSection = ({ tracks, onPlayTrack, onShareTrack }) => (
   <motion.section
     initial={{ opacity: 0 }}
@@ -207,13 +258,12 @@ const FeaturedTracksSection = ({ tracks, onPlayTrack, onShareTrack }) => (
     </div>
     
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-      {tracks.map((track, index) => (
+      {tracks.map((track) => (
         <TrackCard 
           key={track.id}
           track={track}
-          onPlay={() => onPlayTrack(track)}
-          onShare={() => onShareTrack(track)}
-          index={index}
+          onPlay={onPlayTrack}
+          onShare={onShareTrack}
         />
       ))}
     </div>
@@ -228,6 +278,18 @@ const FeaturedTracksSection = ({ tracks, onPlayTrack, onShareTrack }) => (
       </Button>
     </div>
   </motion.section>
+);
+
+const QuickActionCard = ({ icon: Icon, title, description, path }) => (
+  <Link to={path}>
+    <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+      <CardContent className="p-6 text-center">
+        <Icon className="h-12 w-12 text-primary mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
+        <p className="text-muted-foreground text-sm">{description}</p>
+      </CardContent>
+    </Card>
+  </Link>
 );
 
 const QuickActionsSection = () => (
