@@ -18,6 +18,74 @@ import MainLayout from '@/components/layout/MainLayout';
 import { useWindowSize } from '@uidotdev/usehooks';
 
 const MusicTools: React.FC = () => {
+  // ... existing state and ref declarations ...
+
+  // Close tutorial after 5 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowTutorial(false);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <MainLayout>
+      <div 
+        className="relative bg-gradient-to-br from-[#251515] via-[#3B2F2F] to-[#251515] rounded-2xl shadow-2xl overflow-hidden w-full max-w-5xl mx-auto p-4 sm:p-6"
+        ref={containerRef}
+      >
+        {/* ... existing background effects, particles, and orientation alert ... */}
+
+        <AnimatePresence>
+          {showTutorial && !showOrientationAlert && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-[#A67C00]/70 to-[#7A5A00]/70 backdrop-blur-sm border border-[#D4A936]/50 rounded-full px-4 py-2 text-white text-sm font-medium z-30 shadow-lg flex items-center"
+            >
+              <Zap className="inline w-4 h-4 mr-2 text-[#D4A936]" />
+              <span>
+                {activeTool === 'guitar'
+                  ? '← Swipe for piano or tap frets to play'
+                  : 'Swipe left/right to switch between tools'}
+              </span>
+              <button 
+                className="ml-3 text-white/70 hover:text-white"
+                onClick={() => setShowTutorial(false)}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ... rest of the component remains unchanged ... */}
+      </div>
+    </MainLayout>
+  );
+};
+
+export default MusicTools;import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useSwipeable } from 'react-swipeable';
+import { 
+  Guitar, Piano, ArrowLeft, ArrowRight, RotateCcw, 
+  Settings, Zap, X, Plus, MessageCircle, Timer, TrendingUp 
+} from 'lucide-react';
+import InteractivePiano from '@/components/ui/InteractivePiano';
+import InteractiveGuitar from '@/components/ui/InteractiveGuitar';
+import Metronome from '@/components/music-tools/Metronome';
+import PitchFinder from '@/components/music-tools/PitchFinder';
+import ToolSuggestionForm from '@/components/music-tools/ToolSuggestionForm';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import MainLayout from '@/components/layout/MainLayout';
+import { useWindowSize } from '@uidotdev/usehooks';
+
+const MusicTools: React.FC = () => {
   // State management
   const [activeTool, setActiveTool] = useState<'piano' | 'guitar' | 'metronome' | 'pitch-finder'>('piano');
   const [showTutorial, setShowTutorial] = useState(true);
