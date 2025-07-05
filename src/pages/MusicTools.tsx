@@ -6,7 +6,7 @@ import {
   Settings, Zap, X, Plus, MessageCircle, Timer, TrendingUp, RotateCw
 } from 'lucide-react';
 import InteractivePiano from '@/components/ui/InteractivePiano';
-import RealisticGuitar from '@/components/ui/RealisticGuitar';
+import InteractiveGuitar from '@/components/ui/InteractiveGuitar'; // Updated import
 import Metronome from '@/components/music-tools/Metronome';
 import PitchFinder from '@/components/music-tools/PitchFinder';
 import ToolSuggestionForm from '@/components/music-tools/ToolSuggestionForm';
@@ -39,7 +39,7 @@ const MusicTools: React.FC = () => {
       icon: Guitar,
       category: 'instruments', 
       description: 'Strum and play with realistic guitar feel',
-      component: RealisticGuitar,
+      component: InteractiveGuitar, // Updated component
       color: 'bg-gradient-to-r from-amber-600 to-amber-700'
     },
     {
