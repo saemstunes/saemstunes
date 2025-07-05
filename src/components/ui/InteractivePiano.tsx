@@ -77,6 +77,7 @@ const InteractivePiano: React.FC = () => {
   const demoTimeouts = useRef<NodeJS.Timeout[]>([]);
   const noteStartTime = useRef<number>(0);
   const durationTimer = useRef<NodeJS.Timeout | null>(null);
+  const touchActiveRef = useRef(false); // NEW: Track touch state to prevent duplicate events
 
   // Note duration values in beats
   const noteDurations = {
@@ -344,11 +345,16 @@ const InteractivePiano: React.FC = () => {
       }
       
       const melodies = [
-        ['C', 'C', 'G', 'G', 'A', 'A', 'G'],
-        ['E', 'D', 'E', 'G', 'A', 'G', 'E', 'D'],
-        ['E', 'D', 'C', 'D', 'E', 'E', 'E', 'D', 'D', 'D'],
-        ['C', 'C', 'D', 'C', 'E', 'D'],
-        ['E', 'E', 'F', 'G', 'G', 'F', 'E', 'D', 'C', 'C']
+        // 🎶 Melody 1: Twinkle Twinkle Little Star (within C to E')
+        ['C', 'C', 'G', 'G', 'A', 'A', 'G', 'F', 'F', 'E', 'E', 'D', 'D', 'C', 'G', 'G', 'F', 'F', 'E', 'E', 'D', 'G', 'G', 'F', 'F', 'E', 'E', 'D', 'C', 'C', 'G', 'G', 'A', 'A', 'G'],
+        // 🎸 Melody 2: Beat It – Michael Jackson riff simplified within C to E'
+        ['E', 'D', 'E', 'G', 'A', 'G', 'E', 'D', 'E', 'G', 'A', 'G', 'E', 'D', 'C'],
+        // 🎼 Melody 3: Mary Had a Little Lamb (within C to E')
+        ['E', 'D', 'C', 'D', 'E', 'E', 'E', 'D', 'D', 'D', 'E', 'G', 'G', 'E', 'D', 'C', 'D', 'E', 'E', 'E', 'E', 'D', 'D', 'E', 'D', 'C'],
+        // 🎶 Melody 4: Happy Birthday (first phrase) adjusted within C to E'
+        ['C', 'C', 'D', 'C', 'E', 'D', 'C', 'C', 'D', 'C', 'E', 'D'],
+        // 🎹 Melody 5: Ode to Joy – Beethoven (first theme) within C to E'
+        ['E', 'E', 'F', 'G', 'G', 'F', 'E', 'D', 'C', 'C', 'D', 'E', 'E', 'D', 'D', 'E', 'E', 'F', 'G', 'G', 'F', 'E', 'D', 'C', 'C', 'D', 'E', 'D', 'C', 'C']
       ];
       
       const melody = melodies[Math.floor(Math.random() * melodies.length)];
@@ -714,16 +720,38 @@ const InteractivePiano: React.FC = () => {
                     width: `${key.width}%`,
                     height: '100%',
                   }}
-                  onMouseDown={() => handleNotePress(key)}
-                  onMouseUp={() => handleNoteRelease(key)}
-                  onMouseLeave={() => handleNoteRelease(key)}
+                  onMouseDown={(e) => {
+                    if (touchActiveRef.current) {
+                      e.preventDefault();
+                      return;
+                    }
+                    handleNotePress(key);
+                  }}
+                  onMouseUp={(e) => {
+                    if (touchActiveRef.current) {
+                      e.preventDefault();
+                      return;
+                    }
+                    handleNoteRelease(key);
+                  }}
+                  onMouseLeave={(e) => {
+                    if (touchActiveRef.current) {
+                      e.preventDefault();
+                      return;
+                    }
+                    handleNoteRelease(key);
+                  }}
                   onTouchStart={(e) => {
                     e.preventDefault();
+                    touchActiveRef.current = true;
                     handleNotePress(key);
                   }}
                   onTouchEnd={(e) => {
                     e.preventDefault();
                     handleNoteRelease(key);
+                    setTimeout(() => {
+                      touchActiveRef.current = false;
+                    }, 100);
                   }}
                   whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.98 }}
@@ -763,16 +791,38 @@ const InteractivePiano: React.FC = () => {
                     height: '65%',
                     zIndex: 10
                   }}
-                  onMouseDown={() => handleNotePress(key)}
-                  onMouseUp={() => handleNoteRelease(key)}
-                  onMouseLeave={() => handleNoteRelease(key)}
+                  onMouseDown={(e) => {
+                    if (touchActiveRef.current) {
+                      e.preventDefault();
+                      return;
+                    }
+                    handleNotePress(key);
+                  }}
+                  onMouseUp={(e) => {
+                    if (touchActiveRef.current) {
+                      e.preventDefault();
+                      return;
+                    }
+                    handleNoteRelease(key);
+                  }}
+                  onMouseLeave={(e) => {
+                    if (touchActiveRef.current) {
+                      e.preventDefault();
+                      return;
+                    }
+                    handleNoteRelease(key);
+                  }}
                   onTouchStart={(e) => {
                     e.preventDefault();
+                    touchActiveRef.current = true;
                     handleNotePress(key);
                   }}
                   onTouchEnd={(e) => {
                     e.preventDefault();
                     handleNoteRelease(key);
+                    setTimeout(() => {
+                      touchActiveRef.current = false;
+                    }, 100);
                   }}
                   whileHover={{ y: -1 }}
                   whileTap={{ scale: 0.95 }}
