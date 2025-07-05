@@ -399,9 +399,11 @@ const Index = () => {
       </Helmet>
       
       <MainLayout>
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-background overflow-x-hidden">
           <OrientationHint />
-          
+
+          {/* Main content container with max-width */}
+          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6">
           <div className="space-y-6 sm:space-y-8 px-4 sm:px-6">
             <HomeHero 
               onExploreTracks={() => navigate('/tracks')}
@@ -439,41 +441,41 @@ const Index = () => {
               </>
             )}
             
-            {/* Final CTA */}
-            <section className="py-12 bg-gradient-to-r from-primary/10 via-purple-500/5 to-primary/10 rounded-xl">
-              <div className="max-w-3xl mx-auto text-center">
-                <h2 className="text-2xl sm:text-3xl font-bold mb-4">
-                  Ready to Begin Your <span className="text-primary">Musical Journey</span>?
-                </h2>
-                <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-                  Join thousands of music lovers who have found inspiration through our platform.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Button 
-                    size="lg"
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 group"
-                    onClick={() => navigate(user ? '/dashboard' : '/signup')}
-                  >
-                    <Zap className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
-                    {user ? 'Go to Dashboard' : 'Get Started'}
-                  </Button>
-                  <Button 
-                    size="lg" 
-                    variant="outline"
-                    className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-6 sm:px-8 group"
-                    onClick={() => navigate('/pricing')}
-                  >
-                    <Star className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
-                    View Premium
-                  </Button>
+             {/* Final CTA with proper container */}
+              <section className="py-12 bg-gradient-to-r from-primary/10 via-purple-500/5 to-primary/10 rounded-xl">
+                <div className="max-w-3xl mx-auto text-center px-4">
+                  <h2 className="text-2xl sm:text-3xl font-bold mb-4">
+                    Ready to Begin Your <span className="text-primary">Musical Journey</span>?
+                  </h2>
+                  <p className="text-muted-foreground mb-6">
+                    Join thousands of music lovers who have found inspiration through our platform.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button 
+                      size="lg"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 group"
+                      onClick={() => navigate(user ? '/dashboard' : '/signup')}
+                    >
+                      <Zap className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
+                      {user ? 'Go to Dashboard' : 'Get Started'}
+                    </Button>
+                    <Button 
+                      size="lg" 
+                      variant="outline"
+                      className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-6 sm:px-8 group"
+                      onClick={() => navigate('/pricing')}
+                    >
+                      <Star className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
+                      View Premium
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </section>
+              </section>
+            </div>
           </div>
         </div>
       </MainLayout>
     </>
   );
 };
-
 export default Index;
