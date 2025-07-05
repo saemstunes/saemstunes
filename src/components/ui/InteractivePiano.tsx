@@ -113,6 +113,137 @@ const InteractivePiano: React.FC = () => {
     return closest[0];
   };
 
+  // Enhanced melodies with rhythm information
+  const melodies = [
+    // 🎶 Twinkle Twinkle Little Star
+    [
+      { note: 'C', duration: 1 }, 
+      { note: 'C', duration: 1 },
+      { note: 'G', duration: 1 },
+      { note: 'G', duration: 1 },
+      { note: 'A', duration: 1 },
+      { note: 'A', duration: 1 },
+      { note: 'G', duration: 2 },
+      { note: 'F', duration: 1 },
+      { note: 'F', duration: 1 },
+      { note: 'E', duration: 1 },
+      { note: 'E', duration: 1 },
+      { note: 'D', duration: 1 },
+      { note: 'D', duration: 1 },
+      { note: 'C', duration: 2 },
+      { note: 'G', duration: 1 },
+      { note: 'G', duration: 1 },
+      { note: 'F', duration: 1 },
+      { note: 'F', duration: 1 },
+      { note: 'E', duration: 1 },
+      { note: 'E', duration: 1 },
+      { note: 'D', duration: 2 },
+      { note: 'G', duration: 1 },
+      { note: 'G', duration: 1 },
+      { note: 'F', duration: 1 },
+      { note: 'F', duration: 1 },
+      { note: 'E', duration: 1 },
+      { note: 'E', duration: 1 },
+      { note: 'D', duration: 2 },
+      { note: 'C', duration: 1 },
+      { note: 'C', duration: 1 },
+      { note: 'G', duration: 1 },
+      { note: 'G', duration: 1 },
+      { note: 'A', duration: 1 },
+      { note: 'A', duration: 1 },
+      { note: 'G', duration: 2 }
+    ],
+    // 🎸 Beat It - Michael Jackson
+    [
+      { note: 'E', duration: 0.5 },
+      { note: 'D', duration: 0.5 },
+      { note: 'E', duration: 0.5 },
+      { note: 'G', duration: 1 },
+      { note: 'A', duration: 1 },
+      { note: 'G', duration: 1 },
+      { note: 'E', duration: 0.5 },
+      { note: 'D', duration: 0.5 },
+      { note: 'E', duration: 0.5 },
+      { note: 'G', duration: 1 },
+      { note: 'A', duration: 1 },
+      { note: 'G', duration: 1 },
+      { note: 'E', duration: 0.5 },
+      { note: 'D', duration: 0.5 },
+      { note: 'C', duration: 2 }
+    ],
+    // 🎼 Mary Had a Little Lamb
+    [
+      { note: 'E', duration: 1 },
+      { note: 'D', duration: 1 },
+      { note: 'C', duration: 1 },
+      { note: 'D', duration: 1 },
+      { note: 'E', duration: 1 },
+      { note: 'E', duration: 1 },
+      { note: 'E', duration: 2 },
+      { note: 'D', duration: 1 },
+      { note: 'D', duration: 1 },
+      { note: 'D', duration: 2 },
+      { note: 'E', duration: 1 },
+      { note: 'G', duration: 1 },
+      { note: 'G', duration: 2 },
+      { note: 'E', duration: 1 },
+      { note: 'D', duration: 1 },
+      { note: 'C', duration: 1 },
+      { note: 'D', duration: 1 },
+      { note: 'E', duration: 1 },
+      { note: 'E', duration: 1 },
+      { note: 'E', duration: 1 },
+      { note: 'E', duration: 1 },
+      { note: 'D', duration: 1 },
+      { note: 'D', duration: 1 },
+      { note: 'E', duration: 1 },
+      { note: 'D', duration: 1 },
+      { note: 'C', duration: 2 }
+    ],
+    // 🎶 Happy Birthday
+    [
+      { note: 'C', duration: 1 },
+      { note: 'C', duration: 1 },
+      { note: 'D', duration: 2 },
+      { note: 'C', duration: 2 },
+      { note: 'E', duration: 2 },
+      { note: 'D', duration: 4 }
+    ],
+    // 🎹 Ode to Joy
+    [
+      { note: 'E', duration: 1 },
+      { note: 'E', duration: 1 },
+      { note: 'F', duration: 1 },
+      { note: 'G', duration: 1 },
+      { note: 'G', duration: 1 },
+      { note: 'F', duration: 1 },
+      { note: 'E', duration: 1 },
+      { note: 'D', duration: 1 },
+      { note: 'C', duration: 1 },
+      { note: 'C', duration: 1 },
+      { note: 'D', duration: 1 },
+      { note: 'E', duration: 1 },
+      { note: 'E', duration: 1.5 },
+      { note: 'D', duration: 0.5 },
+      { note: 'D', duration: 2 },
+      { note: 'E', duration: 1 },
+      { note: 'E', duration: 1 },
+      { note: 'F', duration: 1 },
+      { note: 'G', duration: 1 },
+      { note: 'G', duration: 1 },
+      { note: 'F', duration: 1 },
+      { note: 'E', duration: 1 },
+      { note: 'D', duration: 1 },
+      { note: 'C', duration: 1 },
+      { note: 'C', duration: 1 },
+      { note: 'D', duration: 1 },
+      { note: 'E', duration: 1 },
+      { note: 'D', duration: 1.5 },
+      { note: 'C', duration: 0.5 },
+      { note: 'C', duration: 2 }
+    ]
+  ];
+
   // Use the constant keys array
   const keys = PIANO_KEYS;
   
@@ -285,7 +416,7 @@ const InteractivePiano: React.FC = () => {
   }, []);
 
   // Enhanced note press handling with duration tracking
-  const handleNotePress = (key: PianoKey) => {
+  const handleNotePress = (key: PianoKey, durationBeats?: number) => {
     noteStartTime.current = Date.now();
     setNoteBeingHeld(key.note);
     setNoteDuration(0);
@@ -295,7 +426,13 @@ const InteractivePiano: React.FC = () => {
       if (noteBeingHeld === key.note) {
         const currentDuration = Date.now() - noteStartTime.current;
         setNoteDuration(currentDuration);
-        setRhythmValue(`${classifyDuration(currentDuration)} (${(currentDuration / 1000).toFixed(1)}s)`);
+        
+        // Use provided duration if available (for demo), otherwise classify
+        const rhythm = durationBeats 
+          ? `${durationBeats} beat${durationBeats !== 1 ? 's' : ''}` 
+          : classifyDuration(currentDuration);
+          
+        setRhythmValue(`${rhythm} (${(currentDuration / 1000).toFixed(1)}s)`);
         durationTimer.current = setTimeout(updateDuration, 50);
       }
     };
@@ -329,7 +466,7 @@ const InteractivePiano: React.FC = () => {
     }
   };
 
-  // Tempo-based demo timing
+  // Tempo-based demo timing with rhythm support
   const playDemo = useCallback(async () => {
     if (isPlayingDemo || isMuted) return;
     
@@ -343,41 +480,35 @@ const InteractivePiano: React.FC = () => {
         setAudioReady(true);
       }
       
-     const melodies = [
-        // 🎶 Melody 1: Twinkle Twinkle Little Star (within C to E')
-        ['C', 'C', 'G', 'G', 'A', 'A', 'G', 'F', 'F', 'E', 'E', 'D', 'D', 'C', 'G', 'G', 'F', 'F', 'E', 'E', 'D', 'G', 'G', 'F', 'F', 'E', 'E', 'D', 'C', 'C', 'G', 'G', 'A', 'A', 'G'],
-        // 🎸 Melody 2: Beat It – Michael Jackson riff simplified within C to E'
-        ['E', 'D', 'E', 'G', 'A', 'G', 'E', 'D', 'E', 'G', 'A', 'G', 'E', 'D', 'C'],
-        // 🎼 Melody 3: Mary Had a Little Lamb (within C to E')
-        ['E', 'D', 'C', 'D', 'E', 'E', 'E', 'D', 'D', 'D', 'E', 'G', 'G', 'E', 'D', 'C', 'D', 'E', 'E', 'E', 'E', 'D', 'D', 'E', 'D', 'C'],
-        // 🎶 Melody 4: Happy Birthday (first phrase) adjusted within C to E'
-        ['C', 'C', 'D', 'C', 'E', 'D', 'C', 'C', 'D', 'C', 'E', 'D'],
-        // 🎹 Melody 5: Ode to Joy – Beethoven (first theme) within C to E'
-        ['E', 'E', 'F', 'G', 'G', 'F', 'E', 'D', 'C', 'C', 'D', 'E', 'E', 'D', 'D', 'E', 'E', 'F', 'G', 'G', 'F', 'E', 'D', 'C', 'C', 'D', 'E', 'D', 'C', 'C']
-      ];
-      
       const melody = melodies[Math.floor(Math.random() * melodies.length)];
-      const noteDuration = 60000 / tempo / 2;
+      let accumulatedTime = 0;
       
-      melody.forEach((note, index) => {
-        demoTimeouts.current.push(setTimeout(() => {
-          const key = keys.find(k => k.note === note);
-          if (key) {
-            handleNotePress(key);
-          }
-        }, index * noteDuration));
+      melody.forEach((noteObj) => {
+        const noteDurationMs = getNoteDurationMs(noteObj.duration);
+        const releaseOffset = noteDurationMs * 0.8;
         
+        // Schedule note press
         demoTimeouts.current.push(setTimeout(() => {
-          const key = keys.find(k => k.note === note);
+          const key = keys.find(k => k.note === noteObj.note);
+          if (key) {
+            handleNotePress(key, noteObj.duration);
+          }
+        }, accumulatedTime));
+        
+        // Schedule note release
+        demoTimeouts.current.push(setTimeout(() => {
+          const key = keys.find(k => k.note === noteObj.note);
           if (key) {
             handleNoteRelease(key);
           }
-        }, index * noteDuration + noteDuration * 0.8));
+        }, accumulatedTime + releaseOffset));
+        
+        accumulatedTime += noteDurationMs;
       });
       
       demoTimeouts.current.push(setTimeout(() => {
         setIsPlayingDemo(false);
-      }, melody.length * noteDuration + 500));
+      }, accumulatedTime + 500));
       
     } catch (error) {
       console.error('Demo playback failed:', error);
