@@ -16,9 +16,10 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 // Custom TikTok icon
 const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -71,12 +72,13 @@ interface Platform {
   followers?: string;
   category: 'music' | 'social' | 'contact';
   engagement?: string;
+  growth?: string;
 }
 
 const SocialMediaContainer: React.FC = () => {
   const [hoveredPlatform, setHoveredPlatform] = useState<string | null>(null);
   const [audioVisualization, setAudioVisualization] = useState<number[]>([]);
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [activeCategory, setActiveCategory] = useState<'all' | 'music' | 'social' | 'contact'>('all');
   const isMobile = useIsMobile();
 
   // Enhanced audio visualization effect
@@ -88,20 +90,15 @@ const SocialMediaContainer: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Update time for dynamic content
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
-    return () => clearInterval(timer);
-  }, []);
-
   const platforms: Platform[] = [
     {
       name: 'Spotify',
       icon: SpotifyIcon,
       url: 'https://open.spotify.com/artist/6oMbcOwuuETAvO51LesbO8',
       color: '#1DB954',
-      description: 'Stream our original compositions',
+      description: 'Stream our original compositions and curated playlists',
       followers: '2.5K',
+      growth: '+12%',
       category: 'music',
       engagement: '94% monthly listeners'
     },
@@ -110,8 +107,9 @@ const SocialMediaContainer: React.FC = () => {
       icon: AppleMusicIcon,
       url: 'https://music.apple.com/ca/artist/saems-tunes/1723336566',
       color: '#FA2C56',
-      description: 'Listen on Apple Music',
+      description: 'Listen to our full catalog and exclusive releases',
       followers: '1.8K',
+      growth: '+8%',
       category: 'music',
       engagement: 'Top 10 Gospel'
     },
@@ -120,8 +118,9 @@ const SocialMediaContainer: React.FC = () => {
       icon: Instagram,
       url: 'https://instagram.com/saemstunes',
       color: '#E1306C',
-      description: 'Daily music tips & inspiration',
+      description: 'Daily music tips, behind-the-scenes, and inspiration',
       followers: '15.2K',
+      growth: '+22%',
       category: 'social',
       engagement: '2.5K avg. likes'
     },
@@ -130,8 +129,9 @@ const SocialMediaContainer: React.FC = () => {
       icon: TikTokIcon,
       url: 'https://tiktok.com/@saemstunes',
       color: '#000000',
-      description: 'Quick music tutorials',
+      description: 'Quick music tutorials and viral content',
       followers: '8.7K',
+      growth: '+35%',
       category: 'social',
       engagement: '45K monthly views'
     },
@@ -140,8 +140,9 @@ const SocialMediaContainer: React.FC = () => {
       icon: Facebook,
       url: 'https://facebook.com/saemstunes',
       color: '#1877F2',
-      description: 'Community & live sessions',
+      description: 'Community hub with live sessions and events',
       followers: '5.1K',
+      growth: '+18%',
       category: 'social',
       engagement: 'Weekly live streams'
     },
@@ -150,16 +151,16 @@ const SocialMediaContainer: React.FC = () => {
       icon: Mail,
       url: '/contact-us',
       color: '#A67C00',
-      description: 'Get in touch with us',
+      description: 'Get in touch for collaborations and inquiries',
       category: 'contact',
       engagement: '24h response time'
     }
   ];
 
   const categories = {
-    music: { name: 'Stream Our Music', icon: Headphones, color: 'text-gold', bgColor: 'bg-gold/10' },
-    social: { name: 'Follow Our Journey', icon: Users, color: 'text-blue-500', bgColor: 'bg-blue-500/10' },
-    contact: { name: 'Connect With Us', icon: Mail, color: 'text-green-500', bgColor: 'bg-green-500/10' }
+    music: { name: 'Streaming', icon: Headphones, color: 'text-gold' },
+    social: { name: 'Social', icon: Users, color: 'text-blue-400' },
+    contact: { name: 'Connect', icon: Mail, color: 'text-green-400' }
   };
 
   const containerVariants = {
@@ -175,95 +176,90 @@ const SocialMediaContainer: React.FC = () => {
   };
 
   const platformVariants = {
-    hidden: { opacity: 0, scale: 0.8 },
+    hidden: { opacity: 0, scale: 0.95 },
     visible: {
       opacity: 1,
       scale: 1,
       transition: {
         type: "spring" as const,
-        stiffness: 100,
+        stiffness: 150,
         damping: 15
       }
     },
     hover: {
-      scale: isMobile ? 1 : 1.05,
-      y: isMobile ? 0 : -5,
+      scale: isMobile ? 1 : 1.03,
+      y: isMobile ? 0 : -3,
       transition: {
         type: "spring" as const,
         stiffness: 400,
-        damping: 25
+        damping: 20
       }
     }
   };
 
+  // Filter platforms based on active category
+  const filteredPlatforms = activeCategory === 'all' 
+    ? platforms 
+    : platforms.filter(p => p.category === activeCategory);
+
   return (
     <motion.section 
-      className="py-12 sm:py-16 bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#0a0a0a] w-full overflow-hidden relative"
+      className="py-12 sm:py-16 bg-gradient-to-br from-background to-muted w-full overflow-hidden relative"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden -z-10">
-        {Array.from({ length: 12 }).map((_, i) => (
+        {Array.from({ length: 9 }).map((_, i) => (
           <motion.div
             key={i}
-            className="absolute rounded-full opacity-5 bg-gold"
+            className="absolute rounded-full opacity-[0.03] dark:opacity-[0.03] bg-foreground"
             style={{
-              width: `${Math.random() * 300 + 100}px`,
-              height: `${Math.random() * 300 + 100}px`,
+              width: `${Math.random() * 400 + 100}px`,
+              height: `${Math.random() * 400 + 100}px`,
               top: `${Math.random() * 100}%`,
               left: `${Math.random() * 100}%`,
             }}
             animate={{
               scale: [1, 1.2, 1],
-              opacity: [0.05, 0.08, 0.05],
+              opacity: [0.03, 0.05, 0.03],
             }}
             transition={{
-              duration: 4 + Math.random() * 4,
+              duration: 5 + Math.random() * 5,
               repeat: Infinity,
-              delay: Math.random() * 2,
+              delay: Math.random() * 3,
             }}
           />
         ))}
       </div>
 
-      <div className="container px-4 sm:px-6 w-full max-w-7xl mx-auto relative">
-        {/* Dynamic Audio Visualization Header */}
-        <div className="absolute top-0 left-0 right-0 h-24 overflow-hidden opacity-20">
-          <div className="flex items-end justify-between h-full gap-1 px-4">
-            {audioVisualization.map((height, i) => (
-              <motion.div
-                key={i}
-                className="w-1.5 rounded-t-lg bg-gold"
-                style={{ height: `${height}%` }}
-                animate={{ height: [`${height}%`, `${height * 1.2}%`, `${height}%`] }}
-                transition={{ 
-                  duration: 0.3, 
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                  delay: i * 0.02 
-                }}
-              />
-            ))}
-          </div>
-        </div>
-
+      <div className="container px-4 sm:px-6 w-full max-w-6xl mx-auto relative">
         {/* Header */}
         <motion.div 
-          className="text-center mb-12 w-full relative z-10"
+          className="text-center mb-12 w-full relative"
           variants={containerVariants}
         >
           <div className="flex flex-col items-center justify-center gap-2 mb-6">
-            <Badge variant="secondary" className="bg-gold/20 text-gold px-4 py-1.5 mb-3">
+            <Badge 
+              className="bg-gold/10 text-gold px-4 py-1.5 mb-3 font-medium rounded-lg border border-gold/20"
+              variant="secondary"
+            >
               Join The Community
             </Badge>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-gold to-amber-200 tracking-tight">
-              Where Music Connects
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto mt-4 text-base sm:text-lg px-4">
-              Connect with Saem's Tunes across platforms for exclusive content, 
-              behind-the-scenes, and musical inspiration
+            <motion.h2 
+              className="text-3xl sm:text-4xl md:text-5xl font-bold text-center tracking-tight"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-gold to-amber-600 dark:to-amber-300">
+                Connect
+              </span>{' '}
+              <span className="text-foreground">with Saem's Tunes</span>
+            </motion.h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto mt-4 text-base sm:text-lg">
+              Follow us across platforms for exclusive content, behind-the-scenes, and musical inspiration
             </p>
           </div>
         </motion.div>
@@ -273,13 +269,13 @@ const SocialMediaContainer: React.FC = () => {
           className="flex items-center justify-center gap-2 mb-10"
           variants={containerVariants}
         >
-          <div className="flex items-center gap-3 bg-black/60 backdrop-blur-md rounded-full px-5 py-3 border border-gold/30 shadow-lg shadow-gold/10">
+          <div className="flex items-center gap-3 bg-card/80 dark:bg-card/90 backdrop-blur-md rounded-full px-5 py-3 border border-gold/20 shadow-sm">
             <div className="relative flex">
               <div className="w-3 h-3 bg-green-500 rounded-full animate-ping absolute opacity-75" />
               <div className="w-3 h-3 bg-green-500 rounded-full" />
             </div>
             <span className="text-sm text-foreground">Live on Instagram Stories</span>
-            <Badge className="bg-gold/20 text-gold text-xs">Now</Badge>
+            <Badge className="bg-gold/10 text-gold text-xs border border-gold/20">Now</Badge>
           </div>
         </motion.div>
 
@@ -289,181 +285,225 @@ const SocialMediaContainer: React.FC = () => {
           variants={containerVariants}
         >
           {[
-            { icon: Users, label: 'Total Followers', value: '32.3K', change: '+12%', color: 'bg-blue-500/20', text: 'text-blue-400' },
-            { icon: Play, label: 'Monthly Plays', value: '156K', change: '+28%', color: 'bg-purple-500/20', text: 'text-purple-400' },
-            { icon: Heart, label: 'Engagement Rate', value: '8.4%', change: '+5%', color: 'bg-rose-500/20', text: 'text-rose-400' },
-            { icon: TrendingUp, label: 'Growth', value: '+2.1K', change: 'This month', color: 'bg-green-500/20', text: 'text-green-400' }
+            { icon: Users, label: 'Total Followers', value: '32.3K', change: '+12%', color: 'bg-blue-400/10', text: 'text-blue-400' },
+            { icon: Play, label: 'Monthly Plays', value: '156K', change: '+28%', color: 'bg-purple-400/10', text: 'text-purple-400' },
+            { icon: Heart, label: 'Engagement Rate', value: '8.4%', change: '+5%', color: 'bg-rose-400/10', text: 'text-rose-400' },
+            { icon: TrendingUp, label: 'Growth', value: '+2.1K', change: 'This month', color: 'bg-green-400/10', text: 'text-green-400' }
           ].map((stat, index) => (
             <motion.div
               key={stat.label}
-              className={`${stat.color} backdrop-blur-sm rounded-xl p-5 border border-border/30`}
+              className={`${stat.color} backdrop-blur-sm rounded-xl p-4 border border-border shadow-sm`}
               whileHover={{ 
-                scale: isMobile ? 1 : 1.03,
-                y: isMobile ? 0 : -3,
-                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.2)'
+                y: isMobile ? 0 : -4,
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)'
               }}
               transition={{ type: "spring", stiffness: 300 }}
             >
               <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 rounded-lg bg-black/30">
+                <div className="p-2 rounded-lg bg-background">
                   <stat.icon className={`h-5 w-5 ${stat.text}`} />
                 </div>
                 <div className="text-sm text-muted-foreground">{stat.label}</div>
               </div>
               <div className="flex items-end justify-between">
-                <div className="font-bold text-2xl">{stat.value}</div>
-                <Badge variant="outline" className="text-xs bg-black/30">
+                <div className="font-bold text-xl">{stat.value}</div>
+                <Badge variant="outline" className="text-xs bg-background">
                   {stat.change}
                 </Badge>
-              </div>
-              <div className="mt-3 h-1.5 w-full bg-black/20 rounded-full overflow-hidden">
-                <motion.div 
-                  className={`h-full ${stat.color.replace('/20', '/60')} rounded-full`}
-                  initial={{ width: 0 }}
-                  animate={{ width: `${30 + index * 20}%` }}
-                  transition={{ duration: 1, delay: 0.2 * index }}
-                />
               </div>
             </motion.div>
           ))}
         </motion.div>
 
-        {/* Platforms by Category */}
-        <div className="space-y-12 w-full max-w-full">
-          {Object.entries(categories).map(([categoryKey, categoryInfo]) => {
-            const categoryPlatforms = platforms.filter(p => p.category === categoryKey);
-            
-            return (
-              <motion.div 
-                key={categoryKey}
-                className="space-y-6 w-full"
-                variants={containerVariants}
-              >
-                <div className="flex items-center gap-4 mb-2">
-                  <div className={`p-3 rounded-xl ${categoryInfo.bgColor} shadow-lg`}>
-                    <categoryInfo.icon className={`h-6 w-6 ${categoryInfo.color}`} />
-                  </div>
-                  <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-300 to-gold">
-                    {categoryInfo.name}
-                  </h3>
-                  <div className="flex-1 h-px bg-gradient-to-r from-gold/30 to-transparent" />
-                </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 w-full max-w-full">
-                  {categoryPlatforms.map((platform) => (
-                    <motion.div
-                      key={platform.name}
-                      variants={platformVariants}
-                      whileHover="hover"
-                      onHoverStart={() => setHoveredPlatform(platform.name)}
-                      onHoverEnd={() => setHoveredPlatform(null)}
-                      className="w-full max-w-full"
+        {/* Category Filter */}
+        <motion.div 
+          className="flex flex-wrap justify-center gap-3 mb-8"
+          variants={containerVariants}
+        >
+          <Button
+            variant={activeCategory === 'all' ? 'default' : 'outline'}
+            className={cn(
+              "rounded-full px-5 py-2 border border-gold/20",
+              activeCategory === 'all' ? 'bg-gold/10 text-gold' : 'bg-transparent'
+            )}
+            onClick={() => setActiveCategory('all')}
+          >
+            All Platforms
+          </Button>
+          
+          {Object.entries(categories).map(([key, category]) => (
+            <Button
+              key={key}
+              variant={activeCategory === key ? 'default' : 'outline'}
+              className={cn(
+                "rounded-full px-5 py-2 flex items-center gap-2 border",
+                activeCategory === key 
+                  ? `bg-${key === 'music' ? 'gold' : key === 'social' ? 'blue-400' : 'green-400'}/10 text-foreground border-transparent` 
+                  : 'bg-transparent border-border'
+              )}
+              onClick={() => setActiveCategory(key as any)}
+            >
+              <category.icon className={`h-4 w-4 ${category.color}`} />
+              {category.name}
+            </Button>
+          ))}
+        </motion.div>
+
+        {/* Social Platform Grid */}
+        <motion.div 
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 w-full max-w-full"
+          variants={containerVariants}
+        >
+          {filteredPlatforms.map((platform) => (
+            <motion.div
+              key={platform.name}
+              variants={platformVariants}
+              whileHover="hover"
+              onHoverStart={() => setHoveredPlatform(platform.name)}
+              onHoverEnd={() => setHoveredPlatform(null)}
+              className="w-full max-w-full"
+            >
+              <Card className="group relative overflow-hidden cursor-pointer h-full bg-card backdrop-blur-sm border border-border shadow-sm hover:shadow-md transition-all">
+                <CardContent className="p-5 h-full flex flex-col">
+                  <div className="flex items-start gap-4 h-full">
+                    <div 
+                      className={cn(
+                        "p-3 rounded-lg transition-all duration-300 flex-shrink-0 group-hover:scale-110",
+                        `bg-${platform.category === 'music' ? 'gold' : platform.category === 'social' ? 'blue-400' : 'green-400'}/10`
+                      )}
                     >
-                      <Card className="group relative overflow-hidden cursor-pointer h-full bg-gradient-to-b from-card/70 to-card/40 backdrop-blur-sm border border-border/30 shadow-lg hover:shadow-xl hover:border-gold/30 transition-all">
-                        <CardContent className="p-5 h-full flex flex-col">
-                          <div className="flex items-start gap-4 h-full">
-                            <div 
-                              className="p-3 rounded-lg transition-all duration-300 flex-shrink-0 group-hover:scale-110"
-                              style={{ 
-                                backgroundColor: hoveredPlatform === platform.name 
-                                  ? `${platform.color}20` 
-                                  : 'hsl(var(--gold) / 0.1)',
-                                boxShadow: `0 4px 15px ${platform.color}20`
-                              }}
-                            >
-                              <platform.icon 
-                                className="h-7 w-7 transition-colors duration-300"
-                                style={{ 
-                                  color: hoveredPlatform === platform.name 
-                                    ? platform.color 
-                                    : 'hsl(var(--gold))' 
-                                }}
-                              />
-                            </div>
-                            
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between gap-2 mb-3">
-                                <h4 className="font-bold text-lg truncate">{platform.name}</h4>
-                                {platform.followers && (
-                                  <Badge className="text-xs flex-shrink-0 bg-black/40">
-                                    <Users className="h-3 w-3 mr-1" />
-                                    {platform.followers}
-                                  </Badge>
-                                )}
-                              </div>
-                              <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                                {platform.description}
-                              </p>
-                              {platform.engagement && (
-                                <div className="flex items-center text-xs text-amber-300 gap-1">
-                                  <Star className="h-3 w-3 fill-amber-300" />
-                                  {platform.engagement}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          
-                          <div className="mt-4 flex justify-between items-center">
-                            <Button
-                              size="sm"
-                              className="bg-transparent hover:bg-gold/10 border border-gold/30 text-gold group-hover:bg-gold/20 transition-colors"
-                              onClick={() => window.open(platform.url, '_blank')}
-                            >
-                              Connect
-                              <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                            </Button>
-                            <div className="text-xs text-muted-foreground">
-                              Tap to explore
-                            </div>
-                          </div>
-                          
-                          {/* Hover effect */}
-                          <AnimatePresence>
-                            {hoveredPlatform === platform.name && (
-                              <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="absolute inset-0 -z-10 bg-gradient-to-br from-gold/5 to-transparent pointer-events-none"
-                              />
+                      <platform.icon 
+                        className="h-7 w-7 transition-colors duration-300"
+                        style={{ color: platform.color }}
+                      />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <h4 className="font-bold text-lg">{platform.name}</h4>
+                        {platform.followers && (
+                          <Badge 
+                            className={cn(
+                              "text-xs flex-shrink-0 bg-background border",
+                              platform.category === 'music' ? 'border-gold/30' : 
+                              platform.category === 'social' ? 'border-blue-400/30' : 
+                              'border-green-400/30'
                             )}
-                          </AnimatePresence>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+                          >
+                            <Users className="h-3 w-3 mr-1" />
+                            {platform.followers}
+                            {platform.growth && (
+                              <span className="text-green-500 ml-1">{platform.growth}</span>
+                            )}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        {platform.description}
+                      </p>
+                      {platform.engagement && (
+                        <div className="flex items-center text-xs gap-1">
+                          <Star className="h-3 w-3 fill-amber-300 text-amber-300" />
+                          <span className="text-foreground">{platform.engagement}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 flex justify-between items-center">
+                    <Button
+                      size="sm"
+                      className={cn(
+                        "bg-transparent hover:bg-gold/10 border transition-colors",
+                        platform.category === 'music' ? 'border-gold/30 text-gold hover:bg-gold/10' : 
+                        platform.category === 'social' ? 'border-blue-400/30 text-blue-400 hover:bg-blue-400/10' : 
+                        'border-green-400/30 text-green-400 hover:bg-green-400/10'
+                      )}
+                      onClick={() => window.open(platform.url, '_blank')}
+                    >
+                      Connect
+                      <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                    <div className="text-xs text-muted-foreground">
+                      Tap to explore
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* Platform Engagement Visual */}
+        <motion.div
+          className="mt-14 mb-16"
+          variants={containerVariants}
+        >
+          <Card className="bg-gradient-to-r from-card to-muted/50 border border-border shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-gold" />
+                Platform Engagement
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {platforms.slice(0, 3).map((platform, idx) => (
+                  <div key={platform.name} className="flex items-center gap-4">
+                    <div 
+                      className="p-3 rounded-lg flex-shrink-0"
+                      style={{ backgroundColor: `${platform.color}20` }}
+                    >
+                      <platform.icon className="h-6 w-6" style={{ color: platform.color }} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="font-medium">{platform.name}</span>
+                        <span className="text-sm font-medium">{platform.followers}</span>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <motion.div 
+                          className="h-full rounded-full"
+                          style={{ backgroundColor: platform.color }}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${30 + idx * 20}%` }}
+                          transition={{ duration: 1, delay: idx * 0.2 }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Newsletter Signup */}
         <motion.div
-          className="mt-16 max-w-3xl mx-auto relative"
+          className="mt-16 max-w-3xl mx-auto"
           variants={containerVariants}
         >
-          <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-gold/20 to-amber-400/10 blur-lg opacity-30"></div>
-          <Card className="bg-gradient-to-r from-[#171717] to-[#0f0f0f] border border-gold/30 backdrop-blur-md relative z-10 overflow-hidden">
-            <CardContent className="p-8 text-center">
-              <div className="absolute -right-10 -top-10 w-32 h-32 rounded-full bg-gold/10 blur-xl"></div>
-              <div className="absolute -left-10 -bottom-10 w-40 h-40 rounded-full bg-amber-400/10 blur-xl"></div>
-              
-              <div className="relative z-10">
-                <h3 className="text-2xl font-bold mb-3 bg-clip-text text-transparent bg-gradient-to-r from-gold to-amber-300">
-                  Exclusive Music Insights
-                </h3>
+          <Card className="bg-gradient-to-r from-card to-muted/50 border border-border shadow-lg">
+            <CardContent className="p-6 text-center">
+              <div className="flex flex-col items-center justify-center">
+                <div className="bg-gold/10 p-3 rounded-full mb-4">
+                  <Mail className="h-8 w-8 text-gold" />
+                </div>
+                <h3 className="text-2xl font-bold mb-2">Exclusive Music Updates</h3>
                 <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
-                  Join our inner circle for early access to releases, behind-the-scenes content, 
-                  and creative inspiration delivered weekly
+                  Subscribe to receive early access to releases, creative insights, 
+                  and behind-the-scenes content
                 </p>
-                <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+                <div className="flex flex-col sm:flex-row gap-3 max-w-md w-full">
                   <input
                     type="email"
                     placeholder="Your email address"
-                    className="flex-1 px-4 py-3 rounded-xl border border-border/40 bg-black/30 text-foreground text-sm focus:border-gold/50 focus:ring-1 focus:ring-gold/20 transition-all"
+                    className="flex-1 px-4 py-3 rounded-lg border border-border bg-background text-foreground text-sm focus:border-gold focus:ring-1 focus:ring-gold/20 transition-all"
                   />
-                  <Button className="bg-gradient-to-r from-gold to-amber-500 text-black hover:from-amber-400 hover:to-gold px-6 py-3 font-medium transition-all shadow-lg shadow-gold/20">
+                  <Button 
+                    className="bg-gold hover:bg-amber-600 text-white px-6 py-3 font-medium shadow-sm transition-all"
+                    variant="default"
+                  >
                     Subscribe
                   </Button>
                 </div>
@@ -480,13 +520,14 @@ const SocialMediaContainer: React.FC = () => {
           className="text-center mt-16 relative"
           variants={containerVariants}
         >
-          <h3 className="text-2xl font-bold mb-4">Ready to Elevate Your Music Experience?</h3>
+          <h3 className="text-2xl font-bold mb-4">Become Part of Our Creative Journey</h3>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Follow us on all platforms to become part of our growing creative community
+            Follow us on all platforms to access exclusive content and join our growing community
           </p>
           <Button 
             size="lg"
-            className="bg-gradient-to-r from-gold to-amber-500 text-black hover:from-amber-400 hover:to-gold px-8 py-6 font-bold text-base shadow-lg shadow-gold/30 hover:shadow-xl transition-all"
+            className="bg-gold hover:bg-amber-600 text-white px-8 py-6 font-bold text-base shadow-sm hover:shadow-md transition-all"
+            variant="default"
           >
             Explore All Platforms
             <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
