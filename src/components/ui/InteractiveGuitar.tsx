@@ -3,6 +3,80 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Pause, Volume2, VolumeX, Info, Settings, Zap, X, RotateCcw } from 'lucide-react';
 import { useSwipeable } from 'react-swipeable';
 
+// Chord theory definitions
+interface ChordDefinition {
+  name: string;
+  intervals: number[]; // Semitone intervals from root
+  symbol: string;
+}
+
+const CHORD_THEORY: ChordDefinition[] = [
+  // Triads
+  { name: "Major", intervals: [0, 4, 7], symbol: "" },
+  { name: "Minor", intervals: [0, 3, 7], symbol: "m" },
+  { name: "Diminished", intervals: [0, 3, 6], symbol: "°" },
+  { name: "Augmented", intervals: [0, 4, 8], symbol: "+" },
+  
+  // Seventh chords
+  { name: "Major 7th", intervals: [0, 4, 7, 11], symbol: "maj7" },
+  { name: "Dominant 7th", intervals: [0, 4, 7, 10], symbol: "7" },
+  { name: "Minor 7th", intervals: [0, 3, 7, 10], symbol: "m7" },
+  { name: "Minor 7th Flat 5", intervals: [0, 3, 6, 10], symbol: "m7b5" },
+  { name: "Diminished 7th", intervals: [0, 3, 6, 9], symbol: "°7" },
+  
+  // Suspended chords
+  { name: "Suspended 2nd", intervals: [0, 2, 7], symbol: "sus2" },
+  { name: "Suspended 4th", intervals: [0, 5, 7], symbol: "sus4" },
+  
+  // Extended chords
+  { name: "Dominant 9th", intervals: [0, 4, 7, 10, 14], symbol: "9" },
+  { name: "Major 9th", intervals: [0, 4, 7, 11, 14], symbol: "maj9" },
+  { name: "Minor 9th", intervals: [0, 3, 7, 10, 14], symbol: "m9" },
+  
+  // Add chords
+  { name: "Add 9", intervals: [0, 4, 7, 14], symbol: "add9" },
+];
+
+// Helper to convert semitone to note name
+const getNoteName = (semitone: number): string => {
+  const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  return notes[semitone % 12];
+};
+
+// Chord detection function
+const detectChord = (frequencies: number[]): string => {
+  if (frequencies.length < 3) return "Not a chord";
+  
+  // Convert frequencies to semitones from A4 (440Hz)
+  const semitones = frequencies.map(freq => {
+    return Math.round(12 * Math.log2(freq / 440) + 69);
+  });
+  
+  // Normalize to C octave
+  const normalized = semitones.map(s => s % 12).sort((a, b) => a - b);
+  
+  // Remove duplicates
+  const uniqueNotes = [...new Set(normalized)];
+  
+  // Check against chord definitions
+  for (const chord of CHORD_THEORY) {
+    for (let i = 0; i < uniqueNotes.length; i++) {
+      const root = uniqueNotes[i];
+      const chordNotes = chord.intervals.map(interval => (root + interval) % 12).sort();
+      
+      // Check if current notes match chord intervals
+      const isMatch = chordNotes.every(note => uniqueNotes.includes(note));
+      
+      if (isMatch) {
+        const rootNote = getNoteName(root);
+        return `${rootNote}${chord.symbol}`;
+      }
+    }
+  }
+  
+  return "Unknown chord";
+};
+
 interface GuitarString {
   note: string;
   openFreq: number;
@@ -39,6 +113,7 @@ const InteractiveGuitar: React.FC = () => {
   const [pickPosition, setPickPosition] = useState(0);
   const [currentChordIndex, setCurrentChordIndex] = useState(-1);
   const [heldChord, setHeldChord] = useState<number | null>(null);
+  const [currentChordName, setCurrentChordName] = useState("");
   
   const audioState = useRef<AudioState>({
     context: null,
@@ -96,6 +171,18 @@ const InteractiveGuitar: React.FC = () => {
       ]
     }
   ];
+
+  // Calculate accurate fret positions
+  const calculateFretPositions = (scaleLength: number, numFrets: number) => {
+    const positions: number[] = [0];
+    for (let i = 1; i <= numFrets; i++) {
+      positions.push(scaleLength * (1 - 1 / Math.pow(2, i / 12)));
+    }
+    return positions;
+  };
+
+  const FRETBOARD_SCALE_LENGTH = 1; // Relative units
+  const fretPositions = calculateFretPositions(FRETBOARD_SCALE_LENGTH, 13);
 
   // Generate frets dynamically with accurate placement
   const generateFrets = (baseFreq: number, count: number = 13) => {
@@ -204,6 +291,7 @@ const InteractiveGuitar: React.FC = () => {
     setActiveNotes(new Set());
     activeNoteKeysByString.current.clear();
     setHeldChord(null);
+    setCurrentChordName("");
   }, []);
 
   // Reset handler for guitar
@@ -220,6 +308,24 @@ const InteractiveGuitar: React.FC = () => {
       window.removeEventListener('reset-guitar', resetHandler);
     };
   }, [stopAllNotes]);
+
+  // Detect chord when active notes change
+  useEffect(() => {
+    const activeFrequencies: number[] = [];
+    
+    activeNoteKeysByString.current.forEach((noteKey, stringIndex) => {
+      const fretIndex = parseInt(noteKey.split('-')[1]);
+      const frequency = strings[stringIndex].frets[fretIndex].frequency;
+      activeFrequencies.push(frequency);
+    });
+    
+    if (activeFrequencies.length > 0) {
+      const chord = detectChord(activeFrequencies);
+      setCurrentChordName(chord);
+    } else {
+      setCurrentChordName("");
+    }
+  }, [activeNotes]);
 
   // Enhanced strum function
   const handleStrum = async (direction: 'up' | 'down', eventData?: any) => {
@@ -477,6 +583,33 @@ const InteractiveGuitar: React.FC = () => {
     );
   };
 
+  // Play current chord
+  const playCurrentChord = () => {
+    const activeFrequencies: number[] = [];
+    
+    activeNoteKeysByString.current.forEach((noteKey, stringIndex) => {
+      const fretIndex = parseInt(noteKey.split('-')[1]);
+      const frequency = strings[stringIndex].frets[fretIndex].frequency;
+      activeFrequencies.push(frequency);
+    });
+    
+    if (activeFrequencies.length > 0) {
+      // Play all notes simultaneously with slight delay for strum effect
+      activeFrequencies.forEach((freq, i) => {
+        setTimeout(() => {
+          // We need to find which string this frequency belongs to
+          for (let s = 0; s < strings.length; s++) {
+            const fretIndex = strings[s].frets.findIndex(f => Math.abs(f.frequency - freq) < 0.1);
+            if (fretIndex !== -1) {
+              playNote(freq, s, fretIndex);
+              return;
+            }
+          }
+        }, i * 30);
+      });
+    }
+  };
+
   return (
     <motion.div
       className="relative bg-gradient-to-br from-amber-900 via-amber-800 to-amber-900 rounded-2xl shadow-2xl overflow-hidden w-full max-w-6xl mx-auto p-4 sm:p-6"
@@ -549,7 +682,7 @@ const InteractiveGuitar: React.FC = () => {
           ))}
         </div>
 
-        {/* Fretboard */}
+        {/* Fretboard with accurate positioning */}
         <div className="relative bg-gradient-to-r from-amber-700 via-amber-600 to-amber-700 rounded-xl p-6 shadow-inner">
           {/* Fret markers */}
           <div className="absolute top-0 left-0 w-full h-full flex justify-between items-center px-6">
@@ -564,12 +697,12 @@ const InteractiveGuitar: React.FC = () => {
           {/* Nut */}
           <div className="absolute left-4 top-0 bottom-0 w-1 bg-ivory rounded-full" />
           
-          {/* Fret wires */}
-          {Array.from({ length: 13 }, (_, i) => (
+          {/* Fret wires - accurately positioned */}
+          {fretPositions.map((position, i) => (
             <div
               key={i}
               className="absolute top-0 bottom-0 w-0.5 bg-gray-300 opacity-60"
-              style={{ left: `${(i + 1) * (100 / 14)}%` }}
+              style={{ left: `${position * 100}%` }}
             />
           ))}
 
@@ -652,6 +785,14 @@ const InteractiveGuitar: React.FC = () => {
         <div className="absolute right-4 top-1/2 transform -translate-y-1/2 w-2 h-20 bg-amber-600 rounded-full shadow-lg" />
       </div>
 
+      {/* Current chord display */}
+      {currentChordName && (
+        <div className="text-center mt-4 bg-gradient-to-r from-amber-500/20 to-orange-500/20 backdrop-blur-sm rounded-full px-6 py-3">
+          <span className="text-amber-100 font-medium">Current Chord:</span>
+          <span className="ml-2 font-bold text-amber-300 text-xl">{currentChordName}</span>
+        </div>
+      )}
+
       {/* Control buttons */}
       <div className="flex justify-center items-center gap-4 mt-6 flex-wrap">
         <button
@@ -704,6 +845,20 @@ const InteractiveGuitar: React.FC = () => {
           className={`text-white/80 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10 ${showKeyguide ? 'bg-white/20' : ''}`}
         >
           <Info className="h-5 w-5" />
+        </button>
+
+        {/* Play Chord Button */}
+        <button
+          onClick={playCurrentChord}
+          disabled={currentChordName === "" || isMuted}
+          className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition-all ${
+            currentChordName === "" || isMuted 
+              ? 'opacity-50 bg-gray-600' 
+              : 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 hover:from-green-500/30 hover:to-emerald-500/30'
+          }`}
+        >
+          <Play className="h-4 w-4" />
+          Play Chord
         </button>
       </div>
 
@@ -861,12 +1016,12 @@ const InteractiveGuitar: React.FC = () => {
               </div>
               
               <div className="bg-white/5 rounded-lg p-3">
-                <h4 className="text-purple-400 font-medium mb-2">Demo Features</h4>
+                <h4 className="text-purple-400 font-medium mb-2">Chord Recognition</h4>
                 <div className="space-y-1 text-white/80">
-                  <div>• Plays G-C-D-Em chord progression</div>
-                  <div>• Shows chord names during demo</div>
-                  <div>• Visual indicators for active chord positions</div>
-                  <div>• Adjustable tempo and sound settings</div>
+                  <div>• Recognizes major, minor, 7th chords</div>
+                  <div>• Shows chord name above controls</div>
+                  <div>• Play chord button strums all active notes</div>
+                  <div>• Accurate fret positioning based on physics</div>
                 </div>
               </div>
             </div>
