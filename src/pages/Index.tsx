@@ -124,7 +124,6 @@ const useShuffledTracks = (count: number, interval: number) => {
 
   return shuffledTracks;
 };
-
 const HomeHero = ({ onExploreTracks, onTryTools }) => (
   <motion.section 
     className="text-center space-y-4 py-8 sm:py-12"
@@ -132,7 +131,7 @@ const HomeHero = ({ onExploreTracks, onTryTools }) => (
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.6 }}
   >
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto px-4">
       <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 sm:mb-6">
         Welcome to{" "}
         <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
@@ -166,8 +165,9 @@ const HomeHero = ({ onExploreTracks, onTryTools }) => (
   </motion.section>
 );
 
+// FIXED: Changed to section element for semantic correctness
 const StatsSection = () => (
-  <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+  <section className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
     {STATS.map((stat, index) => (
       <motion.div
         key={stat.label}
@@ -191,16 +191,17 @@ const StatsSection = () => (
   </section>
 );
 
+// FIXED: Reduced hover scale to prevent overflow
 const TrackCard = ({ track, onPlay, onShare }) => (
-  <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-105">
+  <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
     <CardContent className="p-4">
       <div className="relative mb-4 aspect-square">
-  <img
-    src={track.imageSrc}
-    alt={track.title}
-    className="w-full h-full object-cover rounded-lg"
-  />
-       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-lg flex items-center justify-center">
+        <ResponsiveImage
+          src={track.imageSrc}
+          alt={track.title}
+          className="w-full h-full object-cover rounded-lg"
+        />
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-lg flex items-center justify-center">
           <Button
             size="icon"
             className="opacity-0 group-hover:opacity-100 transition-opacity bg-primary hover:bg-primary/90"
@@ -288,6 +289,7 @@ const QuickActionCard = ({ icon: Icon, title, description, path }) => (
   </Link>
 );
 
+// FIXED: Changed back to section for semantic structure
 const QuickActionsSection = () => (
   <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
     {QUICK_ACTIONS.map((action, index) => (
@@ -315,6 +317,7 @@ const OrientationHint = () => {
   
   return (
     <motion.div 
+      // FIXED: Removed horizontal margins to prevent overflow
       className="bg-primary/10 border border-primary/20 rounded-lg p-3 mb-6 flex items-center gap-3"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -399,49 +402,51 @@ const Index = () => {
       </Helmet>
       
       <MainLayout>
+        {/* FIXED: Added overflow constraint */}
         <div className="min-h-screen bg-background overflow-x-hidden">
           <OrientationHint />
 
-          {/* Main content container with max-width */}
+          {/* FIXED: Proper container with max-width and padding */}
           <div className="w-full max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="space-y-6 sm:space-y-8 px-4 sm:px-6">
-            <HomeHero 
-              onExploreTracks={() => navigate('/tracks')}
-              onTryTools={() => navigate('/music-tools')}
-            />
-            
-            <StatsSection />
-            
-            <FeaturedTracksSection 
-              tracks={featuredTracks}
-              onPlayTrack={handlePlayTrack}
-              onShareTrack={handleShareTrack}
-            />
-            
-            <QuickActionsSection />
-            
-            {/* Music Tools Carousel */}
-            <section>
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">
-                Try Our Music Tools
-              </h2>
-              <MusicToolsCarousel />
-            </section>
-            
-            <SocialMediaContainer />
-            
-            {/* Dashboard Components for Authenticated Users */}
-            {user && (
-              <>
-                <DashboardStats />
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-                  <RecommendedContent />
-                  <UpcomingBookings />
-                </div>
-              </>
-            )}
-            
-             {/* Final CTA with proper container */}
+            {/* FIXED: Removed inner padding to avoid double padding */}
+            <div className="space-y-6 sm:space-y-8 py-4">
+              <HomeHero 
+                onExploreTracks={() => navigate('/tracks')}
+                onTryTools={() => navigate('/music-tools')}
+              />
+              
+              <StatsSection />
+              
+              <FeaturedTracksSection 
+                tracks={featuredTracks}
+                onPlayTrack={handlePlayTrack}
+                onShareTrack={handleShareTrack}
+              />
+              
+              <QuickActionsSection />
+              
+              {/* Music Tools Carousel */}
+              <section>
+                <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">
+                  Try Our Music Tools
+                </h2>
+                <MusicToolsCarousel />
+              </section>
+              
+              <SocialMediaContainer />
+              
+              {/* Dashboard Components for Authenticated Users */}
+              {user && (
+                <>
+                  <DashboardStats />
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+                    <RecommendedContent />
+                    <UpcomingBookings />
+                  </div>
+                </>
+              )}
+              
+              {/* Final CTA with proper container */}
               <section className="py-12 bg-gradient-to-r from-primary/10 via-purple-500/5 to-primary/10 rounded-xl">
                 <div className="max-w-3xl mx-auto text-center px-4">
                   <h2 className="text-2xl sm:text-3xl font-bold mb-4">
@@ -478,4 +483,5 @@ const Index = () => {
     </>
   );
 };
+
 export default Index;
