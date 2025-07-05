@@ -343,12 +343,17 @@ const InteractivePiano: React.FC = () => {
         setAudioReady(true);
       }
       
-      const melodies = [
-        ['C', 'C', 'G', 'G', 'A', 'A', 'G'],
-        ['E', 'D', 'E', 'G', 'A', 'G', 'E', 'D'],
-        ['E', 'D', 'C', 'D', 'E', 'E', 'E', 'D', 'D', 'D'],
-        ['C', 'C', 'D', 'C', 'E', 'D'],
-        ['E', 'E', 'F', 'G', 'G', 'F', 'E', 'D', 'C', 'C']
+     const melodies = [
+        // 🎶 Melody 1: Twinkle Twinkle Little Star (within C to E')
+        ['C', 'C', 'G', 'G', 'A', 'A', 'G', 'F', 'F', 'E', 'E', 'D', 'D', 'C', 'G', 'G', 'F', 'F', 'E', 'E', 'D', 'G', 'G', 'F', 'F', 'E', 'E', 'D', 'C', 'C', 'G', 'G', 'A', 'A', 'G'],
+        // 🎸 Melody 2: Beat It – Michael Jackson riff simplified within C to E'
+        ['E', 'D', 'E', 'G', 'A', 'G', 'E', 'D', 'E', 'G', 'A', 'G', 'E', 'D', 'C'],
+        // 🎼 Melody 3: Mary Had a Little Lamb (within C to E')
+        ['E', 'D', 'C', 'D', 'E', 'E', 'E', 'D', 'D', 'D', 'E', 'G', 'G', 'E', 'D', 'C', 'D', 'E', 'E', 'E', 'E', 'D', 'D', 'E', 'D', 'C'],
+        // 🎶 Melody 4: Happy Birthday (first phrase) adjusted within C to E'
+        ['C', 'C', 'D', 'C', 'E', 'D', 'C', 'C', 'D', 'C', 'E', 'D'],
+        // 🎹 Melody 5: Ode to Joy – Beethoven (first theme) within C to E'
+        ['E', 'E', 'F', 'G', 'G', 'F', 'E', 'D', 'C', 'C', 'D', 'E', 'E', 'D', 'D', 'E', 'E', 'F', 'G', 'G', 'F', 'E', 'D', 'C', 'C', 'D', 'E', 'D', 'C', 'C']
       ];
       
       const melody = melodies[Math.floor(Math.random() * melodies.length)];
