@@ -224,9 +224,9 @@ const Library = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-proxima font-bold">Our Music Library</h1>
+            <h1 className="text-3xl font-proxima font-bold">Saem's Library</h1>
             <p className="text-muted-foreground mt-1">
-              Delve into exclusive fun content for your education
+              Exclusive content created by Saem's Tunes instructors
             </p>
           </div>
           {user && (
@@ -246,9 +246,10 @@ const Library = () => {
           <div className="lg:col-span-2">
             {activeQuizId ? (
               <DynamicMusicQuiz 
-                quizId={activeQuizId}
-                onComplete={handleQuizComplete}
-              />
+  quizId={activeQuizId}
+  onComplete={handleQuizComplete}
+  supabaseClient={supabase} // ✅ Pass the client here
+/>
 
             ) : (
               <Card>

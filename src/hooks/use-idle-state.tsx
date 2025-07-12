@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 
 interface IdleStateOptions {
@@ -29,19 +30,6 @@ export const useIdleState = ({
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   
-  // NEW: Track media playing state
-  const isMediaPlayingRef = useRef(false);
-  
-  // NEW: Function to update media playing state
-  const setMediaPlaying = (isPlaying: boolean) => {
-    isMediaPlayingRef.current = isPlaying;
-    
-    // If media starts playing, reset idle timer
-    if (isPlaying) {
-      resetIdleTimer();
-    }
-  };
-
   useEffect(() => {
     // Online state detection
     const handleOnline = () => setIsOnline(true);
@@ -56,49 +44,42 @@ export const useIdleState = ({
     };
   }, []);
   
-  const startIdleTimer = () => {
-    // Clear any existing timers
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    
-    // NEW: Don't start timer if media is playing
-    if (isMediaPlayingRef.current) return;
-    
-    // Set a timeout to mark user as idle
-    timeoutRef.current = setTimeout(() => {
-      // Check if we've reached the maximum number of activations
-      if (activationCount >= maxActivations) {
-        // Increase idle time for subsequent activations
-        const multiplier = Math.floor(activationCount / maxActivations) + 1;
-        setCurrentIdleTime(idleTime * multiplier);
-      }
-      
-      setIsIdle(true);
-      setIdleSince(new Date());
-      setActivationCount(prev => prev + 1);
-      onIdleStart();
-    }, currentIdleTime);
-  };
-  
-  const resetIdleTimer = () => {
-    if (isIdle) {
-      setIsIdle(false);
-      setIdleSince(null);
-      onIdleEnd();
-    }
-    
-    // NEW: Only restart timer if media is not playing
-    if (!isMediaPlayingRef.current) {
-      startIdleTimer();
-    }
-  };
-  
   useEffect(() => {
+    const startIdleTimer = () => {
+      // Clear any existing timers
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      
+      // Set a timeout to mark user as idle
+      timeoutRef.current = setTimeout(() => {
+        // Check if we've reached the maximum number of activations
+        if (activationCount >= maxActivations) {
+          // Increase idle time for subsequent activations
+          const multiplier = Math.floor(activationCount / maxActivations) + 1;
+          setCurrentIdleTime(idleTime * multiplier);
+        }
+        
+        setIsIdle(true);
+        setIdleSince(new Date());
+        setActivationCount(prev => prev + 1);
+        onIdleStart();
+      }, currentIdleTime);
+    };
+    
+    const resetIdleTimer = () => {
+      if (isIdle) {
+        setIsIdle(false);
+        setIdleSince(null);
+        onIdleEnd();
+      }
+      startIdleTimer();
+    };
+    
     // Set up event listeners
     events.forEach(event => {
       window.addEventListener(event, resetIdleTimer);
     });
-
+    
     // Initialize idle timer
     startIdleTimer();
     
@@ -124,14 +105,12 @@ export const useIdleState = ({
     setCurrentIdleTime(idleTime);
   };
 
-  // NEW: Return setMediaPlaying function
   return { 
     isIdle, 
     isOnline, 
     idleSince, 
     getIdleTime, 
     activationCount, 
-    resetActivationCount,
-    setMediaPlaying // NEW: Expose function to update media state
+    resetActivationCount 
   };
 };

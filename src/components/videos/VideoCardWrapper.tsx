@@ -75,23 +75,17 @@ const VideoCardWrapper: React.FC<VideoCardWrapperProps> = ({
           </div>
         )}
         
-        {/* Play button overlay - Updated for dark mode */}
+        {/* Play button overlay */}
         {canAccess && (
           <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-            <div className={cn(
-              "rounded-full p-3",
-              // Light mode style
-              "bg-white/90 text-foreground",
-              // Dark mode style
-              "dark:bg-primary dark:text-primary-foreground"
-            )}>
-              <Play className="h-6 w-6 fill-current" />
+            <div className="bg-white/90 rounded-full p-3">
+              <Play className="h-6 w-6 text-foreground fill-current" />
             </div>
           </div>
         )}
         
         {/* Duration badge */}
-        <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center dark:bg-primary/80">
+        <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center">
           <Clock className="h-3 w-3 mr-1" />
           {video.duration}
         </div>

@@ -36,22 +36,10 @@ interface Track {
   };
 }
 
-interface FeaturedTrack {
-  id: string;
-  imageSrc: string;
-  title: string;
-  artist: string;
-  plays: number;
-  likes: number;
-  audioSrc: string;
-  description?: string;
-}
-
 const Tracks = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [tracks, setTracks] = useState<Track[]>([]);
-  const [featuredTrack, setFeaturedTrack] = useState<FeaturedTrack | null>(null);
   const [loading, setLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
   const [activeTab, setActiveTab] = useState("showcase");
@@ -65,6 +53,15 @@ const Tracks = () => {
   const [uploading, setUploading] = useState(false);
 
   // Sample data for demonstrations
+  const featuredTrack = {
+    imageSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Cover%20Art/salama-featured.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvQ292ZXIgQXJ0L3NhbGFtYS1mZWF0dXJlZC5qcGciLCJpYXQiOjE3NDk5NTMwNTksImV4cCI6MTc4MTQ4OTA1OX0.KtKlRXxj5z5KzzbnTDWd9oRVbztRHwioGA0YN1Xjn4Q",
+    title: "Featured Track of the Week",
+    artist: "Saem's Tunes ft. Evans Simali - Salama (DEMO)",
+    plays: 1987,
+    likes: 85,
+    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Cover%20Art/Salama%20-%20Saem%20x%20Simali.mp3"
+  };
+
   const albumItems = [
     {
       image: "https://i.imgur.com/VfKXMyG.png",
@@ -164,6 +161,33 @@ const Tracks = () => {
     },
   ];
 
+  // Example usage for dynamic background that shifts with current track
+  const updateBackgroundGradient = (currentTrackIndex: number) => {
+    const currentTrack = albumItems[currentTrackIndex];
+    const body = document.body;
+    if (body) {
+      body.style.background = currentTrack.backgroundGradient;
+    }
+    
+    // Or for a container element
+    const container = document.querySelector('.music-player-container') as HTMLElement;
+    if (container) {
+      container.style.background = currentTrack.backgroundGradient;
+    }
+  };
+
+  // Example CSS variables approach for dynamic theming
+  const applyDynamicColors = (currentTrackIndex: number) => {
+    const currentTrack = albumItems[currentTrackIndex];
+    const root = document.documentElement;
+    
+    if (root) {
+      root.style.setProperty('--primary-color', currentTrack.primaryColor);
+      root.style.setProperty('--secondary-color', currentTrack.secondaryColor);
+      root.style.setProperty('--dynamic-gradient', currentTrack.backgroundGradient);
+    }
+  };
+
   const playlistTracks = [
     "African Gospel",
     "Christian Afrobeats", 
@@ -179,7 +203,6 @@ const Tracks = () => {
 
   useEffect(() => {
     fetchTracks();
-    fetchFeaturedTrack();
     
     // Set up realtime listener for tracks
     const channel = supabase
@@ -190,17 +213,7 @@ const Tracks = () => {
         table: 'tracks'
       }, (payload) => {
         console.log('Track uploaded:', payload);
-        fetchTracks();
-        fetchFeaturedTrack(); // Also refresh featured track in case it changed
-      })
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'tracks'
-      }, (payload) => {
-        console.log('Track updated:', payload);
-        fetchTracks();
-        fetchFeaturedTrack();
+        fetchTracks(); // Refresh the list
       })
       .subscribe();
 
@@ -209,126 +222,36 @@ const Tracks = () => {
     };
   }, []);
 
-  const fetchFeaturedTrack = async () => {
-    try {
-      // First, try to get the most liked/played track from the database
-      const { data: trackData, error: trackError } = await supabase
-        .from('tracks')
-        .select(`
-          id,
-          title,
-          audio_path,
-          cover_path,
-          description,
-          created_at,
-          profiles:user_id (
-            display_name
-          )
-        `)
-        .eq('approved', true)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (trackError && trackError.code !== 'PGRST116') {
-        throw trackError;
-      }
-
-      let featured: FeaturedTrack;
-
-      if (trackData) {
-        // Get play count and like count for this track
-        const [playCountResult, likeCountResult] = await Promise.all([
-          supabase
-            .from('track_plays')
-            .select('*', { count: 'exact', head: true })
-            .eq('track_id', trackData.id),
-          supabase
-            .from('likes')
-            .select('*', { count: 'exact', head: true })
-            .eq('track_id', trackData.id)
-        ]);
-
-        const playCount = playCountResult.count || 0;
-        const likeCount = likeCountResult.count || 0;
-
-        // Get public URLs for audio and cover
-        const audioUrl = trackData.audio_path ? 
-          supabase.storage.from('tracks').getPublicUrl(trackData.audio_path).data.publicUrl : '';
-        const coverUrl = trackData.cover_path ? 
-          supabase.storage.from('tracks').getPublicUrl(trackData.cover_path).data.publicUrl : '';
-
-        featured = {
-          id: trackData.id,
-          imageSrc: coverUrl || "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Cover%20Art/salama-featured.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvQ292ZXIgQXJ0L3NhbGFtYS1mZWF0dXJlZC5qcGciLCJpYXQiOjE3NDk5NTMwNTksImV4cCI6MTc4MTQ4OTA1OX0.KtKlRXxj5z5KzzbnTDWd9oRVbztRHwioGA0YN1Xjn4Q",
-          title: "Featured Track of the Week",
-          artist: trackData.profiles?.display_name ? `${trackData.profiles.display_name} - ${trackData.title}` : trackData.title,
-          plays: playCount,
-          likes: likeCount,
-          audioSrc: audioUrl || "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Cover%20Art/Salama%20-%20Saem%20x%20Simali.mp3",
-          description: trackData.description
-        };
-      } else {
-        // Fallback to original hardcoded data if no tracks in database
-        featured = {
-          id: 'featured-fallback',
-          imageSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Cover%20Art/salama-featured.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvQ292ZXIgQXJ0L3NhbGFtYS1mZWF0dXJlZC5qcGciLCJpYXQiOjE3NDk5NTMwNTksImV4cCI6MTc4MTQ4OTA1OX0.KtKlRXxj5z5KzzbnTDWd9oRVbztRHwioGA0YN1Xjn4Q",
-          title: "Featured Track of the Week",
-          artist: "Saem's Tunes ft. Evans Simali - Salama (DEMO)",
-          plays: 1987,
-          likes: 85,
-          audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Cover%20Art/Salama%20-%20Saem%20x%20Simali.mp3",
-          description: "Amidst a concerning time around the world, we thought to capture the picture of it in light of what we know & are assured of. This song goes back almost 20 years & to be able to translate it in this way, with some of the people who have been a support to this space, is an esteemed honor. I pray this song grows to translate, even beyond my ability, the moments that can't be imagined: bomb landings in promised sheltered areas, an innocent mum and dad beholding their lost child, a child suddenly made an orphan, the plight of a future riddled with uncertainties as powers that greater be call the shots... how damning to not even be able to promise a solution. But even in the midst of it, just to find a voice that speaks to you, comforts you, is a true balm to the wounds the world oft inflicts. Might I present to you Jesus? He knows every thought, bottles every tear and is sovereign even when it feels He isn't. In Christ, nahnu aaminum/nahnun 'āminūm/sango mbote/we are safe/tuko SALAMA!"
-        };
-      }
-
-      setFeaturedTrack(featured);
-      
-    } catch (error) {
-      console.error('Error fetching featured track:', error);
-      // Set fallback featured track on error
-      setFeaturedTrack({
-        id: 'featured-fallback',
-        imageSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Cover%20Art/salama-featured.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvQ292ZXIgQXJ0L3NhbGFtYS1mZWF0dXJlZC5qcGciLCJpYXQiOjE3NDk5NTMwNTksImV4cCI6MTc4MTQ4OTA1OX0.KtKlRXxj5z5KzzbnTDWd9oRVbztRHwioGA0YN1Xjn4Q",
-        title: "Featured Track of the Week",
-        artist: "Saem's Tunes ft. Evans Simali - Salama (DEMO)",
-        plays: 1987,
-        likes: 85,
-        audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Cover%20Art/Salama%20-%20Saem%20x%20Simali.mp3"
-      });
-    }
-  };
-
   const fetchTracks = async () => {
     try {
       const { data, error } = await supabase
         .from('tracks')
         .select(`
-          id,
-          title,
-          description,
-          audio_path,
-          cover_path,
-          access_level,
-          user_id,
-          approved,
-          created_at,
-          profiles:user_id (
-            display_name,
-            avatar_url
-          )
+        id,
+        title,
+        description,
+        audio_path,
+        cover_path,
+        access_level,
+        user_id,
+        approved,
+        created_at,
+        profiles:user_id (
+        display_name,
+        avatar_url
+        )
         `)
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Supabase Error Details:', {
-          message: error.message,
-          code: error.code,
-          details: error.details,
-          hint: error.hint
-        });
-        throw error;
-      }
+      console.error('Supabase Error Details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
+      throw error;
+    }
       
       // Filter tracks based on user access level and ensure proper typing
       const typedTracks = (data || []).map(track => ({
@@ -339,7 +262,6 @@ const Tracks = () => {
         cover_path: track.cover_path,
         access_level: track.access_level as AccessLevel,
         user_id: track.user_id,
-        approved: track.approved,
         created_at: track.created_at,
         profiles: track.profiles
       })) as Track[];
@@ -359,41 +281,6 @@ const Tracks = () => {
     } finally {
       setLoading(false);
     }
-  };
-
- const trackPlay = async (trackId: string) => {
-    if (!trackId || trackId === 'featured-fallback') return;
-    
-    try {
-      await supabase.from('track_plays').insert({
-        track_id: trackId,
-        user_id: user?.id || null
-      });
-    } catch (error) {
-      console.error('Error tracking play:', error);
-    }
-  };
-
-  // Updated handlePlayNow function
-  const handlePlayNow = () => {
-    if (!featuredTrack) return;
-    
-    if (featuredTrack.id && featuredTrack.id !== 'featured-fallback') {
-      trackPlay(featuredTrack.id);
-    }
-    
-    navigate('/audio-player/featured', {
-      state: {
-        track: {
-          id: featuredTrack.id,
-          src: featuredTrack.audioSrc,
-          name: featuredTrack.artist.split(' - ')[1] || featuredTrack.artist,
-          artist: featuredTrack.artist.split(' - ')[0] || 'Saem\'s Tunes',
-          artwork: featuredTrack.imageSrc,
-          album: 'Featured'
-        }
-      }
-    });
   };
 
   const handleUpload = async () => {
@@ -459,31 +346,31 @@ const Tracks = () => {
     setUploading(true);
 
     try {
-      // Upload audio file with user folder structure
-      const sanitizedAudioName = `${user.id}/${Date.now()}-${audioFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-      const { data: audioData, error: audioError } = await supabase.storage
+    // Upload audio file with user folder structure
+    const sanitizedAudioName = `${user.id}/${Date.now()}-${audioFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+    const { data: audioData, error: audioError } = await supabase.storage
+      .from('tracks')
+      .upload(sanitizedAudioName, audioFile); // Remove 'audio/' prefix
+
+    if (audioError) {
+      console.error('Audio upload error:', audioError);
+      throw new Error(`Audio upload failed: ${audioError.message}`);
+    }
+
+    // Upload cover image with user folder structure
+    let coverPath = null;
+    if (coverFile) {
+      const sanitizedCoverName = `${user.id}/${Date.now()}-${coverFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const { data: coverData, error: coverError } = await supabase.storage
         .from('tracks')
-        .upload(sanitizedAudioName, audioFile);
+        .upload(sanitizedCoverName, coverFile); // Remove 'covers/' prefix
 
-      if (audioError) {
-        console.error('Audio upload error:', audioError);
-        throw new Error(`Audio upload failed: ${audioError.message}`);
+      if (coverError) {
+        console.error('Cover upload error:', coverError);
+        throw new Error(`Cover upload failed: ${coverError.message}`);
       }
-
-      // Upload cover image with user folder structure
-      let coverPath = null;
-      if (coverFile) {
-        const sanitizedCoverName = `${user.id}/${Date.now()}-${coverFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-        const { data: coverData, error: coverError } = await supabase.storage
-          .from('tracks')
-          .upload(sanitizedCoverName, coverFile);
-
-        if (coverError) {
-          console.error('Cover upload error:', coverError);
-          throw new Error(`Cover upload failed: ${coverError.message}`);
-        }
-        coverPath = coverData.path;
-      }
+      coverPath = coverData.path;
+    }
 
       // Save track to database
       const { error: dbError } = await supabase
@@ -517,7 +404,6 @@ const Tracks = () => {
       
       // Refresh tracks
       fetchTracks();
-      fetchFeaturedTrack(); // Refresh featured track as well
       
     } catch (error) {
       console.error('Upload error:', error);
@@ -532,7 +418,22 @@ const Tracks = () => {
     }
   };
 
-  if (loading || !featuredTrack) {
+  const handlePlayNow = () => {
+    navigate('/audio-player/featured', {
+      state: {
+        track: {
+          id: 'featured',
+          src: featuredTrack.audioSrc,
+          name: 'Salama (DEMO)',
+          artist: 'Saem\'s Tunes ft. Evans Simali',
+          artwork: featuredTrack.imageSrc,
+          album: 'NaombAoH'
+        }
+      }
+    });
+  };
+
+  if (loading) {
     return (
       <MainLayout>
         <div className="min-h-screen bg-background flex items-center justify-center">
@@ -692,7 +593,7 @@ const Tracks = () => {
                     <div className="space-y-4 order-1 md:order-2 text-center md:text-left">
                       <h3 className="text-xl font-semibold">{featuredTrack.artist}</h3>
                       <p className="text-muted-foreground">
-                        {featuredTrack.description || "Amidst a concerning time around the world, we thought to capture the picture of it in light of what we know & are assured of. This song goes back almost 20 years & to be able to translate it in this way, with some of the people who have been a support to this space, is an esteemed honor. I pray this song grows to translate, even beyond my ability, the moments that can't be imagined: bomb landings in promised sheltered areas, an innocent mum and dad beholding their lost child, a child suddenly made an orphan, the plight of a future riddled with uncertainties as powers that greater be call the shots... how damning to not even be able to promise a solution. But even in the midst of it, just to find a voice that speaks to you, comforts you, is a true balm to the wounds the world oft inflicts. Might I present to you Jesus? He knows every thought, bottles every tear and is sovereign even when it feels He isn't. In Christ, nahnu aaminum/nahnun 'āminūm/sango mbote/we are safe/tuko SALAMA!"}
+                        Amidst a concerning time around the world, we thought to capture the picture of it in light of what we know & are assured of. This song goes back almost 20 years & to be able to translate it in this way, with some of the people who have been a support to this space, is an esteemed honor. I pray this song grows to translate, even beyond my ability, the moments that can't be imagined: bomb landings in promised sheltered areas, an innocent mum and dad beholding their lost child, a child suddenly made an orphan, the plight of a future riddled with uncertainties as powers that greater be call the shots... how damning to not even be able to promise a solution. But even in the midst of it, just to find a voice that speaks to you, comforts you, is a true balm to the wounds the world oft inflicts. Might I present to you Jesus? He knows every thought, bottles every tear and is sovereign even when it feels He isn't. In Christ, nahnu aaminum/nahnun 'āminūm/sango mbote/we are safe/tuko SALAMA!  
                       </p>
                       
                       <div className="flex gap-8 justify-center md:justify-start">
@@ -1006,10 +907,10 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
     };
 
     const shareData = {
-      title: `${track.title} by ${track.profiles?.display_name || 'Unknown Artist'}`,
-      text: `Listen to ${track.title} on Saem's Tunes`,
-      url: `${getBaseUrl()}/tracks/${track.id}`,
-    };
+    title: `${track.title} by ${track.profiles?.display_name || 'Unknown Artist'}`,
+    text: `Listen to ${track.title} on Saem's Tunes`,
+    url: `${getBaseUrl()}/tracks`, // Changed to /tracks
+  };
 
     try {
       if (navigator.share && navigator.canShare(shareData)) {

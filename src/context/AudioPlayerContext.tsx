@@ -1,6 +1,5 @@
 
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { useMediaState } from '@/components/idle-state/mediaStateContext';
 
 interface AudioTrack {
   id: string | number;
@@ -39,9 +38,6 @@ const AudioPlayerContext = createContext<AudioPlayerContextType | undefined>(und
 const MEMORY_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // ✅ MUST BE AT THE TOP - BEFORE ANY OTHER LOGIC
-  const { setMediaPlaying } = useMediaState();
-
   const [state, setState] = useState<AudioPlayerState>({
     currentTrack: null,
     isPlaying: false,
@@ -64,6 +60,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         const parsedState = JSON.parse(savedState);
         const now = Date.now();
         
+        // Check if memory should be cleared (5 minutes passed)
         if (parsedState.lastPlayedTimestamp && (now - parsedState.lastPlayedTimestamp) > MEMORY_DURATION) {
           localStorage.removeItem('audioPlayerState');
           return;
@@ -72,7 +69,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setState(prevState => ({
           ...prevState,
           ...parsedState,
-          isPlaying: false,
+          isPlaying: false, // Never auto-play on load
         }));
       } catch (error) {
         console.error('Error loading audio player state:', error);
@@ -152,7 +149,6 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     });
 
     audio.addEventListener('ended', () => {
-      setMediaPlaying(false); // Now defined
       setState(prevState => ({
         ...prevState,
         isPlaying: false,
@@ -162,7 +158,6 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     });
 
     audio.addEventListener('error', () => {
-      setMediaPlaying(false); // Now defined
       console.error('Audio playback error');
       setState(prevState => ({
         ...prevState,
@@ -174,7 +169,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const playTrack = (track: AudioTrack, startTime: number = 0) => {
-    setMediaPlaying(true);
+    // If it's the same track, just resume
     if (state.currentTrack?.id === track.id && audioRef.current) {
       audioRef.current.currentTime = startTime || state.lastPlayedTime;
       audioRef.current.play().catch(console.error);
@@ -185,6 +180,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       return;
     }
 
+    // New track
     setState(prevState => ({
       ...prevState,
       currentTrack: track,
@@ -207,7 +203,6 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const pauseTrack = () => {
-    setMediaPlaying(false);
     if (audioRef.current) {
       audioRef.current.pause();
       setState(prevState => ({
@@ -219,7 +214,6 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const resumeTrack = () => {
-    setMediaPlaying(true);
     if (audioRef.current) {
       audioRef.current.play().then(() => {
         setState(prevState => ({
@@ -231,7 +225,6 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const stopTrack = () => {
-    setMediaPlaying(false);
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
@@ -278,7 +271,6 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const clearPlayer = () => {
-    setMediaPlaying(false);
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.remove();

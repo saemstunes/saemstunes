@@ -17,7 +17,6 @@ import { useToast } from '@/hooks/use-toast';
 import { usePermissionRequest } from '@/lib/permissionsHelper';
 import { useAudioPlayer } from '@/context/AudioPlayerContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useMediaState } from '@/components/idle-state/mediaStateContext';
 
 interface AudioPlayerProps {
   src: string;
@@ -50,7 +49,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   showControls = true,
   compact = false
 }) => {
-  const { setMediaPlaying } = useMediaState();
   const [isRepeat, setIsRepeat] = useState(false);
   const [isShuffle, setIsShuffle] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -60,11 +58,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const { toast } = useToast();
   const { requestPermissionWithFeedback } = usePermissionRequest();
   const { state, playTrack, pauseTrack, resumeTrack, seek, setVolume, toggleMute } = useAudioPlayer();
-
-   // Add this useEffect to handle external state changes
-  useEffect(() => {
-    setMediaPlaying(state.isPlaying);
-  }, [state.isPlaying, setMediaPlaying]);
 
   // Create track object
   const track = {
@@ -402,7 +395,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       </div>
 
       {/* Custom CSS for extra small screens */}
-      <style>{`
+      <style jsx>{`
         @media (max-width: 475px) {
           .xs\\:block { display: block !important; }
           .xs\\:flex { display: flex !important; }

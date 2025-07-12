@@ -94,9 +94,9 @@ if (difficulty) {
 query = query.eq('difficulty', difficulty);
 }
 
-    // Filter by access level (only show quizzes user has access to)
-    const accessLevels = getAccessibleLevels(userAccessLevel);
-    query = query.in('access_level', accessLevels as any);
+// Filter by access level (only show quizzes user has access to)
+const accessLevels = getAccessibleLevels(userAccessLevel);
+query = query.in('access_level', accessLevels);
 
 const { data, error: fetchError } = await query;
 
@@ -110,11 +110,11 @@ setLoading(false);
 return;
 }
 
-    setAvailableQuizzes(data as any);
+setAvailableQuizzes(data);
 
-    // Randomly select a quiz from available options
-    const randomQuiz = data[Math.floor(Math.random() * data.length)];
-    selectQuiz(randomQuiz as any);
+// Randomly select a quiz from available options
+const randomQuiz = data[Math.floor(Math.random() * data.length)];
+selectQuiz(randomQuiz);
 
 } catch (err) {
 console.error('Error fetching quizzes:', err);
