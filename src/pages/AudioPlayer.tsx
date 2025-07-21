@@ -51,6 +51,22 @@ const AudioPlayerPage = () => {
   const { setMediaPlaying } = useMediaState();
   const [showMetadataPrompt, setShowMetadataPrompt] = useState(false);
 
+
+  // Add this useEffect to handle page visibility
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        setMediaPlaying(false);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [setMediaPlaying]);
+
   // Add this RIGHT at the top of your AudioPlayerPage component
 const ErrorFallback = ({ error }) => {
   return (
@@ -71,21 +87,6 @@ const ErrorFallback = ({ error }) => {
   );
 };
   
-
-  // Add this useEffect to handle page visibility
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        setMediaPlaying(false);
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [setMediaPlaying]);
   
   const SALAMA_TRACK = {
     id: 'featured',
