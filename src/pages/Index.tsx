@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -5,7 +6,8 @@ import MainLayout from "@/components/layout/MainLayout";
 import DashboardStats from "@/components/dashboard/DashboardStats";
 import RecommendedContent from "@/components/dashboard/RecommendedContent";
 import UpcomingBookings from "@/components/dashboard/UpcomingBookings";
-import SocialMediaContainer from "@/components/social/SocialMediaContainer";
+import SocialMediaFeed from "@/components/social/SocialMediaFeed";
+import FourPointerSection from "@/components/homepage/FourPointerSection";
 import InstrumentSelector from "@/components/ui/InstrumentSelector";
 import MusicToolsCarousel from "@/components/ui/MusicToolsCarousel";
 import { Button } from "@/components/ui/button";
@@ -13,7 +15,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Helmet } from "react-helmet";
 import { 
-  Music, PlayCircle, Star, BookOpen, Calendar, 
+  Music, PlayCircle, Star, Calendar, 
   Headphones, Heart, Play, Share, RotateCw, 
   Users, TrendingUp, Zap
 } from "lucide-react";
@@ -21,6 +23,7 @@ import { ResponsiveImage } from "@/components/ui/responsive-image";
 import CountUp from "@/components/tracks/CountUp";
 import { motion } from "framer-motion";
 import { useWindowSize } from "@uidotdev/usehooks";
+import { AudioStorageManager } from "@/utils/audioStorageManager";
 
 // Constants
 const STATS = [
@@ -30,67 +33,19 @@ const STATS = [
   { icon: Star, label: "5-Star Reviews", value: 98 }
 ];
 
+// Simplified Quick Actions (reduced from previous version)
 const QUICK_ACTIONS = [
-  { 
-    icon: BookOpen, 
-    title: "Learning Hub", 
-    description: "Access courses, tutorials, and structured learning paths",
-    path: "/learning-hub"
-  },
   { 
     icon: Calendar, 
     title: "Book Sessions", 
-    description: "Schedule one-on-one lessons with expert instructors",
+    description: "Schedule lessons with expert instructors",
     path: "/bookings"
   },
   { 
     icon: Users, 
     title: "Join Community", 
-    description: "Connect with fellow musicians and share your journey",
+    description: "Connect with fellow musicians",
     path: "/community"
-  }
-];
-
-const FEATURED_TRACKS = [
-  {
-    id: 'pale-ulipo',
-    imageSrc: "https://i.imgur.com/VfKXMyG.png",
-    title: "Pale Ulipo",
-    artist: "Saem's Tunes",
-    plays: 2543,
-    likes: 189,
-    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Cover_Tracks/Pale%20Ulipo%20cover.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvQ292ZXJfVHJhY2tzL1BhbGUgVWxpcG8gY292ZXIubTRhIiwiaWF0IjoxNzQ5OTYwMjQ1LCJleHAiOjE3ODE0OTYyNDV9.3vv7kkkTTw2uRXG_HEItaCZ5xC6dbgcucC-PYjJKXLA",
-    description: "Beautiful acoustic cover with heartfelt vocals"
-  },
-  {
-    id: 'i-need-you-more',
-    imageSrc: "https://i.imgur.com/6yr8BpG.jpeg",
-    title: "I Need You More",
-    artist: "Saem's Tunes",
-    plays: 1876,
-    likes: 156,
-    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/I%20Need%20You%20More.wav",
-    description: "Soulful acoustic performance"
-  },
-  {
-    id: 'ni-hai',
-    imageSrc: "https://i.imgur.com/LJQDADg.jpeg",
-    title: "Ni Hai",
-    artist: "Saem's Tunes ft. Kendin Konge",
-    plays: 3421,
-    likes: 267,
-    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/Ni%20Hai%20(Demo)%20-%20Saem's%20Tunes%20(OFFICIAL%20MUSIC%20VIDEO)%20(128kbit_AAC).m4a",
-    description: "Original composition with powerful message"
-  },
-  {
-    id: 'mapenzi-ya-ajabu',
-    imageSrc: "https://i.imgur.com/wrm7LI1.jpeg",
-    title: "Mapenzi Ya Ajabu",
-    artist: "Saem's Tunes",
-    plays: 2198,
-    likes: 203,
-    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/Mapenzi%20Ya%20Ajabu%20(Demo)%20-%20Saem's%20Tunes%20(OFFICIAL%20MUSIC%20VIDEO)%20(128kbit_AAC).m4a",
-    description: "Inspiring original about amazing love"
   }
 ];
 
@@ -111,9 +66,13 @@ const useShuffledTracks = (count: number, interval: number) => {
   const [shuffledTracks, setShuffledTracks] = useState<any[]>([]);
 
   useEffect(() => {
-    const shuffleAndSelectTracks = () => {
-      const shuffled = [...FEATURED_TRACKS].sort(() => 0.5 - Math.random());
-      setShuffledTracks(shuffled.slice(0, count));
+    const shuffleAndSelectTracks = async () => {
+      try {
+        const tracks = await AudioStorageManager.getShuffledTracks(count);
+        setShuffledTracks(tracks);
+      } catch (error) {
+        console.error('Error fetching shuffled tracks:', error);
+      }
     };
 
     shuffleAndSelectTracks();
@@ -150,7 +109,7 @@ const HomeHero = ({ onExploreTracks, onTryTools }) => (
           className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 group"
         >
           <Music className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
-          Explore Tracks
+          Discover Music
         </Button>
         <Button 
           size="lg" 
@@ -195,12 +154,12 @@ const TrackCard = ({ track, onPlay, onShare }) => (
   <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-105">
     <CardContent className="p-4">
       <div className="relative mb-4 aspect-square">
-  <img
-    src={track.imageSrc}
-    alt={track.title}
-    className="w-full h-full object-cover rounded-lg"
-  />
-       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-lg flex items-center justify-center">
+        <img
+          src={track.cover_art_url || track.imageSrc}
+          alt={track.title}
+          className="w-full h-full object-cover rounded-lg"
+        />
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-lg flex items-center justify-center">
           <Button
             size="icon"
             className="opacity-0 group-hover:opacity-100 transition-opacity bg-primary hover:bg-primary/90"
@@ -219,11 +178,11 @@ const TrackCard = ({ track, onPlay, onShare }) => (
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1">
               <Headphones className="h-3 w-3" />
-              <CountUp to={track.plays} separator="," />
+              <CountUp to={track.play_count || track.plays || 0} separator="," />
             </span>
             <span className="flex items-center gap-1">
               <Heart className="h-3 w-3" />
-              <CountUp to={track.likes} separator="," />
+              <CountUp to={track.likes || 0} separator="," />
             </span>
           </div>
           
@@ -289,7 +248,7 @@ const QuickActionCard = ({ icon: Icon, title, description, path }) => (
 );
 
 const QuickActionsSection = () => (
-  <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+  <section className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
     {QUICK_ACTIONS.map((action, index) => (
       <motion.div
         key={action.title}
@@ -347,15 +306,20 @@ const Index = () => {
     setShowInstrumentSelector(false);
   };
 
-  const handlePlayTrack = (track: any) => {
+  const handlePlayTrack = async (track: any) => {
+    // Track play analytics
+    if (track.id && track.id !== 'featured-fallback') {
+      await AudioStorageManager.trackPlay(track.id, user?.id);
+    }
+    
     navigate(`/audio-player/${track.id}`, {
       state: {
         track: {
           id: track.id,
-          src: track.audioSrc,
+          src: track.audio_url || track.audioSrc,
           name: track.title,
           artist: track.artist,
-          artwork: track.imageSrc,
+          artwork: track.cover_art_url || track.imageSrc,
           album: 'Featured'
         }
       }
@@ -402,46 +366,52 @@ const Index = () => {
         <div className="min-h-screen bg-background overflow-x-hidden">
           <OrientationHint />
 
-          {/* Main content container with max-width */}
+          {/* Main content container with proper responsive width */}
           <div className="w-full max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="space-y-6 sm:space-y-8 px-4 sm:px-6">
-            <HomeHero 
-              onExploreTracks={() => navigate('/tracks')}
-              onTryTools={() => navigate('/music-tools')}
-            />
-            
-            <StatsSection />
-            
-            <FeaturedTracksSection 
-              tracks={featuredTracks}
-              onPlayTrack={handlePlayTrack}
-              onShareTrack={handleShareTrack}
-            />
-            
-            <QuickActionsSection />
-            
-            {/* Music Tools Carousel */}
-            <section>
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">
-                Try Our Music Tools
-              </h2>
-              <MusicToolsCarousel />
-            </section>
-            
-            <SocialMediaContainer />
-            
-            {/* Dashboard Components for Authenticated Users */}
-            {user && (
-              <>
-                <DashboardStats />
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-                  <RecommendedContent />
-                  <UpcomingBookings />
+            <div className="space-y-6 sm:space-y-8">
+              <HomeHero 
+                onExploreTracks={() => navigate('/tracks')}
+                onTryTools={() => navigate('/music-tools')}
+              />
+              
+              <StatsSection />
+              
+              <FeaturedTracksSection 
+                tracks={featuredTracks}
+                onPlayTrack={handlePlayTrack}
+                onShareTrack={handleShareTrack}
+              />
+              
+              <QuickActionsSection />
+              
+              {/* Four Pointer Section */}
+              <FourPointerSection />
+              
+              {/* Music Tools Carousel */}
+              <section>
+                <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">
+                  Try Our Music Tools
+                </h2>
+                <div className="overflow-hidden">
+                  <MusicToolsCarousel />
                 </div>
-              </>
-            )}
-            
-             {/* Final CTA with proper container */}
+              </section>
+              
+              {/* Social Media Feed */}
+              <SocialMediaFeed />
+              
+              {/* Dashboard Components for Authenticated Users */}
+              {user && (
+                <>
+                  <DashboardStats />
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+                    <RecommendedContent />
+                    <UpcomingBookings />
+                  </div>
+                </>
+              )}
+              
+              {/* Final CTA with proper container */}
               <section className="py-12 bg-gradient-to-r from-primary/10 via-purple-500/5 to-primary/10 rounded-xl">
                 <div className="max-w-3xl mx-auto text-center px-4">
                   <h2 className="text-2xl sm:text-3xl font-bold mb-4">
@@ -463,7 +433,7 @@ const Index = () => {
                       size="lg" 
                       variant="outline"
                       className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-6 sm:px-8 group"
-                      onClick={() => navigate('/pricing')}
+                      onClick={() => navigate('/subscriptions')}
                     >
                       <Star className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
                       View Premium
@@ -478,4 +448,5 @@ const Index = () => {
     </>
   );
 };
+
 export default Index;
