@@ -74,8 +74,8 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <PlaylistProvider>
         <MediaStateProvider>
-          <PlaylistProvider>
           <AudioPlayerProvider>
             <TooltipProvider>
               <Toaster />
@@ -156,11 +156,11 @@ const App = () => {
                   <Route path="*" element={<NotFound />} />
                 </Routes>
                 <GlobalMiniPlayer />
-              </BrowserRouter>
-            </TooltipProvider>
-          </AudioPlayerProvider>
-          </PlaylistProvider>  
-        </MediaStateProvider>
+                </BrowserRouter>
+              </TooltipProvider>
+            </AudioPlayerProvider>
+          </MediaStateProvider>
+        </PlaylistProvider> 
       </AuthProvider>
     </QueryClientProvider>
   );
