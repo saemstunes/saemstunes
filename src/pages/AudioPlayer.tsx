@@ -363,8 +363,10 @@ const ErrorFallback = ({ error }) => {
   }
 
   return (
-    <ErrorBoundary FallbackComponent={ErrorFallback}>
+    
     <>
+
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
       <Helmet>
         <title>{`${trackData.name} - Audio Player - Saem's Tunes`}</title>
         <meta name="description" content={`Listen to ${trackData.name} by ${trackData.artist}`} />
