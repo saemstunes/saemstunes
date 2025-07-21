@@ -8,6 +8,8 @@ import MainLayout from "@/components/layout/MainLayout";
 import DashboardStats from "@/components/dashboard/DashboardStats";
 import RecommendedContent from "@/components/dashboard/RecommendedContent";
 import UpcomingBookings from "@/components/dashboard/UpcomingBookings";
+import FourPointerSection from "@/components/homepage/FourPointerSection";
+import SocialMediaFeed from "@/components/social/SocialMediaFeed";
 import { mockSubscriptionPlans } from "@/data/mockData";
 import PricingCard from "@/components/subscription/PricingCard";
 import { motion } from "framer-motion";
@@ -39,25 +41,17 @@ const LandingPage = () => {
     },
   ];
 
-  // Updated variant and colors for better light mode contrast
-  const getSubscriptionPlanVariant = (index: number, plan: any) => {
-    if (index === 1) return "default"; // Middle plan is already good
-    
-    // Use light variant for side plans in light mode for better contrast
-    return "outline";
-  };
-
   return (
     <motion.div 
-      className="min-h-screen"
+      className="min-h-screen overflow-x-hidden"
       {...pageTransition}
     >
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 px-6 md:py-32 text-center">
+      <section className="relative overflow-hidden py-12 md:py-20 px-4 md:px-6 text-center">
         <div className="absolute inset-0 music-note-pattern opacity-10 z-0"></div>
-        <div className="relative z-10 max-w-3xl mx-auto">
+        <div className="relative z-10 max-w-4xl mx-auto">
           <motion.h1 
-            className="text-4xl md:text-6xl font-serif font-bold"
+            className="text-3xl md:text-5xl lg:text-6xl font-serif font-bold mb-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -65,7 +59,7 @@ const LandingPage = () => {
             Unlock Your <span className="text-gold">Musical</span> Potential
           </motion.h1>
           <motion.p 
-            className="mt-6 text-lg text-muted-foreground"
+            className="mt-4 text-base md:text-lg text-muted-foreground max-w-2xl mx-auto"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
@@ -73,14 +67,14 @@ const LandingPage = () => {
             Saem's Tunes provides comprehensive music education with expert tutors, rich content, and a supportive community to help you grow as a musician.
           </motion.p>
           <motion.div 
-            className="mt-10 flex flex-col sm:flex-row gap-4 justify-center"
+            className="mt-8 flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
           >
             <Button 
               size="lg"
-              className="bg-gold hover:bg-gold-dark text-white"
+              className="bg-gold hover:bg-gold-dark text-white flex-1"
               onClick={() => navigate("/signup")}
             >
               Get Started
@@ -89,6 +83,7 @@ const LandingPage = () => {
             <Button 
               size="lg"
               variant="outline"
+              className="flex-1"
               onClick={() => navigate("/videos")}
             >
               Explore Lessons
@@ -98,12 +93,12 @@ const LandingPage = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-16 bg-muted/30">
-        <div className="container px-4">
-          <h2 className="text-3xl font-serif font-bold text-center mb-12">
+      <section className="py-12 bg-muted/30">
+        <div className="container px-4 max-w-6xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-serif font-bold text-center mb-8 md:mb-12">
             Why Choose <span className="text-gold">Saem's Tunes</span>
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((feature, index) => (
               <motion.div 
                 key={index} 
@@ -117,23 +112,37 @@ const LandingPage = () => {
                   {feature.icon}
                 </div>
                 <h3 className="text-lg font-medium mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
+                <p className="text-muted-foreground text-sm">{feature.description}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Pricing Section - Updated for better light mode contrast */}
-      <section className="py-16">
-        <div className="container px-4">
-          <h2 className="text-3xl font-serif font-bold text-center mb-4">
+      {/* Four Pointer Section */}
+      <section className="py-12">
+        <div className="container px-4 max-w-6xl mx-auto">
+          <FourPointerSection />
+        </div>
+      </section>
+
+      {/* Social Media Section */}
+      <section className="py-12 bg-muted/20">
+        <div className="container px-4 max-w-6xl mx-auto">
+          <SocialMediaFeed />
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="py-12">
+        <div className="container px-4 max-w-6xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-serif font-bold text-center mb-4">
             Subscription Plans
           </h2>
-          <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-center mb-8 md:mb-12 max-w-2xl mx-auto">
             Choose a plan that works for you and start your musical journey today. All plans include access to our community and support.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {mockSubscriptionPlans.map((plan, index) => (
               <motion.div
                 key={plan.id}
@@ -141,11 +150,12 @@ const LandingPage = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.2 }}
                 whileHover={{ y: -8, transition: { duration: 0.3 } }}
+                className="h-full"
               >
                 <PricingCard 
                   plan={plan} 
-                  variant={getSubscriptionPlanVariant(index, plan)}
-                  className={index !== 1 ? "shadow-lg border-gold/40 dark:border-gold/20" : ""}
+                  variant={index !== 1 ? "outline" : "default"}
+                  className="h-full"
                 />
               </motion.div>
             ))}
@@ -154,10 +164,10 @@ const LandingPage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-gold/10">
-        <div className="container px-4 text-center">
+      <section className="py-12 bg-gold/10">
+        <div className="container px-4 max-w-4xl mx-auto text-center">
           <motion.h2 
-            className="text-3xl font-serif font-bold mb-6"
+            className="text-2xl md:text-3xl font-serif font-bold mb-4 md:mb-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -165,7 +175,7 @@ const LandingPage = () => {
             Ready to Start Your Musical Journey?
           </motion.h2>
           <motion.p 
-            className="text-muted-foreground mb-8 max-w-2xl mx-auto"
+            className="text-muted-foreground mb-6 md:mb-8 max-w-2xl mx-auto"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
@@ -199,7 +209,7 @@ const Dashboard = () => {
   if (!user) return null;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 px-4">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-3xl font-serif font-bold">Welcome, {user.name}</h1>
         <Button
