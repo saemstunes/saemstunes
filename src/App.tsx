@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 import { AuthProvider } from "@/context/AuthContext";
 import { AudioPlayerProvider } from "@/context/AudioPlayerContext";
 import { MediaStateProvider } from '@/components/idle-state/mediaStateContext';
-import { PlaylistProvider } from '@/contexts/PlaylistContext';
+import { PlaylistProvider } from '@/context/PlaylistContext';
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import SplashScreen from "@/components/ui/splash-screen";
 import GlobalMiniPlayer from "@/components/player/GlobalMiniPlayer";
