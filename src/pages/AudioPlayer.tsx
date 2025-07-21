@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import AudioPlayer from '@/components/media/AudioPlayer';
+import { ArtistMetadataManager } from '@/components/artists/ArtistMetadataManager';
 import { useMediaState } from '@/components/idle-state/mediaStateContext';
 import {
   DropdownMenu,
@@ -47,6 +48,15 @@ const AudioPlayerPage = () => {
   const [loading, setLoading] = useState(true);
   const [imageLoaded, setImageLoaded] = useState(false);
   const { setMediaPlaying } = useMediaState();
+  const [showMetadataPrompt, setShowMetadataPrompt] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowMetadataPrompt(true);
+    }, 30000); // Show after 30s of playback
+    
+    return () => clearTimeout(timer);
+  }, [currentTrack]);
 
   // Add this useEffect to handle page visibility
   useEffect(() => {
@@ -469,6 +479,11 @@ const AudioPlayerPage = () => {
                       onError={handleAudioError}
                     />
                   )}
+
+                  {showMetadataPrompt && (
+                    <ArtistMetadataManager trackId={currentTrack.id} />
+                  )}
+                  
                 </div>
               </CardContent>
             </Card>
