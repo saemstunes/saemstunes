@@ -209,7 +209,6 @@ const InteractiveGuitar: React.FC = () => {
     onSwipedDown: (eventData) => handleStrum('down', eventData),
     onSwipedUp: (eventData) => handleStrum('up', eventData),
     delta: 20,
-    preventDefaultTouchmoveEvent: true,
     trackTouch: true,
     trackMouse: true,
   });

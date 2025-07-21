@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 interface SampleTrack {
@@ -122,23 +121,12 @@ export const migrateSampleTracksToSupabase = async (userId: string) => {
 
       return {
         title: track.title,
-        description: `${track.subtitle} by ${track.handle} • Duration: ${track.duration}`,
+        description: `${track.subtitle} by ${track.handle} • Duration: ${track.duration} • Category: ${category} • Video: ${track.videoUrl || ''} • Colors: ${track.primaryColor}, ${track.secondaryColor}`,
         audio_path: track.audioUrl,
         cover_path: track.image,
         access_level: 'free' as const,
         user_id: userId,
-        approved: true,
-        metadata: {
-          category,
-          subtitle: track.subtitle,
-          handle: track.handle,
-          duration: track.duration,
-          videoUrl: track.videoUrl,
-          youtubeUrl: track.youtubeUrl,
-          primaryColor: track.primaryColor,
-          secondaryColor: track.secondaryColor,
-          backgroundGradient: track.backgroundGradient,
-        }
+        approved: true
       };
     });
 
@@ -235,32 +223,31 @@ export const updateTrackCategories = async () => {
   try {
     const { data: tracks, error } = await supabase
       .from('tracks')
-      .select('id, title, description')
-      .is('metadata', null);
+      .select('id, title, description');
 
     if (error) throw error;
 
     if (tracks) {
       const updates = tracks.map(track => {
         const description = track.description || '';
-        let category = 'personal_playlist';
+        let categoryInfo = 'Category: personal_playlist';
         
         if (description.toLowerCase().includes('cover')) {
-          category = 'covers';
+          categoryInfo = 'Category: covers';
         } else if (description.toLowerCase().includes('original') || description.includes('@saemstunes')) {
-          category = 'originals_by_saems_tunes';
+          categoryInfo = 'Category: originals_by_saems_tunes';
         }
 
         return {
           id: track.id,
-          metadata: { category }
+          description: `${description} • ${categoryInfo}`
         };
       });
 
       for (const update of updates) {
         await supabase
           .from('tracks')
-          .update({ metadata: update.metadata })
+          .update({ description: update.description })
           .eq('id', update.id);
       }
 

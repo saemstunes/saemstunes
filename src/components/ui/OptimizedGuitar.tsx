@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Pause, Volume2, VolumeX, Settings, RotateCcw } from 'lucide-react';
@@ -126,7 +125,6 @@ const OptimizedGuitar: React.FC = () => {
     onSwipedDown: (eventData) => handleStrum('down', eventData),
     onSwipedUp: (eventData) => handleStrum('up', eventData),
     delta: 20,
-    preventDefaultTouchmoveEvent: true,
     trackTouch: true,
     trackMouse: true,
   });

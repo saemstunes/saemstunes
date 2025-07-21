@@ -224,7 +224,6 @@ const Index = () => {
 
   // PRESERVED ORIGINAL SHARE FUNCTIONALITY
   const handleShareTrack = async (track: any) => {
-    const handleShareTrack = async (track: any) => {
     const shareData = {
       title: `${track.title} by ${track.artist}`,
       text: `Listen to ${track.title} on Saem's Tunes`,
@@ -298,7 +297,7 @@ const Index = () => {
               
               {user && (
                 <>
-                  <DashboardStats />
+                  <DashboardStats role={user?.user_metadata?.role || 'student'} />
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
                     <RecommendedContent />
                     <UpcomingBookings />
@@ -342,4 +341,110 @@ const Index = () => {
       </MainLayout>
     </>
   );
+};
+
+export default Index;
+
+// Example usage:
+const FEATURED_TRACKS = [
+  {
+    id: 'featured-1',
+    title: "Pale Ulipo",
+    artist: "Saem's Tunes",
+    imageSrc: "https://i.imgur.com/VfKXMyG.png",
+    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Cover_Tracks/Pale%20Ulipo%20cover.m4a",
+    likes: 2543,
+    plays: 15420
+  },
+  {
+    id: 'featured-2',
+    title: "I Need You More",
+    artist: "Saem's Tunes",
+    imageSrc: "https://i.imgur.com/6yr8BpG.jpeg",
+    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/I%20Need%20You%20More.wav",
+    likes: 1876,
+    plays: 12847
+  },
+  {
+    id: 'featured-3',
+    title: "Ni Hai",
+    artist: "Saem's Tunes ft. Kendin Konge",
+    imageSrc: "https://i.imgur.com/LJQDADg.jpeg",
+    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/Ni%20Hai%20(Demo)%20-%20Saem's%20Tunes%20(OFFICIAL%20MUSIC%20VIDEO)%20(128kbit_AAC).m4a",
+    likes: 3421,
+    plays: 22127
+  },
+  {
+    id: 'featured-4',
+    title: "Mapenzi Ya Ajabu",
+    artist: "Saem's Tunes",
+    imageSrc: "https://i.imgur.com/wrm7LI1.jpeg",
+    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/Mapenzi%20Ya%20Ajabu%20(Demo)%20-%20Saem's%20Tunes%20(OFFICIAL%20MUSIC%20VIDEO)%20(128kbit_AAC).m4a",
+    likes: 2198,
+    plays: 18954
+  }
+];
+
+const StatsSection = () => (
+  <section className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+    {STATS.map((stat, index) => (
+      <Card key={index} className="bg-card text-card-foreground shadow-md">
+        <CardContent className="flex flex-col items-center justify-center p-3 sm:p-4 space-y-2">
+          <stat.icon className="h-6 w-6 text-muted-foreground" />
+          <div className="text-2xl font-bold"><CountUp to={stat.value} separator="," /></div>
+          <div className="text-sm text-muted-foreground">{stat.label}</div>
+        </CardContent>
+      </Card>
+    ))}
+  </section>
+);
+
+const FeaturedTracksSection = ({ tracks, onPlayTrack, onShareTrack }) => (
+  <section>
+    <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">
+      Featured Tracks
+    </h2>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+      {tracks.map(track => (
+        <TrackCard
+          key={track.id}
+          track={track}
+          onPlay={onPlayTrack}
+          onShare={onShareTrack}
+        />
+      ))}
+    </div>
+  </section>
+);
+
+const QuickActionsSection = () => (
+  <section className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+    {QUICK_ACTIONS.map((action, index) => (
+      <Card key={index} className="bg-card text-card-foreground shadow-md hover:shadow-lg transition-shadow duration-300">
+        <CardContent className="flex flex-col items-start justify-start p-4 space-y-3">
+          <action.icon className="h-5 w-5 text-primary" />
+          <h3 className="text-lg font-semibold">{action.title}</h3>
+          <p className="text-sm text-muted-foreground">{action.description}</p>
+          <Link to={action.path} className="text-sm text-primary hover:underline">
+            Learn More
+          </Link>
+        </CardContent>
+      </Card>
+    ))}
+  </section>
+);
+
+const OrientationHint = () => {
+  const { isMobile, isLandscape } = useWindowOrientation();
+
+  if (isMobile && !isLandscape) {
+    return (
+      <div className="fixed top-0 left-0 w-full h-full bg-black/70 backdrop-blur-md z-50 flex flex-col items-center justify-center text-white">
+        <RotateCw className="h-12 w-12 animate-spin-slow mb-4" />
+        <p className="text-lg font-semibold">Please rotate your device for the best experience.</p>
+      </div>
+    );
+  }
+
+  return null;
 };
