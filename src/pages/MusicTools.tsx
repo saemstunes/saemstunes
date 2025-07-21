@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useWindowSize } from "@uidotdev/usehooks";
-import OptimizedGuitar from "@/components/ui/OptimizedGuitar";
+import InteractiveGuitar from "@/components/ui/InteractiveGuitar";
 import InteractivePiano from "@/components/ui/InteractivePiano";
 import Metronome from "@/components/music-tools/Metronome";
 import PitchFinder from "@/components/music-tools/PitchFinder";
@@ -46,7 +46,7 @@ const MUSIC_TOOLS = [
     name: 'Interactive Guitar',
     icon: Guitar,
     description: 'Practice chords and strumming patterns',
-    component: OptimizedGuitar,
+    component: InteractiveGuitar,
     category: 'instruments',
     minWidth: 600,
     recommendedOrientation: 'landscape'
