@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { useAudioPlayer } from "@/context/AudioPlayerContext";
 import MainLayout from "@/components/layout/MainLayout";
 import DashboardStats from "@/components/dashboard/DashboardStats";
 import RecommendedContent from "@/components/dashboard/RecommendedContent";
 import UpcomingBookings from "@/components/dashboard/UpcomingBookings";
 import SocialMediaContainer from "@/components/social/SocialMediaContainer";
-import FourPointerSection from "@/components/homepage/FourPointerSection"; // NEW
+import FourPointerSection from "@/components/homepage/FourPointerSection";
 import InstrumentSelector from "@/components/ui/InstrumentSelector";
 import MusicToolsCarousel from "@/components/ui/MusicToolsCarousel";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ import { ResponsiveImage } from "@/components/ui/responsive-image";
 import CountUp from "@/components/tracks/CountUp";
 import { motion } from "framer-motion";
 import { useWindowSize } from "@uidotdev/usehooks";
-import { AudioStorageManager } from "@/utils/audioStorageManager"; // NEW
+import { AudioStorageManager } from "@/utils/audioStorageManager";
 
 // Constants - PRESERVE ORIGINAL STRUCTURE
 const STATS = [
@@ -32,7 +33,7 @@ const STATS = [
   { icon: Star, label: "5-Star Reviews", value: 98 }
 ];
 
-const QUICK_ACTIONS = [  // KEEP ORIGINAL 3 ACTIONS
+const QUICK_ACTIONS = [
   { 
     icon: BookOpen, 
     title: "Learning Hub", 
@@ -117,7 +118,7 @@ const HomeHero = ({ onExploreTracks, onTryTools }) => (
           className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 group"
         >
           <Music className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
-          Discover Music {/* UPDATED TEXT */}
+          Discover Music
         </Button>
         <Button 
           size="lg" 
@@ -186,9 +187,13 @@ const TrackCard = ({ track, onPlay, onShare }) => (
 
 const Index = () => {
   const { user } = useAuth();
+  const { state } = useAudioPlayer();
   const navigate = useNavigate();
   const { isMobile, isLandscape } = useWindowOrientation();
   const [showInstrumentSelector, setShowInstrumentSelector] = useState(false);
+  
+  // Fix: Use currentTrack from audio player context
+  const currentTrack = state.currentTrack;
   
   // IMPROVED TRACK FETCHING
   const featuredTracks = useShuffledTracks(4, 30000);
@@ -196,6 +201,13 @@ const Index = () => {
   useEffect(() => {
     setShowInstrumentSelector(isMobile && isLandscape);
   }, [isMobile, isLandscape]);
+
+  useEffect(() => {
+    const M = setTimeout(() => {
+      // Auto-shuffle timeout logic here
+    }, 30000);
+    return () => clearTimeout(M);
+  }, [currentTrack]); // Now currentTrack is properly defined
 
   const handleInstrumentSelect = (instrument: string) => {
     navigate(`/music-tools?tool=${instrument}`);
@@ -235,7 +247,6 @@ const Index = () => {
         await navigator.share(shareData);
       } else {
         await navigator.clipboard.writeText(shareData.url);
-        // Show toast notification in a real implementation
       }
     } catch (error) {
       console.error('Error sharing:', error);
@@ -279,20 +290,17 @@ const Index = () => {
               
               <QuickActionsSection />
               
-              {/* NEW COMPONENT ADDED */}
               <FourPointerSection />
               
-              {/* IMPROVED TOOLS CAROUSEL CONTAINER */}
               <section>
                 <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">
                   Try Our Music Tools
                 </h2>
-                <div className="overflow-hidden"> {/* ADDED WRAPPER */}
+                <div className="overflow-hidden">
                   <MusicToolsCarousel />
                 </div>
               </section>
               
-              {/* PRESERVED ORIGINAL SOCIAL COMPONENT */}
               <SocialMediaContainer />
               
               {user && (
@@ -305,7 +313,6 @@ const Index = () => {
                 </>
               )}
               
-              {/* FINAL CTA WITH IMPROVED LINKING */}
               <section className="py-12 bg-gradient-to-r from-primary/10 via-purple-500/5 to-primary/10 rounded-xl">
                 <div className="max-w-3xl mx-auto text-center px-4">
                   <h2 className="text-2xl sm:text-3xl font-bold mb-4">
@@ -327,7 +334,7 @@ const Index = () => {
                       size="lg" 
                       variant="outline"
                       className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-6 sm:px-8 group"
-                      onClick={() => navigate('/pricing')} // PRESERVED ORIGINAL LINK
+                      onClick={() => navigate('/pricing')}
                     >
                       <Star className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
                       View Premium
@@ -345,7 +352,6 @@ const Index = () => {
 
 export default Index;
 
-// Example usage:
 const FEATURED_TRACKS = [
   {
     id: 'featured-1',
