@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { Track } from '@/types/music';
 
 interface Playlist {
   id: string;
@@ -79,7 +80,7 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     setState(prev => ({
       ...prev,
-      currentPlaylist: playlistData,
+      currentPlaylist: playlistData ? { ...playlistData, track_count: fullTracks?.length || 0 } : null,
       queue: fullTracks || [],
       currentIndex: 0,
       playHistory: [],

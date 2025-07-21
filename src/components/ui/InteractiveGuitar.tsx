@@ -216,7 +216,7 @@ const InteractiveGuitar: React.FC = () => {
   useEffect(() => {
     const initAudio = async () => {
       try {
-        const context = new (window.AContext || (window as any).webkitAudioContext)();
+        const context = new ((window as any).AudioContext || (window as any).webkitAudioContext)();
         const gainNode = context.createGain();
         const compressor = context.createDynamicsCompressor();
         

@@ -49,6 +49,7 @@ const AudioPlayerPage = () => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const { setMediaPlaying } = useMediaState();
   const [showMetadataPrompt, setShowMetadataPrompt] = useState(false);
+  const [currentTrack, setCurrentTrack] = useState(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -480,7 +481,7 @@ const AudioPlayerPage = () => {
                     />
                   )}
 
-                  {showMetadataPrompt && (
+                  {showMetadataPrompt && currentTrack && (
                     <ArtistMetadataManager trackId={currentTrack.id} />
                   )}
                   

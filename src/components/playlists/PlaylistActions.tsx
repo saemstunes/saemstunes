@@ -1,4 +1,5 @@
 // src/components/playlists/PlaylistActions.tsx
+import { useState } from 'react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Plus, ListMusic, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';

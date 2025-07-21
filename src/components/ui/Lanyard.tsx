@@ -72,7 +72,7 @@ function Band({ maxSpeed = 50, minSpeed = 0, artistImage }: BandProps) {
   const rot = new THREE.Vector3();
   const dir = new THREE.Vector3();
   
-  const segmentProps = { type: 'dynamic', canSleep: true, colliders: false, angularDamping: 4, linearDamping: 4 };
+  const segmentProps = { type: 'dynamic' as const, canSleep: true, colliders: false as const, angularDamping: 4, linearDamping: 4 };
   
   // For now, using basic geometries instead of GLB until assets are added
   const texture = useTexture(lanyardTexture);
@@ -171,9 +171,9 @@ function Band({ maxSpeed = 50, minSpeed = 0, artistImage }: BandProps) {
             position={[0, -1.2, -0.05]}
             onPointerOver={() => hover(true)}
             onPointerOut={() => hover(false)}
-            onPointerUp={(e) => (e.target.releasePointerCapture(e.pointerId), drag(false))}
+            onPointerUp={(e) => ((e.target as any).releasePointerCapture(e.pointerId), drag(false))}
             onPointerDown={(e) => (
-              e.target.setPointerCapture(e.pointerId), 
+              (e.target as any).setPointerCapture(e.pointerId), 
               drag(new THREE.Vector3().copy(e.point).sub(vec.copy(card.current.translation())))
             )}
           >
@@ -210,15 +210,18 @@ function Band({ maxSpeed = 50, minSpeed = 0, artistImage }: BandProps) {
       
       {/* Lanyard String */}
       <mesh ref={band}>
-        <meshLineGeometry />
-        <meshLineMaterial
-          color="white"
-          depthTest={false}
-          resolution={isSmall ? [1000, 2000] : [1000, 1000]}
-          useMap
-          map={texture}
-          repeat={[-4, 1]}
-          lineWidth={1}
+        <primitive object={new MeshLineGeometry()} attach="geometry" />
+        <primitive 
+          object={new MeshLineMaterial({
+            color: "white",
+            depthTest: false,
+            resolution: isSmall ? [1000, 2000] : [1000, 1000],
+            useMap: true,
+            map: texture,
+            repeat: [-4, 1],
+            lineWidth: 1
+          })} 
+          attach="material" 
         />
       </mesh>
     </>

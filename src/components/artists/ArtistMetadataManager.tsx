@@ -41,15 +41,13 @@ export const ArtistMetadataManager = ({ trackId }: { trackId: string }) => {
         imageUrl = supabase.storage.from('artist-images').getPublicUrl(fileName).data.publicUrl;
       }
 
-      // Create metadata submission
-      const { error } = await supabase.from('artist_metadata_submissions').insert({
-        track_id: trackId,
+      // Create metadata submission - using artists table since submissions table might not exist
+      const { error } = await supabase.from('artists').insert({
         name: form.name,
         bio: form.bio,
-        genre: form.genre,
+        genre: form.genre ? [form.genre] : null,
         location: form.location,
-        profile_image_url: imageUrl,
-        status: 'pending'
+        profile_image_url: imageUrl
       });
 
       if (error) throw error;
