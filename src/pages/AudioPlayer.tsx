@@ -17,13 +17,13 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import AudioPlayer from '@/components/media/AudioPlayer';
-import { ResponsiveImage } from '@/components/ui/responsive-image';
+import { useMediaState } from '@/components/idle-state/mediaStateContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/components/ui/dropdown-menu'; // Fixed import path
 
 interface AudioTrack {
   id: string | number;
@@ -45,42 +45,60 @@ const AudioPlayerPage = () => {
   const [audioError, setAudioError] = useState(false);
   const [trackData, setTrackData] = useState<AudioTrack | null>(null);
   const [loading, setLoading] = useState(true);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const { setMediaPlaying } = useMediaState();
+
+  // Add this useEffect to handle page visibility
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        setMediaPlaying(false);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [setMediaPlaying]);
+  
   const SALAMA_TRACK = {
-  id: 'featured',
-  src: 'https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Cover%20Art/Salama%20-%20Saem%20x%20Simali.mp3',
-  name: 'Salama (DEMO)',
-  artist: "Saem's Tunes ft. Evans Simali",
-  artwork: 'https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Cover%20Art/salama-featured.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvQ292ZXIgQXJ0L3NhbGFtYS1mZWF0dXJlZC5qcGciLCJpYXQiOjE3NDk5NTMwNTksImV4cCI6MTc4MTQ4OTA1OX0.KtKlRXxj5z5KzzbnTDWd9oRVbztRHwioGA0YN1Xjn4Q',
-  album: 'NaombAoH'
-};
+    id: 'featured',
+    src: 'https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Cover%20Art/Salama%20-%20Saem%20x%20Simali.mp3',
+    name: 'Salama (DEMO)',
+    artist: "Saem's Tunes ft. Evans Simali",
+    artwork: 'https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Cover%20Art/salama-featured.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvQ292ZXIgQXJ0L3NhbGFtYS1mZWF0dXJlZC5qcGciLCJpYXQiOjE3NDk5NTMwNTksImV4cCI6MTc4MTQ4OTA1OX0.KtKlRXxj5z5KzzbnTDWd9oRVbztRHwioGA0YN1Xjn4Q',
+    album: 'NaombAoH'
+  };
   
   // Update the useEffect hook
-useEffect(() => {
-  // If we're on the featured route, set Salama as default
-  if (id === 'featured') {
-    setTrackData(SALAMA_TRACK);
-    setLoading(false);
-    return;
-  }
-  
-  // Existing logic for other tracks
-  if (location.state?.track) {
-    setTrackData(location.state.track);
-    setLoading(false);
-  } else if (id) {
-    fetchTrackData(id);
-  } else {
-    setTrackData({
-      id: 1,
-      src: '/audio/sample.mp3',
-      name: 'Sample Track',
-      artist: 'Sample Artist',
-      artwork: '/placeholder.svg',
-      album: 'Sample Album'
-    });
-    setLoading(false);
-  }
-}, [id, location.state]);
+  useEffect(() => {
+    // If we're on the featured route, set Salama as default
+    if (id === 'featured') {
+      setTrackData(SALAMA_TRACK);
+      setLoading(false);
+      return;
+    }
+    
+    // Existing logic for other tracks
+    if (location.state?.track) {
+      setTrackData(location.state.track);
+      setLoading(false);
+    } else if (id) {
+      fetchTrackData(id);
+    } else {
+      setTrackData({
+        id: 1,
+        src: '/audio/sample.mp3',
+        name: 'Sample Track',
+        artist: 'Sample Artist',
+        artwork: '/placeholder.svg',
+        album: 'Sample Album'
+      });
+      setLoading(false);
+    }
+  }, [id, location.state]);
 
   const fetchTrackData = async (trackId: string) => {
     try {
@@ -134,6 +152,7 @@ useEffect(() => {
       setLoading(false);
     }
   };
+  
 
   const checkIfLiked = async () => {
     if (!user || !trackData) return;
@@ -345,18 +364,26 @@ useEffect(() => {
               <CardContent className="p-6 md:p-8">
                 {/* Album Artwork and Info */}
                 <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mb-8">
-                  {/* Artwork */}
-                  <div className="flex-shrink-0 mx-auto lg:mx-0">
-                    <div className="relative group">
-                      <ResponsiveImage
+                  {/* Artwork - Updated with aspect-ratio fix */}
+                  <div className="flex-shrink-0 mx-auto lg:mx-0 w-full max-w-[320px]">
+                    <div className="relative group aspect-square">
+                      {/* Image with aspect-ratio control */}
+                      <img
                         src={trackData.artwork || '/placeholder.svg'}
                         alt={trackData.name}
-                        width={320}
-                        height={320}
-                        mobileWidth={280}
-                        mobileHeight={280}
-                        className="w-80 h-80 md:w-80 md:h-80 sm:w-72 sm:h-72 rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300"
+                        className={cn(
+                          "w-full h-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300",
+                          !imageLoaded && "opacity-0"
+                        )}
+                        onLoad={() => setImageLoaded(true)}
                       />
+                      
+                      {/* Loading placeholder */}
+                      {!imageLoaded && (
+                        <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-2xl" />
+                      )}
+                      
+                      {/* Gradient overlay */}
                       <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
                   </div>
