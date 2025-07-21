@@ -49,15 +49,7 @@ const AudioPlayerPage = () => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const { setMediaPlaying } = useMediaState();
   const [showMetadataPrompt, setShowMetadataPrompt] = useState(false);
-  const [currentTrack, setCurrentTrack] = useState(null);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowMetadataPrompt(true);
-    }, 30000); // Show after 30s of playback
-    
-    return () => clearTimeout(timer);
-  }, [currentTrack]);
+  
 
   // Add this useEffect to handle page visibility
   useEffect(() => {
