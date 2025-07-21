@@ -72,13 +72,7 @@ function Band({ maxSpeed = 50, minSpeed = 0, artistImage }: BandProps) {
   const rot = new THREE.Vector3();
   const dir = new THREE.Vector3();
   
-  const segmentProps = { 
-    type: 'dynamic' as const, 
-    canSleep: true, 
-    colliders: false as const, 
-    angularDamping: 4, 
-    linearDamping: 4 
-  };
+  const segmentProps = { type: 'dynamic', canSleep: true, colliders: false, angularDamping: 4, linearDamping: 4 };
   
   // For now, using basic geometries instead of GLB until assets are added
   const texture = useTexture(lanyardTexture);
@@ -177,20 +171,11 @@ function Band({ maxSpeed = 50, minSpeed = 0, artistImage }: BandProps) {
             position={[0, -1.2, -0.05]}
             onPointerOver={() => hover(true)}
             onPointerOut={() => hover(false)}
-            onPointerUp={(e) => {
-              const target = e.target as any;
-              if (target.releasePointerCapture) {
-                target.releasePointerCapture(e.pointerId);
-              }
-              drag(false);
-            }}
-            onPointerDown={(e) => {
-              const target = e.target as any;
-              if (target.setPointerCapture) {
-                target.setPointerCapture(e.pointerId);
-              }
-              drag(new THREE.Vector3().copy(e.point).sub(vec.copy(card.current.translation())));
-            }}
+            onPointerUp={(e) => (e.target.releasePointerCapture(e.pointerId), drag(false))}
+            onPointerDown={(e) => (
+              e.target.setPointerCapture(e.pointerId), 
+              drag(new THREE.Vector3().copy(e.point).sub(vec.copy(card.current.translation())))
+            )}
           >
             {/* Artist Image Card - Using basic geometry until GLB is added */}
             <mesh>

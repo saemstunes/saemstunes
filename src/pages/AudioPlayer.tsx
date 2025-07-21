@@ -1,85 +1,346 @@
-
-import React, { useState, useEffect } from "react";
-import { useParams, useLocation } from "react-router-dom";
-import { useAudioPlayer } from "@/context/AudioPlayerContext";
-import MainLayout from "@/components/layout/MainLayout";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { 
-  Play, Pause, SkipBack, SkipForward, Volume2, 
-  Heart, Share2, Download, Repeat, Shuffle
-} from "lucide-react";
+  ArrowLeft,
+  Heart,
+  Share,
+  MoreHorizontal,
+  Download,
+  Plus
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import MainLayout from '@/components/layout/MainLayout';
+import { Helmet } from 'react-helmet';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import AudioPlayer from '@/components/media/AudioPlayer';
+import { ArtistMetadataManager } from '@/components/artists/ArtistMetadataManager';
+import { useMediaState } from '@/components/idle-state/mediaStateContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'; // Fixed import path
 
-const AudioPlayer = () => {
+interface AudioTrack {
+  id: string | number;
+  src: string;
+  name: string;
+  artist?: string;
+  artwork?: string;
+  album?: string;
+}
+
+const AudioPlayerPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const location = useLocation();
-  const { state, dispatch } = useAudioPlayer();
-  const [currentTrack, setCurrentTrack] = useState(null);
+  const { toast } = useToast();
+  const { user } = useAuth();
   const [isLiked, setIsLiked] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [audioError, setAudioError] = useState(false);
+  const [trackData, setTrackData] = useState<AudioTrack | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const { setMediaPlaying } = useMediaState();
+  const [showMetadataPrompt, setShowMetadataPrompt] = useState(false);
 
   useEffect(() => {
-    // Get track from location state or audio player context
-    const track = location.state?.track || state.currentTrack;
-    setCurrentTrack(track);
+    const timer = setTimeout(() => {
+      setShowMetadataPrompt(true);
+    }, 30000); // Show after 30s of playback
     
-    if (track && track.id === id) {
-      // Track is already loaded in the audio player
-      console.log('Track loaded:', track);
-    }
-  }, [id, location.state, state.currentTrack]);
+    return () => clearTimeout(timer);
+  }, [currentTrack]);
 
-  const handlePlayPause = () => {
-    if (state.isPlaying) {
-      dispatch({ type: 'PAUSE' });
+  // Add this useEffect to handle page visibility
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        setMediaPlaying(false);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [setMediaPlaying]);
+  
+  const SALAMA_TRACK = {
+    id: 'featured',
+    src: 'https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Cover%20Art/Salama%20-%20Saem%20x%20Simali.mp3',
+    name: 'Salama (DEMO)',
+    artist: "Saem's Tunes ft. Evans Simali",
+    artwork: 'https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Cover%20Art/salama-featured.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvQ292ZXIgQXJ0L3NhbGFtYS1mZWF0dXJlZC5qcGciLCJpYXQiOjE3NDk5NTMwNTksImV4cCI6MTc4MTQ4OTA1OX0.KtKlRXxj5z5KzzbnTDWd9oRVbztRHwioGA0YN1Xjn4Q',
+    album: 'NaombAoH'
+  };
+  
+  // Update the useEffect hook
+  useEffect(() => {
+    // If we're on the featured route, set Salama as default
+    if (id === 'featured') {
+      setTrackData(SALAMA_TRACK);
+      setLoading(false);
+      return;
+    }
+    
+    // Existing logic for other tracks
+    if (location.state?.track) {
+      setTrackData(location.state.track);
+      setLoading(false);
+    } else if (id) {
+      fetchTrackData(id);
     } else {
-      dispatch({ type: 'PLAY' });
+      setTrackData({
+        id: 1,
+        src: '/audio/sample.mp3',
+        name: 'Sample Track',
+        artist: 'Sample Artist',
+        artwork: '/placeholder.svg',
+        album: 'Sample Album'
+      });
+      setLoading(false);
+    }
+  }, [id, location.state]);
+
+  const fetchTrackData = async (trackId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('tracks')
+        .select(`
+          *,
+          profiles:user_id (
+            display_name,
+            avatar_url
+          )
+        `)
+        .eq('id', trackId)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        const audioUrl = data.audio_path ? 
+          supabase.storage.from('tracks').getPublicUrl(data.audio_path).data.publicUrl : '';
+        
+        const coverUrl = data.cover_path ? 
+          supabase.storage.from('tracks').getPublicUrl(data.cover_path).data.publicUrl : '';
+
+        setTrackData({
+          id: data.id,
+          src: audioUrl,
+          name: data.title,
+          artist: data.profiles?.display_name || 'Unknown Artist',
+          artwork: coverUrl || '/placeholder.svg',
+          album: 'Single'
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching track:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load track data",
+        variant: "destructive",
+      });
+      // Fallback to default data
+      setTrackData({
+        id: 1,
+        src: '/audio/sample.mp3',
+        name: 'Sample Track',
+        artist: 'Sample Artist',
+        artwork: '/placeholder.svg',
+        album: 'Sample Album'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+
+  const checkIfLiked = async () => {
+    if (!user || !trackData) return;
+    
+    const { data } = await supabase
+      .from('likes')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('track_id', String(trackData.id))
+      .single();
+    
+    setIsLiked(!!data);
+  };
+
+  const checkIfSaved = async () => {
+    if (!user || !trackData) return;
+    
+    const { data } = await supabase
+      .from('favorites')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('content_id', String(trackData.id))
+      .eq('content_type', 'track')
+      .single();
+    
+    setIsSaved(!!data);
+  };
+
+  const toggleLike = async () => {
+    if (!user) {
+      toast({
+        title: "Sign In Required",
+        description: "Please sign in to like tracks",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!trackData) return;
+    
+    if (isLiked) {
+      await supabase
+        .from('likes')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('track_id', String(trackData.id));
+      setIsLiked(false);
+      toast({
+        title: "Removed from favorites",
+        description: "Track removed from your favorites",
+      });
+    } else {
+      await supabase
+        .from('likes')
+        .insert({ user_id: user.id, track_id: String(trackData.id) });
+      setIsLiked(true);
+      toast({
+        title: "Added to favorites",
+        description: "Track added to your favorites",
+      });
     }
   };
 
-  const handlePrevious = () => {
-    dispatch({ type: 'PREVIOUS' });
-  };
+  const toggleSave = async () => {
+    if (!user) {
+      toast({
+        title: "Sign In Required",
+        description: "Please sign in to save tracks",
+        variant: "destructive",
+      });
+      return;
+    }
 
-  const handleNext = () => {
-    dispatch({ type: 'NEXT' });
-  };
-
-  const handleSeek = (value: number[]) => {
-    const seekTime = value[0];
-    dispatch({ type: 'SEEK', payload: seekTime });
-  };
-
-  const handleVolumeChange = (value: number[]) => {
-    const volume = value[0] / 100;
-    dispatch({ type: 'SET_VOLUME', payload: volume });
-  };
-
-  const toggleLike = () => {
-    setIsLiked(!isLiked);
+    if (!trackData) return;
+    
+    if (isSaved) {
+      await supabase
+        .from('favorites')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('content_id', String(trackData.id))
+        .eq('content_type', 'track');
+      setIsSaved(false);
+      toast({
+        title: "Removed from saved",
+        description: "Track removed from your saved songs",
+      });
+    } else {
+      await supabase
+        .from('favorites')
+        .insert({ 
+          user_id: user.id, 
+          content_id: String(trackData.id),
+          content_type: 'track'
+        });
+      setIsSaved(true);
+      toast({
+        title: "Added to saved",
+        description: "Track added to your saved songs",
+      });
+    }
   };
 
   const handleShare = async () => {
-    if (currentTrack && navigator.share) {
-      try {
-        await navigator.share({
-          title: currentTrack.name,
-          text: `Listen to ${currentTrack.name} by ${currentTrack.artist}`,
-          url: window.location.href,
+    if (!trackData) return;
+
+    const shareData = {
+      title: `${trackData.name} by ${trackData.artist}`,
+      text: `Listen to ${trackData.name} on Saem's Tunes`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareData.url);
+        toast({
+          title: "Link copied",
+          description: "Track link copied to clipboard",
         });
-      } catch (error) {
-        console.error('Share failed:', error);
       }
+    } catch (error) {
+      console.error('Error sharing:', error);
+      toast({
+        title: "Share failed",
+        description: "Unable to share track",
+        variant: "destructive",
+      });
     }
   };
 
-  if (!currentTrack) {
+  const handleDownload = () => {
+    toast({
+      title: "Download feature",
+      description: "Download functionality will be available for premium users",
+    });
+  };
+
+  const handleAddToPlaylist = () => {
+    toast({
+      title: "Add to playlist",
+      description: "Playlist functionality coming soon",
+    });
+  };
+
+  // Handle audio errors
+  const handleAudioError = () => {
+    setAudioError(true);
+    toast({
+      title: "Audio Error",
+      description: "Unable to load the audio player. Please try refreshing the page.",
+      variant: "destructive",
+    });
+  };
+
+  if (loading) {
     return (
       <MainLayout>
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background flex items-center justify-center">
           <div className="text-center">
-            <h2 className="text-2xl font-bold mb-4">Track Not Found</h2>
-            <p className="text-muted-foreground">The requested track could not be loaded.</p>
+            <div className="h-8 w-8 rounded-full border-2 border-t-transparent border-gold animate-spin mx-auto mb-4"></div>
+            <p>Loading track...</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (!trackData) {
+    return (
+      <MainLayout>
+        <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold mb-4">Track not found</h2>
+            <Button onClick={() => navigate('/tracks')}>
+              Back to Tracks
+            </Button>
           </div>
         </div>
       </MainLayout>
@@ -87,138 +348,150 @@ const AudioPlayer = () => {
   }
 
   return (
-    <MainLayout>
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted p-4">
-        <div className="max-w-4xl mx-auto">
-          {/* Album Art and Track Info */}
-          <Card className="mb-8">
-            <CardContent className="p-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                <div className="aspect-square rounded-lg overflow-hidden bg-muted">
-                  {currentTrack.artwork ? (
-                    <img 
-                      src={currentTrack.artwork} 
-                      alt={currentTrack.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                      <Volume2 className="h-16 w-16" />
+    <>
+      <Helmet>
+        <title>{`${trackData.name} - Audio Player - Saem's Tunes`}</title>
+        <meta name="description" content={`Listen to ${trackData.name} by ${trackData.artist}`} />
+      </Helmet>
+      
+      <MainLayout>
+        <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background">
+          <div className="container mx-auto px-4 py-8 max-w-4xl">
+            {/* Header */}
+            <div className="flex items-center gap-4 mb-8">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate(-1)}
+                className="h-10 w-10"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <h1 className="text-2xl font-bold">Now Playing</h1>
+            </div>
+
+            <Card className="overflow-hidden bg-gradient-to-b from-card to-card/80 border-gold/20 shadow-2xl">
+              <CardContent className="p-6 md:p-8">
+                {/* Album Artwork and Info */}
+                <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mb-8">
+                  {/* Artwork - Updated with aspect-ratio fix */}
+                  <div className="flex-shrink-0 mx-auto lg:mx-0 w-full max-w-[320px]">
+                    <div className="relative group aspect-square">
+                      {/* Image with aspect-ratio control */}
+                      <img
+                        src={trackData.artwork || '/placeholder.svg'}
+                        alt={trackData.name}
+                        className={cn(
+                          "w-full h-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300",
+                          !imageLoaded && "opacity-0"
+                        )}
+                        onLoad={() => setImageLoaded(true)}
+                      />
+                      
+                      {/* Loading placeholder */}
+                      {!imageLoaded && (
+                        <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-2xl" />
+                      )}
+                      
+                      {/* Gradient overlay */}
+                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
-                  )}
-                </div>
-                
-                <div className="space-y-4">
-                  <div>
-                    <h1 className="text-3xl font-bold">{currentTrack.name}</h1>
-                    <p className="text-xl text-muted-foreground">{currentTrack.artist}</p>
-                    {currentTrack.album && (
-                      <p className="text-lg text-muted-foreground">{currentTrack.album}</p>
-                    )}
                   </div>
-                  
-                  {/* Action Buttons */}
-                  <div className="flex items-center gap-4">
-                    <Button
-                      size="icon"
-                      variant={isLiked ? "default" : "outline"}
-                      onClick={toggleLike}
-                    >
-                      <Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
-                    </Button>
-                    
-                    <Button size="icon" variant="outline" onClick={handleShare}>
-                      <Share2 className="h-4 w-4" />
-                    </Button>
-                    
-                    <Button size="icon" variant="outline">
-                      <Download className="h-4 w-4" />
-                    </Button>
+
+                  {/* Track Info */}
+                  <div className="flex flex-col justify-center space-y-6 flex-1 text-center lg:text-left">
+                    <div>
+                      <h2 className="text-3xl md:text-4xl font-bold mb-3 text-foreground">{trackData.name}</h2>
+                      <p className="text-xl md:text-2xl text-muted-foreground mb-2">{trackData.artist}</p>
+                      {trackData.album && (
+                        <p className="text-lg text-muted-foreground/80">{trackData.album}</p>
+                      )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center justify-center lg:justify-start gap-4 flex-wrap">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={toggleLike}
+                        className={cn(
+                          "h-12 w-12",
+                          isLiked ? "text-red-500" : "text-muted-foreground"
+                        )}
+                      >
+                        <Heart className={cn("h-6 w-6", isLiked && "fill-current")} />
+                      </Button>
+                      
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleShare}
+                        className="h-12 w-12 text-muted-foreground hover:text-foreground"
+                      >
+                        <Share className="h-6 w-6" />
+                      </Button>
+                      
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-12 w-12 text-muted-foreground hover:text-foreground"
+                          >
+                            <MoreHorizontal className="h-6 w-6" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={toggleSave}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            {isSaved ? 'Remove from saved' : 'Save track'}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={handleAddToPlaylist}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add to playlist
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={handleDownload}>
+                            <Download className="mr-2 h-4 w-4" />
+                            Download
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* Player Controls */}
-          <Card>
-            <CardContent className="p-6">
-              {/* Progress Bar */}
-              <div className="space-y-2 mb-6">
-                <Progress 
-                  value={(state.currentTime / state.duration) * 100} 
-                  className="cursor-pointer"
-                  onClick={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const percent = (e.clientX - rect.left) / rect.width;
-                    handleSeek([percent * state.duration]);
-                  }}
-                />
-                <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>{formatTime(state.currentTime)}</span>
-                  <span>{formatTime(state.duration)}</span>
-                </div>
-              </div>
-
-              {/* Control Buttons */}
-              <div className="flex items-center justify-center gap-4 mb-6">
-                <Button size="icon" variant="outline">
-                  <Shuffle className="h-4 w-4" />
-                </Button>
-                
-                <Button size="icon" variant="outline" onClick={handlePrevious}>
-                  <SkipBack className="h-5 w-5" />
-                </Button>
-                
-                <Button 
-                  size="lg" 
-                  className="h-16 w-16 rounded-full"
-                  onClick={handlePlayPause}
-                >
-                  {state.isPlaying ? (
-                    <Pause className="h-6 w-6" />
+                {/* Audio Player */}
+                <div className="space-y-6">
+                  {audioError ? (
+                    <div className="text-center py-12">
+                      <p className="text-muted-foreground mb-4">Unable to load audio player</p>
+                      <Button onClick={() => window.location.reload()}>
+                        Try Again
+                      </Button>
+                    </div>
                   ) : (
-                    <Play className="h-6 w-6 ml-1" />
+                    <AudioPlayer
+                      src={trackData.src}
+                      title={trackData.name}
+                      artist={trackData.artist}
+                      artwork={trackData.artwork}
+                      className="bg-transparent border-0 shadow-none"
+                      onError={handleAudioError}
+                    />
                   )}
-                </Button>
-                
-                <Button size="icon" variant="outline" onClick={handleNext}>
-                  <SkipForward className="h-5 w-5" />
-                </Button>
-                
-                <Button size="icon" variant="outline">
-                  <Repeat className="h-4 w-4" />
-                </Button>
-              </div>
 
-              {/* Volume Control */}
-              <div className="flex items-center gap-4 justify-center">
-                <Volume2 className="h-4 w-4" />
-                <div className="w-32">
-                  <Progress 
-                    value={state.volume * 100}
-                    className="cursor-pointer"
-                    onClick={(e) => {
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      const percent = (e.clientX - rect.left) / rect.width;
-                      handleVolumeChange([percent * 100]);
-                    }}
-                  />
+                  {showMetadataPrompt && (
+                    <ArtistMetadataManager trackId={currentTrack.id} />
+                  )}
+                  
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
-    </MainLayout>
+      </MainLayout>
+    </>
   );
 };
 
-// Helper function to format time
-const formatTime = (seconds: number) => {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
-};
-
-export default AudioPlayer;
+export default AudioPlayerPage;

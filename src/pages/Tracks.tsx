@@ -19,7 +19,6 @@ import TiltedCard from "@/components/tracks/TiltedCard";
 import CountUp from "@/components/tracks/CountUp";
 import { ResponsiveImage } from "@/components/ui/responsive-image";
 import { useNavigate } from "react-router-dom";
-import PlaylistActions from "@/components/playlists/PlaylistActions";
 
 interface Track {
   id: string;

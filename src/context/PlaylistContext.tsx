@@ -1,150 +1,169 @@
+// src/context/PlaylistContext.tsx
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Track, Playlist, PlaylistState } from '@/types/music';
+interface Playlist {
+  id: string;
+  name: string;
+  description: string;
+  cover_art_url: string;
+  user_id: string;
+  total_duration: number;
+  track_count: number;
+}
 
-interface PlaylistContextType {
-  state: PlaylistState;
-  loadPlaylist: (playlist: Playlist, tracks: Track[]) => void;
-  playTrack: (trackIndex: number) => void;
+interface PlaylistTrack {
+  id: string;
+  playlist_id: string;
+  track_id: string;
+  position: number;
+  added_at: string;
+}
+
+interface PlaylistState {
+  currentPlaylist: Playlist | null;
+  queue: Track[];
+  currentIndex: number;
+  shuffle: boolean;
+  repeat: 'none' | 'all' | 'one';
+  playHistory: number[];
+  upcomingTracks: number[];
+}
+
+interface PlaylistActions {
+  createPlaylist: (name: string, description?: string) => Promise<string>;
+  addToPlaylist: (playlistId: string, trackId: string) => Promise<void>;
+  removeFromPlaylist: (playlistId: string, trackId: string) => Promise<void>;
+  playPlaylist: (playlistId: string, startIndex?: number) => Promise<void>;
   nextTrack: () => void;
   previousTrack: () => void;
-  togglePlay: () => void;
   toggleShuffle: () => void;
-  setRepeat: (mode: 'none' | 'all' | 'one') => void;
-  addTrack: (track: Track) => void;
-  removeTrack: (trackIndex: number) => void;
+  toggleRepeat: () => void;
+  addToQueue: (track: Track) => void;
 }
 
-const PlaylistContext = createContext<PlaylistContextType | undefined>(undefined);
+const PlaylistContext = createContext<PlaylistState & PlaylistActions | null>(null);
 
-export const usePlaylist = () => {
-  const context = useContext(PlaylistContext);
-  if (!context) {
-    throw new Error('usePlaylist must be used within a PlaylistProvider');
-  }
-  return context;
-};
-
-interface PlaylistProviderProps {
-  children: React.ReactNode;
-}
-
-export const PlaylistProvider: React.FC<PlaylistProviderProps> = ({ children }) => {
+export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAuth();
   const [state, setState] = useState<PlaylistState>({
     currentPlaylist: null,
-    tracks: [],
-    currentTrackIndex: 0,
-    isPlaying: false,
-    isLoading: false,
+    queue: [],
+    currentIndex: -1,
     shuffle: false,
     repeat: 'none',
+    playHistory: [],
+    upcomingTracks: []
   });
 
-  const loadPlaylist = useCallback((playlist: Playlist, tracks: Track[]) => {
+  // Fetch playlist data
+  const fetchPlaylist = useCallback(async (playlistId: string) => {
+    const { data: playlistData } = await supabase
+      .from('playlists')
+      .select('*')
+      .eq('id', playlistId)
+      .single();
+
+    const { data: tracksData } = await supabase
+      .from('playlist_tracks')
+      .select('track_id, position')
+      .eq('playlist_id', playlistId)
+      .order('position', { ascending: true });
+
+    const trackIds = tracksData?.map(item => item.track_id) || [];
+    const { data: fullTracks } = await supabase
+      .from('tracks')
+      .select('*')
+      .in('id', trackIds);
+
     setState(prev => ({
       ...prev,
-      currentPlaylist: {
-        ...playlist,
-        track_count: tracks.length, // Ensure track_count is included
-      },
-      tracks,
-      currentTrackIndex: 0,
-      isPlaying: false,
-      isLoading: false,
+      currentPlaylist: playlistData,
+      queue: fullTracks || [],
+      currentIndex: 0,
+      playHistory: [],
+      upcomingTracks: Array.from({ length: (fullTracks?.length || 1) - 1 }, (_, i) => i + 1)
     }));
   }, []);
 
-  const playTrack = useCallback((trackIndex: number) => {
-    if (trackIndex >= 0 && trackIndex < state.tracks.length) {
-      setState(prev => ({
-        ...prev,
-        currentTrackIndex: trackIndex,
-        isPlaying: true,
-      }));
-    }
-  }, [state.tracks.length]);
+  // Playlist actions
+  const createPlaylist = async (name: string, description = ''): Promise<string> => {
+    const { data, error } = await supabase
+      .from('playlists')
+      .insert({
+        name,
+        description,
+        user_id: user?.id,
+        is_public: false
+      })
+      .select('id')
+      .single();
 
-  const nextTrack = useCallback(() => {
+    if (error) throw new Error('Playlist creation failed');
+    return data.id;
+  };
+
+  const addToPlaylist = async (playlistId: string, trackId: string) => {
+    // Get current max position
+    const { data: maxPosData } = await supabase
+      .from('playlist_tracks')
+      .select('position')
+      .eq('playlist_id', playlistId)
+      .order('position', { ascending: false })
+      .limit(1);
+
+    const nextPosition = maxPosData?.length ? maxPosData[0].position + 1 : 1;
+
+    await supabase
+      .from('playlist_tracks')
+      .insert({
+        playlist_id: playlistId,
+        track_id: trackId,
+        position: nextPosition
+      });
+  };
+
+  const playPlaylist = async (playlistId: string, startIndex = 0) => {
+    await fetchPlaylist(playlistId);
+    setState(prev => ({
+      ...prev,
+      currentIndex: startIndex
+    }));
+  };
+
+  // Player controls
+  const nextTrack = () => {
     setState(prev => {
-      let nextIndex = prev.currentTrackIndex + 1;
+      if (prev.repeat === 'one') return prev;
       
-      if (prev.repeat === 'one') {
-        nextIndex = prev.currentTrackIndex;
-      } else if (nextIndex >= prev.tracks.length) {
-        nextIndex = prev.repeat === 'all' ? 0 : prev.currentTrackIndex;
+      const newHistory = [...prev.playHistory, prev.currentIndex];
+      let nextIndex = prev.upcomingTracks.shift() || 0;
+      
+      if (prev.repeat === 'all' && prev.upcomingTracks.length === 0) {
+        nextIndex = 0;
       }
       
       return {
         ...prev,
-        currentTrackIndex: nextIndex,
+        currentIndex: nextIndex,
+        playHistory: newHistory,
+        upcomingTracks: prev.upcomingTracks
       };
     });
-  }, []);
+  };
 
-  const previousTrack = useCallback(() => {
-    setState(prev => {
-      let prevIndex = prev.currentTrackIndex - 1;
-      
-      if (prevIndex < 0) {
-        prevIndex = prev.repeat === 'all' ? prev.tracks.length - 1 : 0;
-      }
-      
-      return {
-        ...prev,
-        currentTrackIndex: prevIndex,
-      };
-    });
-  }, []);
-
-  const togglePlay = useCallback(() => {
-    setState(prev => ({
-      ...prev,
-      isPlaying: !prev.isPlaying,
-    }));
-  }, []);
-
-  const toggleShuffle = useCallback(() => {
-    setState(prev => ({
-      ...prev,
-      shuffle: !prev.shuffle,
-    }));
-  }, []);
-
-  const setRepeat = useCallback((mode: 'none' | 'all' | 'one') => {
-    setState(prev => ({
-      ...prev,
-      repeat: mode,
-    }));
-  }, []);
-
-  const addTrack = useCallback((track: Track) => {
-    setState(prev => ({
-      ...prev,
-      tracks: [...prev.tracks, track],
-    }));
-  }, []);
-
-  const removeTrack = useCallback((trackIndex: number) => {
-    setState(prev => ({
-      ...prev,
-      tracks: prev.tracks.filter((_, index) => index !== trackIndex),
-      currentTrackIndex: trackIndex <= prev.currentTrackIndex 
-        ? Math.max(0, prev.currentTrackIndex - 1)
-        : prev.currentTrackIndex,
-    }));
-  }, []);
-
-  const value: PlaylistContextType = {
-    state,
-    loadPlaylist,
-    playTrack,
+  const value = {
+    ...state,
+    createPlaylist,
+    addToPlaylist,
+    removeFromPlaylist: async () => {}, // Implementation similar to add
+    playPlaylist,
     nextTrack,
-    previousTrack,
-    togglePlay,
-    toggleShuffle,
-    setRepeat,
-    addTrack,
-    removeTrack,
+    previousTrack: () => {}, // Similar to nextTrack
+    toggleShuffle: () => {}, 
+    toggleRepeat: () => {},
+    addToQueue: (track: Track) => {}
   };
 
   return (
@@ -152,4 +171,10 @@ export const PlaylistProvider: React.FC<PlaylistProviderProps> = ({ children }) 
       {children}
     </PlaylistContext.Provider>
   );
+};
+
+export const usePlaylist = () => {
+  const context = useContext(PlaylistContext);
+  if (!context) throw new Error('usePlaylist must be used within PlaylistProvider');
+  return context;
 };

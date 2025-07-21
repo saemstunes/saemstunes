@@ -1,85 +1,59 @@
+// src/components/playlists/PlaylistActions.tsx
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { Plus, ListMusic, Play } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { usePlaylist } from '@/context/PlaylistContext';
 
-import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Play, Plus, Share2, Heart } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+export const PlaylistActions = ({ trackId }: { trackId: string }) => {
+  const { createPlaylist, addToPlaylist } = usePlaylist();
+  const [newPlaylistName, setNewPlaylistName] = useState('');
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
-interface PlaylistActionsProps {
-  playlistId: string;
-  onPlay?: () => void;
-  onAddToPlaylist?: () => void;
-  onShare?: () => void;
-  onToggleLike?: () => void;
-  isLiked?: boolean;
-}
-
-export const PlaylistActions: React.FC<PlaylistActionsProps> = ({
-  playlistId,
-  onPlay,
-  onAddToPlaylist,
-  onShare,
-  onToggleLike,
-  isLiked = false
-}) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
-
-  const handleAction = async (action: () => void) => {
-    setIsLoading(true);
-    try {
-      await action();
-    } catch (error) {
-      console.error('Playlist action failed:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleAddToNew = async () => {
+    const playlistId = await createPlaylist(newPlaylistName);
+    await addToPlaylist(playlistId, trackId);
+    setShowCreateForm(false);
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <Button
-        size="sm"
-        onClick={() => handleAction(onPlay || (() => {}))}
-        disabled={isLoading}
-        className="bg-primary hover:bg-primary/90"
-      >
-        <Play className="h-4 w-4 mr-1" />
-        Play
-      </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <Plus className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
       
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={() => handleAction(onToggleLike || (() => {}))}
-        disabled={isLoading}
-      >
-        <Heart className={`h-4 w-4 ${isLiked ? 'fill-current text-red-500' : ''}`} />
-      </Button>
-
-      <DropdownMenu open={showMenu} onOpenChange={setShowMenu}>
-        <DropdownMenuTrigger asChild>
-          <Button size="sm" variant="outline">
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <DropdownMenuItem onClick={() => handleAction(onAddToPlaylist || (() => {}))}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add to Playlist
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleAction(onShare || (() => {}))}>
-            <Share2 className="h-4 w-4 mr-2" />
-            Share
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+      <DropdownMenuContent>
+        {showCreateForm ? (
+          <div className="px-2 py-1">
+            <input
+              type="text"
+              placeholder="Playlist name"
+              value={newPlaylistName}
+              onChange={(e) => setNewPlaylistName(e.target.value)}
+              className="border rounded p-1 w-full mb-2"
+            />
+            <Button onClick={handleAddToNew} size="sm">
+              Create
+            </Button>
+          </div>
+        ) : (
+          <>
+            <DropdownMenuItem onClick={() => setShowCreateForm(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              New Playlist
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <ListMusic className="mr-2 h-4 w-4" />
+              Add to Existing
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Play className="mr-2 h-4 w-4" />
+              Play Next
+            </DropdownMenuItem>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
-
-export default PlaylistActions;
