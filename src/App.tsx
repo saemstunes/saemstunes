@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { AuthProvider } from "@/context/AuthContext";
 import { AudioPlayerProvider } from "@/context/AudioPlayerContext";
 import { MediaStateProvider } from '@/components/idle-state/mediaStateContext';
+import { PlaylistProvider } from '@/contexts/PlaylistContext';
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import SplashScreen from "@/components/ui/splash-screen";
 import GlobalMiniPlayer from "@/components/player/GlobalMiniPlayer";
@@ -74,6 +75,7 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <MediaStateProvider>
+          <PlaylistProvider>
           <AudioPlayerProvider>
             <TooltipProvider>
               <Toaster />
@@ -157,6 +159,7 @@ const App = () => {
               </BrowserRouter>
             </TooltipProvider>
           </AudioPlayerProvider>
+          </PlaylistProvider>  
         </MediaStateProvider>
       </AuthProvider>
     </QueryClientProvider>
