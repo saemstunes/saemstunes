@@ -1100,6 +1100,8 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
           </div>
         )}
 
+    <div className="flex items-center gap-2">
+      <PlaylistActions trackId={track.id} />
         <div className="flex items-center gap-4 flex-wrap">
           {user && isValidDatabaseTrack && (
             <>
@@ -1138,6 +1140,7 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
           <span className="text-xs text-muted-foreground ml-auto">
             {new Date(track.created_at).toLocaleDateString()}
           </span>
+         </div>
         </div>
       </CardContent>
     </Card>
