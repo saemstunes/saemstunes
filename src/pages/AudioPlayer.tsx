@@ -474,8 +474,8 @@ const AudioPlayerPage = () => {
                   )}
 
                   {showMetadataPrompt && trackData && (
-                    <ArtistMetadataManager trackId={trackData.id} />
-                  )}
+      <ArtistMetadataManager trackId={String(trackData.id)} />
+    )}
                 </div>
               </CardContent>
             </Card>
