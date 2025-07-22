@@ -274,7 +274,7 @@ const Index = () => {
         <div className="min-h-screen bg-background overflow-x-hidden">
           <OrientationHint />
 
-          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="w-full max-w-full md:max-w-3xl lg:max-w-5xl xl:max-w-7xl mx-auto px-4 sm:px-6">
             <div className="space-y-6 sm:space-y-8">
               <HomeHero 
                 onExploreTracks={() => navigate('/tracks')}
@@ -297,7 +297,7 @@ const Index = () => {
                 <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">
                   Try Our Music Tools
                 </h2>
-                <div className="overflow-hidden">
+                <div className="overflow-x-hidden py-2">
                   <MusicToolsCarousel />
                 </div>
               </section>
@@ -305,13 +305,13 @@ const Index = () => {
               <SocialMediaContainer />
               
               {user && (
-                <>
+                <div className="overflow-x-auto">
                   <DashboardStats role={user?.user_metadata?.role || 'student'} />
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
                     <RecommendedContent />
                     <UpcomingBookings />
                   </div>
-                </>
+                </div>
               )}
               
               <section className="py-12 bg-gradient-to-r from-primary/10 via-purple-500/5 to-primary/10 rounded-xl">
@@ -393,7 +393,7 @@ const FEATURED_TRACKS = [
 ];
 
 const StatsSection = () => (
-  <section className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+  <section className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
     {STATS.map((stat, index) => (
       <Card key={index} className="bg-card text-card-foreground shadow-md">
         <CardContent className="flex flex-col items-center justify-center p-3 sm:p-4 space-y-2">
@@ -411,7 +411,7 @@ const FeaturedTracksSection = ({ tracks, onPlayTrack, onShareTrack }: { tracks: 
     <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">
       Featured Tracks
     </h2>
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
       {tracks.map(track => (
         <TrackCard
           key={track.id}
@@ -425,7 +425,7 @@ const FeaturedTracksSection = ({ tracks, onPlayTrack, onShareTrack }: { tracks: 
 );
 
 const QuickActionsSection = () => (
-  <section className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+  <section className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
     {QUICK_ACTIONS.map((action, index) => (
       <Card key={index} className="bg-card text-card-foreground shadow-md hover:shadow-lg transition-shadow duration-300">
         <CardContent className="flex flex-col items-start justify-start p-4 space-y-3">
