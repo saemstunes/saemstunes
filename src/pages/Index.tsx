@@ -18,7 +18,7 @@ import { Helmet } from "react-helmet";
 import { 
   Music, PlayCircle, Star, BookOpen, Calendar, 
   Headphones, Heart, Play, Share, RotateCw, 
-  Users, TrendingUp, Zap
+  Users, TrendingUp, Zap, X
 } from "lucide-react";
 import { ResponsiveImage } from "@/components/ui/responsive-image";
 import CountUp from "@/components/tracks/CountUp";
@@ -443,13 +443,65 @@ const QuickActionsSection = () => (
 
 const OrientationHint = () => {
   const { isMobile, isLandscape } = useWindowOrientation();
+  const [dismissed, setDismissed] = useState(false);
 
-  if (isMobile && !isLandscape) {
+  if (isMobile && !isLandscape && !dismissed) {
     return (
-      <div className="fixed top-0 left-0 w-full h-full bg-black/70 backdrop-blur-md z-50 flex flex-col items-center justify-center text-white">
-        <RotateCw className="h-12 w-12 animate-spin-slow mb-4" />
-        <p className="text-lg font-semibold">Please rotate your device for the best experience.</p>
-      </div>
+      <motion.div 
+        className="fixed top-0 left-0 w-full h-full bg-black/90 backdrop-blur-lg z-[999] flex flex-col items-center justify-center text-white p-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div className="absolute top-6 right-6">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setDismissed(true)}
+            className="text-white hover:bg-white/20 rounded-full p-2 transition-all"
+            aria-label="Close orientation hint"
+          >
+            <X className="h-6 w-6" />
+          </Button>
+        </div>
+        
+        <motion.div
+          initial={{ scale: 0.8, rotate: -30 }}
+          animate={{ 
+            scale: 1, 
+            rotate: 0,
+            transition: { 
+              type: "spring", 
+              stiffness: 260, 
+              damping: 20 
+            }
+          }}
+          className="mb-8"
+        >
+          <RotateCw className="h-20 w-20 text-primary" />
+        </motion.div>
+        
+        <div className="text-center max-w-md space-y-4">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
+            Rotate Your Device
+          </h2>
+          <p className="text-lg">
+            For the best experience with our music tools, please rotate your device to landscape mode.
+          </p>
+          <p className="text-muted-foreground text-sm">
+            (You can close this message to continue in portrait, but some features may be limited)
+          </p>
+        </div>
+        
+        <Button
+          variant="outline"
+          onClick={() => setDismissed(true)}
+          className="mt-8 border-white/30 text-white hover:bg-white/10 hover:text-white"
+        >
+          Continue in Portrait Mode
+        </Button>
+      </motion.div>
     );
   }
 
