@@ -375,7 +375,7 @@ const FEATURED_TRACKS = [
   {
     id: 'featured-3',
     title: "Ni Hai",
-    artist: "Saem's Tunes ft. Kendin Konge",
+    artist: "Saem's Tunes ft. Kendi Nkonge",
     imageSrc: "https://i.imgur.com/LJQDADg.jpeg",
     audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/Ni%20Hai%20(Demo)%20-%20Saem's%20Tunes%20(OFFICIAL%20MUSIC%20VIDEO)%20(128kbit_AAC).m4a",
     likes: 3421,
@@ -395,7 +395,7 @@ const FEATURED_TRACKS = [
 const StatsSection = () => (
   <section className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
     {STATS.map((stat, index) => (
-      <Card key={index} className="bg-card text-card-foreground shadow-md">
+      <Card key={index} className="bg-card text-card-foreground shadow-md overflow-hidden">
         <CardContent className="flex flex-col items-center justify-center p-3 sm:p-4 space-y-2">
           <stat.icon className="h-6 w-6 text-muted-foreground" />
           <div className="text-2xl font-bold"><CountUp to={stat.value} separator="," /></div>
@@ -427,7 +427,7 @@ const FeaturedTracksSection = ({ tracks, onPlayTrack, onShareTrack }: { tracks: 
 const QuickActionsSection = () => (
   <section className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
     {QUICK_ACTIONS.map((action, index) => (
-      <Card key={index} className="bg-card text-card-foreground shadow-md hover:shadow-lg transition-shadow duration-300">
+      <Card key={index} className="bg-card text-card-foreground shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
         <CardContent className="flex flex-col items-start justify-start p-4 space-y-3">
           <action.icon className="h-5 w-5 text-primary" />
           <h3 className="text-lg font-semibold">{action.title}</h3>
