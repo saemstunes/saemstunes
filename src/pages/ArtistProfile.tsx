@@ -91,17 +91,17 @@ const ArtistProfile = () => {
             gravity={[0, -40, 0]} 
             fov={20}
             transparent={true}
-            artistImage={displayArtist.profile_image_url || displayArtist.avatar}
+            artistImage={displayArtist?.profile_image_url || displayArtist?.avatar}
           />
           
           {/* Artist Info Overlay */}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background via-background/80 to-transparent p-6 md:p-10">
             <div className="max-w-4xl mx-auto text-center">
               <h1 className="text-4xl md:text-6xl font-serif font-bold text-foreground mb-4">
-                {displayArtist.name}
+                {displayArtist?.name}
               </h1>
               <p className="text-xl text-muted-foreground mb-6">
-                {displayArtist.genre?.join(', ') || displayArtist.specialties?.join(', ') || 'Artist'}
+                {displayArtist?.genre?.join(', ') || displayArtist?.specialties?.join(', ') || 'Artist'}
               </p>
               <div className="flex items-center justify-center mb-6">
                 <Star className="h-5 w-5 text-gold fill-gold" />
@@ -120,7 +120,7 @@ const ArtistProfile = () => {
                   <Mail className="mr-2 h-4 w-4" />
                   Contact
                 </Button>
-                {displayArtist.social_links && (
+                {displayArtist?.social_links && (
                   <Button variant="outline" onClick={() => window.open(displayArtist.social_links.spotify || displayArtist.social_links.instagram, '_blank')}>
                     <ExternalLink className="mr-2 h-4 w-4" />
                     Follow
@@ -146,21 +146,21 @@ const ArtistProfile = () => {
                 <div className="md:col-span-2">
                   <h2 className="text-2xl font-medium mb-4">Biography</h2>
                   <p className="text-muted-foreground leading-relaxed">
-                    {displayArtist.bio || `${displayArtist.name} is a talented music instructor with years of experience in teaching 
-                    ${displayArtist.genre?.join(', ') || displayArtist.specialties?.join(', ')}. They are passionate about helping students reach their 
+                    {displayArtist?.bio || `${displayArtist?.name} is a talented music instructor with years of experience in teaching 
+                    ${displayArtist?.genre?.join(', ') || displayArtist?.specialties?.join(', ')}. They are passionate about helping students reach their 
                     musical potential through personalized instruction and engaging learning experiences.`}
                   </p>
                   
                   <h3 className="text-lg font-medium mt-8 mb-4">Expertise</h3>
                   <div className="flex flex-wrap gap-2">
-                    {(displayArtist.genre || displayArtist.specialties || []).map((item: string, i: number) => (
+                    {(displayArtist?.genre || displayArtist?.specialties || []).map((item: string, i: number) => (
                       <span key={i} className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
                         {item}
                       </span>
                     ))}
                   </div>
 
-                  {displayArtist.verified_status && (
+                  {displayArtist?.verified_status && (
                     <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
                       <div className="flex items-center">
                         <Star className="h-5 w-5 text-green-600 mr-2" />
@@ -179,7 +179,7 @@ const ArtistProfile = () => {
                         <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 mr-3" />
                         <div>
                           <p className="text-sm">Location</p>
-                          <p className="text-sm font-medium">{displayArtist.location || 'Global'}</p>
+                          <p className="text-sm font-medium">{displayArtist?.location || 'Global'}</p>
                         </div>
                       </div>
                       
@@ -187,7 +187,7 @@ const ArtistProfile = () => {
                         <Music className="h-4 w-4 text-muted-foreground mt-0.5 mr-3" />
                         <div>
                           <p className="text-sm">Followers</p>
-                          <p className="text-sm font-medium">{displayArtist.follower_count || '1K+'}</p>
+                          <p className="text-sm font-medium">{displayArtist?.follower_count || '1K+'}</p>
                         </div>
                       </div>
                       
@@ -210,7 +210,7 @@ const ArtistProfile = () => {
                   </div>
 
                   {/* Social Links */}
-                  {displayArtist.social_links && Object.keys(displayArtist.social_links).length > 0 && (
+                  {displayArtist?.social_links && Object.keys(displayArtist.social_links).length > 0 && (
                     <div className="bg-card rounded-lg border border-border p-6">
                       <h3 className="font-medium mb-4">Connect</h3>
                       <div className="space-y-2">
@@ -260,7 +260,7 @@ const ArtistProfile = () => {
                   Book a private or group session with this instructor
                 </p>
                 <Button 
-                  onClick={() => window.location.href = `/book/${displayArtist.id}`}
+                  onClick={() => window.location.href = `/book/${displayArtist?.id}`}
                   className="bg-gold hover:bg-gold-dark text-white"
                 >
                   View Available Times

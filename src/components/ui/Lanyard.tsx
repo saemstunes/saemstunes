@@ -3,16 +3,11 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { Canvas, extend, useFrame } from '@react-three/fiber';
-import { useGLTF, useTexture, Environment, Lightformer } from '@react-three/drei';
+import { Environment, Lightformer } from '@react-three/drei';
 import { BallCollider, CuboidCollider, Physics, RigidBody, useRopeJoint, useSphericalJoint } from '@react-three/rapier';
 import { MeshLineGeometry, MeshLineMaterial } from 'meshline';
 import * as THREE from 'three';
 import './Lanyard.css';
-
-// Note: You'll need to add these assets to your project
-// For now, using placeholder assets - replace with actual GLB and PNG files
-const cardGLB = "/placeholder-card.glb"; // Replace with actual card.glb path
-const lanyardTexture = "/placeholder-lanyard.png"; // Replace with actual lanyard.png path
 
 extend({ MeshLineGeometry, MeshLineMaterial });
 
@@ -60,22 +55,45 @@ interface BandProps {
 }
 
 function Band({ maxSpeed = 50, minSpeed = 0, artistImage }: BandProps) {
-  const band = useRef<any>();
-  const fixed = useRef<any>();
-  const j1 = useRef<any>();
-  const j2 = useRef<any>();
-  const j3 = useRef<any>();
-  const card = useRef<any>();
+  const band = useRef<THREE.Mesh>(null);
+  const fixed = useRef<any>(null);
+  const j1 = useRef<any>(null);
+  const j2 = useRef<any>(null);
+  const j3 = useRef<any>(null);
+  const card = useRef<any>(null);
   
   const vec = new THREE.Vector3();
   const ang = new THREE.Vector3();
   const rot = new THREE.Vector3();
   const dir = new THREE.Vector3();
   
-  const segmentProps = { type: 'dynamic' as const, canSleep: true, colliders: false as const, angularDamping: 4, linearDamping: 4 };
+  const segmentProps = { 
+    type: 'dynamic' as const, 
+    canSleep: true, 
+    colliders: false as const, 
+    angularDamping: 4, 
+    linearDamping: 4 
+  };
   
-  // For now, using basic geometries instead of GLB until assets are added
-  const texture = useTexture(lanyardTexture);
+  // Create simple lanyard texture
+  const [lanyardTexture] = useState(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, 256, 64);
+      ctx.fillStyle = '#cccccc';
+      for (let i = 0; i < 256; i += 16) {
+        ctx.fillRect(i, 0, 8, 64);
+      }
+    }
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    return texture;
+  });
+
   const [curve] = useState(() => new THREE.CatmullRomCurve3([
     new THREE.Vector3(), 
     new THREE.Vector3(), 
@@ -112,7 +130,7 @@ function Band({ maxSpeed = 50, minSpeed = 0, artistImage }: BandProps) {
   }, []);
 
   useFrame((state, delta) => {
-    if (dragged) {
+    if (dragged && card.current) {
       vec.set(state.pointer.x, state.pointer.y, 0.5).unproject(state.camera);
       dir.copy(vec).sub(state.camera.position).normalize();
       vec.add(dir.multiplyScalar(state.camera.position.length()));
@@ -124,7 +142,7 @@ function Band({ maxSpeed = 50, minSpeed = 0, artistImage }: BandProps) {
       });
     }
     
-    if (fixed.current) {
+    if (fixed.current && j1.current && j2.current && j3.current && band.current) {
       [j1, j2].forEach((ref) => {
         if (!ref.current.lerped) ref.current.lerped = new THREE.Vector3().copy(ref.current.translation());
         const clampedDistance = Math.max(0.1, Math.min(1, ref.current.lerped.distanceTo(ref.current.translation())));
@@ -135,16 +153,20 @@ function Band({ maxSpeed = 50, minSpeed = 0, artistImage }: BandProps) {
       curve.points[1].copy(j2.current.lerped);
       curve.points[2].copy(j1.current.lerped);
       curve.points[3].copy(fixed.current.translation());
-      band.current.geometry.setPoints(curve.getPoints(32));
       
-      ang.copy(card.current.angvel());
-      rot.copy(card.current.rotation());
-      card.current.setAngvel({ x: ang.x, y: ang.y - rot.y * 0.25, z: ang.z });
+      if (band.current.geometry && typeof band.current.geometry.setPoints === 'function') {
+        band.current.geometry.setPoints(curve.getPoints(32));
+      }
+      
+      if (card.current) {
+        ang.copy(card.current.angvel());
+        rot.copy(card.current.rotation());
+        card.current.setAngvel({ x: ang.x, y: ang.y - rot.y * 0.25, z: ang.z });
+      }
     }
   });
 
   curve.curveType = 'chordal';
-  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
 
   return (
     <>
@@ -177,7 +199,7 @@ function Band({ maxSpeed = 50, minSpeed = 0, artistImage }: BandProps) {
               drag(new THREE.Vector3().copy(e.point).sub(vec.copy(card.current.translation())))
             )}
           >
-            {/* Artist Image Card - Using basic geometry until GLB is added */}
+            {/* Artist Image Card */}
             <mesh>
               <boxGeometry args={[1.6, 2.25, 0.02]} />
               <meshPhysicalMaterial 
@@ -210,18 +232,15 @@ function Band({ maxSpeed = 50, minSpeed = 0, artistImage }: BandProps) {
       
       {/* Lanyard String */}
       <mesh ref={band}>
-        <primitive object={new MeshLineGeometry()} attach="geometry" />
-        <primitive 
-          object={new MeshLineMaterial({
-            color: "white",
-            depthTest: false,
-            resolution: isSmall ? [1000, 2000] : [1000, 1000],
-            useMap: true,
-            map: texture,
-            repeat: [-4, 1],
-            lineWidth: 1
-          })} 
-          attach="material" 
+        <meshLineGeometry />
+        <meshLineMaterial
+          color="white"
+          depthTest={false}
+          resolution={isSmall ? [1000, 2000] : [1000, 1000]}
+          useMap={true}
+          map={lanyardTexture}
+          repeat={[-4, 1]}
+          lineWidth={1}
         />
       </mesh>
     </>

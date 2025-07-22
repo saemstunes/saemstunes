@@ -35,7 +35,6 @@ interface AudioTrack {
   album?: string;
 }
 
-
 const AudioPlayerPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -340,7 +339,7 @@ const AudioPlayerPage = () => {
   }
 
   return (
-        <>
+    <>
       <Helmet>
         <title>{`${trackData.name} - Audio Player - Saem's Tunes`}</title>
         <meta name="description" content={`Listen to ${trackData.name} by ${trackData.artist}`} />
@@ -481,6 +480,7 @@ const AudioPlayerPage = () => {
           </div>
         </div>
       </MainLayout>
+    </>
   );
 };
 

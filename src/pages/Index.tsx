@@ -94,7 +94,7 @@ const useShuffledTracks = (count: number, interval: number) => {
 };
 
 // IMPROVED HERO BUTTON TEXT
-const HomeHero = ({ onExploreTracks, onTryTools }) => (
+const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void; onTryTools: () => void }) => (
   <motion.section 
     className="text-center space-y-4 py-8 sm:py-12"
     initial={{ opacity: 0, y: 20 }}
@@ -136,7 +136,7 @@ const HomeHero = ({ onExploreTracks, onTryTools }) => (
 );
 
 // IMPROVED TRACK CARD WITH ANALYTICS SUPPORT
-const TrackCard = ({ track, onPlay, onShare }) => (
+const TrackCard = ({ track, onPlay, onShare }: { track: any; onPlay: (track: any) => void; onShare: (track: any) => void }) => (
   <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-105">
     <CardContent className="p-4">
       <div className="relative mb-4 aspect-square">
@@ -193,8 +193,8 @@ const Index = () => {
   const { isMobile, isLandscape } = useWindowOrientation();
   const [showInstrumentSelector, setShowInstrumentSelector] = useState(false);
   
-  // Fix: Use currentTrack from audio player context
-  const currentTrack = state.currentTrack;
+  // Fix: Use currentTrack from audio player context with null checking
+  const currentTrack = state?.currentTrack || null;
   
   // IMPROVED TRACK FETCHING
   const featuredTracks = useShuffledTracks(4, 30000);
@@ -406,7 +406,7 @@ const StatsSection = () => (
   </section>
 );
 
-const FeaturedTracksSection = ({ tracks, onPlayTrack, onShareTrack }) => (
+const FeaturedTracksSection = ({ tracks, onPlayTrack, onShareTrack }: { tracks: any[]; onPlayTrack: (track: any) => void; onShareTrack: (track: any) => void }) => (
   <section>
     <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">
       Featured Tracks

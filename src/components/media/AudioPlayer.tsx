@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Play, 
@@ -63,8 +64,10 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
    // Add this useEffect to handle external state changes
   useEffect(() => {
-    setMediaPlaying(state.isPlaying);
-  }, [state.isPlaying, setMediaPlaying]);
+    if (state) {
+      setMediaPlaying(state.isPlaying);
+    }
+  }, [state?.isPlaying, setMediaPlaying]);
 
   // Create track object
   const track = {
@@ -75,10 +78,10 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     artwork,
   };
 
-  const isCurrentTrack = state.currentTrack?.id === track.id;
-  const isPlaying = isCurrentTrack && state.isPlaying;
-  const currentTime = isCurrentTrack ? state.currentTime : 0;
-  const duration = isCurrentTrack ? state.duration : 0;
+  const isCurrentTrack = state?.currentTrack?.id === track.id;
+  const isPlaying = isCurrentTrack && state?.isPlaying;
+  const currentTime = isCurrentTrack ? (state?.currentTime || 0) : 0;
+  const duration = isCurrentTrack ? (state?.duration || 0) : 0;
 
   useEffect(() => {
     if (autoPlay && src) {
@@ -97,7 +100,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         }
       }
       
-      const startTime = isCurrentTrack ? state.lastPlayedTime : 0;
+      const startTime = isCurrentTrack ? (state?.lastPlayedTime || 0) : 0;
       playTrack(track, startTime);
     } catch (err) {
       console.error('Error playing audio:', err);
@@ -331,13 +334,13 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
                           size="icon" 
                           onClick={toggleMute} 
                           className="h-8 w-8"
-                          title={state.isMuted ? "Unmute" : "Mute"}
+                          title={state?.isMuted ? "Unmute" : "Mute"}
                         >
-                          {state.isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                          {state?.isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
                         </Button>
                         <div className="flex-1 max-w-24">
                           <Slider
-                            value={[state.isMuted ? 0 : state.volume]} 
+                            value={[state?.isMuted ? 0 : (state?.volume || 1)]} 
                             min={0} 
                             max={1} 
                             step={0.01}
@@ -381,14 +384,14 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
                   size="icon" 
                   onClick={toggleMute} 
                   className="h-8 w-8"
-                  title={state.isMuted ? "Unmute" : "Mute"}
+                  title={state?.isMuted ? "Unmute" : "Mute"}
                 >
-                  {state.isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                  {state?.isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
                 </Button>
                 
                 <div className="w-20 lg:w-24">
                   <Slider
-                    value={[state.isMuted ? 0 : state.volume]} 
+                    value={[state?.isMuted ? 0 : (state?.volume || 1)]} 
                     min={0} 
                     max={1} 
                     step={0.01}
