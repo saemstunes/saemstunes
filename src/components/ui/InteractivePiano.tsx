@@ -620,9 +620,9 @@ const InteractivePiano: React.FC = () => {
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="absolute top-0 left-0 h-full w-80 bg-gradient-to-b from-slate-900 to-slate-800 border-r border-slate-700 shadow-2xl z-20 p-6"
+            className="absolute top-0 left-0 h-full w-80 bg-gradient-to-b from-slate-900 to-slate-800 border-r border-slate-700 shadow-2xl z-20 flex flex-col"
           >
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between p-6">
               <h3 className="text-white font-semibold text-lg flex items-center gap-2">
                 <Settings className="h-5 w-5" />
                 Piano Settings
@@ -635,114 +635,117 @@ const InteractivePiano: React.FC = () => {
               </button>
             </div>
             
-            <div className="grid grid-cols-1 gap-6">
-              <div className="space-y-4">
-                <div className="bg-white/5 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="text-white font-medium flex items-center gap-2">
-                      <Volume2 className="h-4 w-4" />
-                      Volume
-                    </label>
-                    <span className="text-primary font-mono text-sm">
-                      {Math.round(volume * 100)}%
-                    </span>
+            {/* Scrollable content container */}
+            <div className="flex-grow overflow-y-auto px-6 pb-6">
+              <div className="grid grid-cols-1 gap-6">
+                <div className="space-y-4">
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="text-white font-medium flex items-center gap-2">
+                        <Volume2 className="h-4 w-4" />
+                        Volume
+                      </label>
+                      <span className="text-primary font-mono text-sm">
+                        {Math.round(volume * 100)}%
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={volume}
+                      onChange={(e) => setVolume(parseFloat(e.target.value))}
+                      className="w-full accent-primary bg-white/10 rounded-lg"
+                    />
                   </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.1"
-                    value={volume}
-                    onChange={(e) => setVolume(parseFloat(e.target.value))}
-                    className="w-full accent-primary bg-white/10 rounded-lg"
-                  />
-                </div>
-                
-                <div className="bg-white/5 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="text-white font-medium flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      Tempo
-                    </label>
-                    <span className="text-purple-400 font-mono text-sm">
-                      {tempo} BPM
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min="60"
-                    max="200"
-                    step="10"
-                    value={tempo}
-                    onChange={(e) => setTempo(parseInt(e.target.value))}
-                    className="w-full accent-purple-500 bg-white/10 rounded-lg"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="bg-white/5 rounded-lg p-4">
-                  <label className="text-white font-medium block mb-3">Waveform</label>
-                  <select
-                    value={waveform}
-                    onChange={(e) => setWaveform(e.target.value as OscillatorType)}
-                    className="w-full bg-black/50 text-white rounded-lg px-3 py-2 border border-white/20 focus:border-blue-400 focus:outline-none"
-                  >
-                    <option value="sine">Sine (Piano-like)</option>
-                    <option value="sawtooth">Sawtooth</option>
-                    <option value="square">Square</option>
-                    <option value="triangle">Triangle</option>
-                  </select>
-                </div>
-                
-                <div className="bg-white/5 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="text-white font-medium">Octave</label>
-                    <span className="text-blue-400 font-mono text-sm">
-                      {octaveShift > 0 ? '+' : ''}{octaveShift}
-                    </span>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setOctaveShift(prev => Math.max(prev - 1, -2))}
-                      className="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 px-3 rounded-lg transition-colors font-medium"
-                      disabled={octaveShift <= -2}
-                    >
-                      ↓ Lower
-                    </button>
-                    <button
-                      onClick={() => setOctaveShift(0)}
-                      className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 py-2 px-3 rounded-lg transition-colors font-medium"
-                    >
-                      Reset
-                    </button>
-                    <button
-                      onClick={() => setOctaveShift(prev => Math.min(prev + 1, 2))}
-                      className="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 px-3 rounded-lg transition-colors font-medium"
-                      disabled={octaveShift >= 2}
-                    >
-                      ↑ Higher
-                    </button>
+                  
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="text-white font-medium flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        Tempo
+                      </label>
+                      <span className="text-purple-400 font-mono text-sm">
+                        {tempo} BPM
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="60"
+                      max="200"
+                      step="10"
+                      value={tempo}
+                      onChange={(e) => setTempo(parseInt(e.target.value))}
+                      className="w-full accent-purple-500 bg-white/10 rounded-lg"
+                    />
                   </div>
                 </div>
                 
-                <div className="bg-white/5 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <label className="text-white font-medium">Sustain Pedal</label>
-                    <button
-                      onClick={() => setSustainPedal(!sustainPedal)}
-                      className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${
-                        sustainPedal ? 'bg-primary' : 'bg-white/20'
-                      }`}
+                <div className="space-y-4">
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <label className="text-white font-medium block mb-3">Waveform</label>
+                    <select
+                      value={waveform}
+                      onChange={(e) => setWaveform(e.target.value as OscillatorType)}
+                      className="w-full bg-black/50 text-white rounded-lg px-3 py-2 border border-white/20 focus:border-blue-400 focus:outline-none"
                     >
-                      <div className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform duration-300 ${
-                        sustainPedal ? 'translate-x-7' : 'translate-x-0'
-                      }`} />
-                    </button>
+                      <option value="sine">Sine (Piano-like)</option>
+                      <option value="sawtooth">Sawtooth</option>
+                      <option value="square">Square</option>
+                      <option value="triangle">Triangle</option>
+                    </select>
                   </div>
-                  <p className="text-white/60 text-sm mt-2">
-                    Hold Shift key or toggle here
-                  </p>
+                  
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="text-white font-medium">Octave</label>
+                      <span className="text-blue-400 font-mono text-sm">
+                        {octaveShift > 0 ? '+' : ''}{octaveShift}
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setOctaveShift(prev => Math.max(prev - 1, -2))}
+                        className="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 px-3 rounded-lg transition-colors font-medium"
+                        disabled={octaveShift <= -2}
+                      >
+                        ↓ Lower
+                      </button>
+                      <button
+                        onClick={() => setOctaveShift(0)}
+                        className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 py-2 px-3 rounded-lg transition-colors font-medium"
+                      >
+                        Reset
+                      </button>
+                      <button
+                        onClick={() => setOctaveShift(prev => Math.min(prev + 1, 2))}
+                        className="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 px-3 rounded-lg transition-colors font-medium"
+                        disabled={octaveShift >= 2}
+                      >
+                        ↑ Higher
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <label className="text-white font-medium">Sustain Pedal</label>
+                      <button
+                        onClick={() => setSustainPedal(!sustainPedal)}
+                        className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${
+                          sustainPedal ? 'bg-primary' : 'bg-white/20'
+                        }`}
+                      >
+                        <div className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform duration-300 ${
+                          sustainPedal ? 'translate-x-7' : 'translate-x-0'
+                        }`} />
+                      </button>
+                    </div>
+                    <p className="text-white/60 text-sm mt-2">
+                      Hold Shift key or toggle here
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -758,9 +761,9 @@ const InteractivePiano: React.FC = () => {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="absolute top-0 right-0 h-full w-80 bg-gradient-to-b from-slate-900 to-slate-800 border-l border-slate-700 shadow-2xl z-20 p-6"
+            className="absolute top-0 right-0 h-full w-80 bg-gradient-to-b from-slate-900 to-slate-800 border-l border-slate-700 shadow-2xl z-20 flex flex-col"
           >
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between p-6">
               <h3 className="text-white font-semibold text-lg flex items-center gap-2">
                 <Info className="h-5 w-5" />
                 Keyboard Shortcuts
@@ -773,53 +776,56 @@ const InteractivePiano: React.FC = () => {
               </button>
             </div>
             
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <h4 className="font-medium mb-1 text-white/80">White Keys</h4>
-                <div className="space-y-1">
-                  {keys.filter(k => k.type === 'white').map((key) => (
-                    <div key={key.note} className="flex justify-between">
-                      <span className="text-white/70">{key.note}</span>
-                      <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-xs">
-                        {key.keyboardKey?.toUpperCase()}
-                      </kbd>
-                    </div>
-                  ))}
+            {/* Scrollable content container */}
+            <div className="flex-grow overflow-y-auto px-6 pb-6">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <h4 className="font-medium mb-1 text-white/80">White Keys</h4>
+                  <div className="space-y-1">
+                    {keys.filter(k => k.type === 'white').map((key) => (
+                      <div key={key.note} className="flex justify-between">
+                        <span className="text-white/70">{key.note}</span>
+                        <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-xs">
+                          {key.keyboardKey?.toUpperCase()}
+                        </kbd>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-medium mb-1 text-white/80">Black Keys</h4>
+                  <div className="space-y-1">
+                    {keys.filter(k => k.type === 'black').map((key) => (
+                      <div key={key.note} className="flex justify-between">
+                        <span className="text-white/70">{key.note}</span>
+                        <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-xs">
+                          {key.keyboardKey?.toUpperCase()}
+                        </kbd>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-              <div>
-                <h4 className="font-medium mb-1 text-white/80">Black Keys</h4>
+              
+              <div className="mt-6 pt-6 border-t border-white/10">
+                <h4 className="font-medium mb-1 text-white/80">Controls</h4>
                 <div className="space-y-1">
-                  {keys.filter(k => k.type === 'black').map((key) => (
-                    <div key={key.note} className="flex justify-between">
-                      <span className="text-white/70">{key.note}</span>
-                      <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-xs">
-                        {key.keyboardKey?.toUpperCase()}
-                      </kbd>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            
-            <div className="mt-6 pt-6 border-t border-white/10">
-              <h4 className="font-medium mb-1 text-white/80">Controls</h4>
-              <div className="space-y-1">
-                <div className="flex justify-between">
-                  <span className="text-white/70">Play Demo</span>
-                  <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-xs">SPACE</kbd>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-white/70">Sustain Pedal</span>
-                  <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-xs">SHIFT</kbd>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-white/70">Octave Up</span>
-                  <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-xs">↑</kbd>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-white/70">Octave Down</span>
-                  <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-xs">↓</kbd>
+                  <div className="flex justify-between">
+                    <span className="text-white/70">Play Demo</span>
+                    <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-xs">SPACE</kbd>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/70">Sustain Pedal</span>
+                    <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-xs">SHIFT</kbd>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/70">Octave Up</span>
+                    <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-xs">↑</kbd>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/70">Octave Down</span>
+                    <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-xs">↓</kbd>
+                  </div>
                 </div>
               </div>
             </div>
