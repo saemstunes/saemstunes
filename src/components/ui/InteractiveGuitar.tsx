@@ -628,31 +628,41 @@ const InteractiveGuitar: React.FC = () => {
              )`
            }} />
       
-      {/* Guitar body container - realistic proportions */}
-      <div className="relative w-full aspect-[5/2] max-h-96">
-        {/* HEADSTOCK */}
-        <div className="absolute top-0 left-0 w-[15%] h-[20%] bg-gradient-to-b from-amber-800 to-amber-900 rounded-tl-lg">
-          {/* Tuning pegs - arranged in 3+3 configuration */}
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full flex flex-wrap justify-center">
-            {[0, 1, 2].map((row) => (
-              <div key={row} className="w-full flex justify-around px-1 mb-1">
-                {strings.slice(row * 3, (row + 1) * 3).map((string, i) => (
-                  <div key={i} className="w-3 h-6 bg-amber-700 rounded-full relative">
-                    <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-amber-300 rounded-full"></div>
-                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-xs text-amber-100 font-bold">
-                      {string.note}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ))}
+      {/* Guitar layout container */}
+      <div className="relative w-full h-64 sm:h-80 md:h-96 flex items-center overflow-hidden">
+        {/* HEADSTOCK - Larger and partially visible */}
+        <div className="absolute left-[-5%] top-1/2 -translate-y-1/2 w-[20%] h-[75%] bg-gradient-to-b from-amber-800 to-amber-900 rounded-l-lg relative">
+          {/* Tuning pegs - 3 on each side */}
+          <div className="absolute inset-0 flex flex-col justify-evenly">
+            {/* Left side tuning pegs */}
+            <div className="absolute left-1/4 top-0 bottom-0 w-2 flex flex-col justify-evenly">
+              {[0, 2, 4].map((i) => (
+                <div key={i} className="w-3 h-2 bg-amber-600 rounded-full relative -ml-1">
+                  <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-1 bg-amber-300 rounded-full"></div>
+                </div>
+              ))}
+            </div>
+            {/* Right side tuning pegs */}
+            <div className="absolute right-1/4 top-0 bottom-0 w-2 flex flex-col justify-evenly">
+              {[1, 3, 5].map((i) => (
+                <div key={i} className="w-3 h-2 bg-amber-600 rounded-full relative -mr-1">
+                  <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-1 h-1 bg-amber-300 rounded-full"></div>
+                </div>
+              ))}
+            </div>
+            {/* String notes display */}
+            <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 flex flex-col justify-evenly text-xs text-amber-100 font-bold">
+              {strings.map((string, i) => (
+                <span key={i} className="text-center">{string.note}</span>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* NECK & FRETBOARD */}
-        <div className="absolute top-[20%] left-0 w-[70%] h-[15%] bg-gradient-to-r from-amber-700 via-amber-600 to-amber-700">
+        <div className="absolute left-[10%] top-1/2 -translate-y-1/2 w-[80%] h-[100%] bg-gradient-to-r from-amber-700 via-amber-600 to-amber-700">
           {/* Nut */}
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-ivory z-20" />
+          <div className="absolute left-0 top-0 bottom-0 w-1 bg-gray-300 z-20" />
           
           {/* Fret wires - accurately positioned */}
           {fretPositions.slice(1).map((position, i) => (
@@ -667,13 +677,15 @@ const InteractiveGuitar: React.FC = () => {
           <div className="absolute top-0 left-0 w-full h-full z-10" style={{ pointerEvents: 'none' }}>
             {[3,5,7,9,12,15,17].map(fret => {
               const position = fretPositions[fret];
+              const nextPosition = fretPositions[fret + 1] || 1;
+              const centerPosition = (position + nextPosition) / 2;
               return (
                 <div 
                   key={fret} 
                   className="absolute top-1/2 transform -translate-y-1/2 flex items-center justify-center"
-                  style={{ left: `${position * 100}%` }}
+                  style={{ left: `${centerPosition * 100}%` }}
                 >
-                  <div className={`w-2 h-2 sm:w-3 sm:h-3 bg-amber-200 rounded-full opacity-40 ${fret === 12 || fret === 24 ? 'mb-3' : ''}`} />
+                  <div className={`w-2 h-2 sm:w-3 sm:h-3 bg-amber-200 rounded-full opacity-40 ${fret === 12 ? 'mb-3' : ''}`} />
                   {fret === 12 && <div className="absolute top-1/2 mt-3 w-2 h-2 sm:w-3 sm:h-3 bg-amber-200 rounded-full opacity-40" />}
                 </div>
               );
@@ -688,13 +700,11 @@ const InteractiveGuitar: React.FC = () => {
                 className="relative flex items-center h-full"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: stringIndex * 0.1 }}
+                transition={{ delay: stringIndex * 0.05 }}
               >
                 {/* String line */}
                 <div 
-                  className={`absolute w-full transition-all duration-200 ${
-                    stringIndex < 3 ? 'h-1' : 'h-0.5'
-                  }`}
+                  className="absolute w-full h-0.5 transition-all duration-200"
                   style={{ 
                     top: '50%', 
                     transform: 'translateY(-50%)',
@@ -759,10 +769,10 @@ const InteractiveGuitar: React.FC = () => {
           </div>
         </div>
 
-        {/* GUITAR BODY */}
-        <div className="absolute top-[35%] left-[15%] w-[70%] h-[65%] bg-gradient-to-b from-amber-900 to-amber-700 rounded-b-xl overflow-hidden">
+        {/* GUITAR BODY - Larger and partially visible */}
+        <div className="absolute right-[-5%] top-1/2 -translate-y-1/2 w-[20%] h-[100%] bg-gradient-to-b from-amber-900 to-amber-700 overflow-hidden">
           {/* Body shape */}
-          <div className="absolute inset-0 rounded-tl-[30%] rounded-tr-[40%] rounded-bl-[10%] rounded-br-[20%] overflow-hidden">
+          <div className="absolute inset-0 rounded-r-full overflow-hidden">
             {/* Wood grain pattern */}
             <div className="absolute inset-0 opacity-30" style={{
               background: `linear-gradient(
@@ -781,35 +791,16 @@ const InteractiveGuitar: React.FC = () => {
               backgroundSize: '20px 20px'
             }} />
             
-            {/* Sound hole */}
-            <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-black border-4 border-amber-600 relative">
-                <div className="absolute inset-2 rounded-full border border-amber-400"></div>
-                <div className="absolute inset-4 rounded-full border border-amber-300"></div>
+            {/* Sound hole - larger and positioned appropriately */}
+            <div className="absolute top-1/2 left-[30%] transform -translate-x-1/2 -translate-y-1/2 z-10">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-black border-2 border-amber-600 relative">
+                <div className="absolute inset-1 rounded-full border border-amber-400"></div>
+                <div className="absolute inset-2 rounded-full border border-amber-300"></div>
               </div>
             </div>
             
             {/* Bridge */}
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-12 h-2 bg-amber-600 rounded shadow-lg z-10" />
-          </div>
-
-          {/* Chord selection - moved to body */}
-          <div className="absolute top-2 left-0 right-0 flex justify-center flex-wrap gap-1 sm:gap-2 z-30">
-            {chords.map((chord, index) => (
-              <motion.button
-                key={index}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all ${
-                  heldChord === index 
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white' 
-                    : 'bg-amber-700 text-amber-100 hover:bg-amber-600'
-                }`}
-                onClick={() => applyChord(index)}
-              >
-                {chord.name}
-              </motion.button>
-            ))}
+            <div className="absolute bottom-1/3 left-1/3 transform -translate-x-1/2 w-8 h-1 bg-amber-600 rounded shadow-lg z-10" />
           </div>
         </div>
 
@@ -828,13 +819,32 @@ const InteractiveGuitar: React.FC = () => {
               exit={{ opacity: 0, scale: 0.5 }}
               transition={{ duration: 0.2 }}
               style={{
-                left: '70%',
-                top: '60%',
+                left: '75%',
+                top: '50%',
                 transform: `rotate(${strumDirection === 'down' ? 15 : -15}deg)`
               }}
             />
           )}
         </AnimatePresence>
+      </div>
+
+      {/* Chord selection - moved outside guitar container */}
+      <div className="mt-4 flex justify-center flex-wrap gap-1 sm:gap-2">
+        {chords.map((chord, index) => (
+          <motion.button
+            key={index}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all ${
+              heldChord === index 
+                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white' 
+                : 'bg-amber-700 text-amber-100 hover:bg-amber-600'
+            }`}
+            onClick={() => applyChord(index)}
+          >
+            {chord.name}
+          </motion.button>
+        ))}
       </div>
 
       {/* Current chord display */}
