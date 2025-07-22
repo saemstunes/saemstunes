@@ -101,7 +101,7 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.6 }}
   >
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto px-4">
       <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 sm:mb-6">
         Welcome to{" "}
         <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
@@ -271,79 +271,78 @@ const Index = () => {
       </Helmet>
       
       <MainLayout>
-        <div className="min-h-screen bg-background overflow-x-hidden">
+        <div className="min-h-screen bg-background">
           <OrientationHint />
 
-          <div className="min-h-screen bg-background">
-            <div className="space-y-6 sm:space-y-8 px-4 sm:px-6">
-              <HomeHero 
-                onExploreTracks={() => navigate('/tracks')}
-                onTryTools={() => navigate('/music-tools')}
-              />
-              
-              <StatsSection />
-              
-              <FeaturedTracksSection 
-                tracks={featuredTracks}
-                onPlayTrack={handlePlayTrack}
-                onShareTrack={handleShareTrack}
-              />
-              
-              <QuickActionsSection />
-              
-              <FourPointerSection />
-              
-              <section>
-                <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">
-                  Try Our Music Tools
+          {/* REMOVED FIXED WIDTH CONTAINER - RESPONSIVE MOBILE FIX */}
+          <div className="space-y-6 sm:space-y-8 px-4 sm:px-6">
+            <HomeHero 
+              onExploreTracks={() => navigate('/tracks')}
+              onTryTools={() => navigate('/music-tools')}
+            />
+            
+            <StatsSection />
+            
+            <FeaturedTracksSection 
+              tracks={featuredTracks}
+              onPlayTrack={handlePlayTrack}
+              onShareTrack={handleShareTrack}
+            />
+            
+            <QuickActionsSection />
+            
+            <FourPointerSection />
+            
+            <section>
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">
+                Try Our Music Tools
+              </h2>
+              <div className="overflow-x-hidden py-2">
+                <MusicToolsCarousel />
+              </div>
+            </section>
+            
+            <SocialMediaContainer />
+            
+            {user && (
+              <div className="overflow-x-auto">
+                <DashboardStats role={user?.user_metadata?.role || 'student'} />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+                  <RecommendedContent />
+                  <UpcomingBookings />
+                </div>
+              </div>
+            )}
+            
+            <section className="py-12 bg-gradient-to-r from-primary/10 via-purple-500/5 to-primary/10 rounded-xl">
+              <div className="max-w-3xl mx-auto text-center px-4">
+                <h2 className="text-2xl sm:text-3xl font-bold mb-4">
+                  Ready to Begin Your <span className="text-primary">Musical Journey</span>?
                 </h2>
-                <div className="overflow-x-hidden py-2">
-                  <MusicToolsCarousel />
+                <p className="text-muted-foreground mb-6">
+                  Join thousands of music lovers who have found inspiration through our platform.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button 
+                    size="lg"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 group"
+                    onClick={() => navigate(user ? '/dashboard' : '/signup')}
+                  >
+                    <Zap className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
+                    {user ? 'Go to Dashboard' : 'Get Started'}
+                  </Button>
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-6 sm:px-8 group"
+                    onClick={() => navigate('/pricing')}
+                  >
+                    <Star className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
+                    View Premium
+                  </Button>
                 </div>
-              </section>
-              
-              <SocialMediaContainer />
-              
-              {user && (
-                <div className="overflow-x-auto">
-                  <DashboardStats role={user?.user_metadata?.role || 'student'} />
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-                    <RecommendedContent />
-                    <UpcomingBookings />
-                  </div>
-                </div>
-              )}
-              
-              <section className="py-12 bg-gradient-to-r from-primary/10 via-purple-500/5 to-primary/10 rounded-xl">
-                <div className="max-w-3xl mx-auto text-center px-4">
-                  <h2 className="text-2xl sm:text-3xl font-bold mb-4">
-                    Ready to Begin Your <span className="text-primary">Musical Journey</span>?
-                  </h2>
-                  <p className="text-muted-foreground mb-6">
-                    Join thousands of music lovers who have found inspiration through our platform.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                    <Button 
-                      size="lg"
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 group"
-                      onClick={() => navigate(user ? '/dashboard' : '/signup')}
-                    >
-                      <Zap className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
-                      {user ? 'Go to Dashboard' : 'Get Started'}
-                    </Button>
-                    <Button 
-                      size="lg" 
-                      variant="outline"
-                      className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-6 sm:px-8 group"
-                      onClick={() => navigate('/pricing')}
-                    >
-                      <Star className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
-                      View Premium
-                    </Button>
-                  </div>
-                </div>
-              </section>
-            </div>
+              </div>
+            </section>
           </div>
         </div>
       </MainLayout>
