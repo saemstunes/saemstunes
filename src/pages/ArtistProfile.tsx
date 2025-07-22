@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { mockTutors, mockVideos } from "@/data/mockData";
 import VideoCard from "@/components/videos/VideoCard";
-import Lanyard from "@/components/ui/Lanyard";
+import MagicBento from "@/components/ui/MagicBento";
 import { Calendar, Mail, Music, Video, Star, MapPin, ExternalLink } from "lucide-react";
 
 const ArtistProfile = () => {
@@ -84,25 +84,40 @@ const ArtistProfile = () => {
   return (
     <MainLayout>
       <div className="space-y-8">
-        {/* Lanyard Feature Section */}
-        <div className="relative h-screen overflow-hidden bg-gradient-to-b from-background to-muted">
-          <Lanyard 
-            position={[0, 0, 32]} 
-            gravity={[0, -40, 0]} 
-            fov={20}
-            transparent={true}
-            artistImage={displayArtist?.profile_image_url || displayArtist?.avatar}
-          />
+        {/* Magic Bento Feature Section */}
+        <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-background to-muted flex items-center justify-center">
+          <div className="w-full max-w-6xl mx-auto px-4">
+            <MagicBento 
+              textAutoHide={true}
+              enableStars={true}
+              enableSpotlight={true}
+              enableBorderGlow={true}
+              enableTilt={true}
+              enableMagnetism={true}
+              clickEffect={true}
+              spotlightRadius={300}
+              particleCount={12}
+              glowColor="132, 0, 255"
+            />
+          </div>
           
-          {/* Artist Info Overlay */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background via-background/80 to-transparent p-6 md:p-10">
+          {/* Artist Info Overlay - Positioned over the bento */}
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background via-background/90 to-transparent p-6 md:p-10">
             <div className="max-w-4xl mx-auto text-center">
+              <div className="flex items-center justify-center mb-6">
+                <Avatar className="w-20 h-20 border-4 border-primary">
+                  <AvatarImage src={displayArtist?.profile_image_url || displayArtist?.avatar} />
+                  <AvatarFallback>{displayArtist?.name?.charAt(0) || 'A'}</AvatarFallback>
+                </Avatar>
+              </div>
+              
               <h1 className="text-4xl md:text-6xl font-serif font-bold text-foreground mb-4">
                 {displayArtist?.name}
               </h1>
               <p className="text-xl text-muted-foreground mb-6">
                 {displayArtist?.genre?.join(', ') || displayArtist?.specialties?.join(', ') || 'Artist'}
               </p>
+              
               <div className="flex items-center justify-center mb-6">
                 <Star className="h-5 w-5 text-gold fill-gold" />
                 <Star className="h-5 w-5 text-gold fill-gold" />
@@ -111,6 +126,7 @@ const ArtistProfile = () => {
                 <Star className="h-5 w-5 text-muted-foreground" />
                 <span className="ml-2 text-sm">(4.0)</span>
               </div>
+              
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button className="bg-gold hover:bg-gold-dark text-white">
                   <Calendar className="mr-2 h-4 w-4" />

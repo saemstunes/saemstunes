@@ -341,8 +341,8 @@ const AudioPlayerPage = () => {
   return (
     <>
       <Helmet>
-        <title>{`${trackData.name} - Audio Player - Saem's Tunes`}</title>
-        <meta name="description" content={`Listen to ${trackData.name} by ${trackData.artist}`} />
+        <title>{`${trackData?.name || 'Audio Player'} - Saem's Tunes`}</title>
+        <meta name="description" content={`Listen to ${trackData?.name || 'music'} by ${trackData?.artist || 'artist'}`} />
       </Helmet>
       
       <MainLayout>
@@ -370,8 +370,8 @@ const AudioPlayerPage = () => {
                     <div className="relative group aspect-square">
                       {/* Image with aspect-ratio control */}
                       <img
-                        src={trackData.artwork || '/placeholder.svg'}
-                        alt={trackData.name}
+                        src={trackData?.artwork || '/placeholder.svg'}
+                        alt={trackData?.name || 'Track artwork'}
                         className={cn(
                           "w-full h-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300",
                           !imageLoaded && "opacity-0"
@@ -392,9 +392,9 @@ const AudioPlayerPage = () => {
                   {/* Track Info */}
                   <div className="flex flex-col justify-center space-y-6 flex-1 text-center lg:text-left">
                     <div>
-                      <h2 className="text-3xl md:text-4xl font-bold mb-3 text-foreground">{trackData.name}</h2>
-                      <p className="text-xl md:text-2xl text-muted-foreground mb-2">{trackData.artist}</p>
-                      {trackData.album && (
+                      <h2 className="text-3xl md:text-4xl font-bold mb-3 text-foreground">{trackData?.name || 'Unknown Track'}</h2>
+                      <p className="text-xl md:text-2xl text-muted-foreground mb-2">{trackData?.artist || 'Unknown Artist'}</p>
+                      {trackData?.album && (
                         <p className="text-lg text-muted-foreground/80">{trackData.album}</p>
                       )}
                     </div>
@@ -461,14 +461,16 @@ const AudioPlayerPage = () => {
                       </Button>
                     </div>
                   ) : (
-                    <AudioPlayer
-                      src={trackData.src}
-                      title={trackData.name}
-                      artist={trackData.artist}
-                      artwork={trackData.artwork}
-                      className="bg-transparent border-0 shadow-none"
-                      onError={handleAudioError}
-                    />
+                    trackData && (
+                      <AudioPlayer
+                        src={trackData.src}
+                        title={trackData.name}
+                        artist={trackData.artist}
+                        artwork={trackData.artwork}
+                        className="bg-transparent border-0 shadow-none"
+                        onError={handleAudioError}
+                      />
+                    )
                   )}
 
                   {showMetadataPrompt && trackData && (
