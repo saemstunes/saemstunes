@@ -25,7 +25,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'; // Fixed import path
+} from '@/components/ui/dropdown-menu';
 
 interface AudioTrack {
   id: string | number;
@@ -36,39 +36,8 @@ interface AudioTrack {
   album?: string;
 }
 
-const AudioPlayerPage = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { toast } = useToast();
-  const { user } = useAuth();
-  const [isLiked, setIsLiked] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-  const [audioError, setAudioError] = useState(false);
-  const [trackData, setTrackData] = useState<AudioTrack | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const { setMediaPlaying } = useMediaState();
-  const [showMetadataPrompt, setShowMetadataPrompt] = useState(false);
-
-
-  // Add this useEffect to handle page visibility
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        setMediaPlaying(false);
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [setMediaPlaying]);
-
-  // Add this RIGHT at the top of your AudioPlayerPage component
-const ErrorFallback = ({ error }) => {
+// Error Fallback Component
+const ErrorFallback = ({ error }: { error: Error }) => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-red-50">
       <div className="text-center p-8">
@@ -86,8 +55,37 @@ const ErrorFallback = ({ error }) => {
     </div>
   );
 };
-  
-  
+
+const AudioPlayerPage = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const [isLiked, setIsLiked] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [audioError, setAudioError] = useState(false);
+  const [trackData, setTrackData] = useState<AudioTrack | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const { setMediaPlaying } = useMediaState();
+  const [showMetadataPrompt, setShowMetadataPrompt] = useState(false);
+
+  // Add this useEffect to handle page visibility
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        setMediaPlaying(false);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [setMediaPlaying]);
+
   const SALAMA_TRACK = {
     id: 'featured',
     src: 'https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Cover%20Art/Salama%20-%20Saem%20x%20Simali.mp3',
@@ -177,7 +175,6 @@ const ErrorFallback = ({ error }) => {
       setLoading(false);
     }
   };
-  
 
   const checkIfLiked = async () => {
     if (!user || !trackData) return;
@@ -363,10 +360,7 @@ const ErrorFallback = ({ error }) => {
   }
 
   return (
-    
-    <>
-
-      <ErrorBoundary FallbackComponent={ErrorFallback}>
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
       <Helmet>
         <title>{`${trackData.name} - Audio Player - Saem's Tunes`}</title>
         <meta name="description" content={`Listen to ${trackData.name} by ${trackData.artist}`} />
@@ -498,19 +492,17 @@ const ErrorFallback = ({ error }) => {
                     />
                   )}
 
-                  {showMetadataPrompt && currentTrack && (
-                    <ArtistMetadataManager trackId={currentTrack.id} />
+                  {showMetadataPrompt && trackData && (
+                    <ArtistMetadataManager trackId={trackData.id} />
                   )}
-                  
                 </div>
               </CardContent>
             </Card>
           </div>
         </div>
       </MainLayout>
-    </>
+    </ErrorBoundary>
   );
 };
-</ErrorBoundary>
-      
+
 export default AudioPlayerPage;
