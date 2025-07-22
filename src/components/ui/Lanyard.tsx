@@ -2,14 +2,11 @@
 /* eslint-disable react/no-unknown-property */
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { Canvas, extend, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { Environment, Lightformer } from '@react-three/drei';
 import { BallCollider, CuboidCollider, Physics, RigidBody, useRopeJoint, useSphericalJoint } from '@react-three/rapier';
-import { MeshLineGeometry, MeshLineMaterial } from 'meshline';
 import * as THREE from 'three';
 import './Lanyard.css';
-
-extend({ MeshLineGeometry, MeshLineMaterial });
 
 interface LanyardProps {
   position?: [number, number, number];
@@ -55,7 +52,7 @@ interface BandProps {
 }
 
 function Band({ maxSpeed = 50, minSpeed = 0, artistImage }: BandProps) {
-  const band = useRef<THREE.Mesh>(null);
+  const lanyardRef = useRef<THREE.Group>(null);
   const fixed = useRef<any>(null);
   const j1 = useRef<any>(null);
   const j2 = useRef<any>(null);
@@ -74,32 +71,6 @@ function Band({ maxSpeed = 50, minSpeed = 0, artistImage }: BandProps) {
     angularDamping: 4, 
     linearDamping: 4 
   };
-  
-  // Create simple lanyard texture
-  const [lanyardTexture] = useState(() => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 64;
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, 256, 64);
-      ctx.fillStyle = '#cccccc';
-      for (let i = 0; i < 256; i += 16) {
-        ctx.fillRect(i, 0, 8, 64);
-      }
-    }
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-    return texture;
-  });
-
-  const [curve] = useState(() => new THREE.CatmullRomCurve3([
-    new THREE.Vector3(), 
-    new THREE.Vector3(), 
-    new THREE.Vector3(), 
-    new THREE.Vector3()
-  ]));
   
   const [dragged, drag] = useState<any>(false);
   const [hovered, hover] = useState(false);
@@ -142,20 +113,32 @@ function Band({ maxSpeed = 50, minSpeed = 0, artistImage }: BandProps) {
       });
     }
     
-    if (fixed.current && j1.current && j2.current && j3.current && band.current) {
+    if (fixed.current && j1.current && j2.current && j3.current && card.current) {
       [j1, j2].forEach((ref) => {
         if (!ref.current.lerped) ref.current.lerped = new THREE.Vector3().copy(ref.current.translation());
         const clampedDistance = Math.max(0.1, Math.min(1, ref.current.lerped.distanceTo(ref.current.translation())));
         ref.current.lerped.lerp(ref.current.translation(), delta * (minSpeed + clampedDistance * (maxSpeed - minSpeed)));
       });
       
-      curve.points[0].copy(j3.current.translation());
-      curve.points[1].copy(j2.current.lerped);
-      curve.points[2].copy(j1.current.lerped);
-      curve.points[3].copy(fixed.current.translation());
-      
-      if (band.current.geometry && typeof band.current.geometry.setPoints === 'function') {
-        band.current.geometry.setPoints(curve.getPoints(32));
+      // Update lanyard string visual representation
+      if (lanyardRef.current) {
+        const points = [
+          j3.current.translation(),
+          j2.current.lerped,
+          j1.current.lerped,
+          fixed.current.translation()
+        ];
+        
+        // Update lanyard segments positions to follow physics
+        lanyardRef.current.children.forEach((segment, index) => {
+          if (index < points.length - 1) {
+            const start = points[index];
+            const end = points[index + 1];
+            const midpoint = new THREE.Vector3().lerpVectors(start, end, 0.5);
+            segment.position.copy(midpoint);
+            segment.lookAt(end);
+          }
+        });
       }
       
       if (card.current) {
@@ -165,8 +148,6 @@ function Band({ maxSpeed = 50, minSpeed = 0, artistImage }: BandProps) {
       }
     }
   });
-
-  curve.curveType = 'chordal';
 
   return (
     <>
@@ -230,19 +211,21 @@ function Band({ maxSpeed = 50, minSpeed = 0, artistImage }: BandProps) {
         </RigidBody>
       </group>
       
-      {/* Lanyard String */}
-      <mesh ref={band}>
-        <meshLineGeometry />
-        <meshLineMaterial
-          color="white"
-          depthTest={false}
-          resolution={isSmall ? [1000, 2000] : [1000, 1000]}
-          useMap={true}
-          map={lanyardTexture}
-          repeat={[-4, 1]}
-          lineWidth={1}
-        />
-      </mesh>
+      {/* Simple Lanyard String using basic geometries */}
+      <group ref={lanyardRef}>
+        <mesh position={[0.25, 4, 0]}>
+          <cylinderGeometry args={[0.02, 0.02, 0.5]} />
+          <meshBasicMaterial color="white" />
+        </mesh>
+        <mesh position={[0.75, 4, 0]}>
+          <cylinderGeometry args={[0.02, 0.02, 0.5]} />
+          <meshBasicMaterial color="white" />
+        </mesh>
+        <mesh position={[1.25, 4, 0]}>
+          <cylinderGeometry args={[0.02, 0.02, 0.5]} />
+          <meshBasicMaterial color="white" />
+        </mesh>
+      </group>
     </>
   );
 }
