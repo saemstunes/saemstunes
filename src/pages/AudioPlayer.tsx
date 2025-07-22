@@ -19,7 +19,6 @@ import { supabase } from '@/integrations/supabase/client';
 import AudioPlayer from '@/components/media/AudioPlayer';
 import { ArtistMetadataManager } from '@/components/artists/ArtistMetadataManager';
 import { useMediaState } from '@/components/idle-state/mediaStateContext';
-import { ErrorBoundary } from 'react-error-boundary';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,25 +35,6 @@ interface AudioTrack {
   album?: string;
 }
 
-// Error Fallback Component
-const ErrorFallback = ({ error }: { error: Error }) => {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-red-50">
-      <div className="text-center p-8">
-        <h2 className="text-2xl font-bold text-red-600 mb-4">Component Crashed</h2>
-        <pre className="bg-white p-4 rounded text-left text-sm overflow-auto max-w-2xl">
-          {error.message}
-        </pre>
-        <button 
-          onClick={() => window.location.reload()} 
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
-        >
-          Reload Page
-        </button>
-      </div>
-    </div>
-  );
-};
 
 const AudioPlayerPage = () => {
   const { id } = useParams();
@@ -360,7 +340,7 @@ const AudioPlayerPage = () => {
   }
 
   return (
-    <ErrorBoundary FallbackComponent={ErrorFallback}>
+    
       <Helmet>
         <title>{`${trackData.name} - Audio Player - Saem's Tunes`}</title>
         <meta name="description" content={`Listen to ${trackData.name} by ${trackData.artist}`} />
@@ -501,7 +481,7 @@ const AudioPlayerPage = () => {
           </div>
         </div>
       </MainLayout>
-    </ErrorBoundary>
+    
   );
 };
 
