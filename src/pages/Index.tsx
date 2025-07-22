@@ -274,8 +274,8 @@ const Index = () => {
         <div className="min-h-screen bg-background overflow-x-hidden">
           <OrientationHint />
 
-          <div className="w-full max-w-full md:max-w-3xl lg:max-w-5xl xl:max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="space-y-6 sm:space-y-8">
+          <div className="min-h-screen bg-background">
+            <div className="space-y-6 sm:space-y-8 px-4 sm:px-6">
               <HomeHero 
                 onExploreTracks={() => navigate('/tracks')}
                 onTryTools={() => navigate('/music-tools')}
