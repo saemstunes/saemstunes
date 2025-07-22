@@ -18,7 +18,7 @@ import { Helmet } from "react-helmet";
 import { 
   Music, PlayCircle, Star, BookOpen, Calendar, 
   Headphones, Heart, Play, Share, RotateCw, 
-  Users, TrendingUp, Zap, X
+  Users, TrendingUp, Zap, X, Gift
 } from "lucide-react";
 import { ResponsiveImage } from "@/components/ui/responsive-image";
 import CountUp from "@/components/tracks/CountUp";
@@ -444,25 +444,39 @@ const QuickActionsSection = () => (
 const OrientationHint = () => {
   const { isMobile, isLandscape } = useWindowOrientation();
   const [dismissed, setDismissed] = useState(false);
+  
+  // Check if first-time user
+  useEffect(() => {
+    const hasSeenHint = localStorage.getItem('orientationHintSeen');
+    setDismissed(!!hasSeenHint);
+  }, []);
+
+  const handleDismiss = () => {
+    localStorage.setItem('orientationHintSeen', 'true');
+    setDismissed(true);
+  };
 
   if (isMobile && !isLandscape && !dismissed) {
     return (
       <motion.div 
-        className="fixed top-0 left-0 w-full h-full bg-black/90 backdrop-blur-lg z-[999] flex flex-col items-center justify-center text-white p-6"
+        className="fixed inset-0 z-[999] flex flex-col items-center justify-center p-6 backdrop-blur-lg"
+        style={{
+          background: 'radial-gradient(circle, var(--gold-light) 0%, var(--brown-dark) 100%)'
+        }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: 0.5 }}
       >
         <div className="absolute top-6 right-6">
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setDismissed(true)}
-            className="text-white hover:bg-white/20 rounded-full p-2 transition-all"
+            onClick={handleDismiss}
+            className="text-card hover:bg-primary/20 rounded-full p-2 transition-all"
             aria-label="Close orientation hint"
           >
-            <X className="h-6 w-6" />
+            <X className="h-6 w-6 text-card-foreground" />
           </Button>
         </div>
         
@@ -479,27 +493,32 @@ const OrientationHint = () => {
           }}
           className="mb-8"
         >
-          <RotateCw className="h-20 w-20 text-primary" />
+          <div className="relative">
+            <Gift className="h-24 w-24 text-primary" />
+            <RotateCw className="h-10 w-10 text-card absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+          </div>
         </motion.div>
         
         <div className="text-center max-w-md space-y-4">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
-            Rotate Your Device
+          <Badge variant="secondary" className="mb-2 bg-primary/30 text-primary-foreground">
+            Special Gift
+          </Badge>
+          <h2 className="text-2xl font-bold text-card">
+            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Turn Your Screen for a Surprise!
+            </span>
           </h2>
-          <p className="text-lg">
-            For the best experience with our music tools, please rotate your device to landscape mode.
-          </p>
-          <p className="text-muted-foreground text-sm">
-            (You can close this message to continue in portrait, but some features may be limited)
+          <p className="text-lg text-card-foreground">
+            Discover a special musical experience by rotating your device
           </p>
         </div>
         
         <Button
-          variant="outline"
-          onClick={() => setDismissed(true)}
-          className="mt-8 border-white/30 text-white hover:bg-white/10 hover:text-white"
+          onClick={handleDismiss}
+          className="mt-8 bg-card text-card-foreground hover:bg-primary hover:text-primary-foreground group"
         >
-          Continue in Portrait Mode
+          <Play className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
+          Continue without rotating
         </Button>
       </motion.div>
     );
