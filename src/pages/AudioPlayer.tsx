@@ -25,6 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { validate as isUuid } from 'uuid';
 
 interface AudioTrack {
   id: string | number;
@@ -50,7 +51,7 @@ const AudioPlayerPage = () => {
   const { setMediaPlaying } = useMediaState();
   const [showMetadataPrompt, setShowMetadataPrompt] = useState(false);
 
-  // Add this useEffect to handle page visibility
+  // Handle page visibility
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
@@ -65,25 +66,8 @@ const AudioPlayerPage = () => {
     };
   }, [setMediaPlaying]);
 
-  const SALAMA_TRACK = {
-    id: 'featured',
-    src: 'https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Cover%20Art/Salama%20-%20Saem%20x%20Simali.mp3',
-    name: 'Salama (DEMO)',
-    artist: "Saem's Tunes ft. Evans Simali",
-    artwork: 'https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Cover%20Art/salama-featured.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvQ292ZXIgQXJ0L3NhbGFtYS1mZWF0dXJlZC5qcGciLCJpYXQiOjE3NDk5NTMwNTksImV4cCI6MTc4MTQ4OTA1OX0.KtKlRXxj5z5KzzbnTDWd9oRVbztRHwioGA0YN1Xjn4Q',
-    album: 'NaombAoH'
-  };
-  
-  // Update the useEffect hook
+  // Fetch track data when id or location.state changes
   useEffect(() => {
-    // If we're on the featured route, set Salama as default
-    if (id === 'featured') {
-      setTrackData(SALAMA_TRACK);
-      setLoading(false);
-      return;
-    }
-    
-    // Existing logic for other tracks
     if (location.state?.track) {
       setTrackData(location.state.track);
       setLoading(false);
@@ -104,7 +88,7 @@ const AudioPlayerPage = () => {
 
   const fetchTrackData = async (trackId: string) => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('tracks')
         .select(`
           *,
@@ -112,25 +96,39 @@ const AudioPlayerPage = () => {
             display_name,
             avatar_url
           )
-        `)
-        .eq('id', trackId)
-        .single();
+        `);
+
+      // Check if trackId is a valid UUID
+      if (isUuid(trackId)) {
+        query = query.eq('id', trackId);
+      } else {
+        query = query.eq('slug', trackId);
+      }
+
+      const { data, error } = await query.single();
 
       if (error) throw error;
 
       if (data) {
-        const audioUrl = data.audio_path ? 
-          supabase.storage.from('tracks').getPublicUrl(data.audio_path).data.publicUrl : '';
-        
-        const coverUrl = data.cover_path ? 
-          supabase.storage.from('tracks').getPublicUrl(data.cover_path).data.publicUrl : '';
+        // Get public URL for audio
+        const audioUrl = data.audio_path 
+          ? supabase.storage.from('tracks').getPublicUrl(data.audio_path).data.publicUrl 
+          : '';
+
+        // Get public URL for cover image if stored in Supabase Storage
+        // Otherwise use the URL directly
+        const coverUrl = data.cover_path 
+          ? (data.cover_path.startsWith('http') 
+              ? data.cover_path 
+              : supabase.storage.from('tracks').getPublicUrl(data.cover_path).data.publicUrl)
+          : '/placeholder.svg';
 
         setTrackData({
           id: data.id,
           src: audioUrl,
           name: data.title,
-          artist: data.profiles?.display_name || 'Unknown Artist',
-          artwork: coverUrl || '/placeholder.svg',
+          artist: data.artist || data.profiles?.display_name || 'Unknown Artist',
+          artwork: coverUrl,
           album: 'Single'
         });
       }
@@ -181,6 +179,13 @@ const AudioPlayerPage = () => {
     
     setIsSaved(!!data);
   };
+
+  useEffect(() => {
+    if (user && trackData) {
+      checkIfLiked();
+      checkIfSaved();
+    }
+  }, [user, trackData]);
 
   const toggleLike = async () => {
     if (!user) {
@@ -365,10 +370,9 @@ const AudioPlayerPage = () => {
               <CardContent className="p-6 md:p-8">
                 {/* Album Artwork and Info */}
                 <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mb-8">
-                  {/* Artwork - Updated with aspect-ratio fix */}
+                  {/* Artwork */}
                   <div className="flex-shrink-0 mx-auto lg:mx-0 w-full max-w-[320px]">
                     <div className="relative group aspect-square">
-                      {/* Image with aspect-ratio control */}
                       <img
                         src={trackData?.artwork || '/placeholder.svg'}
                         alt={trackData?.name || 'Track artwork'}
@@ -379,12 +383,10 @@ const AudioPlayerPage = () => {
                         onLoad={() => setImageLoaded(true)}
                       />
                       
-                      {/* Loading placeholder */}
                       {!imageLoaded && (
                         <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-2xl" />
                       )}
                       
-                      {/* Gradient overlay */}
                       <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
                   </div>
