@@ -31,8 +31,8 @@ interface Track {
   user_id: string;
   approved: boolean;
   created_at: string;
+  artist: string | null; // NEW: Added artist field
   profiles?: {
-    display_name: string;
     avatar_url: string;
   };
 }
@@ -222,8 +222,7 @@ const Tracks = () => {
           cover_path,
           description,
           created_at,
-          profiles:user_id (
-            display_name
+          artist  
           )
         `)
         .eq('approved', true)
@@ -263,7 +262,7 @@ const Tracks = () => {
           id: trackData.id,
           imageSrc: coverUrl || "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Cover%20Art/salama-featured.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvQ292ZXIgQXJ0L3NhbGFtYS1mZWF0dXJlZC5qcGciLCJpYXQiOjE3NDk5NTMwNTksImV4cCI6MTc4MTQ4OTA1OX0.KtKlRXxj5z5KzzbnTDWd9oRVbztRHwioGA0YN1Xjn4Q",
           title: "Featured Track of the Week",
-          artist: trackData.profiles?.display_name ? `${trackData.profiles.display_name} - ${trackData.title}` : trackData.title,
+          artist: trackData.artist || `Unknown Artist - ${trackData.title}`,
           plays: playCount,
           likes: likeCount,
           audioSrc: audioUrl || "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Cover%20Art/Salama%20-%20Saem%20x%20Simali.mp3",
@@ -314,8 +313,8 @@ const Tracks = () => {
           user_id,
           approved,
           created_at,
+          artist,
           profiles:user_id (
-            display_name,
             avatar_url
           )
         `)
@@ -342,6 +341,7 @@ const Tracks = () => {
         user_id: track.user_id,
         approved: track.approved,
         created_at: track.created_at,
+        artist: track.artist,
         profiles: track.profiles
       })) as Track[];
       
@@ -1007,7 +1007,7 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
     };
 
     const shareData = {
-      title: `${track.title} by ${track.profiles?.display_name || 'Unknown Artist'}`,
+      title: `${track.title} by ${track.tracks?.artist || 'Unknown Artist'}`,
       text: `Listen to ${track.title} on Saem's Tunes`,
       url: `${getBaseUrl()}/tracks/${track.id}`,
     };
@@ -1047,9 +1047,9 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
       <CardContent className="p-6">
         <div className="flex items-start gap-4 mb-4">
           <div className="h-12 w-12 rounded-full bg-gold/20 flex items-center justify-center">
-            {track.profiles?.avatar_url ? (
+            {track.cover_path ? (
               <ResponsiveImage 
-                src={track.profiles.avatar_url} 
+                src={track.cover_path} 
                 alt="Artist" 
                 width={48}
                 height={48}
@@ -1068,7 +1068,7 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
               <h3 className="font-semibold text-lg">{track.title}</h3>
             </div>
             <p className="text-muted-foreground text-sm">
-              by {track.profiles?.display_name || 'Unknown Artist'}
+              by {track.artist || 'Unknown Artist'}
             </p>
             {track.description && (
               <p className="text-sm mt-2">{track.description}</p>
@@ -1094,7 +1094,7 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
             <AudioPlayer 
               src={audioUrl}
               title={track.title}
-              artist={track.profiles?.display_name || 'Unknown Artist'}
+              artist={track.artist || 'Unknown Artist'}
               artwork={coverUrl}
               compact={false}
             />
