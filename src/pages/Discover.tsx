@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
-import SearchBox from '@/components/ui/SearchBox';
-import CategoryNavigation from '@/components/ui/CategoryNavigation';
-import ContentTabs from '@/components/ui/ContentTabs';
-import RecommendationSection from '@/components/ui/RecommendationSection';
+import SearchBox from '@/components/discover/SearchBox';
+import CategoryNavigation from '@/components/discover/CategoryNavigation';
+import ContentTabs from '@/components/discover/ContentTabs';
+import RecommendationSection from '@/components/discover/RecommendationSection';
 import { supabase } from '@/integrations/supabase/client';
 import EnhancedFeaturedBanner from "@/components/discover/EnhancedFeaturedBanner";
 
@@ -28,10 +29,10 @@ const Discover = () => {
   const fetchContent = async () => {
     setLoading(true);
     try {
+      // Fetch video content instead of videos table
       const { data: videosData, error: videosError } = await supabase
-        .from('videos')
+        .from('video_content')
         .select('*')
-        .eq('approved', true)
         .order('created_at', { ascending: false });
 
       if (videosError) throw videosError;
