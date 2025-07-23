@@ -275,7 +275,7 @@ const Index = () => {
           <OrientationHint />
 
           {/* REMOVED FIXED WIDTH CONTAINER - RESPONSIVE MOBILE FIX */}
-          <div className="space-y-6 sm:space-y-8 px-4 sm:px-6">
+          <div className="w-full max-w-full overflow-x-hidden space-y-6 sm:space-y-8 px-4 sm:px-6">
             <HomeHero 
               onExploreTracks={() => navigate('/tracks')}
               onTryTools={() => navigate('/music-tools')}
@@ -293,16 +293,16 @@ const Index = () => {
             
             <FourPointerSection />
             
-            <section>
+            {/* <section>
               <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">
                 Try Our Music Tools
               </h2>
               <div className="overflow-x-hidden py-2">
                 <MusicToolsCarousel />
               </div>
-            </section>
+            </section> 
             
-            <SocialMediaContainer />
+            <SocialMediaContainer /> */}
             
             {user && (
               <div className="overflow-x-auto">
