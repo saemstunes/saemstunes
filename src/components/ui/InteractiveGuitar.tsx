@@ -163,7 +163,7 @@ const InteractiveGuitar: React.FC = () => {
   ];
 
   // Calculate accurate fret positions using logarithmic scale
-  const calculateFretPositions = (numFrets: number = 19) => {
+  const calculateFretPositions = (numFrets: number = 13) => {
     const positions: number[] = [0];
     for (let i = 1; i <= numFrets; i++) {
       positions.push(1 - (1 / Math.pow(2, i / 12)));
@@ -171,10 +171,10 @@ const InteractiveGuitar: React.FC = () => {
     return positions;
   };
 
-  const fretPositions = calculateFretPositions(19);
+  const fretPositions = calculateFretPositions(13);
 
   // Generate frets with accurate note calculation
-  const generateFrets = (baseFreq: number, count: number = 19) => {
+  const generateFrets = (baseFreq: number, count: number = 13) => {
     return Array.from({ length: count }, (_, i) => {
       const freq = baseFreq * Math.pow(2, i / 12);
       const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -628,41 +628,62 @@ const InteractiveGuitar: React.FC = () => {
              )`
            }} />
       
-      {/* Guitar layout container */}
-      <div className="relative w-full h-64 sm:h-80 md:h-96 flex items-center overflow-hidden">
-        {/* HEADSTOCK - Larger and partially visible */}
-        <div className="absolute left-[-5%] top-1/2 -translate-y-1/2 w-[20%] h-[75%] bg-gradient-to-b from-amber-800 to-amber-900 rounded-l-lg relative">
-          {/* Tuning pegs - 3 on each side */}
-          <div className="absolute inset-0 flex flex-col justify-evenly">
-            {/* Left side tuning pegs */}
-            <div className="absolute left-1/4 top-0 bottom-0 w-2 flex flex-col justify-evenly">
-              {[0, 2, 4].map((i) => (
-                <div key={i} className="w-3 h-2 bg-amber-600 rounded-full relative -ml-1">
-                  <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-1 bg-amber-300 rounded-full"></div>
-                </div>
-              ))}
-            </div>
-            {/* Right side tuning pegs */}
-            <div className="absolute right-1/4 top-0 bottom-0 w-2 flex flex-col justify-evenly">
-              {[1, 3, 5].map((i) => (
-                <div key={i} className="w-3 h-2 bg-amber-600 rounded-full relative -mr-1">
-                  <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-1 h-1 bg-amber-300 rounded-full"></div>
-                </div>
-              ))}
-            </div>
-            {/* String notes display */}
-            <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 flex flex-col justify-evenly text-xs text-amber-100 font-bold">
-              {strings.map((string, i) => (
-                <span key={i} className="text-center">{string.note}</span>
-              ))}
-            </div>
+      {/* Guitar body container - proper aspect ratio */}
+      <div className="relative w-full aspect-[3/1] max-h-80">
+        {/* Sound hole with rosette */}
+        <div className="absolute top-1/2 left-[15%] transform -translate-y-1/2 z-10">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-black border-2 sm:border-4 border-amber-600 relative">
+            <div className="absolute inset-1 sm:inset-2 rounded-full border border-amber-400"></div>
+            <div className="absolute inset-2 sm:inset-3 rounded-full border border-amber-300"></div>
           </div>
         </div>
 
-        {/* NECK & FRETBOARD */}
-        <div className="absolute left-[10%] top-1/2 -translate-y-1/2 w-[80%] h-[100%] bg-gradient-to-r from-amber-700 via-amber-600 to-amber-700">
+        {/* Pick animation */}
+        <AnimatePresence>
+          {showPick && (
+            <motion.div
+              className="absolute z-20 w-3 h-4 sm:w-4 sm:h-6 bg-amber-200 rounded-sm shadow-lg pointer-events-none"
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ 
+                opacity: 1, 
+                scale: 1,
+                x: strumDirection === 'down' ? 15 : -15,
+                y: pickPosition * 100 + '%'
+              }}
+              exit={{ opacity: 0, scale: 0.5 }}
+              transition={{ duration: 0.2 }}
+              style={{
+                left: '60%',
+                top: '20%',
+                transform: `rotate(${strumDirection === 'down' ? 15 : -15}deg)`
+              }}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Chord selection */}
+        <div className="absolute top-2 left-2 flex flex-wrap gap-1 sm:gap-2 z-30">
+          {chords.map((chord, index) => (
+            <motion.button
+              key={index}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className={`px-2 py-1 rounded-full text-xs font-medium transition-all ${
+                heldChord === index 
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white' 
+                  : 'bg-amber-700 text-amber-100 hover:bg-amber-600'
+              }`}
+              onClick={() => applyChord(index)}
+            >
+              {chord.name}
+            </motion.button>
+          ))}
+        </div>
+
+        {/* Fretboard with accurate positioning */}
+        <div className="absolute top-1/2 left-[5%] transform -translate-y-1/2 w-[60%] h-[70%] bg-gradient-to-r from-amber-700 via-amber-600 to-amber-700 rounded-lg shadow-inner">
           {/* Nut */}
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-gray-300 z-20" />
+          <div className="absolute left-0 top-0 bottom-0 w-1 bg-ivory rounded-l-lg z-20" />
           
           {/* Fret wires - accurately positioned */}
           {fretPositions.slice(1).map((position, i) => (
@@ -674,56 +695,63 @@ const InteractiveGuitar: React.FC = () => {
           ))}
 
           {/* Fret markers */}
-          <div className="absolute top-0 left-0 w-full h-full z-10" style={{ pointerEvents: 'none' }}>
-            {[3,5,7,9,12,15,17].map(fret => {
+          <div className="absolute top-0 left-0 w-full h-full px-2 z-10" style={{ pointerEvents: 'none' }}>
+            {[3,5,7,9,12].map(fret => {
               const position = fretPositions[fret];
-              const nextPosition = fretPositions[fret + 1] || 1;
-              const centerPosition = (position + nextPosition) / 2;
               return (
                 <div 
                   key={fret} 
-                  className="absolute top-1/2 transform -translate-y-1/2 flex items-center justify-center"
-                  style={{ left: `${centerPosition * 100}%` }}
+                  className="absolute top-1/2 transform -translate-y-1/2 flex flex-col items-center"
+                  style={{ left: `${position * 100}%` }}
                 >
-                  <div className={`w-2 h-2 sm:w-3 sm:h-3 bg-amber-200 rounded-full opacity-40 ${fret === 12 ? 'mb-3' : ''}`} />
-                  {fret === 12 && <div className="absolute top-1/2 mt-3 w-2 h-2 sm:w-3 sm:h-3 bg-amber-200 rounded-full opacity-40" />}
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-amber-200 rounded-full opacity-40 mb-1" />
+                  {fret === 12 && <div className="w-2 h-2 sm:w-3 sm:h-3 bg-amber-200 rounded-full opacity-40" />}
                 </div>
               );
             })}
           </div>
 
           {/* Strings */}
-          <div className="relative w-full h-full flex flex-col justify-evenly">
+          <div className="relative w-full h-full flex flex-col justify-evenly py-2">
             {strings.map((string, stringIndex) => (
               <motion.div
                 key={stringIndex}
                 className="relative flex items-center h-full"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: stringIndex * 0.05 }}
+                transition={{ delay: stringIndex * 0.1 }}
               >
-                {/* String line */}
+                {/* String line with realistic appearance */}
                 <div 
-                  className="absolute w-full h-0.5 transition-all duration-200"
+                  className={`absolute w-full transition-all duration-200 ${
+                    stringIndex < 3 ? 'h-1' : 'h-0.5'
+                  }`}
                   style={{ 
                     top: '50%', 
                     transform: 'translateY(-50%)',
                     background: `linear-gradient(to right, ${
-                      stringIndex < 3 ? '#8B4513, #A0522D' : '#C0C0C0, #E0E0E0'
+                      stringIndex < 3 
+                        ? '#8B4513, #A0522D' // Wound strings (darker)
+                        : '#C0C0C0, #E0E0E0'  // Plain strings (lighter)
                     })`,
                     boxShadow: activeNoteKeysByString.current.has(stringIndex) ? 
                       '0 0 8px rgba(255,215,0,0.8)' : 'none'
                   }}
                 />
                 
-                {/* Frets */}
+                {/* Tuning peg */}
+                <div className="absolute -left-6 sm:-left-8 w-4 h-4 sm:w-6 sm:h-6 bg-amber-700 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-bold z-30 shadow-md border border-amber-600">
+                  {string.note}
+                </div>
+                
+                {/* Frets positioned within logarithmic positions */}
                 <div className="relative w-full h-full flex">
-                  {string.frets.slice(0, 19).map((fret, fretIndex) => {
+                  {string.frets.slice(0, 13).map((fret, fretIndex) => {
                     const isActive = activeNoteKeysByString.current.get(stringIndex) === `${stringIndex}-${fretIndex}` || 
                                    isChordFret(stringIndex, fretIndex);
                     const leftPosition = fretIndex === 0 ? '0%' : `${fretPositions[fretIndex] * 100}%`;
                     const width = fretIndex === 0 ? `${fretPositions[1] * 100}%` : 
-                                 fretIndex < 18 ? `${(fretPositions[fretIndex + 1] - fretPositions[fretIndex]) * 100}%` : 
+                                 fretIndex < 12 ? `${(fretPositions[fretIndex + 1] - fretPositions[fretIndex]) * 100}%` : 
                                  `${(1 - fretPositions[fretIndex]) * 100}%`;
                     
                     return (
@@ -769,82 +797,8 @@ const InteractiveGuitar: React.FC = () => {
           </div>
         </div>
 
-        {/* GUITAR BODY - Larger and partially visible */}
-        <div className="absolute right-[-5%] top-1/2 -translate-y-1/2 w-[20%] h-[100%] bg-gradient-to-b from-amber-900 to-amber-700 overflow-hidden">
-          {/* Body shape */}
-          <div className="absolute inset-0 rounded-r-full overflow-hidden">
-            {/* Wood grain pattern */}
-            <div className="absolute inset-0 opacity-30" style={{
-              background: `linear-gradient(
-                45deg,
-                rgba(160, 82, 45, 0.2) 25%,
-                transparent 25%,
-                transparent 75%,
-                rgba(139, 69, 19, 0.3) 75%
-              ), linear-gradient(
-                45deg,
-                rgba(139, 69, 19, 0.3) 25%,
-                rgba(160, 82, 45, 0.2) 25%,
-                rgba(160, 82, 45, 0.2) 75%,
-                rgba(139, 69, 19, 0.3) 75%
-              )`,
-              backgroundSize: '20px 20px'
-            }} />
-            
-            {/* Sound hole - larger and positioned appropriately */}
-            <div className="absolute top-1/2 left-[30%] transform -translate-x-1/2 -translate-y-1/2 z-10">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-black border-2 border-amber-600 relative">
-                <div className="absolute inset-1 rounded-full border border-amber-400"></div>
-                <div className="absolute inset-2 rounded-full border border-amber-300"></div>
-              </div>
-            </div>
-            
-            {/* Bridge */}
-            <div className="absolute bottom-1/3 left-1/3 transform -translate-x-1/2 w-8 h-1 bg-amber-600 rounded shadow-lg z-10" />
-          </div>
-        </div>
-
-        {/* Pick animation */}
-        <AnimatePresence>
-          {showPick && (
-            <motion.div
-              className="absolute z-20 w-3 h-4 sm:w-4 sm:h-6 bg-amber-200 rounded-sm shadow-lg pointer-events-none"
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ 
-                opacity: 1, 
-                scale: 1,
-                x: strumDirection === 'down' ? 15 : -15,
-                y: pickPosition * 100 + '%'
-              }}
-              exit={{ opacity: 0, scale: 0.5 }}
-              transition={{ duration: 0.2 }}
-              style={{
-                left: '75%',
-                top: '50%',
-                transform: `rotate(${strumDirection === 'down' ? 15 : -15}deg)`
-              }}
-            />
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Chord selection - moved outside guitar container */}
-      <div className="mt-4 flex justify-center flex-wrap gap-1 sm:gap-2">
-        {chords.map((chord, index) => (
-          <motion.button
-            key={index}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all ${
-              heldChord === index 
-                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white' 
-                : 'bg-amber-700 text-amber-100 hover:bg-amber-600'
-            }`}
-            onClick={() => applyChord(index)}
-          >
-            {chord.name}
-          </motion.button>
-        ))}
+        {/* Bridge */}
+        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-8 h-3 sm:w-10 sm:h-4 bg-amber-600 rounded shadow-lg z-10" />
       </div>
 
       {/* Current chord display */}

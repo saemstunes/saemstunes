@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, Play, Heart, Music, CheckCircle, Clock, Star, TrendingUp, Share, Search, Plus } from "lucide-react";
+import { Upload, Play, Pause, Heart, MessageCircle, Music, CheckCircle, Clock, Star, TrendingUp, Share } from "lucide-react";
 import AudioPlayer from "@/components/media/AudioPlayer";
 import { canAccessContent, AccessLevel } from "@/lib/contentAccess";
 import MainLayout from "@/components/layout/MainLayout";
@@ -15,12 +15,11 @@ import { Helmet } from "react-helmet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AnimatedList from "@/components/tracks/AnimatedList";
 import ChromaGrid from "@/components/tracks/ChromaGrid";
+import TiltedCard from "@/components/tracks/TiltedCard";
 import CountUp from "@/components/tracks/CountUp";
 import { ResponsiveImage } from "@/components/ui/responsive-image";
 import { useNavigate } from "react-router-dom";
 import { PlaylistActions } from "@/components/playlists/PlaylistActions";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import EnhancedAnimatedList from "@/components/tracks/EnhancedAnimatedList";
 
 interface Track {
   id: string;
@@ -32,17 +31,10 @@ interface Track {
   user_id: string;
   approved: boolean;
   created_at: string;
-  artist: string | null;
   profiles?: {
+    display_name: string;
     avatar_url: string;
   };
-}
-
-interface Playlist {
-  id: string;
-  name: string;
-  description?: string;
-  created_at: string;
 }
 
 interface FeaturedTrack {
@@ -60,12 +52,10 @@ const Tracks = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [tracks, setTracks] = useState<Track[]>([]);
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [featuredTrack, setFeaturedTrack] = useState<FeaturedTrack | null>(null);
   const [loading, setLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
   const [activeTab, setActiveTab] = useState("showcase");
-  const [searchTerm, setSearchTerm] = useState('');
   
   // Upload form state
   const [title, setTitle] = useState('');
@@ -75,7 +65,7 @@ const Tracks = () => {
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
- // Sample data for demonstrations
+  // Sample data for demonstrations
   const albumItems = [
     {
       image: "https://i.imgur.com/VfKXMyG.png",
@@ -191,25 +181,27 @@ const Tracks = () => {
   useEffect(() => {
     fetchTracks();
     fetchFeaturedTrack();
-    fetchPlaylists();
     
-    // Set up realtime listener for tracks and playlists
+    // Set up realtime listener for tracks
     const channel = supabase
       .channel('tracks-changes')
       .on('postgres_changes', {
-        event: '*',
+        event: 'INSERT',
         schema: 'public',
         table: 'tracks'
-      }, () => {
+      }, (payload) => {
+        console.log('Track uploaded:', payload);
         fetchTracks();
-        fetchFeaturedTrack();
+        fetchFeaturedTrack(); // Also refresh featured track in case it changed
       })
       .on('postgres_changes', {
-        event: '*',
+        event: 'UPDATE',
         schema: 'public',
-        table: 'playlists'
-      }, () => {
-        fetchPlaylists();
+        table: 'tracks'
+      }, (payload) => {
+        console.log('Track updated:', payload);
+        fetchTracks();
+        fetchFeaturedTrack();
       })
       .subscribe();
 
@@ -217,27 +209,6 @@ const Tracks = () => {
       supabase.removeChannel(channel);
     };
   }, []);
-
-  const fetchPlaylists = useCallback(async () => {
-    if (!user) return;
-    try {
-      const { data, error } = await supabase
-        .from('playlists')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      if (data) setPlaylists(data);
-    } catch (error) {
-      console.error('Error fetching playlists:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch playlists. Please try again.',
-        variant: 'destructive',
-      });
-    }
-  }, [user, toast]);
 
   const fetchFeaturedTrack = async () => {
     try {
@@ -251,7 +222,9 @@ const Tracks = () => {
           cover_path,
           description,
           created_at,
-          artist  
+          profiles:user_id (
+            display_name
+          )
         `)
         .eq('approved', true)
         .order('created_at', { ascending: false })
@@ -290,7 +263,7 @@ const Tracks = () => {
           id: trackData.id,
           imageSrc: coverUrl || "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Cover%20Art/salama-featured.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvQ292ZXIgQXJ0L3NhbGFtYS1mZWF0dXJlZC5qcGciLCJpYXQiOjE3NDk5NTMwNTksImV4cCI6MTc4MTQ4OTA1OX0.KtKlRXxj5z5KzzbnTDWd9oRVbztRHwioGA0YN1Xjn4Q",
           title: "Featured Track of the Week",
-          artist: trackData.artist || `Unknown Artist - ${trackData.title}`,
+          artist: trackData.profiles?.display_name ? `${trackData.profiles.display_name} - ${trackData.title}` : trackData.title,
           plays: playCount,
           likes: likeCount,
           audioSrc: audioUrl || "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Cover%20Art/Salama%20-%20Saem%20x%20Simali.mp3",
@@ -341,8 +314,8 @@ const Tracks = () => {
           user_id,
           approved,
           created_at,
-          artist,
           profiles:user_id (
+            display_name,
             avatar_url
           )
         `)
@@ -369,7 +342,6 @@ const Tracks = () => {
         user_id: track.user_id,
         approved: track.approved,
         created_at: track.created_at,
-        artist: track.artist,
         profiles: track.profiles
       })) as Track[];
       
@@ -390,7 +362,7 @@ const Tracks = () => {
     }
   };
 
-  const trackPlay = async (trackId: string) => {
+ const trackPlay = async (trackId: string) => {
     if (!trackId || trackId === 'featured-fallback') return;
     
     try {
@@ -561,37 +533,6 @@ const Tracks = () => {
     }
   };
 
-  // Search functionality
-  const filteredTracks = tracks.filter(track =>
-    track.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (track.artist && track.artist.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
-  // Sharing functionality
-  const handleShare = (track: Track) => {
-    if (navigator.share) {
-      navigator.share({
-        title: track.title,
-        text: `Listen to ${track.title} by ${track.artist} on Saem's Tunes`,
-        url: window.location.href,
-      })
-      .catch((error) => {
-        console.log('Error sharing', error);
-        toast({
-          title: "Share Error",
-          description: "Failed to share. Please try again.",
-          variant: "destructive",
-        });
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast({
-        title: "Link Copied",
-        description: "Track link copied to clipboard"
-      });
-    }
-  };
-
   if (loading || !featuredTrack) {
     return (
       <MainLayout>
@@ -615,33 +556,21 @@ const Tracks = () => {
       <MainLayout>
         <div className="min-h-screen bg-background pb-20 lg:pb-0">
           <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div className="flex justify-between items-center mb-8">
               <div>
                 <h1 className="text-3xl font-bold text-foreground">Tracks</h1>
                 <p className="text-muted-foreground">Discover and share amazing music</p>
               </div>
               
-              <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-                <div className="relative max-w-md w-full">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search tracks, artists..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 w-full"
-                  />
-                </div>
-                
-                {user && (
-                  <Button 
-                    onClick={() => setShowUpload(!showUpload)}
-                    className="bg-gold hover:bg-gold/90"
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    Upload Track
-                  </Button>
-                )}
-              </div>
+              {user && (
+                <Button 
+                  onClick={() => setShowUpload(!showUpload)}
+                  className="bg-gold hover:bg-gold/90"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload Track
+                </Button>
+              )}
             </div>
 
             {/* Upload Form */}
@@ -730,11 +659,10 @@ const Tracks = () => {
 
             {/* Main Content Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="showcase">Showcase</TabsTrigger>
-                <TabsTrigger value="covers">Covers</TabsTrigger>
+                <TabsTrigger value="albums">Covers</TabsTrigger>
                 <TabsTrigger value="playlists">Playlists</TabsTrigger>
-                <TabsTrigger value="artists">Artists</TabsTrigger>
                 <TabsTrigger value="community">Community</TabsTrigger>
               </TabsList>
 
@@ -765,7 +693,7 @@ const Tracks = () => {
                     <div className="space-y-4 order-1 md:order-2 text-center md:text-left">
                       <h3 className="text-xl font-semibold">{featuredTrack.artist}</h3>
                       <p className="text-muted-foreground">
-                        {featuredTrack.description || "Amidst a concerning time around the world..."}
+                        {featuredTrack.description || "Amidst a concerning time around the world, we thought to capture the picture of it in light of what we know & are assured of. This song goes back almost 20 years & to be able to translate it in this way, with some of the people who have been a support to this space, is an esteemed honor. I pray this song grows to translate, even beyond my ability, the moments that can't be imagined: bomb landings in promised sheltered areas, an innocent mum and dad beholding their lost child, a child suddenly made an orphan, the plight of a future riddled with uncertainties as powers that greater be call the shots... how damning to not even be able to promise a solution. But even in the midst of it, just to find a voice that speaks to you, comforts you, is a true balm to the wounds the world oft inflicts. Might I present to you Jesus? He knows every thought, bottles every tear and is sovereign even when it feels He isn't. In Christ, nahnu aaminum/nahnun 'āminūm/sango mbote/we are safe/tuko SALAMA!"}
                       </p>
                       
                       <div className="flex gap-8 justify-center md:justify-start">
@@ -797,27 +725,43 @@ const Tracks = () => {
                   </div>
                 </section>
 
-                {/* Suggested Tracks */}
+                {/* Upcoming Singles */}
                 <section>
                   <div className="flex items-center gap-2 mb-6">
                     <TrendingUp className="h-6 w-6 text-gold" />
-                    <h2 className="text-2xl font-bold">Suggested For You</h2>
+                    <h2 className="text-2xl font-bold">Suggested By You</h2>
                   </div>
                   
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Recommended Tracks</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ScrollArea className="h-[400px]">
-                        <EnhancedAnimatedList tracks={filteredTracks.slice(0, 10)} />
-                      </ScrollArea>
-                    </CardContent>
-                  </Card>
+                  <div className="grid gap-6">
+                    {tracks.slice(0, 3).map((track) => (
+                      <TrackCard key={track.id} track={track} user={user} />
+                    ))}
+                    
+                    {tracks.length === 0 && (
+                      <Card>
+                        <CardContent className="flex flex-col items-center justify-center py-12">
+                          <Music className="h-12 w-12 text-muted-foreground mb-4" />
+                          <h3 className="text-lg font-semibold mb-2">No tracks yet</h3>
+                          <p className="text-muted-foreground text-center mb-4">
+                            Be the first to share your music with the community!
+                          </p>
+                          {user && (
+                            <Button 
+                              onClick={() => setShowUpload(true)}
+                              className="bg-gold hover:bg-gold/90"
+                            >
+                              <Upload className="h-4 w-4 mr-2" />
+                              Upload First Track
+                            </Button>
+                          )}
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
                 </section>
               </TabsContent>
 
-              <TabsContent value="covers" className="space-y-8">
+              <TabsContent value="albums" className="space-y-8">
                 <div className="flex items-center gap-2 mb-6">
                   <Music className="h-6 w-6 text-gold" />
                   <h2 className="text-2xl font-bold">Featured Covers</h2>
@@ -830,63 +774,14 @@ const Tracks = () => {
                     damping={0.45}
                     fadeOut={0.6}
                     ease="power3.out"
-                  />
+                    />
                 </div>
               </TabsContent>
 
               <TabsContent value="playlists" className="space-y-8">
                 <div className="flex items-center gap-2 mb-6">
                   <Music className="h-6 w-6 text-gold" />
-                  <h2 className="text-2xl font-bold">Your Playlists</h2>
-                </div>
-                
-                <div className="grid gap-4">
-                  {playlists.map((playlist) => (
-                    <Card key={playlist.id}>
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-4">
-                          <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
-                            <Music className="h-8 w-8 text-primary" />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-semibold">{playlist.name}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {playlist.description || 'No description'}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Created {new Date(playlist.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <Button variant="outline" size="sm">
-                            View Playlist
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                  
-                  {playlists.length === 0 && (
-                    <Card>
-                      <CardContent className="flex flex-col items-center justify-center py-12">
-                        <Music className="h-12 w-12 text-muted-foreground mb-4" />
-                        <h3 className="text-lg font-semibold mb-2">No playlists yet</h3>
-                        <p className="text-muted-foreground text-center mb-4">
-                          Create your first playlist to organize your favorite tracks
-                        </p>
-                        <Button variant="outline">
-                          <Plus className="h-4 w-4 mr-2" />
-                          Create Playlist
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="artists" className="space-y-8">
-                <div className="flex items-center gap-2 mb-6">
-                  <Music className="h-6 w-6 text-gold" />
-                  <h2 className="text-2xl font-bold">Featured Artists</h2>
+                  <h2 className="text-2xl font-bold">Popular Playlists</h2>
                 </div>
                 
                 <div className="w-full overflow-hidden px-2">
@@ -903,24 +798,36 @@ const Tracks = () => {
               </TabsContent>
 
               <TabsContent value="community" className="space-y-8">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-2">
-                    <Music className="h-6 w-6 text-gold" />
-                    <h2 className="text-2xl font-bold">Community Tracks</h2>
-                  </div>
+                <div className="flex items-center gap-2 mb-6">
+                  <Music className="h-6 w-6 text-gold" />
+                  <h2 className="text-2xl font-bold">Community Tracks</h2>
                 </div>
                 
                 <div className="grid gap-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>All Tracks</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ScrollArea className="h-[500px]">
-                        <EnhancedAnimatedList tracks={filteredTracks} />
-                      </ScrollArea>
-                    </CardContent>
-                  </Card>
+                  {tracks.map((track) => (
+                    <TrackCard key={track.id} track={track} user={user} />
+                  ))}
+                  
+                  {tracks.length === 0 && (
+                    <Card>
+                      <CardContent className="flex flex-col items-center justify-center py-12">
+                        <Music className="h-12 w-12 text-muted-foreground mb-4" />
+                        <h3 className="text-lg font-semibold mb-2">No community tracks yet</h3>
+                        <p className="text-muted-foreground text-center mb-4">
+                          Be the first to share your music with the community!
+                        </p>
+                        {user && (
+                          <Button 
+                            onClick={() => setShowUpload(true)}
+                            className="bg-gold hover:bg-gold/90"
+                          >
+                            <Upload className="h-4 w-4 mr-2" />
+                            Upload First Track
+                          </Button>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
               </TabsContent>
             </Tabs>
@@ -1100,7 +1007,7 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
     };
 
     const shareData = {
-      title: `${track.title} by ${track.artist || 'Unknown Artist'}`,
+      title: `${track.title} by ${track.profiles?.display_name || 'Unknown Artist'}`,
       text: `Listen to ${track.title} on Saem's Tunes`,
       url: `${getBaseUrl()}/tracks/${track.id}`,
     };
@@ -1140,9 +1047,9 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
       <CardContent className="p-6">
         <div className="flex items-start gap-4 mb-4">
           <div className="h-12 w-12 rounded-full bg-gold/20 flex items-center justify-center">
-            {track.cover_path ? (
+            {track.profiles?.avatar_url ? (
               <ResponsiveImage 
-                src={track.cover_path} 
+                src={track.profiles.avatar_url} 
                 alt="Artist" 
                 width={48}
                 height={48}
@@ -1161,7 +1068,7 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
               <h3 className="font-semibold text-lg">{track.title}</h3>
             </div>
             <p className="text-muted-foreground text-sm">
-              by {track.artist || 'Unknown Artist'}
+              by {track.profiles?.display_name || 'Unknown Artist'}
             </p>
             {track.description && (
               <p className="text-sm mt-2">{track.description}</p>
@@ -1187,54 +1094,54 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
             <AudioPlayer 
               src={audioUrl}
               title={track.title}
-              artist={track.artist || 'Unknown Artist'}
+              artist={track.profiles?.display_name || 'Unknown Artist'}
               artwork={coverUrl}
               compact={false}
             />
           </div>
         )}
 
-        <div className="flex items-center gap-2">
-          <PlaylistActions trackId={track.id} />
-          <div className="flex items-center gap-4 flex-wrap">
-            {user && isValidDatabaseTrack && (
-              <>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={toggleLike}
-                  className="flex items-center gap-2"
-                >
-                  <Heart className={`h-4 w-4 ${liked ? 'fill-red-500 text-red-500' : ''}`} />
-                  {likeCount}
-                </Button>
+    <div className="flex items-center gap-2">
+      <PlaylistActions trackId={track.id} />
+        <div className="flex items-center gap-4 flex-wrap">
+          {user && isValidDatabaseTrack && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleLike}
+                className="flex items-center gap-2"
+              >
+                <Heart className={`h-4 w-4 ${liked ? 'fill-red-500 text-red-500' : ''}`} />
+                {likeCount}
+              </Button>
 
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={toggleSave}
-                  className="flex items-center gap-2"
-                >
-                  <CheckCircle className={`h-4 w-4 ${saved ? 'fill-green-500 text-green-500' : ''}`} />
-                  {saved ? 'Saved' : 'Save'}
-                </Button>
-              </>
-            )}
-            
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="flex items-center gap-2"
-              onClick={handleShare}
-            >
-              <Share className="h-4 w-4" />
-              Share
-            </Button>
-            
-            <span className="text-xs text-muted-foreground ml-auto">
-              {new Date(track.created_at).toLocaleDateString()}
-            </span>
-          </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleSave}
+                className="flex items-center gap-2"
+              >
+                <CheckCircle className={`h-4 w-4 ${saved ? 'fill-green-500 text-green-500' : ''}`} />
+                {saved ? 'Saved' : 'Save'}
+              </Button>
+            </>
+          )}
+          
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="flex items-center gap-2"
+            onClick={handleShare}
+          >
+            <Share className="h-4 w-4" />
+            Share
+          </Button>
+          
+          <span className="text-xs text-muted-foreground ml-auto">
+            {new Date(track.created_at).toLocaleDateString()}
+          </span>
+         </div>
         </div>
       </CardContent>
     </Card>

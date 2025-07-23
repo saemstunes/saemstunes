@@ -1,73 +1,19 @@
+
 import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { motion } from "framer-motion";
 import { pageTransition } from "@/lib/animation-utils";
 import SearchBox from "@/components/discover/SearchBox";
-import EnhancedFeaturedBanner from "@/components/discover/EnhancedFeaturedBanner";
-import CategoryNavigation from "@/components/ui/CategoryNavigation";
+import FeaturedBanner from "@/components/discover/FeaturedBanner";
 import ContentTabs from "@/components/discover/ContentTabs";
 import RecommendationSection from "@/components/discover/RecommendationSection";
-import { supabase } from "@/integrations/supabase/client";
 
 const Discover = () => {
   const [activeTab, setActiveTab] = useState("music");
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [videos, setVideos] = useState([]);
-  const [tracks, setTracks] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const categories = [
-    { id: 'all', label: 'All' },
-    { id: 'music', label: 'Music' },
-    { id: 'tutorials', label: 'Tutorials' },
-    { id: 'resources', label: 'Resources' },
-  ];
-
-  useEffect(() => {
-    fetchContent();
-  }, [selectedCategory]);
-
-  const fetchContent = async () => {
-    setLoading(true);
-    try {
-      const { data: videosData, error: videosError } = await supabase
-        .from('videos')
-        .select('*')
-        .eq('approved', true)
-        .order('created_at', { ascending: false });
-
-      if (videosError) throw videosError;
-
-      const { data: tracksData, error: tracksError } = await supabase
-        .from('tracks')
-        .select('*')
-        .eq('approved', true)
-        .order('created_at', { ascending: false });
-
-      if (tracksError) throw tracksError;
-
-      setVideos(videosData || []);
-      setTracks(tracksData || []);
-    } catch (error) {
-      console.error('Error fetching content:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filteredVideos = videos.filter(video =>
-    video.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-    (selectedCategory === 'all' || video.category === selectedCategory)
-  );
-
-  const filteredTracks = tracks.filter(track =>
-    track.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-    (selectedCategory === 'all' || track.category === selectedCategory)
-  );
 
   // Force dropdown menus to appear on top by adding a container with higher z-index
   useEffect(() => {
+    // Add the global container for dropdowns if it doesn't exist
     if (!document.getElementById('portal-dropdown-container')) {
       const dropdownContainer = document.createElement('div');
       dropdownContainer.id = 'portal-dropdown-container';
@@ -81,6 +27,7 @@ const Discover = () => {
       document.body.appendChild(dropdownContainer);
     }
     
+    // Remove the container when the component unmounts
     return () => {
       const container = document.getElementById('portal-dropdown-container');
       if (container && container.childNodes.length === 0) {
@@ -102,39 +49,17 @@ const Discover = () => {
               Explore curated content from across the musical world
             </p>
           </div>
-          <SearchBox 
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            category={selectedCategory}
-            onCategoryChange={setSelectedCategory}
-          />
+          <SearchBox />
         </div>
         
-        {/* Enhanced featured content banner */}
-        <EnhancedFeaturedBanner />
-        
-        {/* Category Navigation */}
-        <CategoryNavigation 
-          categories={categories}
-          selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
-        />
+        {/* Featured content banner */}
+        <FeaturedBanner />
         
         {/* Tabs content section */}
-        <ContentTabs 
-          activeTab={activeTab} 
-          setActiveTab={setActiveTab}
-          videos={filteredVideos}
-          tracks={filteredTracks}
-          searchTerm={searchTerm}
-          selectedCategory={selectedCategory}
-        />
+        <ContentTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
-        {/* Recommendation Section */}
-        <RecommendationSection 
-          videos={filteredVideos}
-          tracks={filteredTracks}
-        />
+        {/* New Recommendation Section */}
+        <RecommendationSection />
       </motion.div>
     </MainLayout>
   );

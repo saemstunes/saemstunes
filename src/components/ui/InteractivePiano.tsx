@@ -593,26 +593,26 @@ const InteractivePiano: React.FC = () => {
       {/* Background effects */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10 opacity-50" />
       
-      {/* Side Panel Buttons - Adjusted for mobile */}
+      {/* Side Panel Buttons (Windows Media Player style) */}
       <div className="absolute inset-y-0 left-0 flex items-center z-30">
         <button
           onClick={() => setPanelPosition(panelPosition === 'left' ? null : 'left')}
-          className="ml-[-16px] sm:ml-[-20px] w-8 h-16 sm:w-10 sm:h-20 bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 rounded-r-lg shadow-lg flex items-center justify-center transition-all group"
+          className="ml-[-20px] w-10 h-20 bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 rounded-r-lg shadow-lg flex items-center justify-center transition-all group"
         >
-          <Settings className="h-4 w-4 sm:h-5 sm:w-5 text-white group-hover:scale-110 transition-transform" />
+          <Settings className="h-5 w-5 text-white group-hover:scale-110 transition-transform" />
         </button>
       </div>
       
       <div className="absolute inset-y-0 right-0 flex items-center z-30">
         <button
           onClick={() => setPanelPosition(panelPosition === 'right' ? null : 'right')}
-          className="mr-[-16px] sm:mr-[-20px] w-8 h-16 sm:w-10 sm:h-20 bg-gradient-to-r from-slate-900 to-slate-800 hover:from-slate-800 hover:to-slate-700 rounded-l-lg shadow-lg flex items-center justify-center transition-all group"
+          className="mr-[-20px] w-10 h-20 bg-gradient-to-r from-slate-900 to-slate-800 hover:from-slate-800 hover:to-slate-700 rounded-l-lg shadow-lg flex items-center justify-center transition-all group"
         >
-          <Info className="h-4 w-4 sm:h-5 sm:w-5 text-white group-hover:scale-110 transition-transform" />
+          <Info className="h-5 w-5 text-white group-hover:scale-110 transition-transform" />
         </button>
       </div>
       
-      {/* Left Settings Panel - Made responsive */}
+      {/* Left Settings Panel */}
       <AnimatePresence>
         {panelPosition === 'left' && (
           <motion.div
@@ -620,9 +620,9 @@ const InteractivePiano: React.FC = () => {
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="absolute top-0 left-0 h-full w-[280px] sm:w-80 bg-gradient-to-b from-slate-900 to-slate-800 border-r border-slate-700 shadow-2xl z-20 flex flex-col"
+            className="absolute top-0 left-0 h-full w-80 bg-gradient-to-b from-slate-900 to-slate-800 border-r border-slate-700 shadow-2xl z-20 p-6"
           >
-            <div className="flex items-center justify-between p-6">
+            <div className="flex items-center justify-between mb-6">
               <h3 className="text-white font-semibold text-lg flex items-center gap-2">
                 <Settings className="h-5 w-5" />
                 Piano Settings
@@ -635,117 +635,114 @@ const InteractivePiano: React.FC = () => {
               </button>
             </div>
             
-            {/* Scrollable content container */}
-            <div className="flex-grow overflow-y-auto px-6 pb-6">
-              <div className="grid grid-cols-1 gap-6">
-                <div className="space-y-4">
-                  <div className="bg-white/5 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <label className="text-white font-medium flex items-center gap-2">
-                        <Volume2 className="h-4 w-4" />
-                        Volume
-                      </label>
-                      <span className="text-primary font-mono text-sm">
-                        {Math.round(volume * 100)}%
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.1"
-                      value={volume}
-                      onChange={(e) => setVolume(parseFloat(e.target.value))}
-                      className="w-full accent-primary bg-white/10 rounded-lg"
-                    />
+            <div className="grid grid-cols-1 gap-6">
+              <div className="space-y-4">
+                <div className="bg-white/5 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-white font-medium flex items-center gap-2">
+                      <Volume2 className="h-4 w-4" />
+                      Volume
+                    </label>
+                    <span className="text-primary font-mono text-sm">
+                      {Math.round(volume * 100)}%
+                    </span>
                   </div>
-                  
-                  <div className="bg-white/5 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <label className="text-white font-medium flex items-center gap-2">
-                        <Clock className="h-4 w-4" />
-                        Tempo
-                      </label>
-                      <span className="text-purple-400 font-mono text-sm">
-                        {tempo} BPM
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min="60"
-                      max="200"
-                      step="10"
-                      value={tempo}
-                      onChange={(e) => setTempo(parseInt(e.target.value))}
-                      className="w-full accent-purple-500 bg-white/10 rounded-lg"
-                    />
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value={volume}
+                    onChange={(e) => setVolume(parseFloat(e.target.value))}
+                    className="w-full accent-primary bg-white/10 rounded-lg"
+                  />
+                </div>
+                
+                <div className="bg-white/5 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-white font-medium flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      Tempo
+                    </label>
+                    <span className="text-purple-400 font-mono text-sm">
+                      {tempo} BPM
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="60"
+                    max="200"
+                    step="10"
+                    value={tempo}
+                    onChange={(e) => setTempo(parseInt(e.target.value))}
+                    className="w-full accent-purple-500 bg-white/10 rounded-lg"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="bg-white/5 rounded-lg p-4">
+                  <label className="text-white font-medium block mb-3">Waveform</label>
+                  <select
+                    value={waveform}
+                    onChange={(e) => setWaveform(e.target.value as OscillatorType)}
+                    className="w-full bg-black/50 text-white rounded-lg px-3 py-2 border border-white/20 focus:border-blue-400 focus:outline-none"
+                  >
+                    <option value="sine">Sine (Piano-like)</option>
+                    <option value="sawtooth">Sawtooth</option>
+                    <option value="square">Square</option>
+                    <option value="triangle">Triangle</option>
+                  </select>
+                </div>
+                
+                <div className="bg-white/5 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-white font-medium">Octave</label>
+                    <span className="text-blue-400 font-mono text-sm">
+                      {octaveShift > 0 ? '+' : ''}{octaveShift}
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setOctaveShift(prev => Math.max(prev - 1, -2))}
+                      className="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 px-3 rounded-lg transition-colors font-medium"
+                      disabled={octaveShift <= -2}
+                    >
+                      ↓ Lower
+                    </button>
+                    <button
+                      onClick={() => setOctaveShift(0)}
+                      className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 py-2 px-3 rounded-lg transition-colors font-medium"
+                    >
+                      Reset
+                    </button>
+                    <button
+                      onClick={() => setOctaveShift(prev => Math.min(prev + 1, 2))}
+                      className="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 px-3 rounded-lg transition-colors font-medium"
+                      disabled={octaveShift >= 2}
+                    >
+                      ↑ Higher
+                    </button>
                   </div>
                 </div>
                 
-                <div className="space-y-4">
-                  <div className="bg-white/5 rounded-lg p-4">
-                    <label className="text-white font-medium block mb-3">Waveform</label>
-                    <select
-                      value={waveform}
-                      onChange={(e) => setWaveform(e.target.value as OscillatorType)}
-                      className="w-full bg-black/50 text-white rounded-lg px-3 py-2 border border-white/20 focus:border-blue-400 focus:outline-none"
+                <div className="bg-white/5 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <label className="text-white font-medium">Sustain Pedal</label>
+                    <button
+                      onClick={() => setSustainPedal(!sustainPedal)}
+                      className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${
+                        sustainPedal ? 'bg-primary' : 'bg-white/20'
+                      }`}
                     >
-                      <option value="sine">Sine (Piano-like)</option>
-                      <option value="sawtooth">Sawtooth</option>
-                      <option value="square">Square</option>
-                      <option value="triangle">Triangle</option>
-                    </select>
+                      <div className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform duration-300 ${
+                        sustainPedal ? 'translate-x-7' : 'translate-x-0'
+                      }`} />
+                    </button>
                   </div>
-                  
-                  <div className="bg-white/5 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <label className="text-white font-medium">Octave</label>
-                      <span className="text-blue-400 font-mono text-sm">
-                        {octaveShift > 0 ? '+' : ''}{octaveShift}
-                      </span>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setOctaveShift(prev => Math.max(prev - 1, -2))}
-                        className="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 px-3 rounded-lg transition-colors font-medium"
-                        disabled={octaveShift <= -2}
-                      >
-                        ↓ Lower
-                      </button>
-                      <button
-                        onClick={() => setOctaveShift(0)}
-                        className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 py-2 px-3 rounded-lg transition-colors font-medium"
-                      >
-                        Reset
-                      </button>
-                      <button
-                        onClick={() => setOctaveShift(prev => Math.min(prev + 1, 2))}
-                        className="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 px-3 rounded-lg transition-colors font-medium"
-                        disabled={octaveShift >= 2}
-                      >
-                        ↑ Higher
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-white/5 rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                      <label className="text-white font-medium">Sustain Pedal</label>
-                      <button
-                        onClick={() => setSustainPedal(!sustainPedal)}
-                        className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${
-                          sustainPedal ? 'bg-primary' : 'bg-white/20'
-                        }`}
-                      >
-                        <div className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform duration-300 ${
-                          sustainPedal ? 'translate-x-7' : 'translate-x-0'
-                        }`} />
-                      </button>
-                    </div>
-                    <p className="text-white/60 text-sm mt-2">
-                      Hold Shift key or toggle here
-                    </p>
-                  </div>
+                  <p className="text-white/60 text-sm mt-2">
+                    Hold Shift key or toggle here
+                  </p>
                 </div>
               </div>
             </div>
@@ -753,7 +750,7 @@ const InteractivePiano: React.FC = () => {
         )}
       </AnimatePresence>
       
-      {/* Right Keyguide Panel - Made responsive */}
+      {/* Right Keyguide Panel */}
       <AnimatePresence>
         {panelPosition === 'right' && (
           <motion.div
@@ -761,9 +758,9 @@ const InteractivePiano: React.FC = () => {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="absolute top-0 right-0 h-full w-[280px] sm:w-80 bg-gradient-to-b from-slate-900 to-slate-800 border-l border-slate-700 shadow-2xl z-20 flex flex-col"
+            className="absolute top-0 right-0 h-full w-80 bg-gradient-to-b from-slate-900 to-slate-800 border-l border-slate-700 shadow-2xl z-20 p-6"
           >
-            <div className="flex items-center justify-between p-6">
+            <div className="flex items-center justify-between mb-6">
               <h3 className="text-white font-semibold text-lg flex items-center gap-2">
                 <Info className="h-5 w-5" />
                 Keyboard Shortcuts
@@ -776,56 +773,53 @@ const InteractivePiano: React.FC = () => {
               </button>
             </div>
             
-            {/* Scrollable content container */}
-            <div className="flex-grow overflow-y-auto px-6 pb-6">
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <h4 className="font-medium mb-1 text-white/80">White Keys</h4>
-                  <div className="space-y-1">
-                    {keys.filter(k => k.type === 'white').map((key) => (
-                      <div key={key.note} className="flex justify-between">
-                        <span className="text-white/70">{key.note}</span>
-                        <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-xs">
-                          {key.keyboardKey?.toUpperCase()}
-                        </kbd>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-1 text-white/80">Black Keys</h4>
-                  <div className="space-y-1">
-                    {keys.filter(k => k.type === 'black').map((key) => (
-                      <div key={key.note} className="flex justify-between">
-                        <span className="text-white/70">{key.note}</span>
-                        <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-xs">
-                          {key.keyboardKey?.toUpperCase()}
-                        </kbd>
-                      </div>
-                    ))}
-                  </div>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <h4 className="font-medium mb-1 text-white/80">White Keys</h4>
+                <div className="space-y-1">
+                  {keys.filter(k => k.type === 'white').map((key) => (
+                    <div key={key.note} className="flex justify-between">
+                      <span className="text-white/70">{key.note}</span>
+                      <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-xs">
+                        {key.keyboardKey?.toUpperCase()}
+                      </kbd>
+                    </div>
+                  ))}
                 </div>
               </div>
-              
-              <div className="mt-6 pt-6 border-t border-white/10">
-                <h4 className="font-medium mb-1 text-white/80">Controls</h4>
+              <div>
+                <h4 className="font-medium mb-1 text-white/80">Black Keys</h4>
                 <div className="space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-white/70">Play Demo</span>
-                    <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-xs">SPACE</kbd>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/70">Sustain Pedal</span>
-                    <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-xs">SHIFT</kbd>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/70">Octave Up</span>
-                    <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-xs">↑</kbd>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/70">Octave Down</span>
-                    <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-xs">↓</kbd>
-                  </div>
+                  {keys.filter(k => k.type === 'black').map((key) => (
+                    <div key={key.note} className="flex justify-between">
+                      <span className="text-white/70">{key.note}</span>
+                      <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-xs">
+                        {key.keyboardKey?.toUpperCase()}
+                      </kbd>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-6 pt-6 border-t border-white/10">
+              <h4 className="font-medium mb-1 text-white/80">Controls</h4>
+              <div className="space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-white/70">Play Demo</span>
+                  <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-xs">SPACE</kbd>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-white/70">Sustain Pedal</span>
+                  <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-xs">SHIFT</kbd>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-white/70">Octave Up</span>
+                  <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-xs">↑</kbd>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-white/70">Octave Down</span>
+                  <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-xs">↓</kbd>
                 </div>
               </div>
             </div>
@@ -833,20 +827,19 @@ const InteractivePiano: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Rhythm Display - Responsive positioning */}
+      {/* Rhythm Display */}
       {noteBeingHeld && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="absolute top-2 sm:top-4 left-2 right-2 sm:left-1/2 sm:transform sm:-translate-x-1/2 bg-blue-500/20 backdrop-blur-sm border border-blue-500/30 rounded-lg px-3 py-1 text-xs sm:text-sm text-blue-100 font-medium z-40 shadow-lg truncate"
+          className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-blue-500/20 backdrop-blur-sm border border-blue-500/30 rounded-lg px-4 py-2 text-blue-100 text-sm font-medium z-40 shadow-lg"
           style={{
-            left: panelPosition === 'left' ? 'calc(50% + 140px)' : 
-                  panelPosition === 'right' ? 'calc(50% - 140px)' : '50%',
-            transition: 'left 0.3s ease',
-            maxWidth: isMobile ? 'calc(100vw - 2rem)' : 'none'
+            left: panelPosition === 'left' ? 'calc(50% + 160px)' : 
+                  panelPosition === 'right' ? 'calc(50% - 160px)' : '50%',
+            transition: 'left 0.3s ease'
           }}
         >
-          <Clock className="inline w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+          <Clock className="inline w-4 h-4 mr-2" />
           Playing: {rhythmValue} • Tempo: {tempo} BPM
         </motion.div>
       )}
@@ -854,7 +847,7 @@ const InteractivePiano: React.FC = () => {
       <div className="relative z-10">
         {/* Control buttons */}
         <motion.div 
-          className="flex flex-wrap justify-center items-center gap-2 mb-3 sm:mb-4"
+          className="flex flex-wrap justify-center items-center gap-2 mb-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
@@ -862,33 +855,33 @@ const InteractivePiano: React.FC = () => {
           <button
             onClick={playDemo}
             disabled={isPlayingDemo || isMuted}
-            className={`text-white/80 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10 ${
+            className={`text-white/80 hover:text-white transition-colors p-1.5 rounded-full hover:bg-white/10 ${
               isPlayingDemo ? 'bg-blue-500/20' : ''
             }`}
           >
-            {isPlayingDemo ? <Pause className="h-3 w-3 sm:h-4 sm:w-4" /> : <Play className="h-3 w-3 sm:h-4 sm:w-4" />}
+            {isPlayingDemo ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
           </button>
           
           <button
             onClick={() => setIsMuted(!isMuted)}
-            className={`text-white/80 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10 ${
+            className={`text-white/80 hover:text-white transition-colors p-1.5 rounded-full hover:bg-white/10 ${
               isMuted ? 'bg-red-500/20 text-red-300' : ''
             }`}
           >
-            {isMuted ? <VolumeX className="h-3 w-3 sm:h-4 sm:w-4" /> : <Volume2 className="h-3 w-3 sm:h-4 sm:w-4" />}
+            {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
           </button>
           
           <button
             onClick={stopAllNotes}
-            className="text-white/80 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
+            className="text-white/80 hover:text-white transition-colors p-1.5 rounded-full hover:bg-white/10"
           >
-            <RotateCcw className="h-3 w-3 sm:h-4 sm:w-4" />
+            <RotateCcw className="h-4 w-4" />
           </button>
         </motion.div>
 
-        {/* Piano Keyboard - Made fully responsive */}
-        <div className="relative bg-gradient-to-b from-gray-800 to-gray-900 rounded-lg p-2 sm:p-4 shadow-inner overflow-x-auto">
-          <div className="relative w-full min-w-[320px] pb-[20%] sm:pb-[25%] min-h-[120px] sm:min-h-[150px] md:min-h-[180px]">
+        {/* Piano Keyboard */}
+        <div className="relative bg-gradient-to-b from-gray-800 to-gray-900 rounded-lg p-4 shadow-inner">
+          <div className="relative w-full pb-[25%] min-h-[150px] sm:min-h-[180px] md:min-h-[200px]">
             <div className="absolute inset-0">
               {/* White keys */}
               {whiteKeys.map((key) => (
@@ -943,14 +936,14 @@ const InteractivePiano: React.FC = () => {
                   whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <div className="absolute bottom-1 sm:bottom-2 left-1/2 transform -translate-x-1/2 text-center">
-                    <span className={`text-[10px] sm:text-xs font-medium block ${
+                  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-center">
+                    <span className={`text-xs font-medium block ${
                       activeKeys.has(key.note) ? 'text-primary-900' : 'text-slate-700'
                     }`}>
                       {key.note}
                     </span>
                     {!isMobile && key.keyboardKey && (
-                      <span className={`text-[9px] sm:text-xs block ${
+                      <span className={`text-xs block ${
                         activeKeys.has(key.note) ? 'text-primary-800' : 'text-slate-500'
                       }`}>
                         {key.keyboardKey.toUpperCase()}
@@ -1014,14 +1007,14 @@ const InteractivePiano: React.FC = () => {
                   whileHover={{ y: -1 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <div className="absolute bottom-1 sm:bottom-2 left-1/2 transform -translate-x-1/2 text-center">
-                    <span className={`text-[10px] sm:text-xs font-medium block ${
+                  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-center">
+                    <span className={`text-xs font-medium block ${
                       activeKeys.has(key.note) ? 'text-primary-200' : 'text-white'
                     }`}>
                       {key.note}
                     </span>
                     {!isMobile && key.keyboardKey && (
-                      <span className={`text-[9px] sm:text-xs block ${
+                      <span className={`text-xs block ${
                         activeKeys.has(key.note) ? 'text-primary-300' : 'text-white/60'
                       }`}>
                         {key.keyboardKey.toUpperCase()}
@@ -1034,30 +1027,30 @@ const InteractivePiano: React.FC = () => {
           </div>
         </div>
 
-        {/* Status indicators - Responsive text */}
+        {/* Status indicators */}
         <motion.div 
-          className="text-center mt-3 sm:mt-4 space-y-1 sm:space-y-2"
+          className="text-center mt-4 space-y-2"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
         >
-          <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2 text-[10px] sm:text-xs">
+          <div className="flex flex-wrap items-center justify-center gap-2 text-xs sm:text-sm">
             <span className="text-white/80">Interactive Piano</span>
             {sustainPedal && (
-              <span className="bg-primary/20 text-primary-400 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full text-[9px] sm:text-xs">
+              <span className="bg-primary/20 text-primary-400 px-2 py-1 rounded-full">
                 Sustain ON
               </span>
             )}
             {octaveShift !== 0 && (
-              <span className="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full text-[9px] sm:text-xs">
+              <span className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full">
                 Octave {octaveShift > 0 ? '+' : ''}{octaveShift}
               </span>
             )}
-            <span className="bg-purple-500/20 text-purple-400 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full text-[9px] sm:text-xs">
+            <span className="bg-purple-500/20 text-purple-400 px-2 py-1 rounded-full">
               Tempo: {tempo} BPM
             </span>
             {isMuted && (
-              <span className="bg-red-500/20 text-red-400 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full text-[9px] sm:text-xs">
+              <span className="bg-red-500/20 text-red-400 px-2 py-1 rounded-full">
                 Muted
               </span>
             )}
@@ -1069,10 +1062,10 @@ const InteractivePiano: React.FC = () => {
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
-                className="inline-flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-primary/20 to-purple-500/20 backdrop-blur-sm rounded-full px-2 py-1 sm:px-3 sm:py-1.5 text-white text-[10px] sm:text-sm border border-primary/30"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-primary/20 to-purple-500/20 backdrop-blur-sm rounded-full px-3 py-1.5 text-white text-sm border border-primary/30"
               >
                 <span>🎹 Playing</span>
-                <span className="font-medium truncate max-w-[80px] sm:max-w-none">
+                <span className="font-medium">
                   {Array.from(activeKeys).join(', ')}
                 </span>
               </motion.div>
