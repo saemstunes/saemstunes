@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, Play, Pause, Heart, MessageCircle, Music, CheckCircle, Clock, Star, TrendingUp, Share } from "lucide-react";
-import AudioPlayer from "@/components/media/AudioPlayer";
+import AudioPlayer from "@/pages/AudioPlayer";
 import { canAccessContent, AccessLevel } from "@/lib/contentAccess";
 import MainLayout from "@/components/layout/MainLayout";
 import { Helmet } from "react-helmet";
