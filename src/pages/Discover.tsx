@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import SearchBox from '@/components/ui/SearchBox';
@@ -30,8 +29,9 @@ const Discover = () => {
     setLoading(true);
     try {
       const { data: videosData, error: videosError } = await supabase
-        .from('video_content')
+        .from('videos')
         .select('*')
+        .eq('approved', true)
         .order('created_at', { ascending: false });
 
       if (videosError) throw videosError;
@@ -44,20 +44,7 @@ const Discover = () => {
 
       if (tracksError) throw tracksError;
 
-      // Transform video data to match expected interface
-      const transformedVideos = videosData?.map(video => ({
-        id: video.id,
-        title: video.title,
-        description: video.description || '',
-        thumbnail_url: video.thumbnail_url || '/placeholder.svg',
-        duration: video.duration ? `${Math.floor(video.duration / 60)}:${(video.duration % 60).toString().padStart(2, '0')}` : '0:00',
-        instructor: 'Instructor', // You may want to add this field to your video_content table
-        level: 'Beginner', // You may want to add this field to your video_content table
-        category: video.category || 'General',
-        isLocked: video.access_level === 'premium'
-      })) || [];
-
-      setVideos(transformedVideos);
+      setVideos(videosData || []);
       setTracks(tracksData || []);
     } catch (error) {
       console.error('Error fetching content:', error);

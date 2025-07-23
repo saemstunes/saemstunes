@@ -1,24 +1,25 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
+import { X, MapPin, Calendar, Users, Star, Music, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { MapPin, Calendar, Users, Star, ExternalLink } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 interface ArtistModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
-  content: any;
-  type: string;
+  data: any;
+  type: 'bio' | 'location' | 'genre' | 'stats' | 'social' | 'achievements';
 }
 
 const ArtistModal: React.FC<ArtistModalProps> = ({
   isOpen,
   onClose,
   title,
-  content,
+  data,
   type
 }) => {
   const renderContent = () => {
@@ -26,131 +27,194 @@ const ArtistModal: React.FC<ArtistModalProps> = ({
       case 'bio':
         return (
           <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Music className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">About the Artist</h3>
+            </div>
             <p className="text-muted-foreground leading-relaxed">
-              {content || 'No biography available for this artist.'}
+              {data.bio || 'No biography available for this artist.'}
             </p>
+            {data.verified_status && (
+              <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <Star className="h-4 w-4 text-green-600" />
+                <span className="text-sm font-medium text-green-700 dark:text-green-400">
+                  Verified Artist
+                </span>
+              </div>
+            )}
           </div>
         );
-      
+
       case 'location':
         return (
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-primary" />
-              <span className="font-medium">{content || 'Location not specified'}</span>
+            <div className="flex items-center gap-2 mb-4">
+              <MapPin className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">Location</h3>
             </div>
-            <p className="text-sm text-muted-foreground">
-              This is where the artist is based and creates their music.
-            </p>
+            <div className="p-4 bg-accent/50 rounded-lg">
+              <p className="text-lg font-medium">{data.location || 'Location not specified'}</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Based in this location
+              </p>
+            </div>
           </div>
         );
-      
+
       case 'genre':
         return (
           <div className="space-y-4">
-            <div className="flex flex-wrap gap-2">
-              {Array.isArray(content) ? content.map((genre, index) => (
-                <Badge key={index} variant="secondary" className="text-sm">
-                  {genre}
-                </Badge>
-              )) : (
-                <Badge variant="secondary">Genre not specified</Badge>
-              )}
+            <div className="flex items-center gap-2 mb-4">
+              <Music className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">Musical Style</h3>
             </div>
-            <p className="text-sm text-muted-foreground">
-              These genres represent the artist's musical style and influences.
-            </p>
+            <div className="flex flex-wrap gap-2">
+              {data.genre?.map((g: string, index: number) => (
+                <Badge key={index} variant="secondary" className="text-sm">
+                  {g}
+                </Badge>
+              )) || <p className="text-muted-foreground">No genres specified</p>}
+            </div>
           </div>
         );
-      
-      case 'social':
-        return (
-          <div className="space-y-4">
-            {content && typeof content === 'object' && Object.keys(content).length > 0 ? (
-              <div className="space-y-3">
-                {Object.entries(content).map(([platform, url]) => (
-                  <div key={platform} className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                    <span className="font-medium capitalize">{platform}</span>
-                    <Button variant="ghost" size="sm" asChild>
-                      <a href={url as string} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground">No social links available for this artist.</p>
-            )}
-          </div>
-        );
-      
+
       case 'stats':
         return (
           <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Users className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">Statistics</h3>
+            </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <Users className="w-5 h-5 text-primary" />
-                  <span className="font-medium">Followers</span>
+              <div className="p-3 bg-accent/50 rounded-lg text-center">
+                <div className="text-2xl font-bold text-primary">
+                  {data.follower_count || 0}
                 </div>
-                <p className="text-2xl font-bold">{content?.followers || 0}</p>
+                <div className="text-sm text-muted-foreground">Followers</div>
               </div>
-              
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <Star className="w-5 h-5 text-primary" />
-                  <span className="font-medium">Verified</span>
+              <div className="p-3 bg-accent/50 rounded-lg text-center">
+                <div className="text-2xl font-bold text-primary">
+                  {data.track_count || 0}
                 </div>
-                <p className="text-2xl font-bold">{content?.verified ? 'Yes' : 'No'}</p>
+                <div className="text-sm text-muted-foreground">Tracks</div>
               </div>
             </div>
-            
-            {content?.joinDate && (
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <Calendar className="w-5 h-5 text-primary" />
-                  <span className="font-medium">Joined</span>
-                </div>
-                <p className="text-lg font-semibold">
-                  {new Date(content.joinDate).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </p>
-              </div>
-            )}
           </div>
         );
-      
-      default:
+
+      case 'social':
         return (
           <div className="space-y-4">
-            <p className="text-muted-foreground">Content not available</p>
+            <div className="flex items-center gap-2 mb-4">
+              <Star className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">Connect</h3>
+            </div>
+            <div className="space-y-2">
+              {data.social_links && Object.keys(data.social_links).length > 0 ? (
+                Object.entries(data.social_links).map(([platform, url]) => (
+                  <Button
+                    key={platform}
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => window.open(url as string, '_blank')}
+                  >
+                    {platform.charAt(0).toUpperCase() + platform.slice(1)}
+                  </Button>
+                ))
+              ) : (
+                <p className="text-muted-foreground">No social links available</p>
+              )}
+            </div>
           </div>
         );
+
+      case 'achievements':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Award className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">Achievements</h3>
+            </div>
+            <div className="space-y-3">
+              {data.verified_status && (
+                <div className="flex items-center gap-3 p-3 bg-gold/10 rounded-lg">
+                  <Star className="h-5 w-5 text-gold" />
+                  <div>
+                    <div className="font-medium">Verified Artist</div>
+                    <div className="text-sm text-muted-foreground">
+                      Official verification status
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div className="flex items-center gap-3 p-3 bg-accent/50 rounded-lg">
+                <Calendar className="h-5 w-5 text-primary" />
+                <div>
+                  <div className="font-medium">Member Since</div>
+                  <div className="text-sm text-muted-foreground">
+                    {new Date(data.created_at).toLocaleDateString()}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return <div>Content not available</div>;
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {title}
-          </DialogTitle>
-        </DialogHeader>
+    <AnimatePresence>
+      {isOpen && (
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
         >
-          {renderContent()}
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={onClose}
+          />
+
+          {/* Modal */}
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            transition={{ type: "spring", duration: 0.3 }}
+            className={cn(
+              "relative bg-background border rounded-lg shadow-xl",
+              "w-full max-w-md max-h-[80vh] overflow-hidden"
+            )}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-xl font-semibold">{title}</h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onClose}
+                className="h-8 w-8"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Content */}
+            <ScrollArea className="p-4 max-h-[60vh]">
+              {renderContent()}
+            </ScrollArea>
+          </motion.div>
         </motion.div>
-      </DialogContent>
-    </Dialog>
+      )}
+    </AnimatePresence>
   );
 };
 
