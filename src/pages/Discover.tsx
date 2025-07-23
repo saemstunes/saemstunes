@@ -113,12 +113,12 @@ const Discover = () => {
         {/* Enhanced featured content banner */}
         <EnhancedFeaturedBanner />
         
-        {/* Category Navigation */}
+        {/* Category Navigation 
         <CategoryNavigation 
           categories={categories}
           selectedCategory={selectedCategory}
           onCategoryChange={setSelectedCategory}
-        />
+        /> */}
         
         {/* Tabs content section */}
         <ContentTabs 
