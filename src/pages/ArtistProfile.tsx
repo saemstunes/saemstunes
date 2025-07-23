@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +8,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { mockTutors, mockVideos } from "@/data/mockData";
 import VideoCard from "@/components/videos/VideoCard";
 import MagicBento from "@/components/ui/MagicBento";
+import ArtistModal from "@/components/artists/ArtistModal";
 import { Calendar, Mail, Music, Video, Star, MapPin, ExternalLink } from "lucide-react";
 
 const ArtistProfile = () => {
@@ -16,8 +16,10 @@ const ArtistProfile = () => {
   const [artist, setArtist] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalData, setModalData] = useState<any>(null);
+  const [modalType, setModalType] = useState<string>('');
   
-  // Filter videos for this tutor
   const tutorVideos = mockVideos.slice(0, 4);
 
   useEffect(() => {
@@ -52,8 +54,13 @@ const ArtistProfile = () => {
     fetchArtist();
   }, [id]);
 
-  // Fallback to mockTutors if no artist found in database
   const displayArtist = artist || mockTutors.find(tutor => tutor.id === id) || mockTutors[0];
+
+  const handleBentoClick = (type: string) => {
+    setModalType(type);
+    setModalData(displayArtist);
+    setModalOpen(true);
+  };
 
   if (loading) {
     return (
@@ -84,9 +91,61 @@ const ArtistProfile = () => {
   return (
     <MainLayout>
       <div className="space-y-8">
-        {/* Magic Bento Feature Section */}
-        <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-background to-muted flex items-center justify-center">
-          <div className="w-full max-w-6xl mx-auto px-4">
+        {/* Hero Section */}
+        <div className="relative min-h-[60vh] overflow-hidden bg-gradient-to-b from-background to-muted flex items-center justify-center">
+          <div className="w-full max-w-4xl mx-auto px-4 text-center">
+            <div className="flex items-center justify-center mb-6">
+              <Avatar className="w-24 h-24 border-4 border-primary">
+                <AvatarImage src={displayArtist?.profile_image_url || displayArtist?.avatar} />
+                <AvatarFallback>{displayArtist?.name?.charAt(0) || 'A'}</AvatarFallback>
+              </Avatar>
+            </div>
+            
+            <h1 className="text-4xl md:text-6xl font-serif font-bold text-foreground mb-4">
+              {displayArtist?.name}
+            </h1>
+            <p className="text-xl text-muted-foreground mb-6">
+              {displayArtist?.genre?.join(', ') || displayArtist?.specialties?.join(', ') || 'Artist'}
+            </p>
+            
+            <div className="flex items-center justify-center mb-6">
+              <Star className="h-5 w-5 text-gold fill-gold" />
+              <Star className="h-5 w-5 text-gold fill-gold" />
+              <Star className="h-5 w-5 text-gold fill-gold" />
+              <Star className="h-5 w-5 text-gold fill-gold" />
+              <Star className="h-5 w-5 text-muted-foreground" />
+              <span className="ml-2 text-sm">(4.0)</span>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button className="bg-gold hover:bg-gold-dark text-white">
+                <Calendar className="mr-2 h-4 w-4" />
+                Book Lesson
+              </Button>
+              <Button variant="outline">
+                <Mail className="mr-2 h-4 w-4" />
+                Contact
+              </Button>
+              {displayArtist?.social_links && (
+                <Button variant="outline" onClick={() => window.open(displayArtist.social_links.spotify || displayArtist.social_links.instagram, '_blank')}>
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Follow
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Enhanced Magic Bento Section */}
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold mb-4">Explore Artist Profile</h2>
+            <p className="text-muted-foreground">
+              Click on each section to learn more about this artist
+            </p>
+          </div>
+          
+          <div className="relative">
             <MagicBento 
               textAutoHide={true}
               enableStars={true}
@@ -97,53 +156,52 @@ const ArtistProfile = () => {
               clickEffect={true}
               spotlightRadius={300}
               particleCount={12}
-              glowColor="132, 0, 255"
+              glowColor="167, 124, 0"
+              cardData={[
+                {
+                  color: "hsl(20 14% 15%)",
+                  title: "Biography",
+                  description: "Artist's story & journey",
+                  label: "About",
+                  onClick: () => handleBentoClick('bio')
+                },
+                {
+                  color: "hsl(20 14% 15%)",
+                  title: "Location",
+                  description: "Where they're based",
+                  label: "Location",
+                  onClick: () => handleBentoClick('location')
+                },
+                {
+                  color: "hsl(20 14% 15%)",
+                  title: "Genre",
+                  description: "Musical style & influences",
+                  label: "Style",
+                  onClick: () => handleBentoClick('genre')
+                },
+                {
+                  color: "hsl(20 14% 15%)",
+                  title: "Statistics",
+                  description: "Followers & engagement",
+                  label: "Stats",
+                  onClick: () => handleBentoClick('stats')
+                },
+                {
+                  color: "hsl(20 14% 15%)",
+                  title: "Social Media",
+                  description: "Connect & follow",
+                  label: "Connect",
+                  onClick: () => handleBentoClick('social')
+                },
+                {
+                  color: "hsl(20 14% 15%)",
+                  title: "Achievements",
+                  description: "Awards & recognition",
+                  label: "Awards",
+                  onClick: () => handleBentoClick('achievements')
+                }
+              ]}
             />
-          </div>
-          
-          {/* Artist Info Overlay - Positioned over the bento */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background via-background/90 to-transparent p-6 md:p-10">
-            <div className="max-w-4xl mx-auto text-center">
-              <div className="flex items-center justify-center mb-6">
-                <Avatar className="w-20 h-20 border-4 border-primary">
-                  <AvatarImage src={displayArtist?.profile_image_url || displayArtist?.avatar} />
-                  <AvatarFallback>{displayArtist?.name?.charAt(0) || 'A'}</AvatarFallback>
-                </Avatar>
-              </div>
-              
-              <h1 className="text-4xl md:text-6xl font-serif font-bold text-foreground mb-4">
-                {displayArtist?.name}
-              </h1>
-              <p className="text-xl text-muted-foreground mb-6">
-                {displayArtist?.genre?.join(', ') || displayArtist?.specialties?.join(', ') || 'Artist'}
-              </p>
-              
-              <div className="flex items-center justify-center mb-6">
-                <Star className="h-5 w-5 text-gold fill-gold" />
-                <Star className="h-5 w-5 text-gold fill-gold" />
-                <Star className="h-5 w-5 text-gold fill-gold" />
-                <Star className="h-5 w-5 text-gold fill-gold" />
-                <Star className="h-5 w-5 text-muted-foreground" />
-                <span className="ml-2 text-sm">(4.0)</span>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button className="bg-gold hover:bg-gold-dark text-white">
-                  <Calendar className="mr-2 h-4 w-4" />
-                  Book Lesson
-                </Button>
-                <Button variant="outline">
-                  <Mail className="mr-2 h-4 w-4" />
-                  Contact
-                </Button>
-                {displayArtist?.social_links && (
-                  <Button variant="outline" onClick={() => window.open(displayArtist.social_links.spotify || displayArtist.social_links.instagram, '_blank')}>
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    Follow
-                  </Button>
-                )}
-              </div>
-            </div>
           </div>
         </div>
         
@@ -285,6 +343,15 @@ const ArtistProfile = () => {
             </TabsContent>
           </Tabs>
         </div>
+
+        {/* Artist Modal */}
+        <ArtistModal
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          title={modalType.charAt(0).toUpperCase() + modalType.slice(1)}
+          data={modalData}
+          type={modalType as any}
+        />
       </div>
     </MainLayout>
   );

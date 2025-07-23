@@ -1,5 +1,4 @@
-
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Play, 
   Pause, 
@@ -19,9 +18,24 @@ import { usePermissionRequest } from '@/lib/permissionsHelper';
 import { useAudioPlayer } from '@/context/AudioPlayerContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMediaState } from '@/components/idle-state/mediaStateContext';
+import { supabase } from '@/integrations/supabase/client';
+import { validate as isUuid } from 'uuid';
+
+interface Track {
+  id: string | number;
+  title: string;
+  artist?: string | null;
+  audio_path: string;
+  cover_path?: string | null;
+  description?: string;
+  profiles?: {
+    avatar_url: string;
+  };
+}
 
 interface AudioPlayerProps {
-  src: string;
+  src?: string;
+  trackId?: string | number;
   title?: string;
   artist?: string;
   artwork?: string;
@@ -41,6 +55,7 @@ const formatTime = (seconds: number): string => {
 
 const AudioPlayer: React.FC<AudioPlayerProps> = ({
   src,
+  trackId,
   title,
   artist,
   artwork = '/placeholder.svg',
@@ -57,12 +72,88 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showAdvancedControls, setShowAdvancedControls] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [trackData, setTrackData] = useState<Track | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string>(src || '');
+  const [coverUrl, setCoverUrl] = useState<string>(artwork);
   
   const { toast } = useToast();
   const { requestPermissionWithFeedback } = usePermissionRequest();
   const { state, playTrack, pauseTrack, resumeTrack, seek, setVolume, toggleMute } = useAudioPlayer();
 
-   // Add this useEffect to handle external state changes
+  // Fetch track metadata if trackId is provided
+  useEffect(() => {
+    const fetchTrackData = async () => {
+      if (!trackId) return;
+      
+      try {
+        setIsLoading(true);
+        let query = supabase
+          .from('tracks')
+          .select(`
+            id,
+            title,
+            artist,
+            audio_path,
+            cover_path,
+            description,
+            profiles:user_id (
+              avatar_url
+            )
+          `);
+
+        // Check if trackId is a valid UUID
+        if (typeof trackId === 'string' && isUuid(trackId)) {
+          query = query.eq('id', trackId);
+        } else {
+          query = query.eq('slug', trackId);
+        }
+
+        const { data, error } = await query.single();
+
+        if (error) throw error;
+        if (!data) return;
+
+        setTrackData(data as Track);
+
+        // Get public URL for audio
+        const audioUrl = data.audio_path 
+          ? supabase.storage.from('tracks').getPublicUrl(data.audio_path).data.publicUrl 
+          : src || '';
+        setAudioUrl(audioUrl);
+
+        // Get cover URL
+        const coverUrl = data.cover_path 
+          ? (data.cover_path.startsWith('http') 
+              ? data.cover_path 
+              : supabase.storage.from('tracks').getPublicUrl(data.cover_path).data.publicUrl)
+          : artwork;
+        setCoverUrl(coverUrl);
+      } catch (err) {
+        console.error('Error fetching track:', err);
+        setError('Failed to load track metadata');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTrackData();
+  }, [trackId, src, artwork]);
+
+  // Handle artwork changes
+  useEffect(() => {
+    setCoverUrl(artwork);
+    setImageLoaded(false);
+  }, [artwork]);
+
+  // Handle image loading errors
+  const handleImageError = () => {
+    if (coverUrl !== '/placeholder.svg') {
+      setCoverUrl('/placeholder.svg');
+    }
+  };
+
+  // Handle external state changes
   useEffect(() => {
     if (state) {
       setMediaPlaying(state.isPlaying);
@@ -71,11 +162,11 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
   // Create track object
   const track = {
-    id: src,
-    src,
-    name: title || 'Unknown Track',
-    artist: artist || 'Unknown Artist',
-    artwork,
+    id: trackId || src || '',
+    src: audioUrl,
+    name: trackData?.title || title || 'Unknown Track',
+    artist: trackData?.artist || artist || 'Unknown Artist',
+    artwork: coverUrl,
   };
 
   const isCurrentTrack = state?.currentTrack?.id === track.id;
@@ -84,10 +175,10 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const duration = isCurrentTrack ? (state?.duration || 0) : 0;
 
   useEffect(() => {
-    if (autoPlay && src) {
+    if (autoPlay && audioUrl) {
       handlePlay();
     }
-  }, [autoPlay, src]);
+  }, [autoPlay, audioUrl]);
 
   const handlePlay = async () => {
     try {
@@ -112,6 +203,11 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   };
 
   const togglePlay = async () => {
+    if (!audioUrl) {
+      setError('No audio source available');
+      return;
+    }
+    
     if (isCurrentTrack) {
       if (isPlaying) {
         pauseTrack();
@@ -173,7 +269,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   }
   
   if (compact) {
-    // Compact player for smaller UI areas
     return (
       <div className={cn("flex items-center gap-2 p-2 min-w-0 overflow-hidden", className)}>
         <Button 
@@ -205,19 +300,34 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   return (
     <div className={cn("bg-background border rounded-lg overflow-hidden w-full", className)}>
       {/* Track info - Always visible */}
-      {(title || artist) && (
+      {(track.name || track.artist) && (
         <div className="p-3 sm:p-4">
           <div className="flex items-center gap-3 min-w-0">
-            {artwork && (
-              <img 
-                src={artwork} 
-                alt={title || "Album art"}
-                className="h-10 w-10 sm:h-12 sm:w-12 object-cover rounded flex-shrink-0"
-              />
+            {coverUrl && (
+              <div className="relative flex-shrink-0">
+                {!imageLoaded && (
+                  <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-lg h-10 w-10 sm:h-12 sm:w-12" />
+                )}
+                <img 
+                  src={coverUrl} 
+                  alt={track.name || "Album art"}
+                  className={cn(
+                    "h-10 w-10 sm:h-12 sm:w-12 object-cover rounded-lg",
+                    !imageLoaded ? "opacity-0" : "opacity-100"
+                  )}
+                  onLoad={() => setImageLoaded(true)}
+                  onError={handleImageError}
+                />
+              </div>
             )}
             <div className="min-w-0 flex-1">
-              {title && <p className="font-medium text-sm sm:text-base truncate">{title}</p>}
-              {artist && <p className="text-xs sm:text-sm text-muted-foreground truncate">{artist}</p>}
+              {track.name && <p className="font-medium text-sm sm:text-base truncate">{track.name}</p>}
+              {track.artist && <p className="text-xs sm:text-sm text-muted-foreground truncate">{track.artist}</p>}
+              {trackData?.description && (
+                <p className="text-xs text-muted-foreground/80 mt-1 line-clamp-1">
+                  {trackData.description}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -242,9 +352,8 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           </div>
         </div>
 
-        {/* Essential controls - Always visible */}
+        {/* Essential controls */}
         <div className="flex items-center justify-center gap-2 mt-4">
-          {/* Skip back - hidden on very small screens */}
           <Button 
             variant="ghost" 
             size="icon"
@@ -255,18 +364,17 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
             <SkipBack className="h-4 w-4" />
           </Button>
           
-          {/* Play/Pause - Always visible */}
           <Button 
             variant="default" 
             size="icon" 
             onClick={togglePlay}
             className="h-12 w-12 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
             title={isPlaying ? "Pause" : "Play"}
+            disabled={!audioUrl}
           >
             {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
           </Button>
           
-          {/* Skip forward - hidden on very small screens */}
           <Button 
             variant="ghost" 
             size="icon"
@@ -278,10 +386,9 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           </Button>
         </div>
 
-        {/* Advanced controls - Responsive visibility */}
+        {/* Advanced controls */}
         {showControls && (
           <>
-            {/* Mobile: Collapsible advanced controls */}
             <div className="sm:hidden">
               <div className="flex items-center justify-center mt-2">
                 <Button 
@@ -305,7 +412,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
                     className="overflow-hidden"
                   >
                     <div className="pt-3 space-y-3">
-                      {/* Repeat and Shuffle */}
                       <div className="flex items-center justify-center gap-4">
                         <Button 
                           variant="ghost" 
@@ -327,7 +433,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
                         </Button>
                       </div>
                       
-                      {/* Volume control */}
                       <div className="flex items-center justify-center gap-2">
                         <Button 
                           variant="ghost" 
@@ -354,7 +459,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
               </AnimatePresence>
             </div>
 
-            {/* Desktop: Always visible advanced controls */}
             <div className="hidden sm:flex items-center justify-between mt-4">
               <div className="flex items-center gap-1">
                 <Button 
@@ -404,7 +508,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         )}
       </div>
 
-      {/* Custom CSS for extra small screens */}
+      {/* Custom CSS */}
       <style>{`
         @media (max-width: 475px) {
           .xs\\:block { display: block !important; }

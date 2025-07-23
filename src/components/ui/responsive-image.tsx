@@ -45,7 +45,7 @@ export const ResponsiveImage = ({
         fetchPriority={priority ? "high" : "low"}
         loading={priority ? "eager" : "lazy"}
         onError={handleImageError}
-        className="w-full h-auto"
+        className="w-full h-full rounded-full"
       />
     </picture>
   );

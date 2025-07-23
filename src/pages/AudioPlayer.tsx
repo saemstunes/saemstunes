@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   ArrowLeft,
   Heart,
   Share,
   MoreHorizontal,
   Download,
-  Plus
+  Plus,
+  Music
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import MainLayout from '@/components/layout/MainLayout';
@@ -25,6 +26,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { validate as isUuid } from 'uuid';
+import EnhancedAnimatedList from '@/components/tracks/EnhancedAnimatedList';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useAudioPlayer } from '@/context/AudioPlayerContext';
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat } from 'lucide-react';
 
 interface AudioTrack {
   id: string | number;
@@ -49,8 +56,10 @@ const AudioPlayerPage = () => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const { setMediaPlaying } = useMediaState();
   const [showMetadataPrompt, setShowMetadataPrompt] = useState(false);
+  const [tracks, setTracks] = useState<AudioTrack[]>([]);
+  const { state, playTrack, pauseTrack, resumeTrack } = useAudioPlayer();
 
-  // Add this useEffect to handle page visibility
+  // Handle page visibility
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
@@ -65,46 +74,65 @@ const AudioPlayerPage = () => {
     };
   }, [setMediaPlaying]);
 
-  const SALAMA_TRACK = {
-    id: 'featured',
-    src: 'https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Cover%20Art/Salama%20-%20Saem%20x%20Simali.mp3',
-    name: 'Salama (DEMO)',
-    artist: "Saem's Tunes ft. Evans Simali",
-    artwork: 'https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Cover%20Art/salama-featured.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvQ292ZXIgQXJ0L3NhbGFtYS1mZWF0dXJlZC5qcGciLCJpYXQiOjE3NDk5NTMwNTksImV4cCI6MTc4MTQ4OTA1OX0.KtKlRXxj5z5KzzbnTDWd9oRVbztRHwioGA0YN1Xjn4Q',
-    album: 'NaombAoH'
-  };
-  
-  // Update the useEffect hook
+  // Fetch all tracks and current track
   useEffect(() => {
-    // If we're on the featured route, set Salama as default
-    if (id === 'featured') {
-      setTrackData(SALAMA_TRACK);
-      setLoading(false);
-      return;
-    }
-    
-    // Existing logic for other tracks
-    if (location.state?.track) {
-      setTrackData(location.state.track);
-      setLoading(false);
-    } else if (id) {
-      fetchTrackData(id);
-    } else {
-      setTrackData({
-        id: 1,
-        src: '/audio/sample.mp3',
-        name: 'Sample Track',
-        artist: 'Sample Artist',
-        artwork: '/placeholder.svg',
-        album: 'Sample Album'
-      });
-      setLoading(false);
-    }
+    const fetchData = async () => {
+      // Fetch all approved tracks
+      try {
+        const { data: allTracks, error: tracksError } = await supabase
+          .from('tracks')
+          .select('*')
+          .eq('approved', true)
+          .order('created_at', { ascending: false });
+
+        if (tracksError) throw tracksError;
+        
+        if (allTracks) {
+          const mappedTracks = allTracks.map(track => ({
+            id: track.id,
+            src: track.audio_path.startsWith('http') 
+              ? track.audio_path 
+              : `https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/${track.audio_path}`,
+            name: track.title,
+            artist: track.artist,
+            artwork: track.cover_path?.startsWith('http') 
+              ? track.cover_path 
+              : track.cover_path 
+                ? `https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/${track.cover_path}`
+                : '/placeholder.svg',
+            album: 'Single'
+          }));
+          setTracks(mappedTracks);
+        }
+      } catch (error) {
+        console.error('Error fetching tracks:', error);
+      }
+
+      // Fetch current track
+      if (location.state?.track) {
+        setTrackData(location.state.track);
+        setLoading(false);
+      } else if (id) {
+        await fetchTrackData(id);
+      } else {
+        setTrackData({
+          id: 1,
+          src: '/audio/sample.mp3',
+          name: 'Sample Track',
+          artist: 'Sample Artist',
+          artwork: '/placeholder.svg',
+          album: 'Sample Album'
+        });
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, [id, location.state]);
 
   const fetchTrackData = async (trackId: string) => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('tracks')
         .select(`
           *,
@@ -112,25 +140,34 @@ const AudioPlayerPage = () => {
             display_name,
             avatar_url
           )
-        `)
-        .eq('id', trackId)
-        .single();
+        `);
+
+      if (isUuid(trackId)) {
+        query = query.eq('id', trackId);
+      } else {
+        query = query.eq('slug', trackId);
+      }
+
+      const { data, error } = await query.single();
 
       if (error) throw error;
 
       if (data) {
-        const audioUrl = data.audio_path ? 
-          supabase.storage.from('tracks').getPublicUrl(data.audio_path).data.publicUrl : '';
-        
-        const coverUrl = data.cover_path ? 
-          supabase.storage.from('tracks').getPublicUrl(data.cover_path).data.publicUrl : '';
+        const audioUrl = data.audio_path 
+          ? supabase.storage.from('tracks').getPublicUrl(data.audio_path).data.publicUrl 
+          : '';
+        const coverUrl = data.cover_path 
+          ? (data.cover_path.startsWith('http') 
+              ? data.cover_path 
+              : supabase.storage.from('tracks').getPublicUrl(data.cover_path).data.publicUrl)
+          : '/placeholder.svg';
 
         setTrackData({
           id: data.id,
           src: audioUrl,
           name: data.title,
-          artist: data.profiles?.display_name || 'Unknown Artist',
-          artwork: coverUrl || '/placeholder.svg',
+          artist: data.artist || data.profiles?.display_name || 'Unknown Artist',
+          artwork: coverUrl,
           album: 'Single'
         });
       }
@@ -141,7 +178,6 @@ const AudioPlayerPage = () => {
         description: "Failed to load track data",
         variant: "destructive",
       });
-      // Fallback to default data
       setTrackData({
         id: 1,
         src: '/audio/sample.mp3',
@@ -181,6 +217,13 @@ const AudioPlayerPage = () => {
     
     setIsSaved(!!data);
   };
+
+  useEffect(() => {
+    if (user && trackData) {
+      checkIfLiked();
+      checkIfSaved();
+    }
+  }, [user, trackData]);
 
   const toggleLike = async () => {
     if (!user) {
@@ -300,6 +343,11 @@ const AudioPlayerPage = () => {
     });
   };
 
+  const handleTrackSelect = (track: AudioTrack) => {
+    setTrackData(track);
+    navigate(`/tracks/${track.id}`);
+  };
+
   // Handle audio errors
   const handleAudioError = () => {
     setAudioError(true);
@@ -308,6 +356,26 @@ const AudioPlayerPage = () => {
       description: "Unable to load the audio player. Please try refreshing the page.",
       variant: "destructive",
     });
+  };
+
+  const togglePlayPause = () => {
+    if (!trackData) return;
+    
+    if (state?.isPlaying) {
+      pauseTrack();
+    } else {
+      if (state?.currentTrackId === trackData.id) {
+        resumeTrack();
+      } else {
+        playTrack({
+          id: trackData.id.toString(),
+          title: trackData.name,
+          artist: trackData.artist || '',
+          audioSrc: trackData.src,
+          artwork: trackData.artwork || '',
+        });
+      }
+    }
   };
 
   if (loading) {
@@ -347,7 +415,7 @@ const AudioPlayerPage = () => {
       
       <MainLayout>
         <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background">
-          <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <div className="container mx-auto px-4 py-8 max-w-7xl">
             {/* Header */}
             <div className="flex items-center gap-4 mb-8">
               <Button
@@ -361,124 +429,208 @@ const AudioPlayerPage = () => {
               <h1 className="text-2xl font-bold">Now Playing</h1>
             </div>
 
-            <Card className="overflow-hidden bg-gradient-to-b from-card to-card/80 border-gold/20 shadow-2xl">
-              <CardContent className="p-6 md:p-8">
-                {/* Album Artwork and Info */}
-                <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mb-8">
-                  {/* Artwork - Updated with aspect-ratio fix */}
-                  <div className="flex-shrink-0 mx-auto lg:mx-0 w-full max-w-[320px]">
-                    <div className="relative group aspect-square">
-                      {/* Image with aspect-ratio control */}
-                      <img
-                        src={trackData?.artwork || '/placeholder.svg'}
-                        alt={trackData?.name || 'Track artwork'}
-                        className={cn(
-                          "w-full h-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300",
-                          !imageLoaded && "opacity-0"
-                        )}
-                        onLoad={() => setImageLoaded(true)}
-                      />
-                      
-                      {/* Loading placeholder */}
-                      {!imageLoaded && (
-                        <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-2xl" />
-                      )}
-                      
-                      {/* Gradient overlay */}
-                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    </div>
-                  </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Main Player */}
+              <div className="lg:col-span-2">
+                <Card className="overflow-hidden bg-gradient-to-b from-card to-card/80 border-gold/20 shadow-2xl">
+                  <CardContent className="p-6 md:p-8">
+                    {/* Album Artwork and Info */}
+                    <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mb-8">
+                      {/* Artwork */}
+                      <div className="flex-shrink-0 mx-auto lg:mx-0 w-full max-w-[320px]">
+                        <div className="relative group aspect-square">
+                          <img
+                            src={trackData?.artwork || '/placeholder.svg'}
+                            alt={trackData?.name || 'Track artwork'}
+                            className={cn(
+                              "w-full h-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300",
+                              !imageLoaded && "opacity-0"
+                            )}
+                            onLoad={() => setImageLoaded(true)}
+                          />
+                          
+                          {!imageLoaded && (
+                            <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-2xl" />
+                          )}
+                          
+                          <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        </div>
+                      </div>
 
-                  {/* Track Info */}
-                  <div className="flex flex-col justify-center space-y-6 flex-1 text-center lg:text-left">
-                    <div>
-                      <h2 className="text-3xl md:text-4xl font-bold mb-3 text-foreground">{trackData?.name || 'Unknown Track'}</h2>
-                      <p className="text-xl md:text-2xl text-muted-foreground mb-2">{trackData?.artist || 'Unknown Artist'}</p>
-                      {trackData?.album && (
-                        <p className="text-lg text-muted-foreground/80">{trackData.album}</p>
-                      )}
-                    </div>
+                      {/* Track Info */}
+                      <div className="flex flex-col justify-center space-y-6 flex-1 text-center lg:text-left">
+                        <div>
+                          <h2 className="text-3xl md:text-4xl font-bold mb-3 text-foreground">{trackData?.name || 'Unknown Track'}</h2>
+                          <p className="text-xl md:text-2xl text-muted-foreground mb-2">{trackData?.artist || 'Unknown Artist'}</p>
+                          {trackData?.album && (
+                            <p className="text-lg text-muted-foreground/80">{trackData.album}</p>
+                          )}
+                        </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex items-center justify-center lg:justify-start gap-4 flex-wrap">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={toggleLike}
-                        className={cn(
-                          "h-12 w-12",
-                          isLiked ? "text-red-500" : "text-muted-foreground"
-                        )}
-                      >
-                        <Heart className={cn("h-6 w-6", isLiked && "fill-current")} />
-                      </Button>
-                      
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleShare}
-                        className="h-12 w-12 text-muted-foreground hover:text-foreground"
-                      >
-                        <Share className="h-6 w-6" />
-                      </Button>
-                      
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
+                        {/* Action Buttons */}
+                        <div className="flex items-center justify-center lg:justify-start gap-4 flex-wrap">
                           <Button
                             variant="ghost"
                             size="icon"
+                            onClick={toggleLike}
+                            className={cn(
+                              "h-12 w-12",
+                              isLiked ? "text-red-500" : "text-muted-foreground"
+                            )}
+                          >
+                            <Heart className={cn("h-6 w-6", isLiked && "fill-current")} />
+                          </Button>
+                          
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleShare}
                             className="h-12 w-12 text-muted-foreground hover:text-foreground"
                           >
-                            <MoreHorizontal className="h-6 w-6" />
+                            <Share className="h-6 w-6" />
                           </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={toggleSave}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            {isSaved ? 'Remove from saved' : 'Save track'}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={handleAddToPlaylist}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Add to playlist
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={handleDownload}>
-                            <Download className="mr-2 h-4 w-4" />
-                            Download
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-12 w-12 text-muted-foreground hover:text-foreground"
+                              >
+                                <MoreHorizontal className="h-6 w-6" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={toggleSave}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                {isSaved ? 'Remove from saved' : 'Save track'}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={handleAddToPlaylist}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Add to playlist
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={handleDownload}>
+                                <Download className="mr-2 h-4 w-4" />
+                                Download
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
 
-                {/* Audio Player */}
-                <div className="space-y-6">
-                  {audioError ? (
-                    <div className="text-center py-12">
-                      <p className="text-muted-foreground mb-4">Unable to load audio player</p>
-                      <Button onClick={() => window.location.reload()}>
-                        Try Again
-                      </Button>
+                    {/* Audio Player */}
+                    <div className="space-y-6">
+                      {audioError ? (
+                        <div className="text-center py-12">
+                          <p className="text-muted-foreground mb-4">Unable to load audio player</p>
+                          <Button onClick={() => window.location.reload()}>
+                            Try Again
+                          </Button>
+                        </div>
+                      ) : (
+                        trackData && (
+                          <AudioPlayer
+                            src={trackData.src}
+                            title={trackData.name}
+                            artist={trackData.artist}
+                            artwork={trackData.artwork}
+                            className="bg-transparent border-0 shadow-none"
+                            onError={handleAudioError}
+                          />
+                        )
+                      )}
+
+                      {/* Enhanced Controls */}
+                      <div className="flex items-center justify-center gap-4 mt-6">
+                        <Button variant="ghost" size="sm" disabled>
+                          <Shuffle className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" disabled>
+                          <SkipBack className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="default" 
+                          size="lg"
+                          onClick={togglePlayPause}
+                          className="h-12 w-12 rounded-full"
+                          disabled={!trackData}
+                        >
+                          {state?.isPlaying && state?.currentTrackId === trackData.id ? (
+                            <Pause className="h-5 w-5" />
+                          ) : (
+                            <Play className="h-5 w-5 ml-0.5" />
+                          )}
+                        </Button>
+                        <Button variant="ghost" size="sm" disabled>
+                          <SkipForward className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" disabled>
+                          <Repeat className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                  ) : (
-                    trackData && (
-                      <AudioPlayer
-                        src={trackData.src}
-                        title={trackData.name}
-                        artist={trackData.artist}
-                        artwork={trackData.artwork}
-                        className="bg-transparent border-0 shadow-none"
-                        onError={handleAudioError}
-                      />
-                    )
-                  )}
 
-                  {showMetadataPrompt && trackData && (
-                    <ArtistMetadataManager trackId={trackData.id} />
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                    {showMetadataPrompt && trackData && (
+                      <ArtistMetadataManager trackId={String(trackData.id)} />
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Track List */}
+              <div className="lg:col-span-1">
+                <Card className="h-fit">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Music className="h-5 w-5" />
+                      Tracks
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <Tabs defaultValue="all" className="w-full">
+                      <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="all">All</TabsTrigger>
+                        <TabsTrigger value="favorites">Favorites</TabsTrigger>
+                        <TabsTrigger value="recent">Recent</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="all" className="mt-0">
+                        <ScrollArea className="h-[600px]">
+                          <div className="p-4">
+                            <EnhancedAnimatedList
+                              tracks={tracks}
+                              onTrackSelect={handleTrackSelect}
+                              currentTrackId={trackData?.id}
+                            />
+                          </div>
+                        </ScrollArea>
+                      </TabsContent>
+                      
+                      <TabsContent value="favorites" className="mt-0">
+                        <ScrollArea className="h-[600px]">
+                          <div className="p-4">
+                            <p className="text-center text-muted-foreground py-8">
+                              No favorite tracks yet
+                            </p>
+                          </div>
+                        </ScrollArea>
+                      </TabsContent>
+                      
+                      <TabsContent value="recent" className="mt-0">
+                        <ScrollArea className="h-[600px]">
+                          <div className="p-4">
+                            <p className="text-center text-muted-foreground py-8">
+                              No recent tracks
+                            </p>
+                          </div>
+                        </ScrollArea>
+                      </TabsContent>
+                    </Tabs>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </div>
         </div>
       </MainLayout>

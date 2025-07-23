@@ -18,7 +18,7 @@ import { Helmet } from "react-helmet";
 import { 
   Music, PlayCircle, Star, BookOpen, Calendar, 
   Headphones, Heart, Play, Share, RotateCw, 
-  Users, TrendingUp, Zap
+  Users, TrendingUp, Zap, X, Gift
 } from "lucide-react";
 import { ResponsiveImage } from "@/components/ui/responsive-image";
 import CountUp from "@/components/tracks/CountUp";
@@ -101,7 +101,7 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.6 }}
   >
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto px-4">
       <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 sm:mb-6">
         Welcome to{" "}
         <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
@@ -271,79 +271,78 @@ const Index = () => {
       </Helmet>
       
       <MainLayout>
-        <div className="min-h-screen bg-background overflow-x-hidden">
+        <div className="min-h-screen bg-background">
           <OrientationHint />
 
-          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="space-y-6 sm:space-y-8">
-              <HomeHero 
-                onExploreTracks={() => navigate('/tracks')}
-                onTryTools={() => navigate('/music-tools')}
-              />
-              
-              <StatsSection />
-              
-              <FeaturedTracksSection 
-                tracks={featuredTracks}
-                onPlayTrack={handlePlayTrack}
-                onShareTrack={handleShareTrack}
-              />
-              
-              <QuickActionsSection />
-              
-              <FourPointerSection />
-              
-              <section>
-                <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">
-                  Try Our Music Tools
+          {/* REMOVED FIXED WIDTH CONTAINER - RESPONSIVE MOBILE FIX */}
+          <div className="w-full max-w-full overflow-x-hidden space-y-6 sm:space-y-8 px-4 sm:px-6">
+            <HomeHero 
+              onExploreTracks={() => navigate('/tracks')}
+              onTryTools={() => navigate('/music-tools')}
+            />
+            
+            <StatsSection />
+            
+            <FeaturedTracksSection 
+              tracks={featuredTracks}
+              onPlayTrack={handlePlayTrack}
+              onShareTrack={handleShareTrack}
+            />
+            
+            <QuickActionsSection />
+            
+            <FourPointerSection />
+            
+            {/* <section>
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">
+                Try Our Music Tools
+              </h2>
+              <div className="overflow-x-hidden py-2">
+                <MusicToolsCarousel />
+              </div>
+            </section> 
+            
+            <SocialMediaContainer /> */}
+            
+            {user && (
+              <div className="overflow-x-auto">
+                <DashboardStats role={user?.user_metadata?.role || 'student'} />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+                  <RecommendedContent />
+                  <UpcomingBookings />
+                </div>
+              </div>
+            )}
+            
+            <section className="py-12 bg-gradient-to-r from-primary/10 via-purple-500/5 to-primary/10 rounded-xl">
+              <div className="max-w-3xl mx-auto text-center px-4">
+                <h2 className="text-2xl sm:text-3xl font-bold mb-4">
+                  Ready to Begin Your <span className="text-primary">Musical Journey</span>?
                 </h2>
-                <div className="overflow-hidden">
-                  <MusicToolsCarousel />
+                <p className="text-muted-foreground mb-6">
+                  Join thousands of music lovers who have found inspiration through our platform.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button 
+                    size="lg"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 group"
+                    onClick={() => navigate(user ? '/dashboard' : '/signup')}
+                  >
+                    <Zap className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
+                    {user ? 'Go to Dashboard' : 'Get Started'}
+                  </Button>
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-6 sm:px-8 group"
+                    onClick={() => navigate('/pricing')}
+                  >
+                    <Star className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
+                    View Premium
+                  </Button>
                 </div>
-              </section>
-              
-              <SocialMediaContainer />
-              
-              {user && (
-                <>
-                  <DashboardStats role={user?.user_metadata?.role || 'student'} />
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-                    <RecommendedContent />
-                    <UpcomingBookings />
-                  </div>
-                </>
-              )}
-              
-              <section className="py-12 bg-gradient-to-r from-primary/10 via-purple-500/5 to-primary/10 rounded-xl">
-                <div className="max-w-3xl mx-auto text-center px-4">
-                  <h2 className="text-2xl sm:text-3xl font-bold mb-4">
-                    Ready to Begin Your <span className="text-primary">Musical Journey</span>?
-                  </h2>
-                  <p className="text-muted-foreground mb-6">
-                    Join thousands of music lovers who have found inspiration through our platform.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                    <Button 
-                      size="lg"
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 group"
-                      onClick={() => navigate(user ? '/dashboard' : '/signup')}
-                    >
-                      <Zap className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
-                      {user ? 'Go to Dashboard' : 'Get Started'}
-                    </Button>
-                    <Button 
-                      size="lg" 
-                      variant="outline"
-                      className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-6 sm:px-8 group"
-                      onClick={() => navigate('/pricing')}
-                    >
-                      <Star className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
-                      View Premium
-                    </Button>
-                  </div>
-                </div>
-              </section>
-            </div>
+              </div>
+            </section>
           </div>
         </div>
       </MainLayout>
@@ -375,7 +374,7 @@ const FEATURED_TRACKS = [
   {
     id: 'featured-3',
     title: "Ni Hai",
-    artist: "Saem's Tunes ft. Kendin Konge",
+    artist: "Saem's Tunes ft. Kendi Nkonge",
     imageSrc: "https://i.imgur.com/LJQDADg.jpeg",
     audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/Ni%20Hai%20(Demo)%20-%20Saem's%20Tunes%20(OFFICIAL%20MUSIC%20VIDEO)%20(128kbit_AAC).m4a",
     likes: 3421,
@@ -393,9 +392,9 @@ const FEATURED_TRACKS = [
 ];
 
 const StatsSection = () => (
-  <section className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+  <section className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
     {STATS.map((stat, index) => (
-      <Card key={index} className="bg-card text-card-foreground shadow-md">
+      <Card key={index} className="bg-card text-card-foreground shadow-md overflow-hidden">
         <CardContent className="flex flex-col items-center justify-center p-3 sm:p-4 space-y-2">
           <stat.icon className="h-6 w-6 text-muted-foreground" />
           <div className="text-2xl font-bold"><CountUp to={stat.value} separator="," /></div>
@@ -411,7 +410,7 @@ const FeaturedTracksSection = ({ tracks, onPlayTrack, onShareTrack }: { tracks: 
     <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">
       Featured Tracks
     </h2>
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
       {tracks.map(track => (
         <TrackCard
           key={track.id}
@@ -425,9 +424,9 @@ const FeaturedTracksSection = ({ tracks, onPlayTrack, onShareTrack }: { tracks: 
 );
 
 const QuickActionsSection = () => (
-  <section className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+  <section className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
     {QUICK_ACTIONS.map((action, index) => (
-      <Card key={index} className="bg-card text-card-foreground shadow-md hover:shadow-lg transition-shadow duration-300">
+      <Card key={index} className="bg-card text-card-foreground shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
         <CardContent className="flex flex-col items-start justify-start p-4 space-y-3">
           <action.icon className="h-5 w-5 text-primary" />
           <h3 className="text-lg font-semibold">{action.title}</h3>
@@ -443,13 +442,84 @@ const QuickActionsSection = () => (
 
 const OrientationHint = () => {
   const { isMobile, isLandscape } = useWindowOrientation();
+  const [dismissed, setDismissed] = useState(false);
+  
+  // Check if first-time user
+  useEffect(() => {
+    const hasSeenHint = localStorage.getItem('orientationHintSeen');
+    setDismissed(!!hasSeenHint);
+  }, []);
 
-  if (isMobile && !isLandscape) {
+  const handleDismiss = () => {
+    localStorage.setItem('orientationHintSeen', 'true');
+    setDismissed(true);
+  };
+
+  if (isMobile && !isLandscape && !dismissed) {
     return (
-      <div className="fixed top-0 left-0 w-full h-full bg-black/70 backdrop-blur-md z-50 flex flex-col items-center justify-center text-white">
-        <RotateCw className="h-12 w-12 animate-spin-slow mb-4" />
-        <p className="text-lg font-semibold">Please rotate your device for the best experience.</p>
-      </div>
+      <motion.div 
+        className="fixed inset-0 z-[999] flex flex-col items-center justify-center p-6 backdrop-blur-lg"
+        style={{
+          background: 'radial-gradient(circle, var(--gold-light) 0%, var(--brown-dark) 100%)'
+        }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="absolute top-6 right-6">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleDismiss}
+            className="text-card hover:bg-primary/20 rounded-full p-2 transition-all"
+            aria-label="Close orientation hint"
+          >
+            <X className="h-6 w-6 text-card-foreground" />
+          </Button>
+        </div>
+        
+        <motion.div
+          initial={{ scale: 0.8, rotate: -30 }}
+          animate={{ 
+            scale: 1, 
+            rotate: 0,
+            transition: { 
+              type: "spring", 
+              stiffness: 260, 
+              damping: 20 
+            }
+          }}
+          className="mb-8"
+        >
+          <div className="relative">
+            <Gift className="h-24 w-24 text-primary" />
+            <RotateCw className="h-10 w-10 text-card absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+          </div>
+        </motion.div>
+        
+        <div className="text-center max-w-md space-y-4">
+          <Badge variant="secondary" className="mb-2 bg-primary/30 text-primary-foreground">
+            Special Gift
+          </Badge>
+          <h2 className="text-2xl font-bold text-card">
+            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Turn Your Screen for a Surprise!
+            </span>
+          </h2>
+          <p className="text-lg text-card-foreground">
+            Discover a special musical experience by rotating your device
+          </p>
+        </div>
+        
+        <Button
+          onClick={handleDismiss}
+          className="mt-8 bg-card text-card-foreground hover:bg-primary hover:text-primary-foreground group"
+        >
+          <Play className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
+          Continue without rotating
+        </Button>
+      </motion.div>
     );
   }
 
