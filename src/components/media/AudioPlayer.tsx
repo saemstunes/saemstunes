@@ -1,14 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
-  Play, 
-  Pause, 
-  SkipBack, 
-  SkipForward, 
-  Volume2, 
-  VolumeX,
-  Repeat,
-  Shuffle,
-  MoreHorizontal
+  Play, Pause, Plus, SkipBack, SkipForward, 
+  Volume2, VolumeX, Repeat, Shuffle, MoreHorizontal 
 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
@@ -53,6 +46,119 @@ const formatTime = (seconds: number): string => {
   return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
 };
 
+const TrackItem: React.FC<{
+  track: Track;
+  isPlaying: boolean;
+  isCurrentTrack: boolean;
+  onClick: () => void;
+  onAddToPlaylist: () => void;
+}> = ({ track, isPlaying, isCurrentTrack, onClick, onAddToPlaylist }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  
+  const coverUrl = track.cover_path 
+    ? (track.cover_path.startsWith('http') 
+        ? track.cover_path 
+        : supabase.storage.from('tracks').getPublicUrl(track.cover_path).data.publicUrl)
+    : '/placeholder.svg';
+
+  const handleImageError = () => {
+    setImageLoaded(true);
+  };
+
+  return (
+    <motion.div
+      className={cn(
+        "relative p-3 rounded-lg border transition-all duration-200 cursor-pointer",
+        isCurrentTrack 
+          ? "bg-accent/10 dark:bg-accent/20 border-primary shadow-md" 
+          : "bg-card dark:bg-card border-border hover:border-accent/50 hover:shadow-sm"
+      )}
+      whileHover={{ y: -2 }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={onClick}
+    >
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="relative flex-shrink-0">
+          {!imageLoaded && (
+            <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-lg h-12 w-12" />
+          )}
+          <img
+            src={coverUrl}
+            alt={track.title || "Album art"}
+            className={cn(
+              "h-12 w-12 object-cover rounded-lg",
+              !imageLoaded ? "opacity-0" : "opacity-100"
+            )}
+            onLoad={() => setImageLoaded(true)}
+            onError={handleImageError}
+          />
+          
+          <AnimatePresence>
+            {isHovered && (
+              <motion.div
+                className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                {isCurrentTrack && isPlaying ? (
+                  <Pause className="h-6 w-6 text-white" />
+                ) : (
+                  <Play className="h-6 w-6 text-white ml-0.5" />
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+          
+          {isCurrentTrack && (
+            <motion.div 
+              className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-primary"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+            />
+          )}
+        </div>
+        
+        <div className="min-w-0 flex-1">
+          <p className="font-medium text-sm sm:text-base truncate">
+            {track.title}
+          </p>
+          {track.artist && (
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">
+              {track.artist}
+            </p>
+          )}
+        </div>
+      </div>
+      
+      <AnimatePresence>
+        {isHovered && (
+          <motion.div
+            className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-2"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+          >
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 bg-background/80 hover:bg-background"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddToPlaylist();
+              }}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+};
+
 const AudioPlayer: React.FC<AudioPlayerProps> = ({
   src,
   trackId,
@@ -72,86 +178,74 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showAdvancedControls, setShowAdvancedControls] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
   const [trackData, setTrackData] = useState<Track | null>(null);
   const [audioUrl, setAudioUrl] = useState<string>(src || '');
   const [coverUrl, setCoverUrl] = useState<string>(artwork);
-  
+  const [topGradientOpacity, setTopGradientOpacity] = useState(0);
+  const [bottomGradientOpacity, setBottomGradientOpacity] = useState(1);
+  const [visibleItems, setVisibleItems] = useState<Set<number>>(new Set());
+
   const { toast } = useToast();
   const { requestPermissionWithFeedback } = usePermissionRequest();
   const { state, playTrack, pauseTrack, resumeTrack, seek, setVolume, toggleMute } = useAudioPlayer();
 
   // Fetch track metadata if trackId is provided
-  useEffect(() => {
-    const fetchTrackData = async () => {
-      if (!trackId) return;
-      
-      try {
-        setIsLoading(true);
-        let query = supabase
-          .from('tracks')
-          .select(`
-            id,
-            title,
-            artist,
-            audio_path,
-            cover_path,
-            description,
-            profiles:user_id (
-              avatar_url
-            )
-          `);
+  const fetchTrackData = useCallback(async () => {
+    if (!trackId) return;
 
-        // Check if trackId is a valid UUID
-        if (typeof trackId === 'string' && isUuid(trackId)) {
-          query = query.eq('id', trackId);
-        } else {
-          query = query.eq('slug', trackId);
-        }
+    try {
+      setIsLoading(true);
+      let query = supabase
+        .from('tracks')
+        .select(`
+          id,
+          title,
+          artist,
+          audio_path,
+          cover_path,
+          description,
+          profiles:user_id (
+            avatar_url
+          )
+        `);
 
-        const { data, error } = await query.single();
-
-        if (error) throw error;
-        if (!data) return;
-
-        setTrackData(data as Track);
-
-        // Get public URL for audio
-        const audioUrl = data.audio_path 
-          ? supabase.storage.from('tracks').getPublicUrl(data.audio_path).data.publicUrl 
-          : src || '';
-        setAudioUrl(audioUrl);
-
-        // Get cover URL
-        const coverUrl = data.cover_path 
-          ? (data.cover_path.startsWith('http') 
-              ? data.cover_path 
-              : supabase.storage.from('tracks').getPublicUrl(data.cover_path).data.publicUrl)
-          : artwork;
-        setCoverUrl(coverUrl);
-      } catch (err) {
-        console.error('Error fetching track:', err);
-        setError('Failed to load track metadata');
-      } finally {
-        setIsLoading(false);
+      if (typeof trackId === 'string' && isUuid(trackId)) {
+        query = query.eq('id', trackId);
+      } else {
+        query = query.eq('slug', trackId);
       }
-    };
 
-    fetchTrackData();
+      const { data, error } = await query.single();
+
+      if (error) throw error;
+      if (!data) return;
+
+      setTrackData(data as Track);
+
+      // Get public URL for audio
+      const audioUrl = data.audio_path
+        ? supabase.storage.from('tracks').getPublicUrl(data.audio_path).data.publicUrl
+        : src || '';
+      setAudioUrl(audioUrl);
+
+      // Get cover URL
+      const coverUrl = data.cover_path
+        ? (data.cover_path.startsWith('http')
+          ? data.cover_path
+          : supabase.storage.from('tracks').getPublicUrl(data.cover_path).data.publicUrl)
+        : artwork;
+      setCoverUrl(coverUrl);
+    } catch (err) {
+      console.error('Error fetching track:', err);
+      setError('Failed to load track metadata');
+    } finally {
+      setIsLoading(false);
+    }
   }, [trackId, src, artwork]);
 
-  // Handle artwork changes
   useEffect(() => {
-    setCoverUrl(artwork);
-    setImageLoaded(false);
-  }, [artwork]);
-
-  // Handle image loading errors
-  const handleImageError = () => {
-    if (coverUrl !== '/placeholder.svg') {
-      setCoverUrl('/placeholder.svg');
-    }
-  };
+    fetchTrackData();
+  }, [fetchTrackData]);
 
   // Handle external state changes
   useEffect(() => {
@@ -190,7 +284,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           return;
         }
       }
-      
+
       const startTime = isCurrentTrack ? (state?.lastPlayedTime || 0) : 0;
       playTrack(track, startTime);
     } catch (err) {
@@ -207,7 +301,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       setError('No audio source available');
       return;
     }
-    
+
     if (isCurrentTrack) {
       if (isPlaying) {
         pauseTrack();
@@ -218,17 +312,17 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       await handlePlay();
     }
   };
-  
+
   const handleProgressChange = (values: number[]) => {
     const newTime = values[0];
     seek(newTime);
   };
-  
+
   const handleVolumeChange = (values: number[]) => {
     const newVolume = values[0];
     setVolume(newVolume);
   };
-  
+
   const toggleRepeat = () => {
     setIsRepeat(!isRepeat);
     toast({
@@ -236,7 +330,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       description: isRepeat ? 'Track will not repeat' : 'Track will repeat when finished',
     });
   };
-  
+
   const toggleShuffle = () => {
     setIsShuffle(!isShuffle);
     toast({
@@ -244,13 +338,29 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       description: 'This feature will work when playing multiple tracks',
     });
   };
-  
+
+  const handleAddToPlaylist = () => {
+    toast({
+      title: 'Added to playlist',
+      description: `${track.name} has been added to your playlist`,
+    });
+  };
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    setTopGradientOpacity(Math.min(scrollTop / 50, 1));
+    const bottomDistance = scrollHeight - (scrollTop + clientHeight);
+    setBottomGradientOpacity(
+      scrollHeight <= clientHeight ? 0 : Math.min(bottomDistance / 50, 1)
+    );
+  };
+
   if (error) {
     return (
       <div className={cn("bg-muted rounded-md p-4 text-center", className)}>
         <p className="text-destructive">Error: {error}</p>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           className="mt-2"
           onClick={() => window.location.reload()}
         >
@@ -259,7 +369,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       </div>
     );
   }
-  
+
   if (isLoading) {
     return (
       <div className={cn("bg-muted rounded-md p-4 flex items-center justify-center", className)}>
@@ -267,85 +377,43 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       </div>
     );
   }
-  
-  if (compact) {
-    return (
-      <div className={cn("flex items-center gap-2 p-2 min-w-0 overflow-hidden", className)}>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={togglePlay} 
-          className="h-8 w-8 flex-shrink-0"
-        >
-          {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-        </Button>
-        
-        <div className="flex-1 min-w-0">
-          <Slider 
-            value={[currentTime]}
-            max={duration || 100} 
-            step={0.1}
-            onValueChange={handleProgressChange}
-            className="h-1"
-          />
-        </div>
-        
-        <span className="text-xs text-muted-foreground flex-shrink-0 hidden xs:block">
-          {formatTime(currentTime)}
-        </span>
-      </div>
-    );
-  }
-  
+
   return (
-    <div className={cn("bg-background border rounded-lg overflow-hidden w-full", className)}>
-      {/* Track info - Always visible */}
-      {(track.name || track.artist) && (
-        <div className="p-3 sm:p-4">
-          <div className="flex items-center gap-3 min-w-0">
-            {coverUrl && (
-              <div className="relative flex-shrink-0">
-                {!imageLoaded && (
-                  <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-lg h-10 w-10 sm:h-12 sm:w-12" />
-                )}
-                <img 
-                  src={coverUrl} 
-                  alt={track.name || "Album art"}
-                  className={cn(
-                    "h-10 w-10 sm:h-12 sm:w-12 object-cover rounded-lg",
-                    !imageLoaded ? "opacity-0" : "opacity-100"
-                  )}
-                  onLoad={() => setImageLoaded(true)}
-                  onError={handleImageError}
-                />
-              </div>
-            )}
-            <div className="min-w-0 flex-1">
-              {track.name && <p className="font-medium text-sm sm:text-base truncate">{track.name}</p>}
-              {track.artist && <p className="text-xs sm:text-sm text-muted-foreground truncate">{track.artist}</p>}
-              {trackData?.description && (
-                <p className="text-xs text-muted-foreground/80 mt-1 line-clamp-1">
-                  {trackData.description}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Progress section */}
-      <div className="px-3 sm:px-4 pb-3 sm:pb-4">
-        <div className="space-y-2">
+    <div className={cn("relative w-full max-w-full overflow-hidden", className)}>
+      {/* Track List */}
+      <div 
+        className="h-full overflow-y-auto px-4 py-2 animated-list-scrollbar"
+        onScroll={handleScroll}
+      >
+        <TrackItem
+          track={{
+            id: track.id,
+            title: track.name,
+            artist: track.artist,
+            audio_path: audioUrl,
+            cover_path: coverUrl,
+          }}
+          isPlaying={isPlaying}
+          isCurrentTrack={isCurrentTrack}
+          onClick={togglePlay}
+          onAddToPlaylist={handleAddToPlaylist}
+        />
+      </div>
+
+      {/* Progress and Controls */}
+      <div className="bg-background border-t p-4">
+        {/* Progress section */}
+        <div className="space-y-2 mb-4">
           <div className="relative">
-            <Slider 
+            <Slider
               value={[currentTime]}
-              max={duration || 100} 
+              max={duration || 100}
               step={0.1}
               onValueChange={handleProgressChange}
               className="cursor-pointer"
             />
           </div>
-          
+
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>{formatTime(currentTime)}</span>
             <span>{formatTime(duration)}</span>
@@ -353,20 +421,29 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         </div>
 
         {/* Essential controls */}
-        <div className="flex items-center justify-center gap-2 mt-4">
-          <Button 
-            variant="ghost" 
+        <div className="flex items-center justify-center gap-2">
+          <Button
+            variant="ghost"
             size="icon"
-            className="h-8 w-8 hidden xs:flex"
+            className="h-8 w-8"
+            title="Shuffle"
+            onClick={toggleShuffle}
+          >
+            <Shuffle className={cn("h-4 w-4", isShuffle && "text-primary")} />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
             title="Previous"
-            disabled
           >
             <SkipBack className="h-4 w-4" />
           </Button>
-          
-          <Button 
-            variant="default" 
-            size="icon" 
+
+          <Button
+            variant="default"
+            size="icon"
             onClick={togglePlay}
             className="h-12 w-12 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
             title={isPlaying ? "Pause" : "Play"}
@@ -374,159 +451,65 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           >
             {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
           </Button>
-          
-          <Button 
-            variant="ghost" 
+
+          <Button
+            variant="ghost"
             size="icon"
-            className="h-8 w-8 hidden xs:flex"
+            className="h-8 w-8"
             title="Next"
-            disabled
           >
             <SkipForward className="h-4 w-4" />
           </Button>
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            title="Repeat"
+            onClick={toggleRepeat}
+          >
+            <Repeat className={cn("h-4 w-4", isRepeat && "text-primary")} />
+          </Button>
         </div>
 
-        {/* Advanced controls */}
-        {showControls && (
-          <>
-            <div className="sm:hidden">
-              <div className="flex items-center justify-center mt-2">
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => setShowAdvancedControls(!showAdvancedControls)}
-                  className="h-8 w-8"
-                  title="More controls"
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </div>
-              
-              <AnimatePresence>
-                {showAdvancedControls && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="pt-3 space-y-3">
-                      <div className="flex items-center justify-center gap-4">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className={cn("h-8 w-8", isShuffle && "text-primary")}
-                          onClick={toggleShuffle}
-                          title="Shuffle"
-                        >
-                          <Shuffle className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className={cn("h-8 w-8", isRepeat && "text-primary")}
-                          onClick={toggleRepeat}
-                          title="Repeat"
-                        >
-                          <Repeat className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      
-                      <div className="flex items-center justify-center gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={toggleMute} 
-                          className="h-8 w-8"
-                          title={state?.isMuted ? "Unmute" : "Mute"}
-                        >
-                          {state?.isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                        </Button>
-                        <div className="flex-1 max-w-24">
-                          <Slider
-                            value={[state?.isMuted ? 0 : (state?.volume || 1)]} 
-                            min={0} 
-                            max={1} 
-                            step={0.01}
-                            onValueChange={handleVolumeChange}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            <div className="hidden sm:flex items-center justify-between mt-4">
-              <div className="flex items-center gap-1">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className={cn("h-8 w-8", isShuffle && "text-primary")}
-                  onClick={toggleShuffle}
-                  title="Shuffle"
-                >
-                  <Shuffle className="h-4 w-4" />
-                </Button>
-                
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className={cn("h-8 w-8", isRepeat && "text-primary")}
-                  onClick={toggleRepeat}
-                  title="Repeat"
-                >
-                  <Repeat className="h-4 w-4" />
-                </Button>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={toggleMute} 
-                  className="h-8 w-8"
-                  title={state?.isMuted ? "Unmute" : "Mute"}
-                >
-                  {state?.isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                </Button>
-                
-                <div className="w-20 lg:w-24">
-                  <Slider
-                    value={[state?.isMuted ? 0 : (state?.volume || 1)]} 
-                    min={0} 
-                    max={1} 
-                    step={0.01}
-                    onValueChange={handleVolumeChange}
-                  />
-                </div>
-              </div>
-            </div>
-          </>
-        )}
+        {/* Volume controls */}
+        <div className="flex items-center gap-2 mt-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleMute}
+            className="h-8 w-8"
+            title={state?.isMuted ? "Unmute" : "Mute"}
+          >
+            {state?.isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+          </Button>
+          <div className="flex-1">
+            <Slider
+              value={[state?.isMuted ? 0 : (state?.volume || 1)]}
+              min={0}
+              max={1}
+              step={0.01}
+              onValueChange={handleVolumeChange}
+            />
+          </div>
+        </div>
       </div>
 
-      {/* Custom CSS */}
-      <style>{`
-        @media (max-width: 475px) {
-          .xs\\:block { display: block !important; }
-          .xs\\:flex { display: flex !important; }
-          .xs\\:h-12 { height: 3rem !important; }
-          .xs\\:w-12 { width: 3rem !important; }
-          .xs\\:text-base { font-size: 1rem !important; }
-          .xs\\:text-sm { font-size: 0.875rem !important; }
-        }
-        @media (min-width: 475px) {
-          .xs\\:block { display: block !important; }
-          .xs\\:flex { display: flex !important; }
-          .xs\\:h-12 { height: 3rem !important; }
-          .xs\\:w-12 { width: 3rem !important; }
-          .xs\\:text-base { font-size: 1rem !important; }
-          .xs\\:text-sm { font-size: 0.875rem !important; }
-        }
-      `}</style>
+      {/* Gradients */}
+      <div
+        className="absolute top-0 left-0 right-0 h-8 pointer-events-none z-10"
+        style={{
+          opacity: topGradientOpacity,
+          background: 'linear-gradient(to bottom, hsl(var(--background)), transparent)'
+        }}
+      />
+      <div
+        className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none z-10"
+        style={{
+          opacity: bottomGradientOpacity,
+          background: 'linear-gradient(to top, hsl(var(--background)), transparent)'
+        }}
+      />
     </div>
   );
 };
