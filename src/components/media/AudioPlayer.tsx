@@ -310,7 +310,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
                 )}
                 <img 
                   src={coverUrl} 
-                  alt={track.cover_path || "Album art"}
+                  alt={track.name || "Album art"}
                   className={cn(
                     "h-10 w-10 sm:h-12 sm:w-12 object-cover rounded-lg",
                     !imageLoaded ? "opacity-0" : "opacity-100"
