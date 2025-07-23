@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Play, 
@@ -29,7 +28,9 @@ interface Track {
   audio_path: string;
   cover_path?: string | null;
   description?: string;
-  user_id?: string;
+  profiles?: {
+    avatar_url: string;
+  };
 }
 
 interface AudioPlayerProps {
@@ -89,7 +90,17 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         setIsLoading(true);
         let query = supabase
           .from('tracks')
-          .select('*');
+          .select(`
+            id,
+            title,
+            artist,
+            audio_path,
+            cover_path,
+            description,
+            profiles:user_id (
+              avatar_url
+            )
+          `);
 
         // Check if trackId is a valid UUID
         if (typeof trackId === 'string' && isUuid(trackId)) {
@@ -100,29 +111,24 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
         const { data, error } = await query.single();
 
-        if (error) {
-          console.error('Error fetching track:', error);
-          setError('Failed to load track metadata');
-          return;
-        }
+        if (error) throw error;
+        if (!data) return;
 
-        if (data) {
-          setTrackData(data);
+        setTrackData(data as Track);
 
-          // Get public URL for audio
-          const audioUrl = data.audio_path 
-            ? supabase.storage.from('tracks').getPublicUrl(data.audio_path).data.publicUrl 
-            : src || '';
-          setAudioUrl(audioUrl);
+        // Get public URL for audio
+        const audioUrl = data.audio_path 
+          ? supabase.storage.from('tracks').getPublicUrl(data.audio_path).data.publicUrl 
+          : src || '';
+        setAudioUrl(audioUrl);
 
-          // Get cover URL
-          const coverUrl = data.cover_path 
-            ? (data.cover_path.startsWith('http') 
-                ? data.cover_path 
-                : supabase.storage.from('tracks').getPublicUrl(data.cover_path).data.publicUrl)
-            : artwork;
-          setCoverUrl(coverUrl);
-        }
+        // Get cover URL
+        const coverUrl = data.cover_path 
+          ? (data.cover_path.startsWith('http') 
+              ? data.cover_path 
+              : supabase.storage.from('tracks').getPublicUrl(data.cover_path).data.publicUrl)
+          : artwork;
+        setCoverUrl(coverUrl);
       } catch (err) {
         console.error('Error fetching track:', err);
         setError('Failed to load track metadata');
