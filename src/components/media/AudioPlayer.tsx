@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Play, 
@@ -57,12 +56,27 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showAdvancedControls, setShowAdvancedControls] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imgSrc, setImgSrc] = useState(artwork);
   
   const { toast } = useToast();
   const { requestPermissionWithFeedback } = usePermissionRequest();
   const { state, playTrack, pauseTrack, resumeTrack, seek, setVolume, toggleMute } = useAudioPlayer();
 
-   // Add this useEffect to handle external state changes
+  // Handle artwork changes
+  useEffect(() => {
+    setImgSrc(artwork);
+    setImageLoaded(false);
+  }, [artwork]);
+
+  // Handle image loading errors
+  const handleImageError = () => {
+    if (imgSrc !== '/placeholder.svg') {
+      setImgSrc('/placeholder.svg');
+    }
+  };
+
+  // Add this useEffect to handle external state changes
   useEffect(() => {
     if (state) {
       setMediaPlaying(state.isPlaying);
@@ -75,7 +89,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     src,
     name: title || 'Unknown Track',
     artist: artist || 'Unknown Artist',
-    artwork,
+    artwork: imgSrc,
   };
 
   const isCurrentTrack = state?.currentTrack?.id === track.id;
@@ -208,12 +222,22 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       {(title || artist) && (
         <div className="p-3 sm:p-4">
           <div className="flex items-center gap-3 min-w-0">
-            {artwork && (
-              <img 
-                src={artwork} 
-                alt={title || "Album art"}
-                className="h-10 w-10 sm:h-12 sm:w-12 object-cover rounded flex-shrink-0"
-              />
+            {imgSrc && (
+              <div className="relative flex-shrink-0">
+                {!imageLoaded && (
+                  <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-lg h-10 w-10 sm:h-12 sm:w-12" />
+                )}
+                <img 
+                  src={imgSrc} 
+                  alt={title || "Album art"}
+                  className={cn(
+                    "h-10 w-10 sm:h-12 sm:w-12 object-cover rounded-lg",
+                    !imageLoaded ? "opacity-0" : "opacity-100"
+                  )}
+                  onLoad={() => setImageLoaded(true)}
+                  onError={handleImageError}
+                />
+              </div>
             )}
             <div className="min-w-0 flex-1">
               {title && <p className="font-medium text-sm sm:text-base truncate">{title}</p>}
