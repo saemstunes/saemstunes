@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { pageTransition } from "@/lib/animation-utils";
 import SearchBox from "@/components/discover/SearchBox";
 import EnhancedFeaturedBanner from "@/components/discover/EnhancedFeaturedBanner";
-import CategoryNavigation from "@/components/ui/CategoryNavigation";
+import CategoryNavigation from "@/components/discover/CategoryNavigation";
 import ContentTabs from "@/components/discover/ContentTabs";
 import RecommendationSection from "@/components/discover/RecommendationSection";
 import { supabase } from "@/integrations/supabase/client";
