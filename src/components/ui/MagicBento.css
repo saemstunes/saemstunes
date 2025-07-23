@@ -1,13 +1,29 @@
-
+/* MagicBento.css */
 :root {
-  --hue: 27;
-  --sat: 69%;
-  --white: hsl(0, 0%, 100%);
-  --purple-primary: rgba(132, 0, 255, 1);
-  --purple-glow: rgba(132, 0, 255, 0.2);
-  --purple-border: rgba(132, 0, 255, 0.8);
-  --border-color: #392e4e;
-  --background-dark: #060010;
+  /* Light Mode Colors */
+  --background: hsl(36 33% 97%);
+  --foreground: hsl(20 14% 21%);
+  --card-bg: hsl(0 0% 100%);
+  --card-fg: hsl(20 14% 21%);
+  --border-color: hsl(20 5% 85%);
+  --gold-primary: #A67C00;
+  --gold-light: #D4A936;
+  --gold-dark: #7A5A00;
+  --brown-default: #3B2F2F;
+  --brown-light: #5A4A4A;
+  --brown-dark: #251515;
+  
+  /* Dark Mode Colors */
+  @media (prefers-color-scheme: dark) {
+    --background: hsl(20 14% 10%);
+    --foreground: hsl(0 0% 95%);
+    --card-bg: hsl(20 14% 15%);
+    --card-fg: hsl(0 0% 95%);
+    --border-color: hsl(20 14% 25%);
+  }
+  
+  --gold-glow: rgba(166, 124, 0, 0.2);
+  --gold-border-glow: rgba(166, 124, 0, 0.8);
   color-scheme: light dark;
 }
 
@@ -17,6 +33,7 @@
   padding: 0.75em;
   max-width: 54em;
   font-size: clamp(1rem, 0.9rem + 0.5vw, 1.5rem);
+  background: var(--background);
 }
 
 .card {
@@ -31,7 +48,8 @@
   padding: 1.25em;
   border-radius: 20px;
   border: 1px solid var(--border-color);
-  background: var(--background-dark);
+  background: var(--card-bg);
+  color: var(--card-fg);
   font-weight: 300;
   overflow: hidden;
   transition: all 0.3s ease;
@@ -51,7 +69,6 @@
 .card__content {
   display: flex;
   position: relative;
-  color: var(--white);
 }
 
 .card__header {
@@ -59,12 +76,13 @@
   justify-content: space-between;
 }
 
-.card__content {
-  flex-direction: column;
-}
-
 .card__label {
   font-size: 16px;
+  background: var(--gold-primary);
+  color: white;
+  padding: 0.25em 0.75em;
+  border-radius: 1em;
+  font-weight: 500;
 }
 
 .card__title,
@@ -74,9 +92,10 @@
 }
 
 .card__title {
-  font-weight: 400;
+  font-weight: 600;
   font-size: 16px;
   margin: 0 0 0.25em;
+  color: var(--gold-dark);
 }
 
 .card__description {
@@ -151,8 +170,8 @@
   inset: 0;
   padding: 6px;
   background: radial-gradient(var(--glow-radius) circle at var(--glow-x) var(--glow-y),
-      rgba(132, 0, 255, calc(var(--glow-intensity) * 0.8)) 0%,
-      rgba(132, 0, 255, calc(var(--glow-intensity) * 0.4)) 30%,
+      rgba(var(--glow-color), calc(var(--glow-intensity) * 0.8)) 0%,
+      rgba(var(--glow-color), calc(var(--glow-intensity) * 0.4)) 30%,
       transparent 60%);
   border-radius: inherit;
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -169,7 +188,7 @@
 }
 
 .card--border-glow:hover {
-  box-shadow: 0 4px 20px rgba(46, 24, 78, 0.4), 0 0 30px var(--purple-glow);
+  box-shadow: 0 4px 20px rgba(166, 124, 0, 0.2), 0 0 30px var(--gold-glow);
 }
 
 .particle-container {
@@ -184,13 +203,13 @@
   left: -2px;
   right: -2px;
   bottom: -2px;
-  background: rgba(132, 0, 255, 0.2);
+  background: rgba(166, 124, 0, 0.2);
   border-radius: 50%;
   z-index: -1;
 }
 
 .particle-container:hover {
-  box-shadow: 0 4px 20px rgba(46, 24, 78, 0.2), 0 0 30px var(--purple-glow);
+  box-shadow: 0 4px 20px rgba(166, 124, 0, 0.2), 0 0 30px var(--gold-glow);
 }
 
 /* Global spotlight styles */
@@ -204,4 +223,6 @@
 .bento-section {
   position: relative;
   user-select: none;
+  padding: 2rem 0;
+  border-radius: 1rem;
 }
