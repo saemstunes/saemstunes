@@ -149,7 +149,7 @@ const TrackCard = ({ track, onPlay, onShare }: { track: any; onPlay: (track: any
           <Button
             size="icon"
             className="opacity-0 group-hover:opacity-100 transition-opacity bg-primary hover:bg-primary/90"
-            onClick={() => onPlay(track)}
+            onClick={() => onPlay(track.audio_path)}
           >
             <Play className="h-5 w-5" />
           </Button>
