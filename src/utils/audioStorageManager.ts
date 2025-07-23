@@ -146,6 +146,18 @@ export class AudioStorageManager {
 
   static async trackPlay(trackId: string, userId?: string): Promise<void> {
     try {
+      // First check if the track exists in the database
+      const { data: track } = await supabase
+        .from('tracks')
+        .select('id')
+        .eq('id', trackId)
+        .single();
+
+      if (!track) {
+        console.log('Track not found in database, skipping play tracking');
+        return;
+      }
+
       await supabase.from('track_plays').insert({
         track_id: trackId,
         user_id: userId || null
