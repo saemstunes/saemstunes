@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Play, 
@@ -111,24 +112,29 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
         const { data, error } = await query.single();
 
-        if (error) throw error;
-        if (!data) return;
+        if (error) {
+          console.error('Error fetching track:', error);
+          setError('Failed to load track metadata');
+          return;
+        }
 
-        setTrackData(data as Track);
+        if (data) {
+          setTrackData(data);
 
-        // Get public URL for audio
-        const audioUrl = data.audio_path 
-          ? supabase.storage.from('tracks').getPublicUrl(data.audio_path).data.publicUrl 
-          : src || '';
-        setAudioUrl(audioUrl);
+          // Get public URL for audio
+          const audioUrl = data.audio_path 
+            ? supabase.storage.from('tracks').getPublicUrl(data.audio_path).data.publicUrl 
+            : src || '';
+          setAudioUrl(audioUrl);
 
-        // Get cover URL
-        const coverUrl = data.cover_path 
-          ? (data.cover_path.startsWith('http') 
-              ? data.cover_path 
-              : supabase.storage.from('tracks').getPublicUrl(data.cover_path).data.publicUrl)
-          : artwork;
-        setCoverUrl(coverUrl);
+          // Get cover URL
+          const coverUrl = data.cover_path 
+            ? (data.cover_path.startsWith('http') 
+                ? data.cover_path 
+                : supabase.storage.from('tracks').getPublicUrl(data.cover_path).data.publicUrl)
+            : artwork;
+          setCoverUrl(coverUrl);
+        }
       } catch (err) {
         console.error('Error fetching track:', err);
         setError('Failed to load track metadata');
