@@ -21,7 +21,7 @@ import { useNavigate } from "react-router-dom";
 import { PlaylistActions } from "@/components/playlists/PlaylistActions";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import EnhancedAnimatedList from "@/components/tracks/EnhancedAnimatedList";
-import TiltedCard from "@/components/tracks/TiltedCard";
+import { TiltedCard } from "@/components/tracks/TiltedCard";
 
 interface Track {
   id: string;
