@@ -21,6 +21,7 @@ import { useNavigate } from "react-router-dom";
 import { PlaylistActions } from "@/components/playlists/PlaylistActions";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import EnhancedAnimatedList from "@/components/tracks/EnhancedAnimatedList";
+import TiltedCard from "@/components/tracks/TiltedCard";
 
 interface Track {
   id: string;
@@ -756,6 +757,26 @@ const Tracks = () => {
                   <div className="grid md:grid-cols-2 gap-6 lg:gap-8 items-center">
                     <div className="flex justify-center relative order-2 md:order-1">
                       <div className="hover:z-[9999] relative transition-all duration-300 w-full max-w-sm">
+
+                       <TiltedCard
+                         imageSrc={featuredTrack.imageSrc}
+                         altText="Featured Track Cover"
+                         captionText=Salama ft Simali
+                         containerHeight="300px"
+                         containerWidth="300px"
+                         imageHeight="300px"
+                         imageWidth="300px"
+                         rotateAmplitude={12}
+                         scaleOnHover={1.2}
+                         showMobileWarning={false}
+                         showTooltip={true}
+                         displayOverlayContent={true}
+                         overlayContent={
+                           <p className="tilted-card-demo-text">
+                             Salama ft. Simali
+                           </p>
+                         }
+                         /> 
                         <ResponsiveImage
                           src={featuredTrack.imageSrc}
                           alt="Featured Track Cover"
