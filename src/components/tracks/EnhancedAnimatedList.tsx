@@ -100,7 +100,7 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
             {/* Play/Pause Overlay */}
             <div className={cn(
               "absolute inset-0 bg-black/40 flex items-center justify-center",
-              "transition-opacity duration-200 rounded-lg",
+              "transition-opacity duration-200 rounded-full",
               hoveredTrack === track.id || isCurrentTrack(track.id) ? "opacity-100" : "opacity-0"
             )}>
               {isPlaying(track.id) ? (
