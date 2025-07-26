@@ -925,6 +925,21 @@ const Tracks = () => {
               </TabsContent>
             </Tabs>
           </div>
+          {/* Mobile overflow prevention */}
+    <style jsx global>{`
+      @media (max-width: 518px) {
+        html, body {
+          overflow-x: hidden !important;
+          width: 100% !important;
+        }
+        * {
+          max-width: 100vw !important;
+        }
+        input, textarea, select {
+          font-size: 16px !important;
+        }
+      }
+    `}</style>
         </div>
       </MainLayout>
     </>
