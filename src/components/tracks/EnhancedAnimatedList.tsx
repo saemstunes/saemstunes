@@ -71,7 +71,7 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: index * 0.1 }}
           className={cn(
-            "flex items-center gap-3 p-3 rounded-lg transition-all duration-200",
+            "flex items-center gap-3 p-3 rounded-lg transition-all duration-200 w-full",
             "hover:bg-accent/50 group cursor-pointer",
             isCurrentTrack(track.id) && "bg-accent/30"
           )}
