@@ -423,7 +423,7 @@ const Tracks = () => {
   // Get distinct artists for Artists tab
   const artists = Array.from(
     new Set(tracks.map(track => track.artist).filter(Boolean) as Set<string>
-  );
+  ));
 
   // Get cover tracks for Covers tab
   const coverTracks = tracks.filter(track => 
