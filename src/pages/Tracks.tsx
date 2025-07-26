@@ -804,12 +804,12 @@ const Tracks = () => {
                     <h2 className="text-2xl font-bold">Suggested For You</h2>
                   </div>
                   
-                  <Card>
+                  <Card className="w-full max-w-full overflow-hidden">
                     <CardHeader>
                       <CardTitle>Recommended Tracks</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <ScrollArea className="h-[400px]">
+                      <ScrollArea className="h-[400px] w-full">
                         <EnhancedAnimatedList tracks={filteredTracks.slice(0, 10)} />
                       </ScrollArea>
                     </CardContent>
@@ -842,22 +842,22 @@ const Tracks = () => {
                 
                 <div className="grid gap-4">
                   {playlists.map((playlist) => (
-                    <Card key={playlist.id}>
+                    <Card key={playlist.id} className="w-full max-w-full overflow-hidden">
                       <CardContent className="p-4">
-                        <div className="flex items-center gap-4">
+                        <div className="flex flex-col sm:flex-row items-center gap-4">
                           <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
                             <Music className="h-8 w-8 text-primary" />
                           </div>
-                          <div className="flex-1">
-                            <h3 className="font-semibold">{playlist.name}</h3>
-                            <p className="text-sm text-muted-foreground">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold truncate">{playlist.name}</h3>
+                            <p className="text-sm text-muted-foreground truncate">
                               {playlist.description || 'No description'}
                             </p>
                             <p className="text-xs text-muted-foreground mt-1">
                               Created {new Date(playlist.created_at).toLocaleDateString()}
                             </p>
                           </div>
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" className="mt-2 sm:mt-0">
                             View Playlist
                           </Button>
                         </div>
@@ -911,12 +911,12 @@ const Tracks = () => {
                 </div>
                 
                 <div className="grid gap-6">
-                  <Card>
+                  <Card className="w-full max-w-full overflow-hidden">
                     <CardHeader>
                       <CardTitle>All Tracks</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <ScrollArea className="h-[500px]">
+                      <ScrollArea className="h-[500px] w-full">
                         <EnhancedAnimatedList tracks={filteredTracks} />
                       </ScrollArea>
                     </CardContent>
