@@ -750,7 +750,7 @@ const Tracks = () => {
                     <div className="flex justify-center relative order-2 md:order-1">
                       <div className="hover:z-[9999] relative transition-all duration-300 w-full max-w-sm">
                         <ResponsiveImage
-                          src={featuredTrack.imageSrc}
+                          src={featuredTrack.imageSrc} || trackData.cover_path
                           alt="Featured Track Cover"
                           width={400}
                           height={400}
