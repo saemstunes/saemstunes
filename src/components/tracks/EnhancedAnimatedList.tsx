@@ -70,7 +70,7 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: index * 0.1 }}
           className={cn(
-            "flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg transition-all duration-200 w-full",
+            "flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-full transition-all duration-200 w-full",
             "hover:bg-accent/50 group cursor-pointer",
             isCurrentTrack(track.id) && "bg-accent/30"
           )}
@@ -81,7 +81,7 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
           {/* Play/Pause Button - Smaller on mobile */}
           <div className="relative flex-shrink-0">
             <div className={cn(
-              "w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden bg-muted flex items-center justify-center",
+              "w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden bg-muted flex items-center justify-center",
               "transition-all duration-200"
             )}>
               {track.cover_path ? (
