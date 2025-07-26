@@ -1,4 +1,3 @@
-
 import { useRef, useState } from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 import "./TiltedCard.css";
@@ -31,8 +30,8 @@ export default function TiltedCard({
   captionText = "",
   containerHeight = "300px",
   containerWidth = "100%",
-  imageHeight = "300px",
-  imageWidth = "300px",
+  imageHeight = "100%",
+  imageWidth = "100%",
   scaleOnHover = 1.1,
   rotateAmplitude = 14,
   showMobileWarning = true,
@@ -41,6 +40,8 @@ export default function TiltedCard({
   displayOverlayContent = false,
 }: TiltedCardProps) {
   const ref = useRef<HTMLElement>(null);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -78,11 +79,13 @@ export default function TiltedCard({
   }
 
   function handleMouseEnter() {
+    setIsHovered(true);
     scale.set(scaleOnHover);
     opacity.set(1);
   }
 
   function handleMouseLeave() {
+    setIsHovered(false);
     opacity.set(0);
     scale.set(1);
     rotateX.set(0);
@@ -118,25 +121,80 @@ export default function TiltedCard({
           scale,
         }}
       >
-        <motion.img
-          src={imageSrc}
-          alt={altText}
-          className="tilted-card-img"
+        {/* Image container with proper dimensions */}
+        <div 
+          className="tilted-card-image-container" 
           style={{
-            width: imageWidth,
-            height: imageHeight,
+            width: "100%",
+            height: "100%",
+            position: "relative",
+            overflow: "hidden",
+            borderRadius: "15px",
           }}
-        />
+        >
+          {/* Loading placeholder */}
+          {!imageLoaded && (
+            <div 
+              className="tilted-card-loading" 
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                backgroundColor: "hsl(var(--muted))",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "hsl(var(--muted-foreground))",
+                fontSize: "0.875rem",
+              }}
+            >
+              Loading image...
+            </div>
+          )}
 
+          {/* Actual image */}
+          <motion.img
+            src={imageSrc}
+            alt={altText}
+            className="tilted-card-img"
+            style={{
+              opacity: imageLoaded ? 1 : 0,
+              transition: "opacity 0.5s ease",
+            }}
+            onLoad={() => setImageLoaded(true)}
+            onError={() => setImageLoaded(false)}
+          />
+        </div>
+
+        {/* Overlay content */}
         {displayOverlayContent && overlayContent && (
           <motion.div
             className="tilted-card-overlay"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "rgba(0,0,0,0.5)",
+              color: "white",
+              borderRadius: "15px",
+              pointerEvents: "none",
+              opacity: isHovered ? 1 : 0,
+              transition: "opacity 0.3s ease",
+            }}
           >
             {overlayContent}
           </motion.div>
         )}
       </motion.div>
 
+      {/* Caption tooltip */}
       {showTooltip && (
         <motion.figcaption
           className="tilted-card-caption"
