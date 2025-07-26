@@ -37,6 +37,13 @@ interface Track {
   profiles?: {
     avatar_url: string;
   };
+  duration?: number;
+  youtube_url?: string;
+  preview_url?: string;
+  video_url?: string;
+  primary_color?: string;
+  secondary_color?: string;
+  background_gradient?: string;
 }
 
 interface Playlist {
@@ -55,6 +62,7 @@ interface FeaturedTrack {
   likes: number;
   audioSrc: string;
   description?: string;
+  youtube_url?: string;
 }
 
 const Tracks = () => {
@@ -74,133 +82,8 @@ const Tracks = () => {
   const [accessLevel, setAccessLevel] = useState<AccessLevel>('free');
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [youtubeUrl, setYoutubeUrl] = useState('');
   const [uploading, setUploading] = useState(false);
-
-  const albumItems = [
-    {
-      image: "https://i.imgur.com/VfKXMyG.png",
-      title: "Pale Ulipo",
-      subtitle: "Accompanied Cover",
-      handle: "@saemstunes",
-      borderColor: "#5A270F",
-      gradient: "linear-gradient(145deg, #5A270F, #000)",
-      audioUrl: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Cover_Tracks/Pale%20Ulipo%20cover.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvQ292ZXJfVHJhY2tzL1BhbGUgVWxpcG8gY292ZXIubTRhIiwiaWF0IjoxNzQ5OTYwMjQ1LCJleHAiOjE3ODE0OTYyNDV9.3vv7kkkTTw2uRXG_HEItaCZ5xC6dbgcucC-PYjJKXLA",
-      duration: "2:53",
-      previewUrl: "https://www.youtube.com/watch?v=Y5hIQj7WoDg",
-      videoUrl: "https://www.youtube.com/watch?v=Y5hIQj7WoDg",
-      youtubeUrl: "https://www.youtube.com/watch?v=Y5hIQj7WoDg",
-      primaryColor: "#5A270F",
-      secondaryColor: "#8B4513",
-      backgroundGradient: "linear-gradient(145deg, #5A270F 0%, #8B4513 50%, #000 100%)",
-    },
-    {
-      image: "https://i.imgur.com/6yr8BpG.jpeg", 
-      title: "I Need You More",
-      subtitle: "Acoustic Cover",
-      handle: "@saemstunes",
-      borderColor: "#DF8142",
-      gradient: "linear-gradient(180deg, #DF8142, #000)",
-      audioUrl: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/I%20Need%20You%20More.wav",
-      duration: "0:53",
-      previewUrl: "https://www.youtube.com/shorts/CcC5vemVEjY",
-      videoUrl: "https://www.youtube.com/shorts/CcC5vemVEjY",
-      youtubeUrl: "https://www.youtube.com/shorts/CcC5vemVEjY",
-      primaryColor: "#DF8142",
-      secondaryColor: "#F4A460",
-      backgroundGradient: "linear-gradient(180deg, #DF8142 0%, #F4A460 50%, #000 100%)",
-    },
-    {
-      image: "https://i.imgur.com/LJQDADg.jpeg",
-      title: "Ni Hai",
-      subtitle: "Original",
-      handle: "@saemstunes, @kendinkonge",
-      borderColor: "#EEB38C",
-      gradient: "linear-gradient(165deg, #EEB38C, #000)",
-      audioUrl: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/Ni%20Hai%20(Demo)%20-%20Saem's%20Tunes%20(OFFICIAL%20MUSIC%20VIDEO)%20(128kbit_AAC).m4a",
-      duration: "1:18",
-      previewUrl: "https://youtu.be/0aLSJiQrMRc?si=WJzRMZVah_UTj7Fs",
-      videoUrl: "https://youtu.be/0aLSJiQrMRc?si=WJzRMZVah_UTj7Fs",
-      youtubeUrl: "https://youtu.be/0aLSJiQrMRc?si=WJzRMZVah_UTj7Fs",
-      primaryColor: "#EEB38C",
-      secondaryColor: "#DEB887",
-      backgroundGradient: "linear-gradient(165deg, #EEB38C 0%, #DEB887 50%, #000 100%)",
-    },
-    {
-      image: "https://i.imgur.com/wrm7LI1.jpeg",
-      title: "Mapenzi Ya Ajabu",
-      subtitle: "Original",
-      handle: "@saemstunes",
-      borderColor: "#5A270F",
-      gradient: "linear-gradient(145deg, #5A270F, #000)",
-      audioUrl: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/Mapenzi%20Ya%20Ajabu%20(Demo)%20-%20Saem's%20Tunes%20(OFFICIAL%20MUSIC%20VIDEO)%20(128kbit_AAC).m4a",
-      duration: "1:30",
-      previewUrl: "https://youtu.be/rl5UOp8q1cM?si=pPE-0BljTQ-kceMl",
-      videoUrl: "https://youtu.be/rl5UOp8q1cM?si=pPE-0BljTQ-kceMl",
-      youtubeUrl: "https://youtu.be/rl5UOp8q1cM?si=pPE-0BljTQ-kceMl",
-      primaryColor: "#5A270F",
-      secondaryColor: "#8B4513",
-      backgroundGradient: "linear-gradient(145deg, #5A270F 0%, #8B4513 50%, #000 100%)",
-    },
-    {
-      image: "https://i.imgur.com/dzjTYAw.jpeg", 
-      title: "LOVE Medley",
-      subtitle: "Project",
-      handle: "@saemstunes",
-      borderColor: "#DF8142",
-      gradient: "linear-gradient(180deg, #DF8142, #000)",
-      audioUrl: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/LOVE%20Medley%20-%20Greatest,%20MYA(OC),%20Kama%20Si%20We,%20Hold%20On%20Me.mp3",
-      duration: "2:07",
-      previewUrl: "https://youtu.be/9NU3PBcj1-U?si=b75lJDDRm1rAiw0A",
-      videoUrl: "https://youtu.be/9NU3PBcj1-U?si=b75lJDDRm1rAiw0A",
-      youtubeUrl: "https://youtu.be/9NU3PBcj1-U?si=b75lJDDRm1rAiw0A",
-      primaryColor: "#DF8142",
-      secondaryColor: "#F4A460",
-      backgroundGradient: "linear-gradient(180deg, #DF8142 0%, #F4A460 50%, #000 100%)",
-    },
-    {
-      image: "https://i.imgur.com/HDBX1q8.jpeg",
-      title: "TCBU Medley",
-      subtitle: "Project",
-      handle: "@saemstunes, @timgrandmich",
-      borderColor: "#EEB38C",
-      gradient: "linear-gradient(165deg, #EEB38C, #000)",
-      audioUrl: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/TCBU%20Medley%20ft.%20Tim%20GrandMich.mp3",
-      duration: "3:36",
-      previewUrl: "https://youtu.be/GEcYrcEvFas?si=C9BQt6wvNy2Zxnvk",
-      videoUrl: "https://youtu.be/GEcYrcEvFas?si=C9BQt6wvNy2Zxnvk",
-      youtubeUrl: "https://youtu.be/GEcYrcEvFas?si=C9BQt6wvNy2Zxnvk",
-      primaryColor: "#EEB38C",
-      secondaryColor: "#DEB887",
-      backgroundGradient: "linear-gradient(165deg, #EEB38C 0%, #DEB887 50%, #000 100%)",
-    },
-    {
-      image: "https://i.imgur.com/FPxYEmG.jpeg",
-      title: "Salama ft. Simali",
-      subtitle: "Originals",
-      handle: "Saem's Tunes, Simali Evans",
-      borderColor: "#5A270F",
-      gradient: "linear-gradient(145deg, #5A270F, #000)",
-      audioUrl: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Cover%20Art/Salama%20-%20Saem%20x%20Simali.mp3",
-      duration: "2:53",
-      previewUrl: "https://youtube.com/shorts/2pyHM3MZy6U",
-      videoUrl: "https://youtube.com/shorts/2pyHM3MZy6U",
-      youtubeUrl: "https://youtube.com/shorts/2pyHM3MZy6U",
-      primaryColor: "#5A270F",
-      secondaryColor: "#8B4513",
-      backgroundGradient: "linear-gradient(145deg, #5A270F 0%, #8B4513 50%, #000 100%)",
-    },
-  ];
-
-  const playlistTracks = [
-    "African Gospel",
-    "Christian Afrobeats", 
-    "Morning Coffee Jazz",
-    "Workout Motivation",
-    "Late Night Vibes",
-    "Classical Focus",
-    "Indie Rock Mix",
-    "Electronic Dreams"
-  ];
 
   const navigate = useNavigate();
 
@@ -267,14 +150,15 @@ const Tracks = () => {
           cover_path,
           description,
           created_at,
-          artist  
+          artist,
+          youtube_url
         `)
         .eq('approved', true)
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
 
-      let featured: FeaturedTrack;
+      if (trackError) throw trackError;
 
       if (trackData) {
         // Get play count and like count for this track
@@ -298,45 +182,21 @@ const Tracks = () => {
         const coverUrl = trackData.cover_path ? 
           supabase.storage.from('tracks').getPublicUrl(trackData.cover_path).data.publicUrl : '';
 
-        featured = {
+        setFeaturedTrack({
           id: trackData.id,
-          imageSrc: coverUrl || "https://i.imgur.com/FPxYEmG.jpeg",
+          imageSrc: coverUrl || "/default-cover.jpg",
           title: trackData.title,
           artist: trackData.artist || "Unknown Artist",
           plays: playCount,
           likes: likeCount,
           audioSrc: audioUrl,
-          description: trackData.description
-        };
-      } else {
-        // Fallback to hardcoded data
-        featured = {
-          id: 'featured-fallback',
-          imageSrc: "https://i.imgur.com/FPxYEmG.jpeg",
-          title: "Featured Track of the Week",
-          artist: "Saem's Tunes ft. Evans Simali - Salama (DEMO)",
-          plays: 1987,
-          likes: 85,
-          audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Cover%20Art/Salama%20-%20Saem%20x%20Simali.mp3",
-          description: "Amidst a concerning time around the world, we thought to capture the picture of it in light of what we know & are assured of. This song goes back almost 20 years & to be able to translate it in this way, with some of the people who have been a support to this space, is an esteemed honor. I pray this song grows to translate, even beyond my ability, the moments that can't be imagined: bomb landings in promised sheltered areas, an innocent mum and dad beholding their lost child, a child suddenly made an orphan, the plight of a future riddled with uncertainties as powers that greater be call the shots... how damning to not even be able to promise a solution. But even in the midst of it, just to find a voice that speaks to you, comforts you, is a true balm to the wounds the world oft inflicts. Might I present to you Jesus? He knows every thought, bottles every tear and is sovereign even when it feels He isn't. In Christ, nahnu aaminum/nahnun 'āminūm/sango mbote/we are safe/tuko SALAMA!"
-        };
+          description: trackData.description,
+          youtube_url: trackData.youtube_url
+        });
       }
-
-      setFeaturedTrack(featured);
-      
     } catch (error) {
       console.error('Error fetching featured track:', error);
-      // Set fallback featured track on error
-      setFeaturedTrack({
-        id: 'featured-fallback',
-        imageSrc: "https://i.imgur.com/FPxYEmG.jpeg",
-        title: "Featured Track of the Week",
-        artist: "Saem's Tunes ft. Evans Simali - Salama (DEMO)",
-        plays: 1987,
-        likes: 85,
-        audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Cover%20Art/Salama%20-%20Saem%20x%20Simali.mp3",
-        description: "Amidst a concerning time around the world, we thought to capture the picture of it in light of what we know & are assured of. This song goes back almost 20 years & to be able to translate it in this way, with some of the people who have been a support to this space, is an esteemed honor. I pray this song grows to translate, even beyond my ability, the moments that can't be imagined: bomb landings in promised sheltered areas, an innocent mum and dad beholding their lost child, a child suddenly made an orphan, the plight of a future riddled with uncertainties as powers that greater be call the shots... how damning to not even be able to promise a solution. But even in the midst of it, just to find a voice that speaks to you, comforts you, is a true balm to the wounds the world oft inflicts. Might I present to you Jesus? He knows every thought, bottles every tear and is sovereign even when it feels He isn't. In Christ, nahnu aaminum/nahnun 'āminūm/sango mbote/we are safe/tuko SALAMA!"
-      });
+      setFeaturedTrack(null);
     }
   };
 
@@ -355,6 +215,13 @@ const Tracks = () => {
           approved,
           created_at,
           artist,
+          duration,
+          youtube_url,
+          preview_url,
+          video_url,
+          primary_color,
+          secondary_color,
+          background_gradient,
           profiles:user_id (
             avatar_url
           )
@@ -362,12 +229,7 @@ const Tracks = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Supabase Error Details:', {
-          message: error.message,
-          code: error.code,
-          details: error.details,
-          hint: error.hint
-        });
+        console.error('Supabase Error Details:', error);
         throw error;
       }
       
@@ -377,20 +239,20 @@ const Tracks = () => {
       ) as Track[];
       
       setTracks(accessibleTracks);
+      setLoading(false);
     } catch (error) {
-      console.error('Full Error Object:', error);
+      console.error('Error fetching tracks:', error);
       toast({
         title: "Error",
         description: "Failed to load tracks",
         variant: "destructive",
       });
-    } finally {
       setLoading(false);
     }
   };
 
   const trackPlay = async (trackId: string) => {
-    if (!trackId || trackId === 'featured-fallback') return;
+    if (!trackId) return;
     
     try {
       await supabase.from('track_plays').insert({
@@ -405,7 +267,7 @@ const Tracks = () => {
   const handlePlayNow = () => {
     if (!featuredTrack) return;
     
-    if (featuredTrack.id && featuredTrack.id !== 'featured-fallback') {
+    if (featuredTrack.id) {
       trackPlay(featuredTrack.id);
     }
     
@@ -515,7 +377,8 @@ const Tracks = () => {
           audio_path: audioData.path,
           cover_path: coverPath,
           access_level: accessLevel,
-          user_id: user.id
+          user_id: user.id,
+          youtube_url: youtubeUrl || null
         });
 
       if (dbError) throw dbError;
@@ -530,6 +393,7 @@ const Tracks = () => {
       setDescription('');
       setAudioFile(null);
       setCoverFile(null);
+      setYoutubeUrl('');
       setAccessLevel('free');
       setShowUpload(false);
       
@@ -556,7 +420,36 @@ const Tracks = () => {
     (track.artist && track.artist.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  if (loading || !featuredTrack) {
+  // Get distinct artists for Artists tab
+  const artists = Array.from(
+    new Set(tracks.map(track => track.artist).filter(Boolean) as Set<string>
+  );
+
+  // Get cover tracks for Covers tab
+  const coverTracks = tracks.filter(track => 
+    track.cover_path && track.approved && track.youtube_url
+  ).map(track => ({
+    id: track.id,
+    image: track.cover_path ? 
+      supabase.storage.from('tracks').getPublicUrl(track.cover_path).data.publicUrl : '',
+    title: track.title,
+    subtitle: track.description?.substring(0, 30) + (track.description && track.description.length > 30 ? '...' : ''),
+    handle: track.artist || '@unknown',
+    borderColor: track.primary_color || '#5A270F',
+    gradient: track.background_gradient || 'linear-gradient(145deg, #5A270F, #000)',
+    audioUrl: track.audio_path ? 
+      supabase.storage.from('tracks').getPublicUrl(track.audio_path).data.publicUrl : '',
+    duration: track.duration ? 
+      `${Math.floor(track.duration / 60)}:${(track.duration % 60).toString().padStart(2, '0')}` : '0:00',
+    previewUrl: track.preview_url || '',
+    videoUrl: track.video_url || '',
+    youtubeUrl: track.youtube_url || '',
+    primaryColor: track.primary_color || '#5A270F',
+    secondaryColor: track.secondary_color || '#8B4513',
+    backgroundGradient: track.background_gradient || 'linear-gradient(145deg, #5A270F 0%, #8B4513 50%, #000 100%)',
+  }));
+
+  if (loading) {
     return (
       <MainLayout>
         <div className="min-h-screen bg-background flex items-center justify-center">
@@ -632,6 +525,13 @@ const Tracks = () => {
                     maxLength={500}
                   />
                   
+                  <Input
+                    placeholder="YouTube URL (optional)"
+                    value={youtubeUrl}
+                    onChange={(e) => setYoutubeUrl(e.target.value)}
+                    type="url"
+                  />
+                  
                   <Select value={accessLevel} onValueChange={(value: AccessLevel) => setAccessLevel(value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Access level" />
@@ -704,69 +604,79 @@ const Tracks = () => {
 
               <TabsContent value="showcase" className="space-y-8">
                 {/* Featured Track of the Week */}
-                <section>
-                  <div className="flex items-center gap-2 mb-6">
-                    <Star className="h-6 w-6 text-gold" />
-                    <h2 className="text-2xl font-bold">Featured Track of the Week</h2>
-                  </div>
-                  
-                  <div className="grid md:grid-cols-2 gap-6 lg:gap-8 items-center">
-                    <div className="flex justify-center relative order-2 md:order-1">
-                      <TiltedCard
-                        imageSrc={featuredTrack.imageSrc}
-                        altText="Featured Track Cover"
-                        captionText="Salama ft Simali"
-                        containerHeight="300px"
-                        containerWidth="300px"
-                        imageHeight="100%"  // Changed to 100%
-                        imageWidth="100%"   // Changed to 100%
-                        rotateAmplitude={12}
-                        scaleOnHover={1.2}
-                        showMobileWarning={false}
-                        showTooltip={true}
-                        displayOverlayContent={true}
-                        overlayContent={
-                          <p className="tilted-card-demo-text">
-                            Salama ft. Simali
-                          </p>
-                        }
-                        />
+                {featuredTrack ? (
+                  <section>
+                    <div className="flex items-center gap-2 mb-6">
+                      <Star className="h-6 w-6 text-gold" />
+                      <h2 className="text-2xl font-bold">Featured Track of the Week</h2>
                     </div>
                     
-                    <div className="space-y-4 order-1 md:order-2 text-center md:text-left">
-                      <h3 className="text-xl font-semibold">{featuredTrack.title}</h3>
-                      <p className="text-muted-foreground">
-                        {featuredTrack.description}
-                      </p>
-                      
-                      <div className="flex gap-8 justify-center md:justify-start">
-                        <div className="text-center">
-                          <div className="flex items-center gap-2 justify-center">
-                            <Play className="h-4 w-4" />
-                            <CountUp to={featuredTrack.plays} separator="," className="text-2xl font-bold text-gold" />
-                          </div>
-                          <p className="text-sm text-muted-foreground">Plays</p>
-                        </div>
-                        
-                        <div className="text-center">
-                          <div className="flex items-center gap-2 justify-center">
-                            <Heart className="h-4 w-4" />
-                            <CountUp to={featuredTrack.likes} separator="," className="text-2xl font-bold text-gold" />
-                          </div>
-                          <p className="text-sm text-muted-foreground">Likes</p>
-                        </div>
+                    <div className="grid md:grid-cols-2 gap-6 lg:gap-8 items-center">
+                      <div className="flex justify-center relative order-2 md:order-1">
+                        <TiltedCard
+                          imageSrc={featuredTrack.imageSrc}
+                          altText="Featured Track Cover"
+                          captionText={featuredTrack.title}
+                          containerHeight="300px"
+                          containerWidth="300px"
+                          imageHeight="100%"
+                          imageWidth="100%"
+                          rotateAmplitude={12}
+                          scaleOnHover={1.2}
+                          showMobileWarning={false}
+                          showTooltip={true}
+                          displayOverlayContent={true}
+                          overlayContent={
+                            <p className="tilted-card-demo-text">
+                              {featuredTrack.title}
+                            </p>
+                          }
+                        />
                       </div>
                       
-                      <Button 
-                        className="bg-gold hover:bg-gold/90 w-full md:w-auto"
-                        onClick={handlePlayNow}
-                      >
-                        <Play className="h-4 w-4 mr-2" />
-                        Play Now
-                      </Button>
+                      <div className="space-y-4 order-1 md:order-2 text-center md:text-left">
+                        <h3 className="text-xl font-semibold">{featuredTrack.title}</h3>
+                        <p className="text-muted-foreground">
+                          {featuredTrack.description}
+                        </p>
+                        
+                        <div className="flex gap-8 justify-center md:justify-start">
+                          <div className="text-center">
+                            <div className="flex items-center gap-2 justify-center">
+                              <Play className="h-4 w-4" />
+                              <CountUp to={featuredTrack.plays} separator="," className="text-2xl font-bold text-gold" />
+                            </div>
+                            <p className="text-sm text-muted-foreground">Plays</p>
+                          </div>
+                          
+                          <div className="text-center">
+                            <div className="flex items-center gap-2 justify-center">
+                              <Heart className="h-4 w-4" />
+                              <CountUp to={featuredTrack.likes} separator="," className="text-2xl font-bold text-gold" />
+                            </div>
+                            <p className="text-sm text-muted-foreground">Likes</p>
+                          </div>
+                        </div>
+                        
+                        <Button 
+                          className="bg-gold hover:bg-gold/90 w-full md:w-auto"
+                          onClick={handlePlayNow}
+                        >
+                          <Play className="h-4 w-4 mr-2" />
+                          Play Now
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </section>
+                  </section>
+                ) : (
+                  <section>
+                    <div className="flex items-center gap-2 mb-6">
+                      <Star className="h-6 w-6 text-gold" />
+                      <h2 className="text-2xl font-bold">No Featured Track</h2>
+                    </div>
+                    <p className="text-muted-foreground">No featured track available. Check back later!</p>
+                  </section>
+                )}
 
                 {/* Suggested Tracks */}
                 <section>
@@ -794,15 +704,19 @@ const Tracks = () => {
                   <h2 className="text-2xl font-bold">Featured Covers</h2>
                 </div>
                 
-                <div className="w-full overflow-hidden">
-                  <ChromaGrid 
-                    items={albumItems}
-                    radius={300}
-                    damping={0.45}
-                    fadeOut={0.6}
-                    ease="power3.out"
-                  />
-                </div>
+                {coverTracks.length > 0 ? (
+                  <div className="w-full overflow-hidden">
+                    <ChromaGrid 
+                      items={coverTracks}
+                      radius={300}
+                      damping={0.45}
+                      fadeOut={0.6}
+                      ease="power3.out"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">No cover tracks available yet</p>
+                )}
               </TabsContent>
 
               <TabsContent value="playlists" className="space-y-8">
@@ -860,17 +774,21 @@ const Tracks = () => {
                   <h2 className="text-2xl font-bold">Featured Artists</h2>
                 </div>
                 
-                <div className="w-full overflow-hidden px-2">
-                  <div className="max-w-full">
-                    <AnimatedList
-                      items={playlistTracks}
-                      onItemSelect={(item) => console.log(item)}
-                      showGradients={true}
-                      enableArrowNavigation={true}
-                      displayScrollbar={true}
-                    />
+                {artists.length > 0 ? (
+                  <div className="w-full overflow-hidden px-2">
+                    <div className="max-w-full">
+                      <AnimatedList
+                        items={artists}
+                        onItemSelect={(item) => console.log(item)}
+                        showGradients={true}
+                        enableArrowNavigation={true}
+                        displayScrollbar={true}
+                      />
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <p className="text-muted-foreground">No artists available</p>
+                )}
               </TabsContent>
 
               <TabsContent value="community" className="space-y-8">
@@ -914,7 +832,6 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
   const coverUrl = track.cover_path ? 
     supabase.storage.from('tracks').getPublicUrl(track.cover_path).data.publicUrl : '';
   
-  // Check if this is a valid database track
   const isValidDatabaseTrack = track.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(track.id);
   
   useEffect(() => {
@@ -1055,7 +972,6 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
   };
 
   const handleShare = async () => {
-    // Determine the appropriate base URL
     const getBaseUrl = () => {
       const hostname = window.location.hostname;
       
