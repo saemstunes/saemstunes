@@ -79,7 +79,7 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
           onClick={() => handleTrackPlay(track)}
         >
           {/* Play/Pause Button - Smaller on mobile */}
-          <div className="relative rounded-full flex-shrink-0">
+          <div className="relative flex-shrink-0">
             <div className={cn(
               "w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden bg-muted flex items-center justify-center",
               "transition-all duration-200"
