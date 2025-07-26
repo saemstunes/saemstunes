@@ -809,7 +809,7 @@ const Tracks = () => {
                       <CardTitle>Recommended Tracks</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <ScrollArea className="h-[400px] max-w-full">
+                      <ScrollArea className="h-[400px] w-full max-w-full">
                         <EnhancedAnimatedList tracks={filteredTracks.slice(0, 10)} />
                       </ScrollArea>
                     </CardContent>
