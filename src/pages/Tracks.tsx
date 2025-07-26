@@ -173,6 +173,22 @@ const Tracks = () => {
       secondaryColor: "#DEB887",
       backgroundGradient: "linear-gradient(165deg, #EEB38C 0%, #DEB887 50%, #000 100%)",
     },
+    {
+      image: "https://i.imgur.com/FPxYEmG.jpeg",
+      title: "Salama ft. Simali",
+      subtitle: "Originals",
+      handle: "Saem's Tunes, Simali Evans",
+      borderColor: "#5A270F",
+      gradient: "linear-gradient(145deg, #5A270F, #000)",
+      audioUrl: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Cover%20Art/Salama%20-%20Saem%20x%20Simali.mp3",
+      duration: "2:53",
+      previewUrl: "https://youtube.com/shorts/2pyHM3MZy6U",
+      videoUrl: "https://youtube.com/shorts/2pyHM3MZy6U",
+      youtubeUrl: "https://youtube.com/shorts/2pyHM3MZy6U",
+      primaryColor: "#5A270F",
+      secondaryColor: "#8B4513",
+      backgroundGradient: "linear-gradient(145deg, #5A270F 0%, #8B4513 50%, #000 100%)",
+    },
   ];
 
   const playlistTracks = [
@@ -313,12 +329,13 @@ const Tracks = () => {
       // Set fallback featured track on error
       setFeaturedTrack({
         id: 'featured-fallback',
-        imageSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Cover%20Art/salama-featured.jpg",
+        imageSrc: "https://i.imgur.com/FPxYEmG.jpeg",
         title: "Featured Track of the Week",
         artist: "Saem's Tunes ft. Evans Simali - Salama (DEMO)",
         plays: 1987,
         likes: 85,
-        audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Cover%20Art/Salama%20-%20Saem%20x%20Simali.mp3"
+        audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Cover%20Art/Salama%20-%20Saem%20x%20Simali.mp3",
+        description: "Amidst a concerning time around the world, we thought to capture the picture of it in light of what we know & are assured of. This song goes back almost 20 years & to be able to translate it in this way, with some of the people who have been a support to this space, is an esteemed honor. I pray this song grows to translate, even beyond my ability, the moments that can't be imagined: bomb landings in promised sheltered areas, an innocent mum and dad beholding their lost child, a child suddenly made an orphan, the plight of a future riddled with uncertainties as powers that greater be call the shots... how damning to not even be able to promise a solution. But even in the midst of it, just to find a voice that speaks to you, comforts you, is a true balm to the wounds the world oft inflicts. Might I present to you Jesus? He knows every thought, bottles every tear and is sovereign even when it feels He isn't. In Christ, nahnu aaminum/nahnun 'āminūm/sango mbote/we are safe/tuko SALAMA!"
       });
     }
   };
