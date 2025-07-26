@@ -81,7 +81,7 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
           {/* Play/Pause Button - Smaller on mobile */}
           <div className="relative flex-shrink-0">
             <div className={cn(
-              "w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden bg-muted flex items-center justify-center",
+              "w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden bg-muted flex items-center justify-center",
               "transition-all duration-200"
             )}>
               {track.cover_path ? (
