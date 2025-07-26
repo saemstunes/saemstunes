@@ -613,8 +613,8 @@ const Tracks = () => {
       </Helmet>
       
       <MainLayout>
-        <div className="min-h-screen bg-background pb-20 lg:pb-0">
-          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="min-h-screen bg-background pb-20 lg:pb-0 overflow-x-hidden">
+  <div className="w-full max-w-full px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8 mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
               <div>
                 <h1 className="text-3xl font-bold text-foreground">Tracks</h1>
