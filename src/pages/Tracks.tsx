@@ -21,7 +21,7 @@ import { useNavigate } from "react-router-dom";
 import { PlaylistActions } from "@/components/playlists/PlaylistActions";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import EnhancedAnimatedList from "@/components/tracks/EnhancedAnimatedList";
-import { TiltedCard } from "@/components/tracks/TiltedCard";
+import TiltedCard from "@/components/tracks/TiltedCard";
 
 interface Track {
   id: string;
@@ -76,7 +76,6 @@ const Tracks = () => {
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
- // Sample data for demonstrations
   const albumItems = [
     {
       image: "https://i.imgur.com/VfKXMyG.png",
@@ -126,7 +125,7 @@ const Tracks = () => {
       secondaryColor: "#DEB887",
       backgroundGradient: "linear-gradient(165deg, #EEB38C 0%, #DEB887 50%, #000 100%)",
     },
-        {
+    {
       image: "https://i.imgur.com/wrm7LI1.jpeg",
       title: "Mapenzi Ya Ajabu",
       subtitle: "Original",
@@ -242,7 +241,7 @@ const Tracks = () => {
 
   const fetchFeaturedTrack = async () => {
     try {
-      // First, try to get the most liked/played track from the database
+      // First, try to get the most recent approved track
       const { data: trackData, error: trackError } = await supabase
         .from('tracks')
         .select(`
@@ -258,10 +257,6 @@ const Tracks = () => {
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
-
-      if (trackError && trackError.code !== 'PGRST116') {
-        throw trackError;
-      }
 
       let featured: FeaturedTrack;
 
@@ -286,29 +281,22 @@ const Tracks = () => {
           supabase.storage.from('tracks').getPublicUrl(trackData.audio_path).data.publicUrl : '';
         const coverUrl = trackData.cover_path ? 
           supabase.storage.from('tracks').getPublicUrl(trackData.cover_path).data.publicUrl : '';
-        const getPublicUrl = (path: string) => 
-        supabase.storage.from('tracks').getPublicUrl(path).data.publicUrl;
 
         featured = {
           id: trackData.id,
-          imageSrc: coverUrl 
-            ? coverUrl 
-            : trackData.cover_path 
-            ? trackData.cover_path 
-            : "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Cover%20Art/salama-featured.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvQ292ZXIgQXJ0L3NhbGFtYS1mZWF0dXJlZC5qcGciLCJpYXQiOjE3NDk5NTMwNTksImV4cCI6MTc4MTQ4OTA1OX0.KtKlRXxj5z5KzzbnTDWd9oRVbztRHwioGA0YN1Xjn4Q",
-          title: "Featured Track of the Week",
-          artist: trackData.artist || `Unknown Artist - ${trackData.title}`,
+          imageSrc: coverUrl || "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Cover%20Art/salama-featured.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvQ292ZXIgQXJ0L3NhbGFtYS1mZWF0dXJlZC5qcGciLCJpYXQiOjE3NDk5NTMwNTksImV4cCI6MTc4MTQ4OTA1OX0.KtKlRXxj5z5KzzbnTDWd9oRVbztRHwioGA0YN1Xjn4Q",
+          title: trackData.title,
+          artist: trackData.artist || "Unknown Artist",
           plays: playCount,
           likes: likeCount,
-          audioSrc: audioUrl || "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Cover%20Art/Salama%20-%20Saem%20x%20Simali.mp3",
+          audioSrc: audioUrl,
           description: trackData.description
         };
       } else {
-        // Fallback to original hardcoded data if no tracks in database
+        // Fallback to hardcoded data
         featured = {
           id: 'featured-fallback',
-          imageSrc: supabase.storage.from('tracks')
-          .getPublicUrl('Cover Art/salama-featured.jpg').data.publicUrl,
+          imageSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/sign/tracks/Cover%20Art/salama-featured.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jYjQzNDkyMC03Y2ViLTQ2MDQtOWU2Zi05YzY2ZmEwMDAxYmEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0cmFja3MvQ292ZXIgQXJ0L3NhbGFtYS1mZWF0dXJlZC5qcGciLCJpYXQiOjE3NDk5NTMwNTksImV4cCI6MTc4MTQ4OTA1OX0.KtKlRXxj5z5KzzbnTDWd9oRVbztRHwioGA0YN1Xjn4Q",
           title: "Featured Track of the Week",
           artist: "Saem's Tunes ft. Evans Simali - Salama (DEMO)",
           plays: 1987,
@@ -366,24 +354,10 @@ const Tracks = () => {
         throw error;
       }
       
-      // Filter tracks based on user access level and ensure proper typing
-      const typedTracks = (data || []).map(track => ({
-        id: track.id,
-        title: track.title,
-        description: track.description,
-        audio_path: track.audio_path,
-        cover_path: track.cover_path,
-        access_level: track.access_level as AccessLevel,
-        user_id: track.user_id,
-        approved: track.approved,
-        created_at: track.created_at,
-        artist: track.artist,
-        profiles: track.profiles
-      })) as Track[];
-      
-      const accessibleTracks = typedTracks.filter(track => 
-        canAccessContent(track.access_level, user, user?.subscriptionTier)
-      );
+      // Filter tracks based on user access level
+      const accessibleTracks = (data || []).filter(track => 
+        canAccessContent(track.access_level as AccessLevel, user, user?.subscriptionTier)
+      ) as Track[];
       
       setTracks(accessibleTracks);
     } catch (error) {
@@ -411,7 +385,6 @@ const Tracks = () => {
     }
   };
 
-  // Updated handlePlayNow function
   const handlePlayNow = () => {
     if (!featuredTrack) return;
     
@@ -424,8 +397,8 @@ const Tracks = () => {
         track: {
           id: featuredTrack.id,
           src: featuredTrack.audioSrc,
-          name: featuredTrack.artist.split(' - ')[1] || featuredTrack.artist,
-          artist: featuredTrack.artist.split(' - ')[0] || 'Saem\'s Tunes',
+          name: featuredTrack.title,
+          artist: featuredTrack.artist,
           artwork: featuredTrack.imageSrc,
           album: 'Featured'
         }
@@ -452,7 +425,7 @@ const Tracks = () => {
       return;
     }
 
-    // Validate file types for security
+    // Validate file types
     const allowedAudioTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/m4a'];
     const allowedImageTypes = ['image/jpeg', 'image/png', 'image/jpg'];
 
@@ -474,7 +447,7 @@ const Tracks = () => {
       return;
     }
 
-    // Check file size limits (10MB for audio, 5MB for image)
+    // Check file size limits
     if (audioFile.size > 10 * 1024 * 1024) {
       toast({
         title: "File Too Large",
@@ -496,18 +469,15 @@ const Tracks = () => {
     setUploading(true);
 
     try {
-      // Upload audio file with user folder structure
+      // Upload audio file
       const sanitizedAudioName = `${user.id}/${Date.now()}-${audioFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
       const { data: audioData, error: audioError } = await supabase.storage
         .from('tracks')
         .upload(sanitizedAudioName, audioFile);
 
-      if (audioError) {
-        console.error('Audio upload error:', audioError);
-        throw new Error(`Audio upload failed: ${audioError.message}`);
-      }
+      if (audioError) throw audioError;
 
-      // Upload cover image with user folder structure
+      // Upload cover image
       let coverPath = null;
       if (coverFile) {
         const sanitizedCoverName = `${user.id}/${Date.now()}-${coverFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
@@ -515,10 +485,7 @@ const Tracks = () => {
           .from('tracks')
           .upload(sanitizedCoverName, coverFile);
 
-        if (coverError) {
-          console.error('Cover upload error:', coverError);
-          throw new Error(`Cover upload failed: ${coverError.message}`);
-        }
+        if (coverError) throw coverError;
         coverPath = coverData.path;
       }
 
@@ -534,10 +501,7 @@ const Tracks = () => {
           user_id: user.id
         });
 
-      if (dbError) {
-        console.error('Database insert error:', dbError);
-        throw new Error(`Database save failed: ${dbError.message}`);
-      }
+      if (dbError) throw dbError;
 
       toast({
         title: "Upload Successful!",
@@ -554,7 +518,7 @@ const Tracks = () => {
       
       // Refresh tracks
       fetchTracks();
-      fetchFeaturedTrack(); // Refresh featured track as well
+      fetchFeaturedTrack();
       
     } catch (error) {
       console.error('Upload error:', error);
@@ -574,31 +538,6 @@ const Tracks = () => {
     track.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (track.artist && track.artist.toLowerCase().includes(searchTerm.toLowerCase()))
   );
-
-  // Sharing functionality
-  const handleShare = (track: Track) => {
-    if (navigator.share) {
-      navigator.share({
-        title: track.title,
-        text: `Listen to ${track.title} by ${track.artist} on Saem's Tunes`,
-        url: window.location.href,
-      })
-      .catch((error) => {
-        console.log('Error sharing', error);
-        toast({
-          title: "Share Error",
-          description: "Failed to share. Please try again.",
-          variant: "destructive",
-        });
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast({
-        title: "Link Copied",
-        description: "Track link copied to clipboard"
-      });
-    }
-  };
 
   if (loading || !featuredTrack) {
     return (
@@ -622,7 +561,7 @@ const Tracks = () => {
       
       <MainLayout>
         <div className="min-h-screen bg-background pb-20 lg:pb-0 overflow-x-hidden">
-  <div className="w-full max-w-full px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8 mx-auto">
+          <div className="w-full max-w-full px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8 mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
               <div>
                 <h1 className="text-3xl font-bold text-foreground">Tracks</h1>
@@ -756,44 +695,31 @@ const Tracks = () => {
                   
                   <div className="grid md:grid-cols-2 gap-6 lg:gap-8 items-center">
                     <div className="flex justify-center relative order-2 md:order-1">
-                      <div className="hover:z-[9999] relative transition-all duration-300 w-full max-w-sm">
-
-                       <TiltedCard
-                         imageSrc={featuredTrack.imageSrc}
-                         altText="Featured Track Cover"
-                         captionText=Salama ft Simali
-                         containerHeight="300px"
-                         containerWidth="300px"
-                         imageHeight="300px"
-                         imageWidth="300px"
-                         rotateAmplitude={12}
-                         scaleOnHover={1.2}
-                         showMobileWarning={false}
-                         showTooltip={true}
-                         displayOverlayContent={true}
-                         overlayContent={
-                           <p className="tilted-card-demo-text">
-                             Salama ft. Simali
-                           </p>
-                         }
-                         /> 
-                        <ResponsiveImage
-                          src={featuredTrack.imageSrc}
-                          alt="Featured Track Cover"
-                          width={400}
-                          height={400}
-                          mobileWidth={280}
-                          mobileHeight={280}
-                          className="w-full h-auto rounded-2xl shadow-2xl transform hover:scale-105 transition-transform duration-300"
-                          priority={true}
-                        />
-                      </div>
+                      <TiltedCard
+                        imageSrc={featuredTrack.imageSrc}
+                        altText="Featured Track Cover"
+                        captionText="Salama ft Simali"
+                        containerHeight="300px"
+                        containerWidth="300px"
+                        imageHeight="300px"
+                        imageWidth="300px"
+                        rotateAmplitude={12}
+                        scaleOnHover={1.2}
+                        showMobileWarning={false}
+                        showTooltip={true}
+                        displayOverlayContent={true}
+                        overlayContent={
+                          <p className="tilted-card-demo-text">
+                            Salama ft. Simali
+                          </p>
+                        }
+                      />
                     </div>
                     
                     <div className="space-y-4 order-1 md:order-2 text-center md:text-left">
-                      <h3 className="text-xl font-semibold">{featuredTrack.artist}</h3>
+                      <h3 className="text-xl font-semibold">{featuredTrack.title}</h3>
                       <p className="text-muted-foreground">
-                        {featuredTrack.description || "Amidst a concerning time around the world, we thought to capture the picture of it in light of what we know & are assured of. This song goes back almost 20 years & to be able to translate it in this way, with some of the people who have been a support to this space, is an esteemed honor. I pray this song grows to translate, even beyond my ability, the moments that can't be imagined: bomb landings in promised sheltered areas, an innocent mum and dad beholding their lost child, a child suddenly made an orphan, the plight of a future riddled with uncertainties as powers that greater be call the shots... how damning to not even be able to promise a solution. But even in the midst of it, just to find a voice that speaks to you, comforts you, is a true balm to the wounds the world oft inflicts. Might I present to you Jesus? He knows every thought, bottles every tear and is sovereign even when it feels He isn't. In Christ, nahnu aaminum/nahnun 'āminūm/sango mbote/we are safe/tuko SALAMA!"}
+                        {featuredTrack.description}
                       </p>
                       
                       <div className="flex gap-8 justify-center md:justify-start">
@@ -921,7 +847,7 @@ const Tracks = () => {
                   <div className="max-w-full">
                     <AnimatedList
                       items={playlistTracks}
-                      onItemSelect={(item, index) => console.log(item, index)}
+                      onItemSelect={(item) => console.log(item)}
                       showGradients={true}
                       enableArrowNavigation={true}
                       displayScrollbar={true}
@@ -953,21 +879,6 @@ const Tracks = () => {
               </TabsContent>
             </Tabs>
           </div>
-          {/* Mobile overflow prevention */}
-    <style jsx global>{`
-      @media (max-width: 518px) {
-        html, body {
-          overflow-x: hidden !important;
-          width: 100% !important;
-        }
-        * {
-          max-width: 100vw !important;
-        }
-        input, textarea, select {
-          font-size: 16px !important;
-        }
-      }
-    `}</style>
         </div>
       </MainLayout>
     </>
@@ -986,8 +897,8 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
   const coverUrl = track.cover_path ? 
     supabase.storage.from('tracks').getPublicUrl(track.cover_path).data.publicUrl : '';
   
-  // Check if this is a valid database track (not the featured track)
-  const isValidDatabaseTrack = track.id !== 'featured' && track.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(track.id);
+  // Check if this is a valid database track
+  const isValidDatabaseTrack = track.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(track.id);
   
   useEffect(() => {
     if (user && isValidDatabaseTrack) {
@@ -1129,7 +1040,6 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
   const handleShare = async () => {
     // Determine the appropriate base URL
     const getBaseUrl = () => {
-      // Check if we're on production or development
       const hostname = window.location.hostname;
       
       if (hostname === 'saemstunes.vercel.app') {
@@ -1137,7 +1047,6 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
       } else if (hostname === 'saemstunes.lovable.app') {
         return 'https://saemstunes.lovable.app';
       } else {
-        // Fallback for local development or other environments
         return window.location.origin;
       }
     };
@@ -1152,7 +1061,6 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
       if (navigator.share && navigator.canShare(shareData)) {
         await navigator.share(shareData);
       } else {
-        // Fallback to copying link
         await navigator.clipboard.writeText(shareData.url);
         toast({
           title: "Link copied",
@@ -1161,7 +1069,6 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
       }
     } catch (error) {
       console.error('Error sharing:', error);
-      // Fallback to copying link
       try {
         await navigator.clipboard.writeText(shareData.url);
         toast({
@@ -1170,8 +1077,8 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
         });
       } catch (clipboardError) {
         toast({
-          title: "Always A Next Time!",
-          description: "Come back when you're ready & spread the good news",
+          title: "Sharing Failed",
+          description: "Please try again later",
           variant: "destructive",
         });
       }
@@ -1185,14 +1092,11 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
           <div className="h-12 w-12 rounded-full bg-gold/20 flex items-center justify-center">
             {track.cover_path ? (
               <ResponsiveImage 
-                src={track.cover_path} 
+                src={coverUrl} 
                 alt="Artist" 
                 width={48}
                 height={48}
-                mobileWidth={48}
-                mobileHeight={48}
                 className="h-12 w-12 rounded-full object-cover"
-                priority={false}
               />
             ) : (
               <Music className="h-6 w-6 text-gold" />
@@ -1217,10 +1121,7 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
               alt="Cover" 
               width={64}
               height={64}
-              mobileWidth={48}
-              mobileHeight={48}
-              className="h-16 w-16 md:h-16 md:w-16 sm:h-12 sm:w-12 rounded object-cover"
-              priority={false}
+              className="h-16 w-16 rounded object-cover"
             />
           )}
         </div>
