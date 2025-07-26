@@ -701,8 +701,8 @@ const Tracks = () => {
                         captionText="Salama ft Simali"
                         containerHeight="300px"
                         containerWidth="300px"
-                        imageHeight="300px"
-                        imageWidth="300px"
+                        imageHeight="100%"  // Changed to 100%
+                        imageWidth="100%"   // Changed to 100%
                         rotateAmplitude={12}
                         scaleOnHover={1.2}
                         showMobileWarning={false}
@@ -713,7 +713,7 @@ const Tracks = () => {
                             Salama ft. Simali
                           </p>
                         }
-                      />
+                        />
                     </div>
                     
                     <div className="space-y-4 order-1 md:order-2 text-center md:text-left">
