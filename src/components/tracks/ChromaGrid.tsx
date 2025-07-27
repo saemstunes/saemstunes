@@ -5,8 +5,8 @@ import { useAudioPlayer } from "@/context/AudioPlayerContext";
 interface ChromaGridItem {
   image: string;
   title: string;
-  artist: string;
-  description?: string;
+  subtitle: string;
+  handle?: string;
   borderColor?: string;
   gradient?: string;
   url?: string;
@@ -77,8 +77,8 @@ export const ChromaGrid = ({
     {
       image: "https://i.pravatar.cc/300?img=8",
       title: "Alex Rivera",
-      artist: "Full Stack Developer",
-      description: "@alexrivera",
+      subtitle: "Full Stack Developer",
+      handle: "@alexrivera",
       borderColor: "#4F46E5",
       gradient: "linear-gradient(145deg, #4F46E5, #000)",
       url: "https://github.com/",
@@ -90,8 +90,8 @@ export const ChromaGrid = ({
     {
       image: "https://i.pravatar.cc/300?img=11",
       title: "Jordan Chen",
-      artist: "DevOps Engineer",
-      description: "@jordanchen",
+      subtitle: "DevOps Engineer",
+      handle: "@jordanchen",
       borderColor: "#10B981",
       gradient: "linear-gradient(210deg, #10B981, #000)",
       url: "https://linkedin.com/in/",
@@ -103,8 +103,8 @@ export const ChromaGrid = ({
     {
       image: "https://i.pravatar.cc/300?img=3",
       title: "Morgan Blake",
-      artist: "UI/UX Designer",
-      description: "@morganblake",
+      subtitle: "UI/UX Designer",
+      handle: "@morganblake",
       borderColor: "#F59E0B",
       gradient: "linear-gradient(165deg, #F59E0B, #000)",
       url: "https://dribbble.com/",
@@ -116,8 +116,8 @@ export const ChromaGrid = ({
     {
       image: "https://i.pravatar.cc/300?img=16",
       title: "Casey Park",
-      artist: "Data Scientist",
-      description: "@caseypark",
+      subtitle: "Data Scientist",
+      handle: "@caseypark",
       borderColor: "#EF4444",
       gradient: "linear-gradient(195deg, #EF4444, #000)",
       url: "https://kaggle.com/",
@@ -129,8 +129,8 @@ export const ChromaGrid = ({
     {
       image: "https://i.pravatar.cc/300?img=25",
       title: "Sam Kim",
-      artist: "Mobile Developer",
-      description: "@thesamkim",
+      subtitle: "Mobile Developer",
+      handle: "@thesamkim",
       borderColor: "#8B5CF6",
       gradient: "linear-gradient(225deg, #8B5CF6, #000)",
       url: "https://github.com/",
@@ -142,8 +142,8 @@ export const ChromaGrid = ({
     {
       image: "https://i.pravatar.cc/300?img=60",
       title: "Tyler Rodriguez",
-      artist: "Cloud Architect",
-      description: "@tylerrod",
+      subtitle: "Cloud Architect",
+      handle: "@tylerrod",
       borderColor: "#06B6D4",
       gradient: "linear-gradient(135deg, #06B6D4, #000)",
       url: "https://aws.amazon.com/",
@@ -370,12 +370,12 @@ export const ChromaGrid = ({
               </h3>
               
               <p className="text-white/80 text-sm mb-2 line-clamp-1">
-                {item.artist}
+                {item.subtitle}
               </p>
               
-              {item.description && (
+              {item.handle && (
                 <p className="text-white/60 text-xs mb-3">
-                  {item.description}
+                  {item.handle}
                 </p>
               )}
 
