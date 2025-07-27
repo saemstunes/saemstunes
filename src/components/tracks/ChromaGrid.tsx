@@ -1,7 +1,6 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { Play, ExternalLink, Clock, Heart, X } from "lucide-react";
 import { useAudioPlayer } from "@/context/AudioPlayerContext";
-import { getImageUrl } from "@/lib/urlUtils";
 
 interface ChromaGridItem {
   image: string;
@@ -238,7 +237,7 @@ export const ChromaGrid = ({
               ) : (
                 <div className="absolute inset-0 w-full h-full flex items-center justify-center">
                   <img 
-                    src={getImageUrl(previewItem.image)} 
+                    src={previewItem.image} 
                     alt={previewItem.title}
                     className="w-full h-full object-cover opacity-70"
                   />

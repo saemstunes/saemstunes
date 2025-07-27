@@ -40,31 +40,8 @@ export default function TiltedCard({
   displayOverlayContent = false,
 }: TiltedCardProps) {
   const ref = useRef<HTMLElement>(null);
-  const [isHovered, setIsHovered] = useState(false);
-  const [resolvedImageSrc, setResolvedImageSrc] = useState("");
   const [imageLoaded, setImageLoaded] = useState(false);
-
-  useEffect(() => {
-    // Resolve image source
-    const resolveImage = async () => {
-      try {
-        if (imageSrc.startsWith('http')) {
-          setResolvedImageSrc(imageSrc);
-        } else {
-          // Handle Supabase paths
-          const { data } = await supabase.storage
-            .from('tracks')
-            .getPublicUrl(imageSrc);
-          setResolvedImageSrc(data.publicUrl);
-        }
-      } catch (error) {
-        console.error("Error resolving image:", error);
-        setResolvedImageSrc('/default-cover.jpg');
-      }
-    };
-
-    resolveImage();
-  }, [imageSrc]);
+  const [isHovered, setIsHovered] = useState(false);
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);

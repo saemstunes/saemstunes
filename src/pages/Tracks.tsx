@@ -618,28 +618,22 @@ const Tracks = () => {
                     </div>
                     
                     <div className="grid md:grid-cols-2 gap-6 lg:gap-8 items-center">
-                      <div className="flex justify-center relative order-2 md:order-1">
-                        <TiltedCard
-                          imageSrc={featuredTrack.imageSrc}
-                          altText={featuredTrack.title}
-                          captionText={featuredTrack.artist}
-                          containerHeight="300px"
-                          containerWidth="300px"
-                          imageHeight="100%"
-                          imageWidth="100%"
-                          rotateAmplitude={12}
-                          scaleOnHover={1.2}
-                          showMobileWarning={false}
-                          showTooltip={true}
-                          displayOverlayContent={true}
-                          overlayContent={
-                            <div className="text-center p-4">
-                              <Play className="h-12 w-12 mx-auto text-white" />
-                              <p className="text-white font-semibold mt-2">Play Now</p>
-                            </div>
-                          }
+                      {featuredTrack && (
+                    <div className="flex justify-center relative order-2 md:order-1">
+                      <div className="hover:z-[9999] relative transition-all duration-300 w-full max-w-sm">
+                        <ResponsiveImage
+                          src={featuredTrack.imageSrc}
+                          alt="Featured Track Cover"
+                          width={400}
+                          height={400}
+                          mobileWidth={280}
+                          mobileHeight={280}
+                          className="w-full h-auto rounded-2xl shadow-2xl transform hover:scale-105 transition-transform duration-300"
+                          priority={true}
                           />
                       </div>
+                    </div>
+                  )}
                       
                       <div className="space-y-4 order-1 md:order-2 text-center md:text-left">
                         <h3 className="text-xl font-semibold">{featuredTrack.title}</h3>
