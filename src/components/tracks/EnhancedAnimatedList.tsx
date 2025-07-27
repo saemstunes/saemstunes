@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { motion } from 'framer-motion';
-import { getMediaUrl } from '@/lib/urlUtils'; // Add this import
+import { getImageUrl } from '@/lib/urlUtils'; // Add this import
 
 interface Track {
   id: string;
@@ -39,14 +39,14 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
   const [hoveredTrack, setHoveredTrack] = useState<string | null>(null);
 
   const handleTrackPlay = async (track: Track) => {
-    const audioUrl = getMediaUrl(track.audio_path); // Use helper
+    const audioUrl = getImageUrl(track.audio_path); // Use helper
 
     const audioTrack = {
       id: track.id,
       src: audioUrl,
       name: track.title,
       artist: track.artist || 'Unknown Artist',
-      artwork: track.cover_path ? getMediaUrl(track.cover_path) : '/placeholder.svg',
+      artwork: track.cover_path ? getImageUrl(track.cover_path) : '/placeholder.svg',
     };
 
     if (state?.currentTrack?.id === track.id && state?.isPlaying) {
@@ -85,7 +85,7 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
             )}>
               {track.cover_path ? (
                 <ResponsiveImage
-                  src={getMediaUrl(track.cover_path)} // Use helper
+                  src={getImageUrl(track.cover_path)} // Use helper
                   alt={track.title}
                   width={48}
                   height={48}
