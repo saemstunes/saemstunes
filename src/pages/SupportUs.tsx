@@ -164,14 +164,17 @@ const SupportUs = () => {
                   ))}
                 </div>
                 <div className="mt-4">
-                  <label className="text-sm font-medium">Custom Amount</label>
+                  <label className="text-sm font-medium text-foreground">Custom Amount</label>
                   <div className="flex mt-1">
-                    <div className="bg-muted px-3 py-2 border border-r-0 rounded-l-md">$</div>
+                    <div className="bg-muted text-foreground px-3 py-2 border border-r-0 rounded-l-md dark:bg-muted dark:text-foreground">
+                      $
+                    </div>
                     <input
                       type="text"
-                      className="flex-1 px-3 py-2 border rounded-r-md focus:outline-none focus:ring-2 focus:ring-gold/50"
+                      className="flex-1 px-3 py-2 border rounded-r-md focus:outline-none focus:ring-2 focus:ring-gold/50 
+                      bg-background text-foreground dark:bg-background dark:text-foreground"
                       placeholder="Enter amount"
-                    />
+                      />
                   </div>
                 </div>
               </CardContent>
