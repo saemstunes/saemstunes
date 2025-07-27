@@ -831,8 +831,7 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
   const audioUrl = track.audio_path ? 
     supabase.storage.from('tracks').getPublicUrl(track.audio_path).data.publicUrl : '';
   
-  const coverUrl = track.cover_path ? 
-    supabase.storage.from('tracks').getPublicUrl(track.cover_path).data.publicUrl : '';
+  const coverUrl = getImageUrl(track.cover_path);
   
   const isValidDatabaseTrack = track.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(track.id);
   
@@ -1051,15 +1050,14 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
           </div>
           
           {coverUrl && (
-            <ResponsiveImage 
-              src={coverUrl} 
-              alt="Cover" 
-              width={64}
-              height={64}
-              className="h-16 w-16 rounded object-cover"
-            />
-          )}
-        </div>
+      <ResponsiveImage 
+        src={coverUrl} 
+        alt="Cover" 
+        width={64}
+        height={64}
+        className="h-16 w-16 rounded object-cover" // Removed rounded-full
+        />
+    )}
 
         {audioUrl && (
           <div className="mb-4">
