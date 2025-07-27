@@ -6,7 +6,7 @@ interface ChromaGridItem {
   image: string;
   title: string;
   subtitle: string;
-  handle?: string;
+  artist?: string;
   borderColor?: string;
   gradient?: string;
   url?: string;
@@ -373,9 +373,9 @@ export const ChromaGrid = ({
                 {item.subtitle}
               </p>
               
-              {item.handle && (
+              {item.artist && (
                 <p className="text-white/60 text-xs mb-3">
-                  {item.handle}
+                  {item.artist}
                 </p>
               )}
 
