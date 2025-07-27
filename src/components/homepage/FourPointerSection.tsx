@@ -24,7 +24,7 @@ const FourPointerSection: React.FC = () => {
       title: "Why Choose Saem's Tunes",
       description: "Experience authentic music education with personalized learning paths and real-world application.",
       cta: "Discover Our Story",
-      link: "/about",
+      link: "/support-us",
       gradient: "from-amber-500/20 to-orange-500/20"
     },
     {
