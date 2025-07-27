@@ -618,22 +618,28 @@ const Tracks = () => {
                     </div>
                     
                     <div className="grid md:grid-cols-2 gap-6 lg:gap-8 items-center">
-                      {featuredTrack && (
                     <div className="flex justify-center relative order-2 md:order-1">
                       <div className="hover:z-[9999] relative transition-all duration-300 w-full max-w-sm">
-                        <ResponsiveImage
-                          src={featuredTrack.imageSrc}
-                          alt="Featured Track Cover"
-                          width={400}
-                          height={400}
-                          mobileWidth={280}
-                          mobileHeight={280}
-                          className="w-full h-auto rounded-2xl shadow-2xl transform hover:scale-105 transition-transform duration-300"
-                          priority={true}
-                          />
+                        <TiltedCard
+                          imageSrc={featuredTrack.imageSrc} // Can be URL or storage path
+                          altText="Featured Track Cover"
+                          captionText={featuredTrack.title}
+                          containerHeight="300px"
+                          containerWidth="300px"
+                          rotateAmplitude={12}
+                          scaleOnHover={1.2}
+                          showMobileWarning={false}
+                          showTooltip={true}
+                          displayOverlayContent={true}
+                          overlayContent={
+                            <p className="tilted-card-demo-text">
+                              {featuredTrack.title}
+                            </p>
+                          }
+                        />
                       </div>
                     </div>
-                  )}
+                
                       
                       <div className="space-y-4 order-1 md:order-2 text-center md:text-left">
                         <h3 className="text-xl font-semibold">{featuredTrack.title}</h3>
