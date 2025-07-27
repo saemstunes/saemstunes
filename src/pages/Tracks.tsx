@@ -251,15 +251,6 @@ const Tracks = () => {
     }
   };
 
-  // Inside Tracks component
-const getImageUrl = useCallback((path: string | null | undefined): string => {
-  if (!path) return '';
-  // Return as-is if already a full URL
-  if (path.startsWith('http')) return path;
-  // Generate URL for Supabase paths
-  return supabase.storage.from('tracks').getPublicUrl(path).data.publicUrl;
-}, []);
-  
   const trackPlay = async (trackId: string) => {
     if (!trackId) return;
     
@@ -622,22 +613,25 @@ const getImageUrl = useCallback((path: string | null | undefined): string => {
                     
                     <div className="grid md:grid-cols-2 gap-6 lg:gap-8 items-center">
                       <div className="flex justify-center relative order-2 md:order-1">
-                      {featuredTrack && (
-                        <div className="flex justify-center relative order-2 md:order-1">
-                        <div className="hover:z-[9999] relative transition-all duration-300 w-full max-w-sm">
-                        <ResponsiveImage
-                          src={featuredTrack.imageSrc}
-                          alt="Featured Track Cover"
-                          width={400}
-                          height={400}
-                          mobileWidth={280}
-                          mobileHeight={280}
-                          className="w-full h-auto rounded-2xl shadow-2xl transform hover:scale-105 transition-transform duration-300"
-                          priority={true}
-                          />
-                        </div>
-                        </div>
-                        )}
+                        <TiltedCard
+                          imageSrc={featuredTrack.imageSrc}
+                          altText="Featured Track Cover"
+                          captionText={featuredTrack.title}
+                          containerHeight="300px"
+                          containerWidth="300px"
+                          imageHeight="100%"
+                          imageWidth="100%"
+                          rotateAmplitude={12}
+                          scaleOnHover={1.2}
+                          showMobileWarning={false}
+                          showTooltip={true}
+                          displayOverlayContent={true}
+                          overlayContent={
+                            <p className="tilted-card-demo-text">
+                              {featuredTrack.title}
+                            </p>
+                          }
+                        />
                       </div>
                       
                       <div className="space-y-4 order-1 md:order-2 text-center md:text-left">
