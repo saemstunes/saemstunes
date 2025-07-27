@@ -641,6 +641,7 @@ const Tracks = () => {
                           />
                       </div>
                       )}
+                      </div>
                       
                       <div className="space-y-4 order-1 md:order-2 text-center md:text-left">
                         <h3 className="text-xl font-semibold">{featuredTrack.title}</h3>
