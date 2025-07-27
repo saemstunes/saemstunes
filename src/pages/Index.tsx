@@ -28,10 +28,10 @@ import { AudioStorageManager } from "@/utils/audioStorageManager";
 
 // Constants - PRESERVE ORIGINAL STRUCTURE
 const STATS = [
-  { icon: TrendingUp, label: "Total Plays", value: 15420 },
-  { icon: Users, label: "Community Members", value: 2847 },
-  { icon: Music, label: "Original Tracks", value: 127 },
-  { icon: Star, label: "5-Star Reviews", value: 98 }
+  { icon: TrendingUp, label: "Total Plays", value: 100000 },
+  { icon: Users, label: "Community Members", value: 2384 },
+  { icon: Music, label: "Original Tracks", value: 7 },
+  { icon: Star, label: "Students Taught", value: 20 }
 ];
 
 const QUICK_ACTIONS = [
@@ -335,7 +335,7 @@ const Index = () => {
                     size="lg" 
                     variant="outline"
                     className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-6 sm:px-8 group"
-                    onClick={() => navigate('/pricing')}
+                    onClick={() => navigate('/subscriptions')}
                   >
                     <Star className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
                     View Premium
@@ -358,7 +358,7 @@ const FEATURED_TRACKS = [
     title: "Pale Ulipo",
     artist: "Saem's Tunes",
     imageSrc: "https://i.imgur.com/VfKXMyG.png",
-    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Cover_Tracks/Pale%20Ulipo%20cover.m4a",
+    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Cover_Tracks/pale-ulipo%20(Afrobeat).m4a",
     likes: 2543,
     plays: 15420
   },
