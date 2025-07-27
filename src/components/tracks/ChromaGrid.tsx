@@ -321,7 +321,7 @@ export const ChromaGrid = ({
               <img 
                 src={item.image} 
                 alt={item.title}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 rounded-lg"
               />
               
               <div className={`absolute inset-0 bg-black/70 transition-opacity duration-300 flex items-center justify-center ${
