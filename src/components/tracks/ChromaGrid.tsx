@@ -1,21 +1,24 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { Play, ExternalLink, Clock, Heart, X } from "lucide-react";
 import { useAudioPlayer } from "@/context/AudioPlayerContext";
-import { supabase } from "@/integrations/supabase/client";
 
 interface ChromaGridItem {
-  id: string;
   image: string;
   title: string;
   subtitle: string;
+  handle?: string;
   borderColor?: string;
   gradient?: string;
+  url?: string;
+  location?: string;
   audioUrl?: string;
   duration?: string;
   youtubeUrl?: string;
   primaryColor?: string;
   secondaryColor?: string;
   backgroundGradient?: string;
+  likes?: number;
+  views?: number;
 }
 
 interface ChromaGridProps {
@@ -55,6 +58,11 @@ export const ChromaGrid = ({
   const [isMobile, setIsMobile] = useState(false);
   const [previewItem, setPreviewItem] = useState<ChromaGridItem | null>(null);
 
+  const parseDuration = useCallback((str: string): number => {
+    const [mins, secs] = str.split(":").map(Number);
+    return mins * 60 + secs;
+  }, []);
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -65,8 +73,88 @@ export const ChromaGrid = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Use database items if provided, otherwise show empty state
-  const data = items || [];
+  const demo: ChromaGridItem[] = [
+    {
+      image: "https://i.pravatar.cc/300?img=8",
+      title: "Alex Rivera",
+      subtitle: "Full Stack Developer",
+      handle: "@alexrivera",
+      borderColor: "#4F46E5",
+      gradient: "linear-gradient(145deg, #4F46E5, #000)",
+      url: "https://github.com/",
+      duration: "3:45",
+      audioUrl: "https://example.com/track1.mp3",
+      likes: 120,
+      views: 1500,
+    },
+    {
+      image: "https://i.pravatar.cc/300?img=11",
+      title: "Jordan Chen",
+      subtitle: "DevOps Engineer",
+      handle: "@jordanchen",
+      borderColor: "#10B981",
+      gradient: "linear-gradient(210deg, #10B981, #000)",
+      url: "https://linkedin.com/in/",
+      duration: "4:12",
+      audioUrl: "https://example.com/track2.mp3",
+      likes: 85,
+      views: 3200,
+    },
+    {
+      image: "https://i.pravatar.cc/300?img=3",
+      title: "Morgan Blake",
+      subtitle: "UI/UX Designer",
+      handle: "@morganblake",
+      borderColor: "#F59E0B",
+      gradient: "linear-gradient(165deg, #F59E0B, #000)",
+      url: "https://dribbble.com/",
+      duration: "2:58",
+      audioUrl: "https://example.com/track3.mp3",
+      likes: 210,
+      views: 4800,
+    },
+    {
+      image: "https://i.pravatar.cc/300?img=16",
+      title: "Casey Park",
+      subtitle: "Data Scientist",
+      handle: "@caseypark",
+      borderColor: "#EF4444",
+      gradient: "linear-gradient(195deg, #EF4444, #000)",
+      url: "https://kaggle.com/",
+      duration: "3:21",
+      audioUrl: "https://example.com/track4.mp3",
+      likes: 75,
+      views: 2100,
+    },
+    {
+      image: "https://i.pravatar.cc/300?img=25",
+      title: "Sam Kim",
+      subtitle: "Mobile Developer",
+      handle: "@thesamkim",
+      borderColor: "#8B5CF6",
+      gradient: "linear-gradient(225deg, #8B5CF6, #000)",
+      url: "https://github.com/",
+      duration: "4:05",
+      audioUrl: "https://example.com/track5.mp3",
+      likes: 180,
+      views: 5600,
+    },
+    {
+      image: "https://i.pravatar.cc/300?img=60",
+      title: "Tyler Rodriguez",
+      subtitle: "Cloud Architect",
+      handle: "@tylerrod",
+      borderColor: "#06B6D4",
+      gradient: "linear-gradient(135deg, #06B6D4, #000)",
+      url: "https://aws.amazon.com/",
+      duration: "3:33",
+      audioUrl: "https://example.com/track6.mp3",
+      likes: 95,
+      views: 3900,
+    },
+  ];
+  
+  const data = items?.length ? items : demo;
 
   const handleCardClick = useCallback((url?: string) => {
     if (url) {
@@ -94,25 +182,13 @@ export const ChromaGrid = ({
     setPreviewItem(null);
     
     playTrack({
-      id: previewItem.id,
+      id: previewItem.audioUrl!,
       src: previewItem.audioUrl!,
       name: previewItem.title,
       artist: previewItem.subtitle,
       artwork: previewItem.image,
     });
   }, [previewItem, playTrack]);
-  
-  if (data.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <Music className="h-16 w-16 text-muted-foreground mb-4" />
-        <h3 className="text-xl font-semibold mb-2">No tracks available</h3>
-        <p className="text-muted-foreground text-center">
-          There are no tracks to display at the moment
-        </p>
-      </div>
-    );
-  }
   
   return (
     <div
@@ -192,13 +268,21 @@ export const ChromaGrid = ({
                 </div>
                 
                 <div className="flex flex-col gap-2 md:gap-3 mt-2 md:mt-0">
+                  <button
+                    onClick={handlePlayAudio}
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2 md:py-3 px-4 md:px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <Play className="h-4 w-4 md:h-5 md:w-5" />
+                    <span className="text-sm md:text-base">Play Audio</span>
+                  </button>
+                  
                   {previewItem.audioUrl && (
                     <button
-                      onClick={handlePlayAudio}
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2 md:py-3 px-4 md:px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                      onClick={() => window.open(previewItem.audioUrl, "_blank")}
+                      className="bg-secondary hover:bg-secondary/80 text-secondary-foreground font-medium py-2 md:py-3 px-4 md:px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
                     >
-                      <Play className="h-4 w-4 md:h-5 md:w-5" />
-                      <span className="text-sm md:text-base">Play Audio</span>
+                      <ExternalLink className="h-4 w-4 md:h-5 md:w-5" />
+                      <span className="text-sm md:text-base">Audio Source</span>
                     </button>
                   )}
                   
@@ -221,16 +305,16 @@ export const ChromaGrid = ({
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 w-full">
         {data.map((item, i) => (
           <article
-            key={item.id}
+            key={i}
             className="chroma-card-enhanced group relative overflow-hidden rounded-xl cursor-pointer transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
             onMouseMove={handleCardMove}
             onMouseEnter={() => setHoveredItem(i)}
             onMouseLeave={() => setHoveredItem(null)}
-            onClick={() => handleCardClick(item.youtubeUrl)}
+            onClick={() => handleCardClick(item.url)}
             style={{
               "--card-border": item.borderColor || "transparent",
               "--card-gradient": item.gradient,
-              background: item.backgroundGradient || "linear-gradient(145deg, #333, #000)",
+              background: item.gradient || "linear-gradient(145deg, #333, #000)",
             } as React.CSSProperties}
           >
             <div className="aspect-square relative overflow-hidden">
@@ -252,11 +336,11 @@ export const ChromaGrid = ({
                       <Play className="h-6 w-6 text-white fill-white" />
                     </button>
                   )}
-                  {item.youtubeUrl && (
+                  {item.url && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        window.open(item.youtubeUrl, "_blank", "noopener,noreferrer");
+                        window.open(item.url, "_blank", "noopener,noreferrer");
                       }}
                       className="bg-white/20 backdrop-blur-sm rounded-full p-3 hover:bg-white/30 transition-colors"
                     >
@@ -289,6 +373,29 @@ export const ChromaGrid = ({
                 {item.subtitle}
               </p>
               
+              {item.handle && (
+                <p className="text-white/60 text-xs mb-3">
+                  {item.handle}
+                </p>
+              )}
+
+              {isMobile && (item.likes !== undefined || item.views !== undefined) && (
+                <div className="flex items-center gap-3 mt-2 text-xs text-white/60">
+                  {item.likes !== undefined && (
+                    <span className="flex items-center gap-1">
+                      <Heart className="h-3 w-3" />
+                      {item.likes}
+                    </span>
+                  )}
+                  {item.views !== undefined && (
+                    <span className="flex items-center gap-1">
+                      <Play className="h-3 w-3" />
+                      {item.views.toLocaleString()}
+                    </span>
+                  )}
+                </div>
+              )}
+
               {isMobile && (
                 <div className="flex gap-2 mt-3">
                   {(item.audioUrl || item.youtubeUrl) && (
@@ -300,17 +407,44 @@ export const ChromaGrid = ({
                       Preview
                     </button>
                   )}
-                  {item.youtubeUrl && (
+                  {item.url && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        window.open(item.youtubeUrl, "_blank", "noopener,noreferrer");
+                        window.open(item.url, "_blank", "noopener,noreferrer");
                       }}
                       className="flex-1 md:flex-none bg-white/20 backdrop-blur-sm rounded-lg py-2 px-3 text-white text-sm font-medium hover:bg-white/30 transition-colors flex items-center justify-center gap-2"
                     >
                       <ExternalLink className="h-4 w-4" />
-                      Watch
+                      Visit
                     </button>
+                  )}
+                </div>
+              )}
+
+              {!isMobile && hoveredItem === i && (
+                <div className="mt-3 space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                  {item.location && (
+                    <p className="text-white/60 text-xs">
+                      📍 {item.location}
+                    </p>
+                  )}
+                  
+                  {(item.likes !== undefined || item.views !== undefined) && (
+                    <div className="flex items-center gap-4 text-white/60 text-xs">
+                      {item.likes !== undefined && (
+                        <span className="flex items-center gap-1">
+                          <Heart className="h-3 w-3" />
+                          {item.likes}
+                        </span>
+                      )}
+                      {item.views !== undefined && (
+                        <span className="flex items-center gap-1">
+                          <Play className="h-3 w-3" />
+                          {item.views.toLocaleString()}
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
