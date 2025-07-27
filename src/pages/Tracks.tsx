@@ -184,7 +184,7 @@ const Tracks = () => {
 
         setFeaturedTrack({
           id: trackData.id,
-          imageSrc: coverUrl
+          imageSrc: coverUrl,
           title: trackData.title,
           artist: trackData.artist || "Unknown Artist",
           plays: playCount,
