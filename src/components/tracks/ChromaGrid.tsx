@@ -1,9 +1,8 @@
 import { useRef, useEffect, useState, useCallback } from "react";
-import { Play, ExternalLink, Clock, Heart, X, Music } from "lucide-react";
+import { Play, ExternalLink, Clock, Heart, X } from "lucide-react";
 import { useAudioPlayer } from "@/context/AudioPlayerContext";
 
 interface ChromaGridItem {
-  id: string;
   image: string;
   title: string;
   subtitle: string;
@@ -59,6 +58,11 @@ export const ChromaGrid = ({
   const [isMobile, setIsMobile] = useState(false);
   const [previewItem, setPreviewItem] = useState<ChromaGridItem | null>(null);
 
+  const parseDuration = useCallback((str: string): number => {
+    const [mins, secs] = str.split(":").map(Number);
+    return mins * 60 + secs;
+  }, []);
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -71,7 +75,6 @@ export const ChromaGrid = ({
 
   const demo: ChromaGridItem[] = [
     {
-      id: "demo-1",
       image: "https://i.pravatar.cc/300?img=8",
       title: "Alex Rivera",
       subtitle: "Full Stack Developer",
@@ -85,7 +88,6 @@ export const ChromaGrid = ({
       views: 1500,
     },
     {
-      id: "demo-2",
       image: "https://i.pravatar.cc/300?img=11",
       title: "Jordan Chen",
       subtitle: "DevOps Engineer",
@@ -99,7 +101,6 @@ export const ChromaGrid = ({
       views: 3200,
     },
     {
-      id: "demo-3",
       image: "https://i.pravatar.cc/300?img=3",
       title: "Morgan Blake",
       subtitle: "UI/UX Designer",
@@ -113,7 +114,6 @@ export const ChromaGrid = ({
       views: 4800,
     },
     {
-      id: "demo-4",
       image: "https://i.pravatar.cc/300?img=16",
       title: "Casey Park",
       subtitle: "Data Scientist",
@@ -127,7 +127,6 @@ export const ChromaGrid = ({
       views: 2100,
     },
     {
-      id: "demo-5",
       image: "https://i.pravatar.cc/300?img=25",
       title: "Sam Kim",
       subtitle: "Mobile Developer",
@@ -141,7 +140,6 @@ export const ChromaGrid = ({
       views: 5600,
     },
     {
-      id: "demo-6",
       image: "https://i.pravatar.cc/300?img=60",
       title: "Tyler Rodriguez",
       subtitle: "Cloud Architect",
@@ -157,18 +155,6 @@ export const ChromaGrid = ({
   ];
   
   const data = items?.length ? items : demo;
-
-  if (data.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <Music className="h-16 w-16 text-muted-foreground mb-4" />
-        <h3 className="text-xl font-semibold mb-2">No tracks available</h3>
-        <p className="text-muted-foreground text-center">
-          There are no tracks to display at the moment
-        </p>
-      </div>
-    );
-  }
 
   const handleCardClick = useCallback((url?: string) => {
     if (url) {
@@ -196,7 +182,7 @@ export const ChromaGrid = ({
     setPreviewItem(null);
     
     playTrack({
-      id: previewItem.id || previewItem.audioUrl!,
+      id: previewItem.audioUrl!,
       src: previewItem.audioUrl!,
       name: previewItem.title,
       artist: previewItem.subtitle,
@@ -282,13 +268,21 @@ export const ChromaGrid = ({
                 </div>
                 
                 <div className="flex flex-col gap-2 md:gap-3 mt-2 md:mt-0">
+                  <button
+                    onClick={handlePlayAudio}
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2 md:py-3 px-4 md:px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <Play className="h-4 w-4 md:h-5 md:w-5" />
+                    <span className="text-sm md:text-base">Play Audio</span>
+                  </button>
+                  
                   {previewItem.audioUrl && (
                     <button
-                      onClick={handlePlayAudio}
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2 md:py-3 px-4 md:px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                      onClick={() => window.open(previewItem.audioUrl, "_blank")}
+                      className="bg-secondary hover:bg-secondary/80 text-secondary-foreground font-medium py-2 md:py-3 px-4 md:px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
                     >
-                      <Play className="h-4 w-4 md:h-5 md:w-5" />
-                      <span className="text-sm md:text-base">Play Audio</span>
+                      <ExternalLink className="h-4 w-4 md:h-5 md:w-5" />
+                      <span className="text-sm md:text-base">Audio Source</span>
                     </button>
                   )}
                   
@@ -311,16 +305,16 @@ export const ChromaGrid = ({
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 w-full">
         {data.map((item, i) => (
           <article
-            key={item.id}
+            key={i}
             className="chroma-card-enhanced group relative overflow-hidden rounded-xl cursor-pointer transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
             onMouseMove={handleCardMove}
             onMouseEnter={() => setHoveredItem(i)}
             onMouseLeave={() => setHoveredItem(null)}
-            onClick={() => handleCardClick(item.url || item.youtubeUrl)}
+            onClick={() => handleCardClick(item.url)}
             style={{
               "--card-border": item.borderColor || "transparent",
               "--card-gradient": item.gradient,
-              background: item.backgroundGradient || item.gradient || "linear-gradient(145deg, #333, #000)",
+              background: item.gradient || "linear-gradient(145deg, #333, #000)",
             } as React.CSSProperties}
           >
             <div className="aspect-square relative overflow-hidden">
@@ -342,11 +336,11 @@ export const ChromaGrid = ({
                       <Play className="h-6 w-6 text-white fill-white" />
                     </button>
                   )}
-                  {(item.url || item.youtubeUrl) && (
+                  {item.url && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        window.open(item.url || item.youtubeUrl, "_blank", "noopener,noreferrer");
+                        window.open(item.url, "_blank", "noopener,noreferrer");
                       }}
                       className="bg-white/20 backdrop-blur-sm rounded-full p-3 hover:bg-white/30 transition-colors"
                     >
@@ -413,16 +407,16 @@ export const ChromaGrid = ({
                       Preview
                     </button>
                   )}
-                  {(item.url || item.youtubeUrl) && (
+                  {item.url && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        window.open(item.url || item.youtubeUrl, "_blank", "noopener,noreferrer");
+                        window.open(item.url, "_blank", "noopener,noreferrer");
                       }}
                       className="flex-1 md:flex-none bg-white/20 backdrop-blur-sm rounded-lg py-2 px-3 text-white text-sm font-medium hover:bg-white/30 transition-colors flex items-center justify-center gap-2"
                     >
                       <ExternalLink className="h-4 w-4" />
-                      {item.url ? "Visit" : "Watch"}
+                      Visit
                     </button>
                   )}
                 </div>
