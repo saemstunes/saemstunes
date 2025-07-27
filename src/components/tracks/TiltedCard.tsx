@@ -1,6 +1,8 @@
 import { useRef, useState } from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 import "./TiltedCard.css";
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client"; // Add supabase import
 
 const springValues = {
   damping: 30,
@@ -40,8 +42,32 @@ export default function TiltedCard({
   displayOverlayContent = false,
 }: TiltedCardProps) {
   const ref = useRef<HTMLElement>(null);
-  const [imageLoaded, setImageLoaded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [resolvedImageSrc, setResolvedImageSrc] = useState("");
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  useEffect(() => {
+    // Resolve image source
+    const resolveImage = async () => {
+      try {
+        if (imageSrc.startsWith('http')) {
+          setResolvedImageSrc(imageSrc);
+        } else {
+          // Handle Supabase paths
+          const { data } = supabase.storage
+            .from('tracks')
+            .getPublicUrl(imageSrc);
+          setResolvedImageSrc(data.publicUrl);
+        }
+      } catch (error) {
+        console.error("Error resolving image:", error);
+        setResolvedImageSrc('/default-cover.jpg');
+      }
+    };
+
+    resolveImage();
+  }, [imageSrc]);
+  
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -155,17 +181,26 @@ export default function TiltedCard({
           )}
 
           {/* Actual image */}
-          <motion.img
-            src={imageSrc}
-            alt={altText}
-            className="tilted-card-img"
-            style={{
-              opacity: imageLoaded ? 1 : 0,
-              transition: "opacity 0.5s ease",
-            }}
-            onLoad={() => setImageLoaded(true)}
-            onError={() => setImageLoaded(false)}
-          />
+          {resolvedImageSrc && (
+            <motion.img
+              src={resolvedImageSrc}
+              alt={altText}
+              className="tilted-card-img"
+              style={{
+                opacity: imageLoaded ? 1 : 0,
+                transition: "opacity 0.5s ease",
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
+              onLoad={() => setImageLoaded(true)}
+              onError={(e) => {
+                console.error("Failed to load image:", resolvedImageSrc);
+                e.currentTarget.src = '/default-cover.jpg';
+                setImageLoaded(true);
+              }}
+            />
+          )}
         </div>
 
         {/* Overlay content */}
