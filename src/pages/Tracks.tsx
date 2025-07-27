@@ -1056,7 +1056,8 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
         height={64}
         className="h-16 w-16 rounded object-cover" // Removed rounded-full
         />
-    )}
+      )}
+     </div>     
 
         {audioUrl && (
           <div className="mb-4">
