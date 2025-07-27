@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { Play, ExternalLink, Clock, Heart, X } from "lucide-react";
 import { useAudioPlayer } from "@/context/AudioPlayerContext";
-import { getImageUrl } from "@/lib/imageUtils";
+import { getImageUrl } from "@/lib/urlUtils";
 
 interface ChromaGridItem {
   image: string;
