@@ -1,7 +1,9 @@
+
 import { useRef, useState } from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 import "./TiltedCard.css";
-import { useEffect } from "react"; // Add this import
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client"; // Add supabase import
 
 const springValues = {
   damping: 30,
@@ -53,7 +55,7 @@ export default function TiltedCard({
           setResolvedImageSrc(imageSrc);
         } else {
           // Handle Supabase paths
-          const { data } = await supabase.storage
+          const { data } = supabase.storage
             .from('tracks')
             .getPublicUrl(imageSrc);
           setResolvedImageSrc(data.publicUrl);
@@ -180,21 +182,26 @@ export default function TiltedCard({
           )}
 
           {/* Actual image */}
-          <motion.img
-            src={resolvedImageSrc}
-            alt={altText}
-            className="tilted-card-img"
-            style={{
-              opacity: imageLoaded ? 1 : 0,
-              transition: "opacity 0.5s ease",
-            }}
-            onLoad={() => setImageLoaded(true)}
-            onError={(e) => {
-              console.error("Failed to load image:", resolvedImageSrc);
-              e.currentTarget.src = '/default-cover.jpg';
-              setImageLoaded(true);
-            }}
+          {resolvedImageSrc && (
+            <motion.img
+              src={resolvedImageSrc}
+              alt={altText}
+              className="tilted-card-img"
+              style={{
+                opacity: imageLoaded ? 1 : 0,
+                transition: "opacity 0.5s ease",
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
+              onLoad={() => setImageLoaded(true)}
+              onError={(e) => {
+                console.error("Failed to load image:", resolvedImageSrc);
+                e.currentTarget.src = '/default-cover.jpg';
+                setImageLoaded(true);
+              }}
             />
+          )}
         </div>
 
         {/* Overlay content */}
