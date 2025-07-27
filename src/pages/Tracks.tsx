@@ -180,12 +180,11 @@ const Tracks = () => {
         // Get public URLs for audio and cover
         const audioUrl = trackData.audio_path ? 
           supabase.storage.from('tracks').getPublicUrl(trackData.audio_path).data.publicUrl : '';
-        const coverUrl = trackData.cover_path ? 
-          supabase.storage.from('tracks').getPublicUrl(trackData.cover_path).data.publicUrl : '';
+        const coverUrl = getImageUrl(trackData.cover_path); // Use helper
 
         setFeaturedTrack({
           id: trackData.id,
-          imageSrc: coverUrl || "/default-cover.jpg",
+          imageSrc: coverUrl
           title: trackData.title,
           artist: trackData.artist || "Unknown Artist",
           plays: playCount,
