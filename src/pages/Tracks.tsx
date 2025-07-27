@@ -22,6 +22,7 @@ import { PlaylistActions } from "@/components/playlists/PlaylistActions";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import EnhancedAnimatedList from "@/components/tracks/EnhancedAnimatedList";
 import TiltedCard from "@/components/tracks/TiltedCard";
+import { getImageUrl } from "@/lib/urlUtils";
 
 interface Track {
   id: string;
@@ -199,6 +200,13 @@ const Tracks = () => {
       setFeaturedTrack(null);
     }
   };
+
+  // Add this inside the component
+  const getImageUrl = useCallback((path: string | null | undefined): string => {
+    if (!path) return '';
+    if (path.startsWith('http')) return path;
+    return supabase.storage.from('tracks').getPublicUrl(path).data.publicUrl;
+  }, []);
 
   const fetchTracks = async () => {
     try {
@@ -430,8 +438,7 @@ const Tracks = () => {
     track.cover_path && track.approved && track.youtube_url
   ).map(track => ({
     id: track.id,
-    image: track.cover_path ? 
-      supabase.storage.from('tracks').getPublicUrl(track.cover_path).data.publicUrl : '',
+    image: getImageUrl(track.cover_path), 
     title: track.title,
     subtitle: track.description?.substring(0, 30) + (track.description && track.description.length > 30 ? '...' : ''),
     handle: track.artist || '@unknown',
@@ -612,27 +619,22 @@ const Tracks = () => {
                     </div>
                     
                     <div className="grid md:grid-cols-2 gap-6 lg:gap-8 items-center">
-                      <div className="flex justify-center relative order-2 md:order-1">
-                        <TiltedCard
-                          imageSrc={featuredTrack.imageSrc}
-                          altText="Featured Track Cover"
-                          captionText={featuredTrack.title}
-                          containerHeight="300px"
-                          containerWidth="300px"
-                          imageHeight="100%"
-                          imageWidth="100%"
-                          rotateAmplitude={12}
-                          scaleOnHover={1.2}
-                          showMobileWarning={false}
-                          showTooltip={true}
-                          displayOverlayContent={true}
-                          overlayContent={
-                            <p className="tilted-card-demo-text">
-                              {featuredTrack.title}
-                            </p>
-                          }
-                        />
+                      {featuredTrack && (
+                    <div className="flex justify-center relative order-2 md:order-1">
+                      <div className="hover:z-[9999] relative transition-all duration-300 w-full max-w-sm">
+                        <ResponsiveImage
+                          src={featuredTrack.imageSrc}
+                          alt="Featured Track Cover"
+                          width={400}
+                          height={400}
+                          mobileWidth={280}
+                          mobileHeight={280}
+                          className="w-full h-auto rounded-2xl shadow-2xl transform hover:scale-105 transition-transform duration-300"
+                          priority={true}
+                          />
                       </div>
+                    </div>
+                  )}
                       
                       <div className="space-y-4 order-1 md:order-2 text-center md:text-left">
                         <h3 className="text-xl font-semibold">{featuredTrack.title}</h3>
