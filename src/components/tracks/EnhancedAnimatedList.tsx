@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { motion } from 'framer-motion';
+import { getMediaUrl } from '@/lib/urlUtils'; // Add this import
 
 interface Track {
   id: string;
@@ -38,16 +39,14 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
   const [hoveredTrack, setHoveredTrack] = useState<string | null>(null);
 
   const handleTrackPlay = async (track: Track) => {
-    const audioUrl = track.audio_path.startsWith('http') 
-      ? track.audio_path 
-      : `https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/${track.audio_path}`;
+    const audioUrl = getMediaUrl(track.audio_path); // Use helper
 
     const audioTrack = {
       id: track.id,
       src: audioUrl,
       name: track.title,
       artist: track.artist || 'Unknown Artist',
-      artwork: track.cover_path || '/placeholder.svg',
+      artwork: track.cover_path ? getMediaUrl(track.cover_path) : '/placeholder.svg',
     };
 
     if (state?.currentTrack?.id === track.id && state?.isPlaying) {
@@ -78,7 +77,7 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
           onMouseLeave={() => setHoveredTrack(null)}
           onClick={() => handleTrackPlay(track)}
         >
-          {/* Play/Pause Button - Smaller on mobile */}
+          {/* Play/Pause Button */}
           <div className="relative flex-shrink-0">
             <div className={cn(
               "w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden bg-muted flex items-center justify-center",
@@ -86,7 +85,7 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
             )}>
               {track.cover_path ? (
                 <ResponsiveImage
-                  src={track.cover_path}
+                  src={getMediaUrl(track.cover_path)} // Use helper
                   alt={track.title}
                   width={48}
                   height={48}
@@ -111,7 +110,7 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
             </div>
           </div>
 
-          {/* Track Info - Improved truncation */}
+          {/* Track Info */}
           <div className="flex-1 min-w-0 overflow-hidden">
             <h3 className={cn(
               "font-medium text-xs sm:text-sm truncate",
@@ -124,11 +123,10 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
             </p>
           </div>
 
-          {/* Actions - Optimized for mobile */}
+          {/* Actions */}
           <div className="flex items-center gap-1 sm:gap-2">
             <PlaylistActions trackId={track.id} />
             
-            {/* Hide heart icon on small screens */}
             <Button
               variant="ghost"
               size="xs"
