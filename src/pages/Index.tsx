@@ -312,7 +312,7 @@ const Index = () => {
             
             <FourPointerSection />
             
-            <section>
+            {/* <section>
               <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">
                 Try Our Music Tools
               </h2>
