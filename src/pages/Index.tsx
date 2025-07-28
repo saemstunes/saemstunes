@@ -378,8 +378,8 @@ const FEATURED_TRACKS = [
     artist: "Saem's Tunes",
     imageSrc: "https://i.imgur.com/VfKXMyG.png",
     audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/Pale%20Ulipo%20(Afrobeat).m4a",
-    likes: 2543,
-    plays: 15420
+    likes: 71,
+    plays: 1202
   },
   {
     id: 'featured-2',
@@ -387,8 +387,8 @@ const FEATURED_TRACKS = [
     artist: "Saem's Tunes",
     imageSrc: "https://i.imgur.com/6yr8BpG.jpeg",
     audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/I%20Need%20You%20More.wav",
-    likes: 1876,
-    plays: 12847
+    likes: 106,
+    plays: 2412
   },
   {
     id: 'featured-3',
@@ -396,8 +396,8 @@ const FEATURED_TRACKS = [
     artist: "Saem's Tunes ft. Kendi Nkonge",
     imageSrc: "https://i.imgur.com/LJQDADg.jpeg",
     audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/Ni%20Hai%20(Demo)%20-%20Saem's%20Tunes%20(OFFICIAL%20MUSIC%20VIDEO)%20(128kbit_AAC).m4a",
-    likes: 3421,
-    plays: 22127
+    likes: 1421,
+    plays: 127
   },
   {
     id: 'featured-4',
@@ -405,8 +405,8 @@ const FEATURED_TRACKS = [
     artist: "Saem's Tunes",
     imageSrc: "https://i.imgur.com/wrm7LI1.jpeg",
     audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/Mapenzi%20Ya%20Ajabu%20(Demo)%20-%20Saem's%20Tunes%20(OFFICIAL%20MUSIC%20VIDEO)%20(128kbit_AAC).m4a",
-    likes: 2198,
-    plays: 18954
+    likes: 28,
+    plays: 154
   }
 ];
 
