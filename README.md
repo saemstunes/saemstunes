@@ -1,6 +1,6 @@
 📘 Saem’s Tunes — README
 
-🎵 Saem’s Tunes: Where Every Note Counts
+🎵 Saem’s Tunes: Jesus, Music, Community, Knowledge
 
 Saem’s Tunes is a music learning and creative collaboration platform designed to help learners grow from voice to heart to industry. Whether you're a curious beginner or a seasoned musician, Saem’s Tunes provides the tools to learn, practice, collaborate, and thrive in your musical journey.
 
