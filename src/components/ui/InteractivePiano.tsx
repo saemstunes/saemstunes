@@ -115,133 +115,221 @@ const InteractivePiano: React.FC = () => {
 
   // Enhanced melodies with rhythm information
   const melodies = [
-    // 🎶 Twinkle Twinkle Little Star
-    [
-      { note: 'C', duration: 1 }, 
-      { note: 'C', duration: 1 },
-      { note: 'G', duration: 1 },
-      { note: 'G', duration: 1 },
-      { note: 'A', duration: 1 },
-      { note: 'A', duration: 1 },
-      { note: 'G', duration: 2 },
-      { note: 'F', duration: 1 },
-      { note: 'F', duration: 1 },
-      { note: 'E', duration: 1 },
-      { note: 'E', duration: 1 },
-      { note: 'D', duration: 1 },
-      { note: 'D', duration: 1 },
-      { note: 'C', duration: 2 },
-      { note: 'G', duration: 1 },
-      { note: 'G', duration: 1 },
-      { note: 'F', duration: 1 },
-      { note: 'F', duration: 1 },
-      { note: 'E', duration: 1 },
-      { note: 'E', duration: 1 },
-      { note: 'D', duration: 2 },
-      { note: 'G', duration: 1 },
-      { note: 'G', duration: 1 },
-      { note: 'F', duration: 1 },
-      { note: 'F', duration: 1 },
-      { note: 'E', duration: 1 },
-      { note: 'E', duration: 1 },
-      { note: 'D', duration: 2 },
-      { note: 'C', duration: 1 },
-      { note: 'C', duration: 1 },
-      { note: 'G', duration: 1 },
-      { note: 'G', duration: 1 },
-      { note: 'A', duration: 1 },
-      { note: 'A', duration: 1 },
-      { note: 'G', duration: 2 }
-    ],
-    // 🎸 Beat It - Michael Jackson
-    [
-      { note: 'E', duration: 0.5 },
-      { note: 'D', duration: 0.5 },
-      { note: 'E', duration: 0.5 },
-      { note: 'G', duration: 1 },
-      { note: 'A', duration: 1 },
-      { note: 'G', duration: 1 },
-      { note: 'E', duration: 0.5 },
-      { note: 'D', duration: 0.5 },
-      { note: 'E', duration: 0.5 },
-      { note: 'G', duration: 1 },
-      { note: 'A', duration: 1 },
-      { note: 'G', duration: 1 },
-      { note: 'E', duration: 0.5 },
-      { note: 'D', duration: 0.5 },
-      { note: 'C', duration: 2 }
-    ],
-    // 🎼 Mary Had a Little Lamb
-    [
-      { note: 'E', duration: 1 },
-      { note: 'D', duration: 1 },
-      { note: 'C', duration: 1 },
-      { note: 'D', duration: 1 },
-      { note: 'E', duration: 1 },
-      { note: 'E', duration: 1 },
-      { note: 'E', duration: 2 },
-      { note: 'D', duration: 1 },
-      { note: 'D', duration: 1 },
-      { note: 'D', duration: 2 },
-      { note: 'E', duration: 1 },
-      { note: 'G', duration: 1 },
-      { note: 'G', duration: 2 },
-      { note: 'E', duration: 1 },
-      { note: 'D', duration: 1 },
-      { note: 'C', duration: 1 },
-      { note: 'D', duration: 1 },
-      { note: 'E', duration: 1 },
-      { note: 'E', duration: 1 },
-      { note: 'E', duration: 1 },
-      { note: 'E', duration: 1 },
-      { note: 'D', duration: 1 },
-      { note: 'D', duration: 1 },
-      { note: 'E', duration: 1 },
-      { note: 'D', duration: 1 },
-      { note: 'C', duration: 2 }
-    ],
-    // 🎶 Happy Birthday
-    [
-      { note: 'C', duration: 1 },
-      { note: 'C', duration: 1 },
-      { note: 'D', duration: 2 },
-      { note: 'C', duration: 2 },
-      { note: 'E', duration: 2 },
-      { note: 'D', duration: 4 }
-    ],
-    // 🎹 Ode to Joy
-    [
-      { note: 'E', duration: 1 },
-      { note: 'E', duration: 1 },
-      { note: 'F', duration: 1 },
-      { note: 'G', duration: 1 },
-      { note: 'G', duration: 1 },
-      { note: 'F', duration: 1 },
-      { note: 'E', duration: 1 },
-      { note: 'D', duration: 1 },
-      { note: 'C', duration: 1 },
-      { note: 'C', duration: 1 },
-      { note: 'D', duration: 1 },
-      { note: 'E', duration: 1 },
-      { note: 'E', duration: 1.5 },
-      { note: 'D', duration: 0.5 },
-      { note: 'D', duration: 2 },
-      { note: 'E', duration: 1 },
-      { note: 'E', duration: 1 },
-      { note: 'F', duration: 1 },
-      { note: 'G', duration: 1 },
-      { note: 'G', duration: 1 },
-      { note: 'F', duration: 1 },
-      { note: 'E', duration: 1 },
-      { note: 'D', duration: 1 },
-      { note: 'C', duration: 1 },
-      { note: 'C', duration: 1 },
-      { note: 'D', duration: 1 },
-      { note: 'E', duration: 1 },
-      { note: 'D', duration: 1.5 },
-      { note: 'C', duration: 0.5 },
-      { note: 'C', duration: 2 }
-    ]
+  // 🌟 Twinkle Twinkle Little Star (Complete)
+  [
+    { note: 'C', duration: 1 }, 
+    { note: 'C', duration: 1 },
+    { note: 'G', duration: 1 },
+    { note: 'G', duration: 1 },
+    { note: 'A', duration: 1 },
+    { note: 'A', duration: 1 },
+    { note: 'G', duration: 2 },
+    { note: 'F', duration: 1 },
+    { note: 'F', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'D', duration: 1 },
+    { note: 'D', duration: 1 },
+    { note: 'C', duration: 2 },
+    { note: 'G', duration: 1 },
+    { note: 'G', duration: 1 },
+    { note: 'F', duration: 1 },
+    { note: 'F', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'D', duration: 2 },
+    { note: 'G', duration: 1 },
+    { note: 'G', duration: 1 },
+    { note: 'F', duration: 1 },
+    { note: 'F', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'D', duration: 2 },
+    { note: 'C', duration: 1 },
+    { note: 'C', duration: 1 },
+    { note: 'G', duration: 1 },
+    { note: 'G', duration: 1 },
+    { note: 'A', duration: 1 },
+    { note: 'A', duration: 1 },
+    { note: 'G', duration: 2 },
+    { note: 'F', duration: 1 },
+    { note: 'F', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'D', duration: 1 },
+    { note: 'D', duration: 1 },
+    { note: 'C', duration: 4 }
+  ],
+
+  // 🚣 Row, Row, Row Your Boat
+  [
+    { note: 'C', duration: 1 },
+    { note: 'C', duration: 1 },
+    { note: 'C', duration: 0.75 },
+    { note: 'D', duration: 0.25 },
+    { note: 'E', duration: 2 },
+    { note: 'E', duration: 0.75 },
+    { note: 'D', duration: 0.25 },
+    { note: 'E', duration: 0.75 },
+    { note: 'F', duration: 0.25 },
+    { note: 'G', duration: 4 },
+    { note: 'C', duration: 0.5 },
+    { note: 'C', duration: 0.5 },
+    { note: 'C', duration: 0.5 },
+    { note: 'G', duration: 0.5 },
+    { note: 'G', duration: 0.5 },
+    { note: 'G', duration: 0.5 },
+    { note: 'E', duration: 0.5 },
+    { note: 'E', duration: 0.5 },
+    { note: 'E', duration: 0.5 },
+    { note: 'C', duration: 0.5 },
+    { note: 'C', duration: 0.5 },
+    { note: 'C', duration: 0.5 },
+    { note: 'G', duration: 0.75 },
+    { note: 'F', duration: 0.25 },
+    { note: 'E', duration: 0.75 },
+    { note: 'D', duration: 0.25 },
+    { note: 'C', duration: 4 }
+  ],
+
+  // 🎼 Mary Had a Little Lamb (Complete verse)
+  [
+    { note: 'E', duration: 1 },
+    { note: 'D', duration: 1 },
+    { note: 'C', duration: 1 },
+    { note: 'D', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'E', duration: 2 },
+    { note: 'D', duration: 1 },
+    { note: 'D', duration: 1 },
+    { note: 'D', duration: 2 },
+    { note: 'E', duration: 1 },
+    { note: 'G', duration: 1 },
+    { note: 'G', duration: 2 },
+    { note: 'E', duration: 1 },
+    { note: 'D', duration: 1 },
+    { note: 'C', duration: 1 },
+    { note: 'D', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'D', duration: 1 },
+    { note: 'D', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'D', duration: 1 },
+    { note: 'C', duration: 4 }
+  ],
+
+  // 🎶 Happy Birthday (Complete song)
+  [
+    { note: 'C', duration: 1 },
+    { note: 'C', duration: 1 },
+    { note: 'D', duration: 2 },
+    { note: 'C', duration: 2 },
+    { note: 'F', duration: 2 },
+    { note: 'E', duration: 4 },
+    { note: 'C', duration: 1 },
+    { note: 'C', duration: 1 },
+    { note: 'D', duration: 2 },
+    { note: 'C', duration: 2 },
+    { note: 'G', duration: 2 },
+    { note: 'F', duration: 4 },
+    { note: 'C', duration: 1 },
+    { note: 'C', duration: 1 },
+    { note: 'C', duration: 2 },
+    { note: 'A', duration: 2 },
+    { note: 'F', duration: 2 },
+    { note: 'E', duration: 2 },
+    { note: 'D', duration: 4 },
+    { note: 'A#', duration: 1 },
+    { note: 'A#', duration: 1 },
+    { note: 'A', duration: 2 },
+    { note: 'F', duration: 2 },
+    { note: 'G', duration: 2 },
+    { note: 'F', duration: 4 }
+  ],
+
+  // 🎹 Ode to Joy (Complete first section)
+  [
+    { note: 'E', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'F', duration: 1 },
+    { note: 'G', duration: 1 },
+    { note: 'G', duration: 1 },
+    { note: 'F', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'D', duration: 1 },
+    { note: 'C', duration: 1 },
+    { note: 'C', duration: 1 },
+    { note: 'D', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'E', duration: 1.5 },
+    { note: 'D', duration: 0.5 },
+    { note: 'D', duration: 2 },
+    { note: 'E', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'F', duration: 1 },
+    { note: 'G', duration: 1 },
+    { note: 'G', duration: 1 },
+    { note: 'F', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'D', duration: 1 },
+    { note: 'C', duration: 1 },
+    { note: 'C', duration: 1 },
+    { note: 'D', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'D', duration: 1.5 },
+    { note: 'C', duration: 0.5 },
+    { note: 'C', duration: 4 }
+  ],
+
+  // 🎵 Baa Baa Black Sheep (Added nursery rhyme)
+  [
+    { note: 'C', duration: 1 },
+    { note: 'C', duration: 1 },
+    { note: 'G', duration: 1 },
+    { note: 'G', duration: 1 },
+    { note: 'A', duration: 1 },
+    { note: 'A', duration: 1 },
+    { note: 'G', duration: 2 },
+    { note: 'F', duration: 1 },
+    { note: 'F', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'D', duration: 1 },
+    { note: 'D', duration: 1 },
+    { note: 'C', duration: 2 },
+    { note: 'G', duration: 1 },
+    { note: 'G', duration: 1 },
+    { note: 'F', duration: 1 },
+    { note: 'F', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'D', duration: 2 },
+    { note: 'G', duration: 1 },
+    { note: 'G', duration: 1 },
+    { note: 'F', duration: 1 },
+    { note: 'F', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'D', duration: 2 },
+    { note: 'C', duration: 1 },
+    { note: 'C', duration: 1 },
+    { note: 'G', duration: 1 },
+    { note: 'G', duration: 1 },
+    { note: 'A', duration: 1 },
+    { note: 'A', duration: 1 },
+    { note: 'G', duration: 2 },
+    { note: 'F', duration: 1 },
+    { note: 'F', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'E', duration: 1 },
+    { note: 'D', duration: 1 },
+    { note: 'D', duration: 1 },
+    { note: 'C', duration: 4 }
+  ]
   ];
 
   // Use the constant keys array
@@ -906,35 +994,25 @@ const InteractivePiano: React.FC = () => {
                     left: `${key.position}%`,
                     width: `${key.width}%`,
                     height: '100%',
+                    touchAction: 'none' // FIX: Prevent touch gestures
                   }}
-                  onMouseDown={(e) => {
-                    if (touchActiveRef.current) {
-                      e.preventDefault();
-                      return;
-                    }
+                  onMouseDown={() => {
+                    if (touchActiveRef.current) return;
                     handleNotePress(key);
                   }}
-                  onMouseUp={(e) => {
-                    if (touchActiveRef.current) {
-                      e.preventDefault();
-                      return;
-                    }
+                  onMouseUp={() => {
+                    if (touchActiveRef.current) return;
                     handleNoteRelease(key);
                   }}
-                  onMouseLeave={(e) => {
-                    if (touchActiveRef.current) {
-                      e.preventDefault();
-                      return;
-                    }
+                  onMouseLeave={() => {
+                    if (touchActiveRef.current) return;
                     handleNoteRelease(key);
                   }}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
+                  onTouchStart={() => {
                     touchActiveRef.current = true;
                     handleNotePress(key);
                   }}
-                  onTouchEnd={(e) => {
-                    e.preventDefault();
+                  onTouchEnd={() => {
                     handleNoteRelease(key);
                     setTimeout(() => {
                       touchActiveRef.current = false;
@@ -976,36 +1054,26 @@ const InteractivePiano: React.FC = () => {
                     left: `${key.position}%`,
                     width: `${key.width}%`,
                     height: '65%',
-                    zIndex: 10
+                    zIndex: 10,
+                    touchAction: 'none' // FIX: Prevent touch gestures
                   }}
-                  onMouseDown={(e) => {
-                    if (touchActiveRef.current) {
-                      e.preventDefault();
-                      return;
-                    }
+                  onMouseDown={() => {
+                    if (touchActiveRef.current) return;
                     handleNotePress(key);
                   }}
-                  onMouseUp={(e) => {
-                    if (touchActiveRef.current) {
-                      e.preventDefault();
-                      return;
-                    }
+                  onMouseUp={() => {
+                    if (touchActiveRef.current) return;
                     handleNoteRelease(key);
                   }}
-                  onMouseLeave={(e) => {
-                    if (touchActiveRef.current) {
-                      e.preventDefault();
-                      return;
-                    }
+                  onMouseLeave={() => {
+                    if (touchActiveRef.current) return;
                     handleNoteRelease(key);
                   }}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
+                  onTouchStart={() => {
                     touchActiveRef.current = true;
                     handleNotePress(key);
                   }}
-                  onTouchEnd={(e) => {
-                    e.preventDefault();
+                  onTouchEnd={() => {
                     handleNoteRelease(key);
                     setTimeout(() => {
                       touchActiveRef.current = false;
