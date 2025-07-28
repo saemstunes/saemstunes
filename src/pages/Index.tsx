@@ -54,6 +54,11 @@ const QUICK_ACTIONS = [
   }
 ];
 
+const isUuid = (id: string) => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(id);
+};
+
 // IMPROVED ORIENTATION HOOK
 const useWindowOrientation = () => {
   const windowSize = useWindowSize();
@@ -234,25 +239,27 @@ const Index = () => {
     setShowInstrumentSelector(false);
   };
 
-  // ADDED PLAY TRACKING ANALYTICS
   const handlePlayTrack = async (track: any) => {
-    if (track.id && track.id !== 'featured-fallback') {
-      await AudioStorageManager.trackPlay(track.id, user?.id);
-    }
-    
-    navigate(`/audio-player/${track.id}`, {
-      state: {
-        track: {
-          id: track.id,
-          src: track.audio_url || track.audioSrc,
-          name: track.title,
-          artist: track.artist,
-          artwork: track.cover_art_url || track.imageSrc,
-          album: 'Featured'
-        }
+  // Use slug for tracking if ID is not a UUID
+  const identifier = track.slug && !isUuid(track.id) ? track.slug : track.id;
+  
+  if (identifier) {
+    await AudioStorageManager.trackPlay(identifier, user?.id);
+  }
+  
+  navigate(`/audio-player/${track.id}`, {
+    state: {
+      track: {
+        id: track.id,
+        src: track.audio_url || track.audioSrc,
+        name: track.title,
+        artist: track.artist,
+        artwork: track.cover_art_url || track.imageSrc,
+        album: 'Featured'
       }
-    });
-  };
+    }
+  });
+};
 
   // PRESERVED ORIGINAL SHARE FUNCTIONALITY
   const handleShareTrack = async (track: any) => {
