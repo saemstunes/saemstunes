@@ -11,7 +11,7 @@ import FourPointerSection from "@/components/homepage/FourPointerSection";
 import InstrumentSelector from "@/components/ui/InstrumentSelector";
 import MusicToolsCarousel from "@/components/ui/MusicToolsCarousel";
 import { Button } from "@/components/ui/button";
-import { HandMusic } from "@/assets/icons/hand-floating-music-notes-fill.svg?react";
+import HandMusic from "@/assets/icons/hand-floating-music-notes-fill.svg?react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Helmet } from "react-helmet";
