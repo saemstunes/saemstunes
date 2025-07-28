@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -55,16 +54,24 @@ const QUICK_ACTIONS = [
   }
 ];
 
-// Custom hook for orientation detection
+// IMPROVED ORIENTATION HOOK
 const useWindowOrientation = () => {
   const windowSize = useWindowSize();
-  
-  const isMobile = windowSize.width ? windowSize.width < 768 : false;
-  const isLandscape = windowSize.width && windowSize.height 
-    ? windowSize.width > windowSize.height 
-    : false;
-  
-  return { isMobile, isLandscape };
+  const [orientation, setOrientation] = useState({
+    isMobile: false,
+    isLandscape: false
+  });
+
+  useEffect(() => {
+    if (windowSize.width === null || windowSize.height === null) return;
+    
+    setOrientation({
+      isMobile: windowSize.width < 768,
+      isLandscape: windowSize.width > windowSize.height
+    });
+  }, [windowSize]);
+
+  return orientation;
 };
 
 // IMPROVED TRACK HANDLING WITH AUDIO STORAGE MANAGER
@@ -191,7 +198,11 @@ const Index = () => {
   const { state } = useAudioPlayer();
   const navigate = useNavigate();
   const { isMobile, isLandscape } = useWindowOrientation();
-  const [showInstrumentSelector, setShowInstrumentSelector] = useState(false);
+  
+  // Initialize with correct orientation state
+  const [showInstrumentSelector, setShowInstrumentSelector] = useState(
+    isMobile && isLandscape
+  );
   
   // Fix: Use currentTrack from audio player context with null checking
   const currentTrack = state?.currentTrack || null;
@@ -199,16 +210,24 @@ const Index = () => {
   // IMPROVED TRACK FETCHING
   const featuredTracks = useShuffledTracks(4, 30000);
 
+  // BACKUP ORIENTATION CHANGE LISTENER
+  useEffect(() => {
+    const handleOrientationChange = () => {
+      const isMobileNow = window.innerWidth < 768;
+      const isLandscapeNow = window.matchMedia("(orientation: landscape)").matches;
+      setShowInstrumentSelector(isMobileNow && isLandscapeNow);
+    };
+
+    window.addEventListener('orientationchange', handleOrientationChange);
+    return () => {
+      window.removeEventListener('orientationchange', handleOrientationChange);
+    };
+  }, []);
+
+  // SYNC WITH ORIENTATION HOOK
   useEffect(() => {
     setShowInstrumentSelector(isMobile && isLandscape);
   }, [isMobile, isLandscape]);
-
-  useEffect(() => {
-    const M = setTimeout(() => {
-      // Auto-shuffle timeout logic here
-    }, 30000);
-    return () => clearTimeout(M);
-  }, [currentTrack]); // Now currentTrack is properly defined
 
   const handleInstrumentSelect = (instrument: string) => {
     navigate(`/music-tools?tool=${instrument}`);
