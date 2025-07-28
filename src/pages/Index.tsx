@@ -11,7 +11,6 @@ import FourPointerSection from "@/components/homepage/FourPointerSection";
 import InstrumentSelector from "@/components/ui/InstrumentSelector";
 import MusicToolsCarousel from "@/components/ui/MusicToolsCarousel";
 import { Button } from "@/components/ui/button";
-import HandMusic from "@/assets/icons/hand-floating-music-notes-fill.svg?react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Helmet } from "react-helmet";
@@ -131,7 +130,7 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
           onClick={onExploreTracks}
           className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 group"
         >
-          <HandMusic className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
+          <Music className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
           Discover Music
         </Button>
         <Button 
