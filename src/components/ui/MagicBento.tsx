@@ -1,6 +1,6 @@
 import { useRef, useEffect, useCallback, useState } from "react";
 import { gsap } from "gsap";
-import { isMobile } from './hooks/use-mobile';
+import { useIsMobile } from './hooks/use-mobile';
 import "./MagicBento.css";
 
 const DEFAULT_PARTICLE_COUNT = 12;
