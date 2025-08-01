@@ -1,12 +1,14 @@
 /* styles/global.css */
 :root {
-  --background-start-rgb: 255, 255, 255; /* Light mode start */
-  --background-end-rgb: 255, 255, 255;   /* Light mode end */
+  /* Light mode colors */
+  --background-start-rgb: 252, 248, 242; /* hsl(36 33% 97%) */
+  --background-end-rgb: 252, 248, 242;   /* hsl(36 33% 97%) */
 }
 
 .dark {
-  --background-start-rgb: 0, 0, 0;       /* Dark mode start */
-  --background-end-rgb: 0, 0, 0;         /* Dark mode end */
+  /* Dark mode colors */
+  --background-start-rgb: 26, 22, 21;    /* hsl(20 14% 10%) */
+  --background-end-rgb: 26, 22, 21;      /* hsl(20 14% 10%) */
 }
 
 nav.flex.flex-col.gap-6 img.h-8.w-8.mb-6 {
