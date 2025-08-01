@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import MagicBento from "@/components/ui/MagicBento";
 import ArtistModal from "@/components/artists/ArtistModal";
-import ArtistNotFound from "@/components/errors/ArtistNotFound";
+import ArtistNotFound from "@/pages/ArtistNotFound";
 import { 
   Calendar, Mail, Music, Video, Star, MapPin, 
   ExternalLink, Award, Info, Heart, Users, Mic2, Guitar 
