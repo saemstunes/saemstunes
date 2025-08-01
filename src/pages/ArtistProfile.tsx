@@ -1,3 +1,4 @@
+// src/pages/artist/[slug].tsx
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -5,33 +6,56 @@ import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { mockTutors, mockVideos } from "@/data/mockData";
 import VideoCard from "@/components/videos/VideoCard";
 import MagicBento from "@/components/ui/MagicBento";
 import ArtistModal from "@/components/artists/ArtistModal";
 import { Calendar, Mail, Music, Video, Star, MapPin, ExternalLink } from "lucide-react";
+import { slugify } from "@/utils/slugify";
+
+// Define the artist type
+interface Artist {
+  id: string;
+  slug: string;
+  name: string;
+  bio: string | null;
+  profile_image_url: string | null;
+  genre: string[] | null;
+  specialties: string[] | null;
+  location: string | null;
+  verified_status: boolean;
+  social_links: Record<string, string> | null;
+  follower_count: number;
+  rating: number | null;
+  lessons_available: boolean;
+  courses_available: boolean;
+  achievements: any[] | null;
+  created_at: string;
+  updated_at: string;
+}
 
 const ArtistProfile = () => {
-  const { id } = useParams();
-  const [artist, setArtist] = useState<any>(null);
+  const { slug } = useParams<{ slug: string }>();
+  const [artist, setArtist] = useState<Artist | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalData, setModalData] = useState<any>(null);
+  const [modalData, setModalData] = useState<Artist | null>(null);
   const [modalType, setModalType] = useState<string>('');
-  
-  const tutorVideos = mockVideos.slice(0, 4);
 
   useEffect(() => {
     const fetchArtist = async () => {
-      if (!id) return;
-      
+      if (!slug) {
+        setError('Invalid artist URL');
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       try {
         const { data, error } = await supabase
           .from('artists')
           .select('*')
-          .eq('id', id)
+          .eq('slug', slug)
           .single();
 
         if (error) {
@@ -42,6 +66,8 @@ const ArtistProfile = () => {
 
         if (data) {
           setArtist(data);
+        } else {
+          setError('Artist not found');
         }
       } catch (error) {
         console.error('Error during artist fetch:', error);
@@ -52,13 +78,12 @@ const ArtistProfile = () => {
     };
 
     fetchArtist();
-  }, [id]);
-
-  const displayArtist = artist || mockTutors.find(tutor => tutor.id === id) || mockTutors[0];
+  }, [slug]);
 
   const handleBentoClick = (type: string) => {
+    if (!artist) return;
     setModalType(type);
-    setModalData(displayArtist);
+    setModalData(artist);
     setModalOpen(true);
   };
 
@@ -75,19 +100,27 @@ const ArtistProfile = () => {
     );
   }
 
-  if (error && !displayArtist) {
+  if (error || !artist) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <h2 className="text-2xl font-bold mb-4">Artist Not Found</h2>
-            <p className="text-muted-foreground">{error}</p>
+            <p className="text-muted-foreground">{error || 'The artist you requested does not exist'}</p>
+            <Button className="mt-4" onClick={() => window.location.href = '/'}>
+              Browse Artists
+            </Button>
           </div>
         </div>
       </MainLayout>
     );
   }
   
+  // Calculate star rating
+  const rating = artist.rating || 4.0;
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 >= 0.5;
+
   return (
     <MainLayout>
       <div className="space-y-8">
@@ -96,25 +129,32 @@ const ArtistProfile = () => {
           <div className="w-full max-w-4xl mx-auto px-4 text-center">
             <div className="flex items-center justify-center mb-6">
               <Avatar className="w-24 h-24 border-4 border-primary">
-                <AvatarImage src={displayArtist?.profile_image_url || displayArtist?.avatar} />
-                <AvatarFallback>{displayArtist?.name?.charAt(0) || 'A'}</AvatarFallback>
+                <AvatarImage src={artist.profile_image_url || undefined} />
+                <AvatarFallback>
+                  {artist.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
               </Avatar>
             </div>
             
             <h1 className="text-4xl md:text-6xl font-serif font-bold text-foreground mb-4">
-              {displayArtist?.name}
+              {artist.name}
             </h1>
             <p className="text-xl text-muted-foreground mb-6">
-              {displayArtist?.genre?.join(', ') || displayArtist?.specialties?.join(', ') || 'Artist'}
+              {artist.genre?.join(', ') || artist.specialties?.join(', ') || 'Artist'}
             </p>
             
             <div className="flex items-center justify-center mb-6">
-              <Star className="h-5 w-5 text-gold fill-gold" />
-              <Star className="h-5 w-5 text-gold fill-gold" />
-              <Star className="h-5 w-5 text-gold fill-gold" />
-              <Star className="h-5 w-5 text-gold fill-gold" />
-              <Star className="h-5 w-5 text-muted-foreground" />
-              <span className="ml-2 text-sm">(4.0)</span>
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  className={`h-5 w-5 ${
+                    i < fullStars || (i === fullStars && hasHalfStar)
+                      ? 'text-gold fill-gold'
+                      : 'text-muted-foreground'
+                  } mr-1`}
+                />
+              ))}
+              <span className="ml-2 text-sm">({rating.toFixed(1)})</span>
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -126,8 +166,14 @@ const ArtistProfile = () => {
                 <Mail className="mr-2 h-4 w-4" />
                 Contact
               </Button>
-              {displayArtist?.social_links && (
-                <Button variant="outline" onClick={() => window.open(displayArtist.social_links.spotify || displayArtist.social_links.instagram, '_blank')}>
+              {artist.social_links && (
+                <Button variant="outline" 
+                  onClick={() => window.open(
+                    artist.social_links?.spotify || 
+                    artist.social_links?.instagram || 
+                    '#', '_blank'
+                  )}
+                >
                   <ExternalLink className="mr-2 h-4 w-4" />
                   Follow
                 </Button>
@@ -198,7 +244,8 @@ const ArtistProfile = () => {
                   title: "Achievements",
                   description: "Awards & recognition",
                   label: "Awards",
-                  onClick: () => handleBentoClick('achievements')
+                  onClick: () => handleBentoClick('achievements'),
+                  disabled: !artist.achievements || artist.achievements.length === 0
                 }
               ]}
             />
@@ -210,8 +257,12 @@ const ArtistProfile = () => {
           <Tabs defaultValue="about" className="w-full">
             <TabsList className="grid grid-cols-4 w-full">
               <TabsTrigger value="about">About</TabsTrigger>
-              <TabsTrigger value="lessons">Lessons</TabsTrigger>
-              <TabsTrigger value="courses">Courses</TabsTrigger>
+              {artist.lessons_available && (
+                <TabsTrigger value="lessons">Lessons</TabsTrigger>
+              )}
+              {artist.courses_available && (
+                <TabsTrigger value="courses">Courses</TabsTrigger>
+              )}
               <TabsTrigger value="schedule">Schedule</TabsTrigger>
             </TabsList>
             
@@ -220,21 +271,19 @@ const ArtistProfile = () => {
                 <div className="md:col-span-2">
                   <h2 className="text-2xl font-medium mb-4">Biography</h2>
                   <p className="text-muted-foreground leading-relaxed">
-                    {displayArtist?.bio || `${displayArtist?.name} is a talented music instructor with years of experience in teaching 
-                    ${displayArtist?.genre?.join(', ') || displayArtist?.specialties?.join(', ')}. They are passionate about helping students reach their 
-                    musical potential through personalized instruction and engaging learning experiences.`}
+                    {artist.bio || `${artist.name} is a talented music artist.`}
                   </p>
                   
                   <h3 className="text-lg font-medium mt-8 mb-4">Expertise</h3>
                   <div className="flex flex-wrap gap-2">
-                    {(displayArtist?.genre || displayArtist?.specialties || []).map((item: string, i: number) => (
+                    {(artist.genre || artist.specialties || []).map((item, i) => (
                       <span key={i} className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
                         {item}
                       </span>
                     ))}
                   </div>
 
-                  {displayArtist?.verified_status && (
+                  {artist.verified_status && (
                     <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
                       <div className="flex items-center">
                         <Star className="h-5 w-5 text-green-600 mr-2" />
@@ -253,7 +302,7 @@ const ArtistProfile = () => {
                         <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 mr-3" />
                         <div>
                           <p className="text-sm">Location</p>
-                          <p className="text-sm font-medium">{displayArtist?.location || 'Global'}</p>
+                          <p className="text-sm font-medium">{artist.location || 'Global'}</p>
                         </div>
                       </div>
                       
@@ -261,7 +310,9 @@ const ArtistProfile = () => {
                         <Music className="h-4 w-4 text-muted-foreground mt-0.5 mr-3" />
                         <div>
                           <p className="text-sm">Followers</p>
-                          <p className="text-sm font-medium">{displayArtist?.follower_count || '1K+'}</p>
+                          <p className="text-sm font-medium">
+                            {artist.follower_count.toLocaleString()}
+                          </p>
                         </div>
                       </div>
                       
@@ -277,24 +328,26 @@ const ArtistProfile = () => {
                         <Star className="h-4 w-4 text-muted-foreground mt-0.5 mr-3" />
                         <div>
                           <p className="text-sm">Rating</p>
-                          <p className="text-sm font-medium">4.0 out of 5</p>
+                          <p className="text-sm font-medium">
+                            {rating.toFixed(1)} out of 5
+                          </p>
                         </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Social Links */}
-                  {displayArtist?.social_links && Object.keys(displayArtist.social_links).length > 0 && (
+                  {artist.social_links && Object.keys(artist.social_links).length > 0 && (
                     <div className="bg-card rounded-lg border border-border p-6">
                       <h3 className="font-medium mb-4">Connect</h3>
                       <div className="space-y-2">
-                        {Object.entries(displayArtist.social_links).map(([platform, url]) => (
+                        {Object.entries(artist.social_links).map(([platform, url]) => (
                           <Button
                             key={platform}
                             variant="outline"
                             size="sm"
                             className="w-full justify-start"
-                            onClick={() => window.open(url as string, '_blank')}
+                            onClick={() => window.open(url, '_blank')}
                           >
                             <ExternalLink className="mr-2 h-4 w-4" />
                             {platform.charAt(0).toUpperCase() + platform.slice(1)}
@@ -307,34 +360,37 @@ const ArtistProfile = () => {
               </div>
             </TabsContent>
             
-            <TabsContent value="lessons" className="p-4">
-              <h2 className="text-xl font-medium mb-4">Featured Lessons</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {tutorVideos.map(video => (
-                  <VideoCard key={video.id} video={video} isPremium={video.isLocked} />
-                ))}
-              </div>
-            </TabsContent>
+            {artist.lessons_available && (
+              <TabsContent value="lessons" className="p-4">
+                <h2 className="text-xl font-medium mb-4">Featured Lessons</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {/* Lesson content would go here */}
+                  <p className="text-muted-foreground">No lessons available yet</p>
+                </div>
+              </TabsContent>
+            )}
             
-            <TabsContent value="courses" className="p-4">
-              <div className="text-center py-16">
-                <Music className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-xl font-medium mb-2">No Courses Available</h3>
-                <p className="text-muted-foreground max-w-md mx-auto mb-6">
-                  This instructor hasn't published any courses yet. Check back soon!
-                </p>
-              </div>
-            </TabsContent>
+            {artist.courses_available && (
+              <TabsContent value="courses" className="p-4">
+                <div className="text-center py-16">
+                  <Music className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-xl font-medium mb-2">No Courses Available</h3>
+                  <p className="text-muted-foreground max-w-md mx-auto mb-6">
+                    This artist hasn't published any courses yet. Check back soon!
+                  </p>
+                </div>
+              </TabsContent>
+            )}
             
             <TabsContent value="schedule" className="p-4">
               <div className="text-center py-16">
                 <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-xl font-medium mb-2">Schedule a Lesson</h3>
                 <p className="text-muted-foreground max-w-md mx-auto mb-6">
-                  Book a private or group session with this instructor
+                  Book a private or group session with this artist
                 </p>
                 <Button 
-                  onClick={() => window.location.href = `/book/${displayArtist?.id}`}
+                  onClick={() => window.location.href = `/book/${artist.id}`}
                   className="bg-gold hover:bg-gold-dark text-white"
                 >
                   View Available Times
