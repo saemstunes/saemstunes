@@ -33,7 +33,7 @@ const FourPointerSection: React.FC = () => {
       description: "From beginner chords to advanced composition - follow a structured journey that grows with you.",
       cta: "View Learning Paths",
       link: "/learning-hub",
-      gradient: "from-blue-500/20 to-purple-500/20"
+      gradient: "from-amber-500/20 to-orange-500/20"
     },
     {
       icon: Users,
@@ -41,7 +41,7 @@ const FourPointerSection: React.FC = () => {
       description: "Join thousands of musicians who've transformed their musical journey through our supportive community.",
       cta: "Read Success Stories",
       link: "/community",
-      gradient: "from-green-500/20 to-emerald-500/20"
+      gradient: "from-amber-500/20 to-orange-500/20"
     },
     {
       icon: Zap,
@@ -49,7 +49,7 @@ const FourPointerSection: React.FC = () => {
       description: "Access premium content, one-on-one sessions, and advanced tools designed for serious musicians.",
       cta: "Explore Premium",
       link: "/subscriptions",
-      gradient: "from-purple-500/20 to-pink-500/20"
+      gradient: "from-amber-500/20 to-orange-500/20"
     }
   ];
 
