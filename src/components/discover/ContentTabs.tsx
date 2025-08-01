@@ -92,38 +92,37 @@ const ContentTabs: React.FC<ContentTabsProps> = ({ activeTab, setActiveTab }) =>
       </TabsContent>
       
       <TabsContent value="artists" className="pt-4">
-        <h2 className="text-xl font-proxima font-semibold mb-4">Artists You Should Listen To</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {artists.map(artist => (
-            <div key={artist.id} className="group relative">
-              <ArtistCard 
-                name={artist.name}
-                role={artist.specialties?.join(', ') || 'Artist'}
-                imageSrc={artist.profile_image_url || ''}
-                onClick={() => navigate(`/artist/${artist.slug}`)}
-              />
-              {artist.social_links && (
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button
-                    size="icon"
-                    variant="secondary"
-                    className="h-8 w-8 bg-black/50 hover:bg-black/70"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // Open the first available social link
-                      const firstLink = Object.values(artist.social_links)[0];
-                      if (firstLink) {
-                        window.open(firstLink, '_blank', 'noopener,noreferrer');
-                      }
-                    }}
-                  >
-                    <ExternalLink className="h-4 w-4 text-white" />
-                  </Button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+  <h2 className="text-xl font-proxima font-semibold mb-4">Artists You Should Listen To</h2>
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    {artists.map(artist => (
+      <div key={artist.id} className="group relative">
+        <ArtistCard 
+          name={artist.name}
+          role={artist.specialties?.join(', ') || 'Artist'}
+          imageSrc={artist.profile_image_url || ''}
+          slug={artist.slug} // Pass slug here
+        />
+        {artist.social_links && (
+          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button
+              size="icon"
+              variant="secondary"
+              className="h-8 w-8 bg-black/50 hover:bg-black/70"
+              onClick={(e) => {
+                e.preventDefault();
+                const firstLink = Object.values(artist.social_links)[0];
+                if (firstLink) {
+                  window.open(firstLink, '_blank', 'noopener,noreferrer');
+                }
+              }}
+            >
+              <ExternalLink className="h-4 w-4 text-white" />
+            </Button>
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
         <div className="mt-6 text-center">
           <Button 
             variant="outline" 
