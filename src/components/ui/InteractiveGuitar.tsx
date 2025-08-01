@@ -697,7 +697,7 @@ const InteractiveGuitar: React.FC = () => {
             {/* Enhanced wood grain */}
             <div className="absolute opacity-30 rounded-lg"
                  style={{
-                   height: "100px",
+                   height: "50px",
                    backgroundImage: `repeating-linear-gradient(
                      0deg,
                      rgba(139, 69, 19, 0.4) 0px,
