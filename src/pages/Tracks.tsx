@@ -167,31 +167,31 @@ const Tracks = () => {
           supabase
             .from('track_plays')
             .select('*', { count: 'exact', head: true })
-            .eq('track_id', trackData.id),
+            .eq('track_id', (trackData as any).id),
           supabase
             .from('likes')
             .select('*', { count: 'exact', head: true })
-            .eq('track_id', trackData.id)
+            .eq('track_id', (trackData as any).id)
         ]);
 
         const playCount = playCountResult.count || 0;
         const likeCount = likeCountResult.count || 0;
 
         // Get public URLs for audio and cover
-        const audioUrl = trackData.audio_path ? 
-          supabase.storage.from('tracks').getPublicUrl(trackData.audio_path).data.publicUrl : '';
-        const coverUrl = getImageUrl(trackData.cover_path); // Use helper
+        const audioUrl = (trackData as any).audio_path ? 
+          supabase.storage.from('tracks').getPublicUrl((trackData as any).audio_path).data.publicUrl : '';
+        const coverUrl = getImageUrl((trackData as any).cover_path); // Use helper
 
         setFeaturedTrack({
-          id: trackData.id,
+          id: (trackData as any).id,
           imageSrc: coverUrl,
-          title: trackData.title,
-          artist: trackData.artist || "Unknown Artist",
+          title: (trackData as any).title,
+          artist: (trackData as any).artist || "Unknown Artist",
           plays: playCount,
           likes: likeCount,
           audioSrc: audioUrl,
-          description: trackData.description,
-          youtube_url: trackData.youtube_url
+          description: (trackData as any).description,
+          youtube_url: (trackData as any).youtube_url
         });
       }
     } catch (error) {
@@ -241,11 +241,11 @@ const Tracks = () => {
       }
       
       // Filter tracks based on user access level
-      const accessibleTracks = (data || []).filter(track => 
+      const accessibleTracks = (data || []).filter((track: any) => 
         canAccessContent(track.access_level as AccessLevel, user, user?.subscriptionTier)
-      ) as Track[];
+      );
       
-      setTracks(accessibleTracks);
+      setTracks(accessibleTracks as any);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching tracks:', error);
@@ -429,8 +429,8 @@ const Tracks = () => {
 
   // Get distinct artists for Artists tab
   const artists = Array.from(
-    new Set(tracks.map(track => track.artist).filter(Boolean) as Set<string>
-  ));
+    new Set(tracks.map(track => track.artist).filter(Boolean))
+  );
 
   // Get cover tracks for Covers tab
   const coverTracks = tracks.filter(track => 

@@ -129,7 +129,7 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
             
             <Button
               variant="ghost"
-              size="xs"
+              size="sm"
               className="h-6 w-6 sm:h-8 sm:w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex"
               onClick={(e) => {
                 e.stopPropagation();
@@ -143,7 +143,7 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  size="xs"
+                  size="sm"
                   className="h-6 w-6 sm:h-8 sm:w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={(e) => e.stopPropagation()}
                 >

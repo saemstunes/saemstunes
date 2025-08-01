@@ -32,7 +32,7 @@ const Discover = () => {
     setLoading(true);
     try {
       const { data: videosData, error: videosError } = await supabase
-        .from('videos')
+        .from('video_content')
         .select('*')
         .eq('approved', true)
         .order('created_at', { ascending: false });
@@ -47,8 +47,8 @@ const Discover = () => {
 
       if (tracksError) throw tracksError;
 
-      setVideos(videosData || []);
-      setTracks(tracksData || []);
+      setVideos(videosData as any || []);
+      setTracks(tracksData as any || []);
     } catch (error) {
       console.error('Error fetching content:', error);
     } finally {
@@ -102,12 +102,7 @@ const Discover = () => {
               Explore curated content from across the musical world
             </p>
           </div>
-          <SearchBox 
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            category={selectedCategory}
-            onCategoryChange={setSelectedCategory}
-          />
+          <SearchBox />
         </div>
         
         {/* Enhanced featured content banner */}
@@ -124,17 +119,10 @@ const Discover = () => {
         <ContentTabs 
           activeTab={activeTab} 
           setActiveTab={setActiveTab}
-          videos={filteredVideos}
-          tracks={filteredTracks}
-          searchTerm={searchTerm}
-          selectedCategory={selectedCategory}
         />
 
         {/* Recommendation Section */}
-        <RecommendationSection 
-          videos={filteredVideos}
-          tracks={filteredTracks}
-        />
+        <RecommendationSection />
       </motion.div>
     </MainLayout>
   );

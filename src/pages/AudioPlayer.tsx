@@ -94,7 +94,7 @@ const AudioPlayerPage = () => {
               ? track.audio_path 
               : `https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/${track.audio_path}`,
             name: track.title,
-            artist: track.artist,
+            artist: (track as any).artist,
             artwork: track.cover_path?.startsWith('http') 
               ? track.cover_path 
               : track.cover_path 
@@ -166,7 +166,7 @@ const AudioPlayerPage = () => {
           id: data.id,
           src: audioUrl,
           name: data.title,
-          artist: data.artist || data.profiles?.display_name || 'Unknown Artist',
+          artist: (data as any).artist || data.profiles?.display_name || 'Unknown Artist',
           artwork: coverUrl,
           album: 'Single'
         });
@@ -364,14 +364,14 @@ const AudioPlayerPage = () => {
     if (state?.isPlaying) {
       pauseTrack();
     } else {
-      if (state?.currentTrackId === trackData.id) {
+      if (state?.currentTrack?.id === trackData.id) {
         resumeTrack();
       } else {
         playTrack({
           id: trackData.id.toString(),
-          title: trackData.name,
+          src: trackData.src,
+          name: trackData.name,
           artist: trackData.artist || '',
-          audioSrc: trackData.src,
           artwork: trackData.artwork || '',
         });
       }
@@ -556,7 +556,7 @@ const AudioPlayerPage = () => {
                           className="h-12 w-12 rounded-full"
                           disabled={!trackData}
                         >
-                          {state?.isPlaying && state?.currentTrackId === trackData.id ? (
+                          {state?.isPlaying && state?.currentTrack?.id === trackData.id ? (
                             <Pause className="h-5 w-5" />
                           ) : (
                             <Play className="h-5 w-5 ml-0.5" />
@@ -599,9 +599,9 @@ const AudioPlayerPage = () => {
                         <ScrollArea className="h-[600px]">
                           <div className="p-4">
                             <EnhancedAnimatedList
-                              tracks={tracks}
-                              onTrackSelect={handleTrackSelect}
-                              currentTrackId={trackData?.id}
+                              tracks={tracks as any}
+                              onTrackSelect={handleTrackSelect as any}
+                              
                             />
                           </div>
                         </ScrollArea>

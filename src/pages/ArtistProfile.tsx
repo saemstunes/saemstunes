@@ -77,7 +77,7 @@ const ArtistProfile = () => {
         }
 
         if (data) {
-          setArtist(data);
+          setArtist(data as any);
         } else {
           setError('Artist not found');
         }
@@ -457,7 +457,7 @@ const ArtistProfile = () => {
           onClose={() => setModalOpen(false)}
           title={modalType.charAt(0).toUpperCase() + modalType.slice(1)}
           data={artist}
-          type={modalType}
+          type={modalType as any}
         />
       </div>
     </MainLayout>

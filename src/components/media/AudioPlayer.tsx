@@ -114,19 +114,19 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         if (error) throw error;
         if (!data) return;
 
-        setTrackData(data as Track);
+        setTrackData(data as any);
 
         // Get public URL for audio
-        const audioUrl = data.audio_path 
-          ? supabase.storage.from('tracks').getPublicUrl(data.audio_path).data.publicUrl 
+        const audioUrl = (data as any).audio_path 
+          ? supabase.storage.from('tracks').getPublicUrl((data as any).audio_path).data.publicUrl 
           : src || '';
         setAudioUrl(audioUrl);
 
         // Get cover URL
-        const coverUrl = data.cover_path 
-          ? (data.cover_path.startsWith('http') 
-              ? data.cover_path 
-              : supabase.storage.from('tracks').getPublicUrl(data.cover_path).data.publicUrl)
+        const coverUrl = (data as any).cover_path 
+          ? ((data as any).cover_path.startsWith('http') 
+              ? (data as any).cover_path 
+              : supabase.storage.from('tracks').getPublicUrl((data as any).cover_path).data.publicUrl)
           : artwork;
         setCoverUrl(coverUrl);
       } catch (err) {

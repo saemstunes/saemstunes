@@ -41,7 +41,9 @@ const ContentTabs: React.FC<ContentTabsProps> = ({ activeTab, setActiveTab }) =>
           return;
         }
 
-        setArtists(data || []);
+        if (data && Array.isArray(data)) {
+          setArtists(data as unknown as Artist[]);
+        }
       } catch (error) {
         console.error('Error during artist fetch:', error);
       } finally {
