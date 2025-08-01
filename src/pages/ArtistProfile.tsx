@@ -1,18 +1,19 @@
 // src/pages/artist/[slug].tsx
-import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import React, { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/router";
 import { supabase } from "@/integrations/supabase/client";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import VideoCard from "@/components/videos/VideoCard";
 import MagicBento from "@/components/ui/MagicBento";
 import ArtistModal from "@/components/artists/ArtistModal";
-import { Calendar, Mail, Music, Video, Star, MapPin, ExternalLink } from "lucide-react";
-import { slugify } from "@/utils/slugify";
+import { 
+  Calendar, Mail, Music, Video, Star, MapPin, 
+  ExternalLink, Award, Info, Heart, Users, Mic2, Guitar 
+} from "lucide-react";
+import VideoCard from "@/components/videos/VideoCard";
 
-// Define the artist type
 interface Artist {
   id: string;
   slug: string;
@@ -29,12 +30,17 @@ interface Artist {
   lessons_available: boolean;
   courses_available: boolean;
   achievements: any[] | null;
+  fun_facts: string[] | null;
+  awards: string[] | null;
+  favorite_instruments: string[] | null;
+  influences: string[] | null;
   created_at: string;
   updated_at: string;
 }
 
 const ArtistProfile = () => {
-  const { slug } = useParams<{ slug: string }>();
+  const router = useRouter();
+  const { slug } = router.query;
   const [artist, setArtist] = useState<Artist | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,17 +50,19 @@ const ArtistProfile = () => {
 
   useEffect(() => {
     const fetchArtist = async () => {
-      if (!slug) {
-        setError('Invalid artist URL');
-        setLoading(false);
-        return;
-      }
+      if (!slug) return;
 
       setLoading(true);
       try {
         const { data, error } = await supabase
           .from('artists')
-          .select('*')
+          .select(`
+            id, slug, name, bio, profile_image_url, genre, specialties, 
+            location, verified_status, social_links, follower_count, 
+            rating, lessons_available, courses_available, achievements,
+            fun_facts, awards, favorite_instruments, influences,
+            created_at, updated_at
+          `)
           .eq('slug', slug)
           .single();
 
@@ -77,8 +85,103 @@ const ArtistProfile = () => {
       }
     };
 
-    fetchArtist();
+    if (slug) fetchArtist();
   }, [slug]);
+
+  const bentoCardData = useMemo(() => {
+    if (!artist) return [];
+    
+    const cards = [
+      {
+        color: "hsl(20 14% 15%)",
+        title: "Biography",
+        description: artist.bio ? `${artist.bio.substring(0, 80)}...` : 'Artist story',
+        label: "About",
+        icon: <Info className="h-5 w-5" />,
+        onClick: () => handleBentoClick('bio'),
+        disabled: !artist.bio
+      },
+      {
+        color: "hsl(20 14% 15%)",
+        title: "Location",
+        description: artist.location || 'Global artist',
+        label: "Roots",
+        icon: <MapPin className="h-5 w-5" />,
+        onClick: () => handleBentoClick('location'),
+        disabled: !artist.location
+      },
+      {
+        color: "hsl(20 14% 15%)",
+        title: "Genre",
+        description: artist.genre?.join(', ') || 'Various styles',
+        label: "Style",
+        icon: <Music className="h-5 w-5" />,
+        onClick: () => handleBentoClick('genre'),
+        disabled: !artist.genre?.length
+      },
+      {
+        color: "hsl(20 14% 15%)",
+        title: "Followers",
+        description: `${artist.follower_count.toLocaleString()} fans`,
+        label: "Stats",
+        icon: <Users className="h-5 w-5" />,
+        onClick: () => handleBentoClick('stats')
+      },
+      {
+        color: "hsl(20 14% 15%)",
+        title: "Connect",
+        description: artist.social_links 
+          ? `${Object.keys(artist.social_links).length} platforms` 
+          : 'No socials',
+        label: "Social",
+        icon: <ExternalLink className="h-5 w-5" />,
+        onClick: () => handleBentoClick('social'),
+        disabled: !artist.social_links || Object.keys(artist.social_links).length === 0
+      },
+      {
+        color: "hsl(20 14% 15%)",
+        title: "Fun Facts",
+        description: artist.fun_facts?.length 
+          ? `${artist.fun_facts.length} interesting tidbits` 
+          : 'No fun facts',
+        label: "Fun",
+        icon: <Heart className="h-5 w-5" />,
+        onClick: () => handleBentoClick('fun_facts'),
+        disabled: !artist.fun_facts?.length
+      },
+      {
+        color: "hsl(20 14% 15%)",
+        title: "Awards",
+        description: artist.awards?.length 
+          ? `${artist.awards.length} recognitions` 
+          : 'No awards yet',
+        label: "Achievements",
+        icon: <Award className="h-5 w-5" />,
+        onClick: () => handleBentoClick('awards'),
+        disabled: !artist.awards?.length
+      },
+      {
+        color: "hsl(20 14% 15%)",
+        title: "Influences",
+        description: artist.influences?.join(', ') || 'Various inspirations',
+        label: "Heroes",
+        icon: <Star className="h-5 w-5" />,
+        onClick: () => handleBentoClick('influences'),
+        disabled: !artist.influences?.length
+      },
+      {
+        color: "hsl(20 14% 15%)",
+        title: "Instruments",
+        description: artist.favorite_instruments?.join(', ') || 'Various instruments',
+        label: "Tools",
+        icon: <Guitar className="h-5 w-5" />,
+        onClick: () => handleBentoClick('instruments'),
+        disabled: !artist.favorite_instruments?.length
+      }
+    ];
+
+    return cards.filter(card => !card.disabled);
+  }, [artist]);
 
   const handleBentoClick = (type: string) => {
     if (!artist) return;
@@ -86,6 +189,10 @@ const ArtistProfile = () => {
     setModalData(artist);
     setModalOpen(true);
   };
+
+  const rating = artist?.rating || 4.0;
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 >= 0.5;
 
   if (loading) {
     return (
@@ -106,8 +213,13 @@ const ArtistProfile = () => {
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <h2 className="text-2xl font-bold mb-4">Artist Not Found</h2>
-            <p className="text-muted-foreground">{error || 'The artist you requested does not exist'}</p>
-            <Button className="mt-4" onClick={() => window.location.href = '/'}>
+            <p className="text-muted-foreground mb-6">
+              {error || 'The artist you requested does not exist'}
+            </p>
+            <Button 
+              onClick={() => router.push('/')}
+              className="bg-primary hover:bg-primary-dark text-white"
+            >
               Browse Artists
             </Button>
           </div>
@@ -116,21 +228,19 @@ const ArtistProfile = () => {
     );
   }
   
-  // Calculate star rating
-  const rating = artist.rating || 4.0;
-  const fullStars = Math.floor(rating);
-  const hasHalfStar = rating % 1 >= 0.5;
-
   return (
     <MainLayout>
-      <div className="space-y-8">
+      <div className="space-y-8 pb-20">
         {/* Hero Section */}
         <div className="relative min-h-[60vh] overflow-hidden bg-gradient-to-b from-background to-muted flex items-center justify-center">
-          <div className="w-full max-w-4xl mx-auto px-4 text-center">
+          <div className="w-full max-w-4xl mx-auto px-4 text-center z-10">
             <div className="flex items-center justify-center mb-6">
               <Avatar className="w-24 h-24 border-4 border-primary">
-                <AvatarImage src={artist.profile_image_url || undefined} />
-                <AvatarFallback>
+                <AvatarImage 
+                  src={artist.profile_image_url || undefined} 
+                  alt={artist.name}
+                />
+                <AvatarFallback className="bg-primary text-white font-bold">
                   {artist.name.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
@@ -182,72 +292,21 @@ const ArtistProfile = () => {
           </div>
         </div>
 
-        {/* Enhanced Magic Bento Section */}
+        {/* Dynamic Magic Bento Section */}
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold mb-4">Explore Artist Profile</h2>
+            <h2 className="text-3xl font-bold mb-4">Artist Profile Explorer</h2>
             <p className="text-muted-foreground">
-              Click on each section to learn more about this artist
+              Click on each card to dive deeper into {artist.name}'s musical world
             </p>
           </div>
           
           <div className="relative">
             <MagicBento 
-              textAutoHide={true}
-              enableStars={true}
-              enableSpotlight={true}
-              enableBorderGlow={true}
-              enableTilt={true}
-              enableMagnetism={true}
-              clickEffect={true}
-              spotlightRadius={300}
-              particleCount={12}
-              glowColor="167, 124, 0"
-              cardData={[
-                {
-                  color: "hsl(20 14% 15%)",
-                  title: "Biography",
-                  description: "Artist's story & journey",
-                  label: "About",
-                  onClick: () => handleBentoClick('bio')
-                },
-                {
-                  color: "hsl(20 14% 15%)",
-                  title: "Location",
-                  description: "Where they're based",
-                  label: "Location",
-                  onClick: () => handleBentoClick('location')
-                },
-                {
-                  color: "hsl(20 14% 15%)",
-                  title: "Genre",
-                  description: "Musical style & influences",
-                  label: "Style",
-                  onClick: () => handleBentoClick('genre')
-                },
-                {
-                  color: "hsl(20 14% 15%)",
-                  title: "Statistics",
-                  description: "Followers & engagement",
-                  label: "Stats",
-                  onClick: () => handleBentoClick('stats')
-                },
-                {
-                  color: "hsl(20 14% 15%)",
-                  title: "Social Media",
-                  description: "Connect & follow",
-                  label: "Connect",
-                  onClick: () => handleBentoClick('social')
-                },
-                {
-                  color: "hsl(20 14% 15%)",
-                  title: "Achievements",
-                  description: "Awards & recognition",
-                  label: "Awards",
-                  onClick: () => handleBentoClick('achievements'),
-                  disabled: !artist.achievements || artist.achievements.length === 0
-                }
-              ]}
+              cardData={bentoCardData}
+              gridConfig="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+              glowIntensity={0.6}
+              particleDensity={8}
             />
           </div>
         </div>
@@ -271,7 +330,7 @@ const ArtistProfile = () => {
                 <div className="md:col-span-2">
                   <h2 className="text-2xl font-medium mb-4">Biography</h2>
                   <p className="text-muted-foreground leading-relaxed">
-                    {artist.bio || `${artist.name} is a talented music artist.`}
+                    {artist.bio || `${artist.name} is a talented music artist with a passion for creating unique sounds and inspiring others.`}
                   </p>
                   
                   <h3 className="text-lg font-medium mt-8 mb-4">Expertise</h3>
@@ -365,7 +424,13 @@ const ArtistProfile = () => {
                 <h2 className="text-xl font-medium mb-4">Featured Lessons</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {/* Lesson content would go here */}
-                  <p className="text-muted-foreground">No lessons available yet</p>
+                  <div className="text-center py-12">
+                    <Mic2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-medium mb-2">Coming Soon</h3>
+                    <p className="text-muted-foreground">
+                      {artist.name} is preparing amazing lessons for you
+                    </p>
+                  </div>
                 </div>
               </TabsContent>
             )}
@@ -390,7 +455,7 @@ const ArtistProfile = () => {
                   Book a private or group session with this artist
                 </p>
                 <Button 
-                  onClick={() => window.location.href = `/book/${artist.id}`}
+                  onClick={() => router.push(`/book/${artist.id}`)}
                   className="bg-gold hover:bg-gold-dark text-white"
                 >
                   View Available Times
@@ -405,8 +470,8 @@ const ArtistProfile = () => {
           isOpen={modalOpen}
           onClose={() => setModalOpen(false)}
           title={modalType.charAt(0).toUpperCase() + modalType.slice(1)}
-          data={modalData}
-          type={modalType as any}
+          data={artist}
+          type={modalType}
         />
       </div>
     </MainLayout>
