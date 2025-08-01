@@ -1,6 +1,6 @@
 // src/pages/artist/[slug].tsx
 import React, { useState, useEffect, useMemo } from "react";
-import { useRouter } from "next/router";
+import { useParams, useNavigate } from "react-router-dom"; // Fixed import
 import { supabase } from "@/integrations/supabase/client";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -39,8 +39,8 @@ interface Artist {
 }
 
 const ArtistProfile = () => {
-  const router = useRouter();
-  const { slug } = router.query;
+  const { slug } = useParams<{ slug: string }>(); // Correct hook for React Router
+  const navigate = useNavigate(); // For navigation
   const [artist, setArtist] = useState<Artist | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +50,11 @@ const ArtistProfile = () => {
 
   useEffect(() => {
     const fetchArtist = async () => {
-      if (!slug) return;
+      if (!slug) {
+        setError('Invalid artist URL');
+        setLoading(false);
+        return;
+      }
 
       setLoading(true);
       try {
@@ -217,7 +221,7 @@ const ArtistProfile = () => {
               {error || 'The artist you requested does not exist'}
             </p>
             <Button 
-              onClick={() => router.push('/')}
+              onClick={() => navigate('/')} // Use navigate instead of router.push
               className="bg-primary hover:bg-primary-dark text-white"
             >
               Browse Artists
@@ -455,7 +459,7 @@ const ArtistProfile = () => {
                   Book a private or group session with this artist
                 </p>
                 <Button 
-                  onClick={() => router.push(`/book/${artist.id}`)}
+                  onClick={() => navigate(`/book/${artist.id}`)} // Correct navigation
                   className="bg-gold hover:bg-gold-dark text-white"
                 >
                   View Available Times
