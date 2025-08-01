@@ -11,7 +11,7 @@ import ArtistModal from "@/components/artists/ArtistModal";
 import ArtistNotFound from "@/components/errors/ArtistNotFound";
 import { 
   Calendar, Mail, Music, Video, Star, MapPin, 
-  ExternalLink, Award, Info, Heart, Users, Mic2, Guitar 
+  ExternalLink, Award, Info, Heart, Users, Mic2, Guitar, ArrowLeft 
 } from "lucide-react";
 
 interface Artist {
@@ -193,10 +193,20 @@ const ArtistProfile = () => {
   if (loading) {
     return (
       <MainLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p>Loading artist profile...</p>
+        <div className="space-y-8 pb-20">
+          <Button 
+            variant="outline" 
+            className="mb-6"
+            onClick={() => navigate("/discover")}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Discover
+          </Button>
+          <div className="flex items-center justify-center min-h-[50vh]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+              <p>Loading artist profile...</p>
+            </div>
           </div>
         </div>
       </MainLayout>
@@ -204,7 +214,21 @@ const ArtistProfile = () => {
   }
 
   if (error || !artist) {
-    return <ArtistNotFound slug={slug || ''} error={error} isArtistPage />;
+    return (
+      <MainLayout>
+        <div className="space-y-8 pb-20">
+          <Button 
+            variant="outline" 
+            className="mb-6"
+            onClick={() => navigate("/discover")}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Discover
+          </Button>
+          <ArtistNotFound slug={slug || ''} error={error} isArtistPage />
+        </div>
+      </MainLayout>
+    );
   }
   
   // Calculate star rating
@@ -215,6 +239,16 @@ const ArtistProfile = () => {
   return (
     <MainLayout>
       <div className="space-y-8 pb-20">
+        {/* Back Button */}
+        <Button 
+          variant="outline" 
+          className="mb-6 ml-6 mt-4"
+          onClick={() => navigate("/discover")}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Discover
+        </Button>
+
         {/* Hero Section */}
         <div className="relative min-h-[60vh] overflow-hidden bg-gradient-to-b from-background to-muted flex items-center justify-center">
           <div className="w-full max-w-4xl mx-auto px-4 text-center z-10">
