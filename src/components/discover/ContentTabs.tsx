@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Music, User, Mic, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,74 +6,52 @@ import { useNavigate } from "react-router-dom";
 import VideoCardWrapper from "@/components/videos/VideoCardWrapper";
 import { mockVideos } from "@/data/mockData";
 import ArtistCard from "./ArtistCard";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ContentTabsProps {
   activeTab: string;
   setActiveTab: (value: string) => void;
 }
 
+interface Artist {
+  id: string;
+  slug: string;
+  name: string;
+  bio: string | null;
+  profile_image_url: string | null;
+  specialties: string[] | null;
+  social_links: Record<string, string> | null;
+}
+
 const ContentTabs: React.FC<ContentTabsProps> = ({ activeTab, setActiveTab }) => {
   const navigate = useNavigate();
-  
-  const artists = [
-    {
-      id: "artist-1",
-      name: "Kendi Nkonge",
-      role: "Performer/Vocalist",
-      imageSrc: "https://i.imgur.com/7CFi8hL.jpeg",
-      link: "https://open.spotify.com/artist/1eRQ6VZjE5zn8a8cxYEoR7"
-    },
-    {
-      id: "artist-2",
-      name: "Jonathan McReynolds",
-      role: "Singer/Music Professor", 
-      imageSrc: "https://i.imgur.com/HDfxFTF.jpeg",
-      link: "https://open.spotify.com/artist/5ItTHwcEtFh6DEOBheMub9"
-    },
-    {
-      id: "artist-3",
-      name: "Janice Wanjiru-Kioko",
-      role: "Singer/Vocal Coach",
-      imageSrc: "https://i.imgur.com/m4RCnEl.jpeg", 
-      link: "https://www.instagram.com/janicewanjiru_kioko/?hl=en"
-    },
-    {
-      id: "artist-4",
-      name: "Bire the Vocalist",
-      role: "Performer/Vocalist",
-      imageSrc: "https://i.imgur.com/GiaZkBN.jpeg",
-      link: "https://open.spotify.com/artist/19cIDIEhh6ccn5BzxvZi3x"
-    },
-    {
-      id: "artist-5",
-      name: "Josh Groban",
-      role: "Classical Singer",
-      imageSrc: "https://i.imgur.com/zoWPxEW.jpeg",
-      link: "https://music.apple.com/artist/6cXMpsP9x0SH4kFfMyVezF"
-    },
-    {
-      id: "artist-6",
-      name: "Tori Kelly",
-      role: "Performer/Vocalist",
-      imageSrc: "https://i.imgur.com/jT7HABQ.jpeg",
-      link: "https://open.spotify.com/artist/1vSN1fsvrzpbttOYGsliDr"
-    },
-    {
-      id: "artist-7",
-      name: "Lisa-Oduor Noah",
-      role: "Performer/Vocalist", 
-      imageSrc: "https://i.imgur.com/1jFe8dW.jpeg",
-      link: "https://music.apple.com/artist/2lzhfTv334wDq7W7tFyJHa"
-    },
-    {
-      id: "artist-8",
-      name: "Cynthia Erivo",
-      role: "Performer/Vocalist",
-      imageSrc: "https://i.imgur.com/napbSbt.jpeg",
-      link: "https://open.spotify.com/artist/46UMQ0cW8ToR8egkBRwAxZ"
-    }
-  ];
-  
+  const [artists, setArtists] = useState<Artist[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchArtists = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('artists')
+          .select('id, slug, name, bio, profile_image_url, specialties, social_links')
+          .limit(8);
+
+        if (error) {
+          console.error('Error fetching artists:', error);
+          return;
+        }
+
+        setArtists(data || []);
+      } catch (error) {
+        console.error('Error during artist fetch:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchArtists();
+  }, []);
+
   return (
     <Tabs defaultValue="music" value={activeTab} onValueChange={setActiveTab} className="w-full">
       <TabsList className="grid grid-cols-3">
@@ -117,27 +94,33 @@ const ContentTabs: React.FC<ContentTabsProps> = ({ activeTab, setActiveTab }) =>
       <TabsContent value="artists" className="pt-4">
         <h2 className="text-xl font-proxima font-semibold mb-4">Artists You Should Listen To</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {artists.map((artist, index) => (
-            <div key={index} className="group relative">
+          {artists.map(artist => (
+            <div key={artist.id} className="group relative">
               <ArtistCard 
                 name={artist.name}
-                role={artist.role}
-                imageSrc={artist.imageSrc}
-                onClick={() => navigate(`/artist/${artist.id}`)}
+                role={artist.specialties?.join(', ') || 'Artist'}
+                imageSrc={artist.profile_image_url || ''}
+                onClick={() => navigate(`/artist/${artist.slug}`)}
               />
-              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button
-                  size="icon"
-                  variant="secondary"
-                  className="h-8 w-8 bg-black/50 hover:bg-black/70"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    window.open(artist.link, '_blank', 'noopener,noreferrer');
-                  }}
-                >
-                  <ExternalLink className="h-4 w-4 text-white" />
-                </Button>
-              </div>
+              {artist.social_links && (
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="h-8 w-8 bg-black/50 hover:bg-black/70"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Open the first available social link
+                      const firstLink = Object.values(artist.social_links)[0];
+                      if (firstLink) {
+                        window.open(firstLink, '_blank', 'noopener,noreferrer');
+                      }
+                    }}
+                  >
+                    <ExternalLink className="h-4 w-4 text-white" />
+                  </Button>
+                </div>
+              )}
             </div>
           ))}
         </div>
