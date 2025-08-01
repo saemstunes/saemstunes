@@ -155,7 +155,7 @@ const ArtistModal: React.FC<ArtistModalProps> = ({
                   >
                     <span className="flex items-center gap-2">
                       <ExternalLink className="h-4 w-4" />
-                      {platform && typeof platform === 'string' ? platform.charAt(0).toUpperCase() + platform.slice(1) : 'Social Link'}
+                      {platform.charAt(0).toUpperCase() + platform.slice(1)}
                     </span>
                   </Button>
                 ))
