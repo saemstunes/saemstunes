@@ -1,44 +1,11 @@
-import { useRef, useEffect, useCallback, useState } from "react";
+import React, { useRef, useEffect, useCallback, useState } from "react";
 import { gsap } from "gsap";
 import "./MagicBento.css";
 
 const DEFAULT_PARTICLE_COUNT = 12;
 const DEFAULT_SPOTLIGHT_RADIUS = 300;
-const DEFAULT_GLOW_COLOR = "166, 124, 0"; // Gold color in RGB
+const DEFAULT_GLOW_COLOR = "166, 124, 0";
 const MOBILE_BREAKPOINT = 768;
-
-const cardData = [
-  {
-    title: "Analytics",
-    description: "Track user behavior",
-    label: "Insights",
-  },
-  {
-    title: "Dashboard",
-    description: "Centralized data view",
-    label: "Overview",
-  },
-  {
-    title: "Collaboration",
-    description: "Work together seamlessly",
-    label: "Teamwork",
-  },
-  {
-    title: "Automation",
-    description: "Streamline workflows",
-    label: "Efficiency",
-  },
-  {
-    title: "Integration",
-    description: "Connect favorite tools",
-    label: "Connectivity",
-  },
-  {
-    title: "Security",
-    description: "Enterprise-grade protection",
-    label: "Protection",
-  },
-];
 
 const createParticleElement = (
   x: number,
@@ -505,13 +472,15 @@ const GlobalSpotlight = ({
 interface BentoCardGridProps {
   children: React.ReactNode;
   gridRef: React.RefObject<HTMLDivElement>;
+  gridConfig?: string;
 }
 
 const BentoCardGrid = ({
   children,
-  gridRef
+  gridRef,
+  gridConfig = "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
 }: BentoCardGridProps) => (
-  <div className="card-grid bento-section" ref={gridRef}>
+  <div className={`card-grid bento-section ${gridConfig}`} ref={gridRef}>
     {children}
   </div>
 );
@@ -532,32 +501,50 @@ const useMobileDetection = () => {
   return isMobile;
 };
 
+interface MagicBentoCardData {
+  title: string;
+  description: string;
+  label: string;
+  color?: string;
+  icon?: React.ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+}
+
 interface MagicBentoProps {
+  cardData: MagicBentoCardData[];
   textAutoHide?: boolean;
   enableStars?: boolean;
   enableSpotlight?: boolean;
   enableBorderGlow?: boolean;
   disableAnimations?: boolean;
+  gridConfig?: string;
   spotlightRadius?: number;
   particleCount?: number;
-  enableTilt?: boolean;
   glowColor?: string;
+  enableTilt?: boolean;
   clickEffect?: boolean;
   enableMagnetism?: boolean;
+  glowIntensity?: number;
+  particleDensity?: number;
 }
 
 const MagicBento = ({
+  cardData,
   textAutoHide = true,
   enableStars = true,
   enableSpotlight = true,
   enableBorderGlow = true,
   disableAnimations = false,
+  gridConfig = "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
   spotlightRadius = DEFAULT_SPOTLIGHT_RADIUS,
   particleCount = DEFAULT_PARTICLE_COUNT,
-  enableTilt = false,
   glowColor = DEFAULT_GLOW_COLOR,
+  enableTilt = false,
   clickEffect = true,
   enableMagnetism = true,
+  glowIntensity = 0.6,
+  particleDensity = 8,
 }: MagicBentoProps) => {
   const gridRef = useRef<HTMLDivElement>(null);
   const isMobile = useMobileDetection();
@@ -575,13 +562,14 @@ const MagicBento = ({
         />
       )}
 
-      <BentoCardGrid gridRef={gridRef}>
+      <BentoCardGrid gridRef={gridRef} gridConfig={gridConfig}>
         {cardData.map((card, index) => {
           const baseClassName = `card ${textAutoHide ? "card--text-autohide" : ""} ${enableBorderGlow ? "card--border-glow" : ""}`;
           const cardProps = {
             className: baseClassName,
             style: {
               "--glow-color": glowColor,
+              "--glow-intensity": glowIntensity,
             } as React.CSSProperties
           };
 
@@ -591,13 +579,19 @@ const MagicBento = ({
                 key={index}
                 {...cardProps}
                 disableAnimations={shouldDisableAnimations}
-                particleCount={particleCount}
+                particleCount={particleDensity}
                 glowColor={glowColor}
                 enableTilt={enableTilt}
                 clickEffect={clickEffect}
                 enableMagnetism={enableMagnetism}
+                onClick={card.onClick}
               >
                 <div className="card__header">
+                  {card.icon && (
+                    <div className="card__icon">
+                      {card.icon}
+                    </div>
+                  )}
                   <div className="card__label">{card.label}</div>
                 </div>
                 <div className="card__content">
@@ -612,12 +606,11 @@ const MagicBento = ({
             <div
               key={index}
               {...cardProps}
+              onClick={card.onClick}
               ref={(el) => {
-                if (!el) return;
+                if (!el || shouldDisableAnimations) return;
 
                 const handleMouseMove = (e: MouseEvent) => {
-                  if (shouldDisableAnimations) return;
-
                   const rect = el.getBoundingClientRect();
                   const x = e.clientX - rect.left;
                   const y = e.clientY - rect.top;
@@ -649,8 +642,6 @@ const MagicBento = ({
                 };
 
                 const handleMouseLeave = () => {
-                  if (shouldDisableAnimations) return;
-
                   if (enableTilt) {
                     gsap.to(el, {
                       rotateX: 0,
@@ -671,48 +662,8 @@ const MagicBento = ({
                 };
 
                 const handleClick = (e: MouseEvent) => {
-                  if (!clickEffect || shouldDisableAnimations) return;
-
-                  const rect = el.getBoundingClientRect();
-                  const x = e.clientX - rect.left;
-                  const y = e.clientY - rect.top;
-
-                  const maxDistance = Math.max(
-                    Math.hypot(x, y),
-                    Math.hypot(x - rect.width, y),
-                    Math.hypot(x, y - rect.height),
-                    Math.hypot(x - rect.width, y - rect.height)
-                  );
-
-                  const ripple = document.createElement("div");
-                  ripple.style.cssText = `
-                    position: absolute;
-                    width: ${maxDistance * 2}px;
-                    height: ${maxDistance * 2}px;
-                    border-radius: 50%;
-                    background: radial-gradient(circle, rgba(${glowColor}, 0.4) 0%, rgba(${glowColor}, 0.2) 30%, transparent 70%);
-                    left: ${x - maxDistance}px;
-                    top: ${y - maxDistance}px;
-                    pointer-events: none;
-                    z-index: 1000;
-                  `;
-
-                  el.appendChild(ripple);
-
-                  gsap.fromTo(
-                    ripple,
-                    {
-                      scale: 0,
-                      opacity: 1,
-                    },
-                    {
-                      scale: 1,
-                      opacity: 0,
-                      duration: 0.8,
-                      ease: "power2.out",
-                      onComplete: () => ripple.remove(),
-                    }
-                  );
+                  if (!clickEffect || !card.onClick) return;
+                  card.onClick();
                 };
 
                 el.addEventListener("mousemove", handleMouseMove);
@@ -721,6 +672,11 @@ const MagicBento = ({
               }}
             >
               <div className="card__header">
+                {card.icon && (
+                  <div className="card__icon">
+                    {card.icon}
+                  </div>
+                )}
                 <div className="card__label">{card.label}</div>
               </div>
               <div className="card__content">
