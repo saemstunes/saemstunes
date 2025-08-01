@@ -1,5 +1,6 @@
 import { useRef, useEffect, useCallback, useState } from "react";
 import { gsap } from "gsap";
+import { useIsMobile } from './useIsMobile';
 import "./MagicBento.css";
 
 const DEFAULT_PARTICLE_COUNT = 12;
@@ -288,10 +289,57 @@ const ParticleCard = ({
       }
     };
 
+    const handleTouchStart = (e: TouchEvent) => {
+      if (clickEffect && e.touches.length > 0) {
+        const touch = e.touches[0];
+        const rect = element.getBoundingClientRect();
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+
+        const maxDistance = Math.max(
+          Math.hypot(x, y),
+          Math.hypot(x - rect.width, y),
+          Math.hypot(x, y - rect.height),
+          Math.hypot(x - rect.width, y - rect.height)
+        );
+
+        const ripple = document.createElement("div");
+        ripple.style.cssText = `
+          position: absolute;
+          width: ${maxDistance * 2}px;
+          height: ${maxDistance * 2}px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(${glowColor}, 0.4) 0%, rgba(${glowColor}, 0.2) 30%, transparent 70%);
+          left: ${x - maxDistance}px;
+          top: ${y - maxDistance}px;
+          pointer-events: none;
+          z-index: 1000;
+        `;
+
+        element.appendChild(ripple);
+
+        gsap.fromTo(
+          ripple,
+          {
+            scale: 0,
+            opacity: 1,
+          },
+          {
+            scale: 1,
+            opacity: 0,
+            duration: 0.8,
+            ease: "power2.out",
+            onComplete: () => ripple.remove(),
+          }
+        );
+      }
+    };
+
     element.addEventListener("mouseenter", handleMouseEnter);
     element.addEventListener("mouseleave", handleMouseLeave);
     element.addEventListener("mousemove", handleMouseMove);
     element.addEventListener("click", handleClick);
+    element.addEventListener("touchstart", handleTouchStart);
 
     return () => {
       isHoveredRef.current = false;
@@ -299,6 +347,7 @@ const ParticleCard = ({
       element.removeEventListener("mouseleave", handleMouseLeave);
       element.removeEventListener("mousemove", handleMouseMove);
       element.removeEventListener("click", handleClick);
+      element.removeEventListener("touchstart", handleTouchStart);
       clearAllParticles();
     };
   }, [
@@ -317,6 +366,8 @@ const ParticleCard = ({
       ref={cardRef}
       className={`${className} particle-container`}
       style={{ ...style, position: "relative", overflow: "hidden" }}
+      onClick={disableAnimations ? onClick : undefined}
+      onTouchEnd={disableAnimations ? onClick : undefined}
     >
       {children}
     </div>
@@ -492,22 +543,6 @@ const BentoCardGrid = ({
   </div>
 );
 
-const useMobileDetection = () => {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () =>
-      setIsMobile(window.innerWidth <= MOBILE_BREAKPOINT);
-
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-
-  return isMobile;
-};
-
 interface MagicBentoCardData {
   title: string;
   description: string;
@@ -554,7 +589,7 @@ const MagicBento = ({
   particleDensity = 8,
 }: MagicBentoProps) => {
   const gridRef = useRef<HTMLDivElement>(null);
-  const isMobile = useMobileDetection();
+  const isMobile = useIsMobile();
   const shouldDisableAnimations = disableAnimations || isMobile;
 
   return (
@@ -580,6 +615,12 @@ const MagicBento = ({
             } as React.CSSProperties
           };
 
+          const handleInteraction = () => {
+            if (!card.disabled && card.onClick) {
+              card.onClick();
+            }
+          };
+
           if (enableStars) {
             return (
               <ParticleCard
@@ -591,7 +632,7 @@ const MagicBento = ({
                 enableTilt={enableTilt}
                 clickEffect={clickEffect}
                 enableMagnetism={enableMagnetism}
-                onClick={card.disabled ? undefined : card.onClick}
+                onClick={handleInteraction}
               >
                 <div className="card__header">
                   {card.icon && (
@@ -613,7 +654,8 @@ const MagicBento = ({
             <div
               key={index}
               {...cardProps}
-              onClick={card.disabled ? undefined : card.onClick}
+              onClick={handleInteraction}
+              onTouchEnd={handleInteraction}
               ref={(el) => {
                 if (!el || shouldDisableAnimations || card.disabled) return;
 
@@ -713,9 +755,56 @@ const MagicBento = ({
                   );
                 };
 
+                const handleTouchStart = (e: TouchEvent) => {
+                  if (clickEffect && e.touches.length > 0) {
+                    const touch = e.touches[0];
+                    const rect = el.getBoundingClientRect();
+                    const x = touch.clientX - rect.left;
+                    const y = touch.clientY - rect.top;
+
+                    const maxDistance = Math.max(
+                      Math.hypot(x, y),
+                      Math.hypot(x - rect.width, y),
+                      Math.hypot(x, y - rect.height),
+                      Math.hypot(x - rect.width, y - rect.height)
+                    );
+
+                    const ripple = document.createElement("div");
+                    ripple.style.cssText = `
+                      position: absolute;
+                      width: ${maxDistance * 2}px;
+                      height: ${maxDistance * 2}px;
+                      border-radius: 50%;
+                      background: radial-gradient(circle, rgba(${glowColor}, 0.4) 0%, rgba(${glowColor}, 0.2) 30%, transparent 70%);
+                      left: ${x - maxDistance}px;
+                      top: ${y - maxDistance}px;
+                      pointer-events: none;
+                      z-index: 1000;
+                    `;
+
+                    el.appendChild(ripple);
+
+                    gsap.fromTo(
+                      ripple,
+                      {
+                        scale: 0,
+                        opacity: 1,
+                      },
+                      {
+                        scale: 1,
+                        opacity: 0,
+                        duration: 0.8,
+                        ease: "power2.out",
+                        onComplete: () => ripple.remove(),
+                      }
+                    );
+                  }
+                };
+
                 el.addEventListener("mousemove", handleMouseMove);
                 el.addEventListener("mouseleave", handleMouseLeave);
                 el.addEventListener("click", handleClick);
+                el.addEventListener("touchstart", handleTouchStart);
               }}
             >
               <div className="card__header">
