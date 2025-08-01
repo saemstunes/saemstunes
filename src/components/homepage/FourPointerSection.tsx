@@ -37,7 +37,7 @@ const FourPointerSection: React.FC = () => {
       narrowDescription: "Personalized music education",
       cta: "Discover Our Story",
       smCta: "Our Story",
-      narrowCta: "Story",
+      narrowCta: "Discover",
       link: "/support-us",
       gradient: "from-amber-500/20 to-orange-500/20"
     },
@@ -51,7 +51,7 @@ const FourPointerSection: React.FC = () => {
       narrowDescription: "Beginner to advanced journey",
       cta: "View Learning Paths",
       smCta: "View Paths",
-      narrowCta: "Paths",
+      narrowCta: "Learn",
       link: "/learning-hub",
       gradient: "from-amber-500/20 to-orange-500/20"
     },
