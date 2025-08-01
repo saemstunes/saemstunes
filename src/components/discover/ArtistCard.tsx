@@ -1,26 +1,33 @@
-
-import React from 'react';
+import Link from 'next/link';
 
 interface ArtistCardProps {
+  id: string;
   name: string;
   role: string;
   imageSrc: string;
-  onClick: () => void;
+  slug: string; // Add slug to props
 }
 
-const ArtistCard: React.FC<ArtistCardProps> = ({ name, role, imageSrc, onClick }) => {
+const ArtistCard: React.FC<ArtistCardProps> = ({ 
+  id, 
+  name, 
+  role, 
+  imageSrc, 
+  slug 
+}) => {
   return (
-    <div 
-      className="rounded-lg overflow-hidden shadow-md bg-card cursor-pointer hover:shadow-lg transition-shadow"
-      onClick={onClick}
-    >
-      <img src={imageSrc} alt={name} className="w-full aspect-square object-cover" />
-      <div className="p-3">
-        <h3 className="font-bold">{name}</h3>
-        <p className="text-sm text-muted-foreground">{role}</p>
+    <Link href={`/artist/${slug}`} passHref>
+      <div className="rounded-lg overflow-hidden shadow-md bg-card cursor-pointer hover:shadow-lg transition-shadow">
+        <img 
+          src={imageSrc} 
+          alt={name} 
+          className="w-full aspect-square object-cover" 
+        />
+        <div className="p-3">
+          <h3 className="font-bold">{name}</h3>
+          <p className="text-sm text-muted-foreground">{role}</p>
+        </div>
       </div>
-    </div>
+    </Link>
   );
 };
-
-export default ArtistCard;
