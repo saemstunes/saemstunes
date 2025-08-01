@@ -20,6 +20,7 @@ interface Artist {
   name: string;
   bio: string | null;
   profile_image_url: string | null;
+  cover_image_url: string | null; // Added cover image URL
   genre: string[] | null;
   specialties: string[] | null;
   location: string | null;
@@ -62,7 +63,7 @@ const ArtistProfile = () => {
         const result = await client
           .from('artists')
           .select(`
-            id, slug, name, bio, profile_image_url, genre, specialties, 
+            id, slug, name, bio, profile_image_url, cover_image_url, genre, specialties, 
             location, verified_status, social_links, follower_count, 
             rating, lessons_available, courses_available, achievements, 
             fun_facts, awards, favorite_instruments, influences, 
@@ -196,7 +197,7 @@ const ArtistProfile = () => {
         <div className="space-y-8 pb-20">
           <Button 
             variant="outline" 
-            className="mb-6"
+            className="mb-6 ml-6 mt-4"
             onClick={() => navigate("/discover")}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -219,7 +220,7 @@ const ArtistProfile = () => {
         <div className="space-y-8 pb-20">
           <Button 
             variant="outline" 
-            className="mb-6"
+            className="mb-6 ml-6 mt-4"
             onClick={() => navigate("/discover")}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -249,8 +250,27 @@ const ArtistProfile = () => {
           Back to Discover
         </Button>
 
-        {/* Hero Section */}
-        <div className="relative min-h-[60vh] overflow-hidden bg-gradient-to-b from-background to-muted flex items-center justify-center">
+        {/* Hero Section with Background Image */}
+        <div className="relative min-h-[60vh] overflow-hidden flex items-center justify-center">
+          {/* Background Image */}
+          {artist.cover_image_url && (
+            <div 
+              className="absolute inset-0 w-full h-full z-0"
+              style={{
+                backgroundImage: `url(${artist.cover_image_url})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundAttachment: 'fixed',
+                filter: 'blur(8px) brightness(0.5)',
+                transform: 'scale(1.05)',
+              }}
+            />
+          )}
+          
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/50 to-background z-0" />
+          
+          {/* Content Container */}
           <div className="w-full max-w-4xl mx-auto px-4 text-center z-10">
             <div className="flex items-center justify-center mb-6">
               <Avatar className="w-24 h-24 border-4 border-primary">
