@@ -340,7 +340,9 @@ const Index = () => {
               </div>
             )}
             
-            <section className="py-12 bg-gradient-to-r from-primary/10 via-purple-500/5 to-primary/10 rounded-xl">
+            <section className="py-12 rounded-xl bg-gradient-to-r 
+              from-gold-default/10 via-gold-light/10 to-gold-default/10
+              dark:from-gold-dark/10 dark:via-gold-default/10 dark:to-gold-dark/10">
               <div className="max-w-3xl mx-auto text-center px-4">
                 <h2 className="text-2xl sm:text-3xl font-bold mb-4">
                   Ready to Begin Your <span className="text-primary">Musical Journey</span>?
