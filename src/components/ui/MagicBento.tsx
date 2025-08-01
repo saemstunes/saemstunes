@@ -563,7 +563,7 @@ const ArtistModal = ({ artist, onClose }: ArtistModalProps) => {
             />
           ) : (
             <div className="cover-placeholder">
-              {artist.name.charAt(0)}
+              {artist?.name?.charAt(0) || '?'}
             </div>
           )}
           
