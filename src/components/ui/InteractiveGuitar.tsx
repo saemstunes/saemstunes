@@ -695,8 +695,9 @@ const InteractiveGuitar: React.FC = () => {
           {/* Neck back */}
           <div className="absolute inset-0 bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 shadow-lg rounded-lg">
             {/* Enhanced wood grain */}
-            <div className="absolute inset-0 opacity-30 rounded-lg"
+            <div className="absolute opacity-30 rounded-lg"
                  style={{
+                   height: "100px",
                    backgroundImage: `repeating-linear-gradient(
                      0deg,
                      rgba(139, 69, 19, 0.4) 0px,
