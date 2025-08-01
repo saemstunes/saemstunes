@@ -132,7 +132,7 @@ const AudioPlayerPage = () => {
 
   const fetchTrackData = async (trackId: string) => {
     try {
-      let query = supabase
+      let query: any = supabase
         .from('tracks')
         .select(`
           *,
@@ -148,7 +148,7 @@ const AudioPlayerPage = () => {
         query = query.eq('slug', trackId);
       }
 
-      const { data, error } = await query.single();
+      const { data, error }: { data: any; error: any } = await query.single();
 
       if (error) throw error;
 

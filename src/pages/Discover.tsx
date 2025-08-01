@@ -31,13 +31,15 @@ const Discover = () => {
   const fetchContent = async () => {
     setLoading(true);
     try {
-      const { data: videosData, error: videosError } = await supabase
+      const client = supabase as any;
+      const videosResult = await client
         .from('video_content')
         .select('*')
         .eq('approved', true)
         .order('created_at', { ascending: false });
 
-      if (videosError) throw videosError;
+      const { data: videosData, error: videosError } = videosResult;
+      if (videosError) console.error('Videos error:', videosError);
 
       const { data: tracksData, error: tracksError } = await supabase
         .from('tracks')

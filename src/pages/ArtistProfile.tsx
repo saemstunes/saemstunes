@@ -58,17 +58,20 @@ const ArtistProfile = () => {
 
       setLoading(true);
       try {
-        const { data, error: fetchError } = await supabase
+        const client = supabase as any;
+        const result = await client
           .from('artists')
           .select(`
             id, slug, name, bio, profile_image_url, genre, specialties, 
             location, verified_status, social_links, follower_count, 
-            rating, lessons_available, courses_available, achievements,
-            fun_facts, awards, favorite_instruments, influences,
+            rating, lessons_available, courses_available, achievements, 
+            fun_facts, awards, favorite_instruments, influences, 
             created_at, updated_at
           `)
           .eq('slug', slug)
-          .single();
+          .maybeSingle();
+
+        const { data, error: fetchError } = result;
 
         if (fetchError) {
           console.error('Error fetching artist:', fetchError);

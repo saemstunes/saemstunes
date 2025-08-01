@@ -88,7 +88,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       
       try {
         setIsLoading(true);
-        let query = supabase
+        let query: any = supabase
           .from('tracks')
           .select(`
             id,
@@ -109,7 +109,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           query = query.eq('slug', trackId);
         }
 
-        const { data, error } = await query.single();
+        const { data, error }: { data: any; error: any } = await query.single();
 
         if (error) throw error;
         if (!data) return;
