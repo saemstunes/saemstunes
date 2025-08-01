@@ -69,7 +69,12 @@ const ArtistNotFound: React.FC<ArtistNotFoundProps> = ({
             <Button 
               variant="link" 
               className="text-primary underline"
-              onClick={() => window.location.href = "mailto:support@musicplatform.com"}
+              onClick={() => {
+                const email = "saemstunes@gmail.com";
+                const subject = encodeURIComponent("RE: Missing Artist?");
+                const body = encodeURIComponent(`Dear Saem,\n\nMy favorite artist is missing from your platform. Could you help me find or add them?\n\nThank you,\n`);
+                window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+              }}
             >
               Contact Support
             </Button>
