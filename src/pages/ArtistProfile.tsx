@@ -1,6 +1,6 @@
 // src/pages/artist/[slug].tsx
 import React, { useState, useEffect, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom"; // Fixed import
+import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -8,11 +8,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import MagicBento from "@/components/ui/MagicBento";
 import ArtistModal from "@/components/artists/ArtistModal";
+import ArtistNotFound from "@/components/errors/ArtistNotFound";
 import { 
   Calendar, Mail, Music, Video, Star, MapPin, 
   ExternalLink, Award, Info, Heart, Users, Mic2, Guitar 
 } from "lucide-react";
-import VideoCard from "@/components/videos/VideoCard";
 
 interface Artist {
   id: string;
@@ -39,8 +39,8 @@ interface Artist {
 }
 
 const ArtistProfile = () => {
-  const { slug } = useParams<{ slug: string }>(); // Correct hook for React Router
-  const navigate = useNavigate(); // For navigation
+  const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const [artist, setArtist] = useState<Artist | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +58,7 @@ const ArtistProfile = () => {
 
       setLoading(true);
       try {
-        const { data, error } = await supabase
+        const { data, error: fetchError } = await supabase
           .from('artists')
           .select(`
             id, slug, name, bio, profile_image_url, genre, specialties, 
@@ -70,9 +70,9 @@ const ArtistProfile = () => {
           .eq('slug', slug)
           .single();
 
-        if (error) {
-          console.error('Error fetching artist:', error);
-          setError('Artist not found');
+        if (fetchError) {
+          console.error('Error fetching artist:', fetchError);
+          setError(fetchError.message || 'Artist not found');
           return;
         }
 
@@ -89,13 +89,13 @@ const ArtistProfile = () => {
       }
     };
 
-    if (slug) fetchArtist();
+    fetchArtist();
   }, [slug]);
 
   const bentoCardData = useMemo(() => {
     if (!artist) return [];
     
-    const cards = [
+    return [
       {
         color: "hsl(20 14% 15%)",
         title: "Biography",
@@ -172,19 +172,8 @@ const ArtistProfile = () => {
         icon: <Star className="h-5 w-5" />,
         onClick: () => handleBentoClick('influences'),
         disabled: !artist.influences?.length
-      },
-      {
-        color: "hsl(20 14% 15%)",
-        title: "Instruments",
-        description: artist.favorite_instruments?.join(', ') || 'Various instruments',
-        label: "Tools",
-        icon: <Guitar className="h-5 w-5" />,
-        onClick: () => handleBentoClick('instruments'),
-        disabled: !artist.favorite_instruments?.length
       }
-    ];
-
-    return cards.filter(card => !card.disabled);
+    ].filter(card => !card.disabled);
   }, [artist]);
 
   const handleBentoClick = (type: string) => {
@@ -194,9 +183,9 @@ const ArtistProfile = () => {
     setModalOpen(true);
   };
 
-  const rating = artist?.rating || 4.0;
-  const fullStars = Math.floor(rating);
-  const hasHalfStar = rating % 1 >= 0.5;
+  const handleBookLesson = () => {
+    navigate(`/book/${artist?.id}`);
+  };
 
   if (loading) {
     return (
@@ -212,26 +201,14 @@ const ArtistProfile = () => {
   }
 
   if (error || !artist) {
-    return (
-      <MainLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold mb-4">Artist Not Found</h2>
-            <p className="text-muted-foreground mb-6">
-              {error || 'The artist you requested does not exist'}
-            </p>
-            <Button 
-              onClick={() => navigate('/')} // Use navigate instead of router.push
-              className="bg-primary hover:bg-primary-dark text-white"
-            >
-              Browse Artists
-            </Button>
-          </div>
-        </div>
-      </MainLayout>
-    );
+    return <ArtistNotFound slug={slug || ''} error={error} isArtistPage />;
   }
   
+  // Calculate star rating
+  const rating = artist.rating || 4.0;
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 >= 0.5;
+
   return (
     <MainLayout>
       <div className="space-y-8 pb-20">
@@ -243,8 +220,9 @@ const ArtistProfile = () => {
                 <AvatarImage 
                   src={artist.profile_image_url || undefined} 
                   alt={artist.name}
+                  className="object-cover"
                 />
-                <AvatarFallback className="bg-primary text-white font-bold">
+                <AvatarFallback className="bg-primary text-white font-bold flex items-center justify-center">
                   {artist.name.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
@@ -272,7 +250,10 @@ const ArtistProfile = () => {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button className="bg-gold hover:bg-gold-dark text-white">
+              <Button 
+                className="bg-gold hover:bg-gold-dark text-white"
+                onClick={handleBookLesson}
+              >
                 <Calendar className="mr-2 h-4 w-4" />
                 Book Lesson
               </Button>
@@ -282,11 +263,13 @@ const ArtistProfile = () => {
               </Button>
               {artist.social_links && (
                 <Button variant="outline" 
-                  onClick={() => window.open(
-                    artist.social_links?.spotify || 
-                    artist.social_links?.instagram || 
-                    '#', '_blank'
-                  )}
+                  onClick={() => {
+                    const url = artist.social_links?.spotify || 
+                              artist.social_links?.instagram || 
+                              artist.social_links?.youtube || 
+                              '#';
+                    window.open(url, '_blank');
+                  }}
                 >
                   <ExternalLink className="mr-2 h-4 w-4" />
                   Follow
@@ -427,7 +410,6 @@ const ArtistProfile = () => {
               <TabsContent value="lessons" className="p-4">
                 <h2 className="text-xl font-medium mb-4">Featured Lessons</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {/* Lesson content would go here */}
                   <div className="text-center py-12">
                     <Mic2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                     <h3 className="text-lg font-medium mb-2">Coming Soon</h3>
@@ -459,7 +441,7 @@ const ArtistProfile = () => {
                   Book a private or group session with this artist
                 </p>
                 <Button 
-                  onClick={() => navigate(`/book/${artist.id}`)} // Correct navigation
+                  onClick={handleBookLesson}
                   className="bg-gold hover:bg-gold-dark text-white"
                 >
                   View Available Times
