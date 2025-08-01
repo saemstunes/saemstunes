@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   X, MapPin, Calendar, Users, Star, Music, Award, 
   Info, Heart, ExternalLink, Guitar, Mic2, Book, Globe
@@ -29,6 +29,18 @@ const ArtistModal: React.FC<ArtistModalProps> = ({
   data,
   type
 }) => {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [isOpen]);
+
   const renderContent = () => {
     switch (type) {
       case 'bio':
@@ -353,7 +365,7 @@ const ArtistModal: React.FC<ArtistModalProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4"
         >
           {/* Backdrop */}
           <motion.div
@@ -372,7 +384,8 @@ const ArtistModal: React.FC<ArtistModalProps> = ({
             transition={{ type: "spring", duration: 0.3 }}
             className={cn(
               "relative bg-background border rounded-xl shadow-2xl",
-              "w-full max-w-md max-h-[90vh] overflow-hidden"
+              "w-full max-w-full sm:max-w-md",
+              "max-h-[90dvh] overflow-hidden"
             )}
           >
             {/* Header */}
@@ -394,7 +407,7 @@ const ArtistModal: React.FC<ArtistModalProps> = ({
             </div>
 
             {/* Content */}
-            <ScrollArea className="h-[60vh] p-5">
+            <ScrollArea className="h-[50dvh] sm:h-[60vh] p-4 sm:p-5" type="auto">
               {renderContent()}
             </ScrollArea>
             
