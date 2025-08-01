@@ -20,7 +20,7 @@ interface Artist {
   name: string;
   bio: string | null;
   profile_image_url: string | null;
-  cover_image_url: string | null; // Added cover image URL
+  cover_image_url: string | null;
   genre: string[] | null;
   specialties: string[] | null;
   location: string | null;
@@ -261,14 +261,24 @@ const ArtistProfile = () => {
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundAttachment: 'fixed',
-                filter: 'blur(8px) brightness(0.5)',
-                transform: 'scale(1.05)',
+                filter: 'blur(2px)', // Reduced blur
               }}
             />
           )}
           
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/50 to-background z-0" />
+          {/* Enhanced Gradient Overlay */}
+          <div 
+            className="absolute inset-0 z-0" 
+            style={{
+              background: `linear-gradient(
+                to bottom, 
+                rgba(var(--background-start-rgb), 0.8) 0%, 
+                rgba(var(--background-start-rgb), 0.4) 30%, 
+                rgba(var(--background-end-rgb), 0.1) 70%, 
+                rgba(var(--background-end-rgb), 1) 100%
+              )`
+            }}
+          />
           
           {/* Content Container */}
           <div className="w-full max-w-4xl mx-auto px-4 text-center z-10">
