@@ -1,35 +1,42 @@
 import React from 'react';
-import { Link } from 'react-router-dom'; // Use react-router-dom's Link
+import { Link } from 'react-router-dom';
 
 interface ArtistCardProps {
-  id: string;
   name: string;
   role: string;
   imageSrc: string;
-  slug: string;
+  slug: string; // Slug is required for routing
 }
 
 const ArtistCard: React.FC<ArtistCardProps> = ({ 
-  id, 
   name, 
   role, 
   imageSrc, 
   slug 
 }) => {
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    e.currentTarget.src = '/artist-placeholder.jpg';
+    e.currentTarget.classList.add('opacity-80');
+  };
+
   return (
-    <Link to={`/artist/${slug}`} className="block"> {/* Correct Link component */}
-      <div className="rounded-lg overflow-hidden shadow-md bg-card cursor-pointer hover:shadow-lg transition-shadow duration-300 group">
-        <div className="relative aspect-square overflow-hidden">
-          <img 
-            src={imageSrc || '/artist-placeholder.jpg'}
-            alt={name} 
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        </div>
-        <div className="p-3">
-          <h3 className="font-bold truncate">{name}</h3>
-          <p className="text-sm text-muted-foreground truncate">{role}</p>
-        </div>
+    <Link 
+      to={`/artist/${slug}`}
+      className="block rounded-lg overflow-hidden shadow-md bg-card hover:shadow-lg transition-all duration-300 group"
+      aria-label={`View ${name}'s profile`}
+    >
+      <div className="relative aspect-square overflow-hidden">
+        <img 
+          src={imageSrc || '/artist-placeholder.jpg'}
+          alt={`${name}'s profile picture`}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          loading="lazy"
+          onError={handleImageError}
+        />
+      </div>
+      <div className="p-3">
+        <h3 className="font-bold truncate text-foreground">{name}</h3>
+        <p className="text-sm text-muted-foreground truncate">{role}</p>
       </div>
     </Link>
   );
