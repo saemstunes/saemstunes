@@ -392,7 +392,7 @@ const FEATURED_TRACKS = [
     artist: "Saem's Tunes",
     imageSrc: "https://i.imgur.com/VfKXMyG.png",
     audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/" + 
-              encodeURIComponent("Tracks/Pale Ulipo.m4a"),
+              encodeURIComponent("Tracks/Pale Ulipo (Afrobeats).m4a",
     likes: 71,
     plays: 1202
   },
