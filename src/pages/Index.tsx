@@ -240,11 +240,15 @@ const Index = () => {
   };
 
   const handlePlayTrack = async (track: any) => {
-  // Use slug for tracking if ID is not a UUID
-  const identifier = track.slug && !isUuid(track.id) ? track.slug : track.id;
+  // Use slug if available, otherwise use ID directly for non-database tracks
+  const identifier = track.slug || (!isUuid(track.id) ? track.id : null);
   
-  if (identifier) {
-    await AudioStorageManager.trackPlay(identifier, user?.id);
+  if (identifier && user?.id) {
+    try {
+      await AudioStorageManager.trackPlay(identifier, user.id);
+    } catch (error) {
+      console.error('Play tracking failed:', error);
+    }
   }
   
   navigate(`/audio-player/${track.id}`, {
