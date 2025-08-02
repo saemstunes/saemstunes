@@ -443,7 +443,7 @@ const AudioPlayerPage = () => {
   }
 
   return (
-    <>
+    <div>
       <Helmet>
         <title>{`${trackData?.name || 'Audio Player'} - Saem's Tunes`}</title>
         <meta name="description" content={`Listen to ${trackData?.name || 'music'} by ${trackData?.artist || 'artist'}`} />
@@ -506,171 +506,171 @@ const AudioPlayerPage = () => {
                         {/* Action Buttons */}
                         <div className="flex items-center justify-center lg:justify-start gap-4 flex-wrap">
                           <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={toggleLike}
-                                className={cn(
-                                  "h-12 w-12",
-                                  isLiked ? "text-red-500" : "text-muted-foreground"
-                                )}
-                              >
-                                <Heart className={cn("h-6 w-6", isLiked && "fill-current")} />
-                              </Button>
-                              
+                            variant="ghost"
+                            size="icon"
+                            onClick={toggleLike}
+                            className={cn(
+                              "h-12 w-12",
+                              isLiked ? "text-red-500" : "text-muted-foreground"
+                            )}
+                          >
+                            <Heart className={cn("h-6 w-6", isLiked && "fill-current")} />
+                          </Button>
+                          
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleShare}
+                            className="h-12 w-12 text-muted-foreground hover:text-foreground"
+                          >
+                            <Share className="h-6 w-6" />
+                          </Button>
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={handleShare}
                                 className="h-12 w-12 text-muted-foreground hover:text-foreground"
                               >
-                                <Share className="h-6 w-6" />
+                                <MoreHorizontal className="h-6 w-6" />
                               </Button>
-                              
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-12 w-12 text-muted-foreground hover:text-foreground"
-                                  >
-                                    <MoreHorizontal className="h-6 w-6" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={toggleSave}>
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    {isSaved ? 'Remove from saved' : 'Save track'}
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={handleAddToPlaylist}>
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Add to playlist
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={handleDownload}>
-                                    <Download className="mr-2 h-4 w-4" />
-                                    Download
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          </div>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={toggleSave}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                {isSaved ? 'Remove from saved' : 'Save track'}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={handleAddToPlaylist}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Add to playlist
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={handleDownload}>
+                                <Download className="mr-2 h-4 w-4" />
+                                Download
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
+                      </div>
+                    </div>
 
-                        {/* Audio Player */}
-                        <div className="space-y-6">
-                          {audioError ? (
-                            <div className="text-center py-12">
-                              <p className="text-muted-foreground mb-4">Unable to load audio player</p>
-                              <Button onClick={() => window.location.reload()}>
-                                Try Again
-                              </Button>
-                            </div>
+                    {/* Audio Player */}
+                    <div className="space-y-6">
+                      {audioError ? (
+                        <div className="text-center py-12">
+                          <p className="text-muted-foreground mb-4">Unable to load audio player</p>
+                          <Button onClick={() => window.location.reload()}>
+                            Try Again
+                          </Button>
+                        </div>
+                      ) : (
+                        trackData && (
+                          <AudioPlayer
+                            src={trackData.src}
+                            title={trackData.name}
+                            artist={trackData.artist}
+                            artwork={trackData.artwork}
+                            className="bg-transparent border-0 shadow-none"
+                            onError={handleAudioError}
+                          />
+                        )
+                      )}
+
+                      {/* Enhanced Controls */}
+                      <div className="flex items-center justify-center gap-4 mt-6">
+                        <Button variant="ghost" size="sm" disabled>
+                          <Shuffle className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" disabled>
+                          <SkipBack className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="default" 
+                          size="lg"
+                          onClick={togglePlayPause}
+                          className="h-12 w-12 rounded-full"
+                          disabled={!trackData}
+                        >
+                          {state?.isPlaying && state?.currentTrack?.id === trackData.id ? (
+                            <Pause className="h-5 w-5" />
                           ) : (
-                            trackData && (
-                              <AudioPlayer
-                                src={trackData.src}
-                                title={trackData.name}
-                                artist={trackData.artist}
-                                artwork={trackData.artwork}
-                                className="bg-transparent border-0 shadow-none"
-                                onError={handleAudioError}
-                              />
-                            )
+                            <Play className="h-5 w-5 ml-0.5" />
                           )}
+                        </Button>
+                        <Button variant="ghost" size="sm" disabled>
+                          <SkipForward className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" disabled>
+                          <Repeat className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
 
-                          {/* Enhanced Controls */}
-                          <div className="flex items-center justify-center gap-4 mt-6">
-                            <Button variant="ghost" size="sm" disabled>
-                              <Shuffle className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm" disabled>
-                              <SkipBack className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="default" 
-                              size="lg"
-                              onClick={togglePlayPause}
-                              className="h-12 w-12 rounded-full"
-                              disabled={!trackData}
-                            >
-                              {state?.isPlaying && state?.currentTrack?.id === trackData.id ? (
-                                <Pause className="h-5 w-5" />
-                              ) : (
-                                <Play className="h-5 w-5 ml-0.5" />
-                              )}
-                            </Button>
-                            <Button variant="ghost" size="sm" disabled>
-                              <SkipForward className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm" disabled>
-                              <Repeat className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-
-                        {showMetadataPrompt && trackData && (
-                          <ArtistMetadataManager trackId={String(trackData.id)} />
-                        )}
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  {/* Track List */}
-                  <div className="lg:col-span-1">
-                    <Card className="h-fit">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Music className="h-5 w-5" />
-                          Tracks
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-0">
-                        <Tabs defaultValue="all" className="w-full">
-                          <TabsList className="grid w-full grid-cols-3">
-                            <TabsTrigger value="all">All</TabsTrigger>
-                            <TabsTrigger value="favorites">Favorites</TabsTrigger>
-                            <TabsTrigger value="recent">Recent</TabsTrigger>
-                          </TabsList>
-                          
-                          <TabsContent value="all" className="mt-0">
-                            <ScrollArea className="h-[600px]">
-                              <div className="p-4">
-                                <EnhancedAnimatedList
-                                  tracks={tracks as any}
-                                  onTrackSelect={handleTrackSelect as any}
-                                />
-                              </div>
-                            </ScrollArea>
-                          </TabsContent>
-                          
-                          <TabsContent value="favorites" className="mt-0">
-                            <ScrollArea className="h-[600px]">
-                              <div className="p-4">
-                                <p className="text-center text-muted-foreground py-8">
-                                  No favorite tracks yet
-                                </p>
-                              </div>
-                            </ScrollArea>
-                          </TabsContent>
-                          
-                          <TabsContent value="recent" className="mt-0">
-                            <ScrollArea className="h-[600px]">
-                              <div className="p-4">
-                                <p className="text-center text-muted-foreground py-8">
-                                  No recent tracks
-                                </p>
-                              </div>
-                            </ScrollArea>
-                          </TabsContent>
-                        </Tabs>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
+                    {showMetadataPrompt && trackData && (
+                      <ArtistMetadataManager trackId={String(trackData.id)} />
+                    )}
+                  </CardContent>
+                </Card>
               </div>
-            </MainLayout>
-          </>
-        );
-      };
 
-      export default AudioPlayerPage;
-      
+              {/* Track List */}
+              <div className="lg:col-span-1">
+                <Card className="h-fit">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Music className="h-5 w-5" />
+                      Tracks
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <Tabs defaultValue="all" className="w-full">
+                      <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="all">All</TabsTrigger>
+                        <TabsTrigger value="favorites">Favorites</TabsTrigger>
+                        <TabsTrigger value="recent">Recent</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="all" className="mt-0">
+                        <ScrollArea className="h-[600px]">
+                          <div className="p-4">
+                            <EnhancedAnimatedList
+                              tracks={tracks as any}
+                              onTrackSelect={handleTrackSelect as any}
+                            />
+                          </div>
+                        </ScrollArea>
+                      </TabsContent>
+                      
+                      <TabsContent value="favorites" className="mt-0">
+                        <ScrollArea className="h-[600px]">
+                          <div className="p-4">
+                            <p className="text-center text-muted-foreground py-8">
+                              No favorite tracks yet
+                            </p>
+                          </div>
+                        </ScrollArea>
+                      </TabsContent>
+                      
+                      <TabsContent value="recent" className="mt-0">
+                        <ScrollArea className="h-[600px]">
+                          <div className="p-4">
+                            <p className="text-center text-muted-foreground py-8">
+                              No recent tracks
+                            </p>
+                          </div>
+                        </ScrollArea>
+                      </TabsContent>
+                    </Tabs>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </div>
+      </MainLayout>
+    </div>
+  );
+};
+
+export default AudioPlayerPage;
