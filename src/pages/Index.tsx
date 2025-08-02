@@ -382,7 +382,7 @@ export default Index;
 
 const FEATURED_TRACKS = [
   {
-    id: 'featured-5',
+    id: 'featured-1',
     title: "Pale Ulipo",
     artist: "Saem's Tunes",
     imageSrc: "https://i.imgur.com/VfKXMyG.png",
