@@ -751,79 +751,89 @@ const InteractiveGuitar: React.FC = () => {
             
             {/* Strings - CORRECTED ORDER (thickest at top) */}
             <div className="absolute inset-0 flex flex-col justify-evenly py-1">
-              {strings.map((string, stringIndex) => (
-                <motion.div
-                  key={stringIndex}
-                  className="relative flex items-center h-full"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: stringIndex * 0.05 }}
-                >
-                  {/* String line - varying thickness */}
-                  <div 
-                    className="absolute w-full transition-all duration-200 rounded-full"
-                    style={{ 
-                      top: '50%', 
-                      transform: 'translateY(-50%)',
-                      height: `${stringIndex < 3 ? '2px' : '1.5px'}`, // Thicker for lower strings
-                      background: `linear-gradient(to right, ${
-                        stringIndex < 3 ? '#8B4513, #CD853F, #D2691E' : '#C0C0C0, #E0E0E0, #F5F5F5'
-                      })`,
-                      boxShadow: activeNoteKeysByString.current.has(stringIndex) ? 
-                        '0 0 8px rgba(255,215,0,0.8)' : '0 1px 2px rgba(0,0,0,0.2)'
-                    }}
-                  />
-                  
-                  {/* Interactive fret areas */}
-                  <div className="relative w-full h-full flex">
-                    {string.frets.slice(0, 14).map((fret, fretIndex) => {
-                      const isActive = activeNoteKeysByString.current.get(stringIndex) === `${stringIndex}-${fretIndex}` || 
-                                     isChordFret(stringIndex, fretIndex);
-                      const leftPosition = fretIndex === 0 ? '0%' : `${fretPositions[fretIndex] * 100}%`;
-                      const width = fretIndex === 0 ? `${fretPositions[1] * 100}%` : 
-                                   fretIndex < 13 ? `${(fretPositions[fretIndex + 1] - fretPositions[fretIndex]) * 100}%` : 
-                                   `${(1 - fretPositions[fretIndex]) * 100}%`;
-                      
-                      return (
-                        <button
-                          key={fretIndex}
-                          className={`absolute h-full border-r border-amber-600/20 flex items-center justify-center transition-all duration-200 z-20 rounded-sm ${
-                            isActive
-                              ? 'bg-yellow-400/50 shadow-lg scale-105 border-yellow-500/50'
-                              : 'hover:bg-amber-600/20 hover:shadow-md'
-                          }`}
-                          style={{ 
-                            left: leftPosition,
-                            width: width
-                          }}
-                          onClick={() => playNote(fret.frequency, stringIndex, fretIndex)}
-                          onMouseDown={(e) => e.preventDefault()}
-                        >
-                          {fretIndex === 0 && (
-                            <div className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full shadow-md border-2 ${
-                              isChordFret(stringIndex, fretIndex) 
-                                ? 'bg-yellow-400 border-yellow-500 shadow-yellow-500/50' 
-                                : 'bg-amber-600 border-amber-500'
-                            }`} />
-                          )}
-                          {fretIndex > 0 && (
-                            <motion.div
-                              className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full border-2 shadow-sm ${
-                                isActive
+              {strings.map((string, stringIndex) => {
+                const isThick = stringIndex < 3;
+                const stringHeight = isThick ? '2px' : '1.5px';
+                const blurSize = isThick ? 4 : 2;
+                const glowColor = isThick
+                  ? 'rgba(139,69,19,0.8)'
+                  : 'rgba(192,192,192,0.8)';
+
+                return (
+                  <motion.div
+                    key={stringIndex}
+                    className="relative flex items-center h-full"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: stringIndex * 0.05 }}
+                  >
+                    {/* String line - varying thickness with matching glow */}
+                    <div 
+                      className="absolute w-full transition-all duration-200 rounded-full"
+                      style={{ 
+                        top: '50%', 
+                        transform: 'translateY(-50%)',
+                        height: stringHeight,
+                        background: `linear-gradient(to right, ${
+                          isThick ? '#8B4513, #CD853F, #D2691E' : '#C0C0C0, #E0E0E0, #F5F5F5'
+                        })`,
+                        boxShadow: activeNoteKeysByString.current.has(stringIndex) 
+                          ? `0 0 ${blurSize}px ${glowColor}`
+                          : '0 1px 2px rgba(0,0,0,0.2)'
+                      }}
+                    />
+                    
+                    {/* Interactive fret areas */}
+                    <div className="relative w-full h-full flex">
+                      {string.frets.slice(0, 14).map((fret, fretIndex) => {
+                        const isActive = activeNoteKeysByString.current.get(stringIndex) === `${stringIndex}-${fretIndex}` || 
+                                      isChordFret(stringIndex, fretIndex);
+                        const leftPosition = fretIndex === 0 ? '0%' : `${fretPositions[fretIndex] * 100}%`;
+                        const width = fretIndex === 0 ? `${fretPositions[1] * 100}%` : 
+                                    fretIndex < 13 ? `${(fretPositions[fretIndex + 1] - fretPositions[fretIndex]) * 100}%` : 
+                                    `${(1 - fretPositions[fretIndex]) * 100}%`;
+                        
+                        return (
+                          <button
+                            key={fretIndex}
+                            className={`absolute h-full border-r border-amber-600/20 flex items-center justify-center transition-all duration-200 z-20 rounded-sm ${
+                              isActive
+                                ? 'bg-yellow-400/50 shadow-lg scale-105 border-yellow-500/50'
+                                : 'hover:bg-amber-600/20 hover:shadow-md'
+                            }`}
+                            style={{ 
+                              left: leftPosition,
+                              width: width
+                            }}
+                            onClick={() => playNote(fret.frequency, stringIndex, fretIndex)}
+                            onMouseDown={(e) => e.preventDefault()}
+                          >
+                            {fretIndex === 0 && (
+                              <div className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full shadow-md border-2 ${
+                                isChordFret(stringIndex, fretIndex) 
                                   ? 'bg-yellow-400 border-yellow-500 shadow-yellow-500/50' 
-                                  : 'bg-transparent border-white/30'
-                              }`}
-                              initial={{ scale: 0 }}
-                              animate={{ scale: isActive ? 1.2 : 1 }}
-                              transition={{ duration: 0.2 }}
-                            />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </motion.div>
-              ))}
+                                  : 'bg-amber-600 border-amber-500'
+                              }`} />
+                            )}
+                            {fretIndex > 0 && (
+                              <motion.div
+                                className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full border-2 shadow-sm ${
+                                  isActive
+                                    ? 'bg-yellow-400 border-yellow-500 shadow-yellow-500/50' 
+                                    : 'bg-transparent border-white/30'
+                                }`}
+                                initial={{ scale: 0 }}
+                                animate={{ scale: isActive ? 1.2 : 1 }}
+                                transition={{ duration: 0.2 }}
+                              />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -831,20 +841,30 @@ const InteractiveGuitar: React.FC = () => {
         {/* STRINGS SPANNING FROM NECK TO BRIDGE */}
         <div className="absolute left-[60%] top-1/2 -translate-y-1/2 w-[35%] h-[25%] pointer-events-none z-15">
           <div className="absolute inset-0 flex flex-col justify-evenly">
-            {strings.map((string, stringIndex) => (
-              <div 
-                key={`span-${stringIndex}`}
-                className="w-full transition-all duration-200 rounded-full"
-                style={{ 
-                  height: `${stringIndex < 3 ? '2px' : '1.5px'}`,
-                  background: `linear-gradient(to right, ${
-                    stringIndex < 3 ? '#8B4513, #CD853F, #D2691E' : '#C0C0C0, #E0E0E0, #F5F5F5'
-                  })`,
-                  boxShadow: activeNoteKeysByString.current.has(stringIndex) ? 
-                    '0 0 6px rgba(255,215,0,0.6)' : '0 1px 2px rgba(0,0,0,0.1)'
-                }}
-              />
-            ))}
+            {strings.map((string, stringIndex) => {
+              const isThick = stringIndex < 3;
+              const stringHeight = isThick ? '2px' : '1.5px';
+              const blurSize = isThick ? 4 : 2;
+              const glowColor = isThick
+                ? 'rgba(139,69,19,0.8)'
+                : 'rgba(192,192,192,0.8)';
+
+              return (
+                <div 
+                  key={`span-${stringIndex}`}
+                  className="w-full transition-all duration-200 rounded-full"
+                  style={{ 
+                    height: stringHeight,
+                    background: `linear-gradient(to right, ${
+                      isThick ? '#8B4513, #CD853F, #D2691E' : '#C0C0C0, #E0E0E0, #F5F5F5'
+                    })`,
+                    boxShadow: activeNoteKeysByString.current.has(stringIndex) 
+                      ? `0 0 ${blurSize}px ${glowColor}`
+                      : '0 1px 2px rgba(0,0,0,0.1)'
+                  }}
+                />
+              );
+            })}
           </div>
         </div>
 
