@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -41,6 +42,13 @@ interface AudioTrack {
   artwork?: string;
   album?: string;
 }
+
+// Helper function to get storage URLs
+const getStorageUrl = (path: string | null | undefined, bucket = 'tracks'): string => {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+};
 
 const AudioPlayerPage = () => {
   const { id } = useParams();
@@ -90,16 +98,10 @@ const AudioPlayerPage = () => {
         if (allTracks) {
           const mappedTracks = allTracks.map(track => ({
             id: track.id,
-            src: track.audio_path.startsWith('http') 
-              ? track.audio_path 
-              : `https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/${track.audio_path}`,
+            src: getStorageUrl(track.audio_path),
             name: track.title,
-            artist: (track as any).artist,
-            artwork: track.cover_path?.startsWith('http') 
-              ? track.cover_path 
-              : track.cover_path 
-                ? `https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/${track.cover_path}`
-                : '/placeholder.svg',
+            artist: track.artist,
+            artwork: getStorageUrl(track.cover_path),
             album: 'Single'
           }));
           setTracks(mappedTracks);
@@ -153,20 +155,14 @@ const AudioPlayerPage = () => {
       if (error) throw error;
 
       if (data) {
-        const audioUrl = data.audio_path
-          ? supabase.storage.from('tracks').getPublicUrl(encodeURIComponent(data.audio_path)).data.publicUrl 
-          : '';
-        const coverUrl = data.cover_path 
-          ? (data.cover_path.startsWith('http') 
-              ? data.cover_path 
-              : supabase.storage.from('tracks').getPublicUrl(data.cover_path).data.publicUrl)
-          : '/placeholder.svg';
+        const audioUrl = getStorageUrl(data.audio_path);
+        const coverUrl = getStorageUrl(data.cover_path) || '/placeholder.svg';
 
         setTrackData({
           id: data.id,
           src: audioUrl,
           name: data.title,
-          artist: (data as any).artist || data.profiles?.display_name || 'Unknown Artist',
+          artist: data.artist || data.profiles?.display_name || 'Unknown Artist',
           artwork: coverUrl,
           album: 'Single'
         });
@@ -601,7 +597,6 @@ const AudioPlayerPage = () => {
                             <EnhancedAnimatedList
                               tracks={tracks as any}
                               onTrackSelect={handleTrackSelect as any}
-                              
                             />
                           </div>
                         </ScrollArea>
