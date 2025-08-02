@@ -691,7 +691,7 @@ const InteractiveGuitar: React.FC = () => {
         </div>
 
         {/* NECK & FRETBOARD - Ends at sound hole */}
-        <div className="absolute left-[12%] top-1/2 -translate-y-1/2 w-[50%] h-[62%] z-20">
+        <div className="absolute left-[12%] top-1/2 -translate-y-1/2 w-[50%] h-[65%] z-20">
           {/* Neck back */}
           <div className="absolute inset-0 bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 shadow-lg rounded-lg">
             {/* Enhanced wood grain */}
