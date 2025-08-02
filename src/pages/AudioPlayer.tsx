@@ -153,8 +153,8 @@ const AudioPlayerPage = () => {
       if (error) throw error;
 
       if (data) {
-        const audioUrl = data.audio_path 
-          ? supabase.storage.from('tracks').getPublicUrl(data.audio_path).data.publicUrl 
+        const audioUrl = data.audio_path
+          ? supabase.storage.from('tracks').getPublicUrl(encodeURIComponent(data.audio_path)).data.publicUrl 
           : '';
         const coverUrl = data.cover_path 
           ? (data.cover_path.startsWith('http') 
