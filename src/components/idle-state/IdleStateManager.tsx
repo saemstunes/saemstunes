@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useIdleState } from '@/hooks/use-idle-state';
 import { AnimatePresence } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
@@ -19,8 +19,18 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
   const [currentFact, setCurrentFact] = useState('');
   const location = useLocation();
   const idleWrapperRef = useRef<HTMLDivElement>(null);
+  const factRotationIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const factRotationTime = 15000; // 15 seconds
   
-  // Use our idle state hook with the improved configuration
+  const offlineFacts = [
+    "Music connects people across all cultures and time periods.",
+    "Did you know? Ethiopian Orthodox gospel choirs perform 1,600-year-old hymns",
+    "Tip: Practice everyday! :)",
+    "Studies found that cows produce more milk when listening to calming classical music",
+    "The human ear can detect sounds ranging from 20 Hz to 20,000 Hz",
+    "Tip: Sign up to enjoy a side of the app you didn't know existed"
+  ];
+
   const { 
     isIdle, 
     isOnline, 
@@ -29,9 +39,8 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
     resetActivationCount 
   } = useIdleState({
     idleTime,
-    maxActivations: 5, // Max 5 activations before increasing wait time
+    maxActivations: 5,
     onIdleStart: () => {
-      // Wait 1 second before showing idle content to prevent flashing
       setTimeout(() => setShowIdleContent(true), 1000);
     },
     onIdleEnd: () => {
@@ -40,13 +49,10 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
     }
   });
 
-  // Reset activation count after significant user engagement
   useEffect(() => {
-    // Reset when user navigates to a different route
     resetActivationCount();
   }, [location.pathname, resetActivationCount]);
 
-  // Add touch event listeners to detect any user interaction with the screen
   useEffect(() => {
     const handleUserInteraction = () => {
       if (isIdle) {
@@ -55,14 +61,12 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
       }
     };
 
-    // Add event listeners for common user interactions
     document.addEventListener('touchstart', handleUserInteraction, { passive: true });
     document.addEventListener('mousedown', handleUserInteraction, { passive: true });
     document.addEventListener('keydown', handleUserInteraction, { passive: true });
     document.addEventListener('scroll', handleUserInteraction, { passive: true });
 
     return () => {
-      // Clean up event listeners
       document.removeEventListener('touchstart', handleUserInteraction);
       document.removeEventListener('mousedown', handleUserInteraction);
       document.removeEventListener('keydown', handleUserInteraction);
@@ -70,11 +74,8 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
     };
   }, [isIdle]);
 
-  // Detect clicks outside idle content
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
-      // If the idle wrapper exists and the click is not inside any idle component
-      // This will exit idle mode when clicking anywhere outside idle components
       if (idleWrapperRef.current && !idleWrapperRef.current.contains(e.target as Node)) {
         setShowIdleContent(false);
       }
@@ -89,40 +90,26 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
     };
   }, [showIdleContent]);
 
-  // Decide which idle mode to display based on idle time and online status
   useEffect(() => {
     if (!isIdle) return;
     
     const idleTimeMs = getIdleTime();
     
-    if (idleTimeMs < 120000) { // First 2 minutes
-      // Show facts if online, or animated background if offline
+    if (idleTimeMs < 120000) {
       setIdleMode('fact');
-    } else if (idleTimeMs < 300000) { // Between 2-5 minutes
-      // Show auto showcase on appropriate pages
+    } else if (idleTimeMs < 300000) {
       if (['/music-tools', '/discover', '/library'].includes(location.pathname)) {
         setIdleMode('showcase');
       } else {
         setIdleMode('fact');
       }
-    } else { // After 5 minutes
-      // Show idle game
+    } else {
       setIdleMode('game');
     }
   }, [isIdle, getIdleTime, isOnline, location.pathname]);
   
-  // Fetch music facts if we're in online fact mode
-  useEffect(() => {
-    if (isIdle && showIdleContent && idleMode === 'fact' && isOnline && !factFetchAttempted) {
-      fetchMusicFact();
-      setFactFetchAttempted(true);
-    }
-  }, [isIdle, showIdleContent, idleMode, isOnline, factFetchAttempted]);
-  
-  // Simulated fetch function for music facts
-  const fetchMusicFact = async () => {
+  const fetchMusicFact = useCallback(async () => {
     try {
-      // Simulating API call with some predefined facts
       const facts = [
         "The first piano was invented in Italy by Bartolomeo Cristofori around 1700",
         "Mozart wrote his first symphony at the age of eight",
@@ -151,12 +138,12 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
         "A grand piano has over 12,000 parts, 10,000 of which are moving",
         "Gospel music secured the 9th spot among the most-streamed genres in Africa on Spotify in 2024",
         "Kenyan worship songs are now being taught in Bible colleges across five continents",
-        "Joyous Celebration recorded their 21st album in the USA; , proving African gospel's international recording industry reach",
+        "Joyous Celebration recorded their 21st album in the USA, proving African gospel's international recording industry reach",
         "Music activates every known part of the brain — more than any other stimulus",
         "Humming can reduce stress by lowering heart rate and blood pressure",
-        "Amapiano’s growth on Spotify is staggering. Streams skyrocketed over 5,668% between 2018 and 2023, hitting 1.4 billion in 2023 alone",
-        "Did you know? Mercy Masika’s “Mwema” was adopted as the UNHCR Refugee Week anthem in 2019",
-        "Did you know? Sinach’s “Way Maker” has been translated into over 50 languages and surpassed 100 million streams",
+        "Amapiano's growth on Spotify is staggering. Streams skyrocketed over 5,668% between 2018 and 2023, hitting 1.4 billion in 2023 alone",
+        "Did you know? Mercy Masika's 'Mwema' was adopted as the UNHCR Refugee Week anthem in 2019",
+        "Did you know? Sinach's 'Way Maker' has been translated into over 50 languages and surpassed 100 million streams",
         "Ancient Greek athletes trained to specific musical rhythms to boost stamina and coordination",
       ];
       
@@ -166,9 +153,47 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
       console.error("Error fetching music fact:", error);
       setCurrentFact("Music connects people across all cultures and time periods.");
     }
-  };
+  }, []);
 
-  // Don't render anything if not idle
+  useEffect(() => {
+    if (showIdleContent && idleMode === 'fact') {
+      if (factRotationIntervalRef.current) {
+        clearInterval(factRotationIntervalRef.current);
+      }
+      
+      factRotationIntervalRef.current = setInterval(() => {
+        if (isOnline) {
+          fetchMusicFact();
+        } else {
+          setCurrentFact(prev => {
+            const availableFacts = offlineFacts.filter(fact => fact !== prev);
+            return availableFacts[Math.floor(Math.random() * availableFacts.length)] || 
+                   offlineFacts[0];
+          });
+        }
+      }, factRotationTime);
+    }
+
+    return () => {
+      if (factRotationIntervalRef.current) {
+        clearInterval(factRotationIntervalRef.current);
+        factRotationIntervalRef.current = null;
+      }
+    };
+  }, [showIdleContent, idleMode, isOnline, factRotationTime, fetchMusicFact]);
+
+  useEffect(() => {
+    if (isIdle && showIdleContent && idleMode === 'fact' && isOnline && !factFetchAttempted) {
+      fetchMusicFact();
+      setFactFetchAttempted(true);
+    }
+    
+    if (isIdle && showIdleContent && idleMode === 'fact' && !isOnline && !factFetchAttempted) {
+      setCurrentFact(offlineFacts[0]);
+      setFactFetchAttempted(true);
+    }
+  }, [isIdle, showIdleContent, idleMode, isOnline, factFetchAttempted, fetchMusicFact]);
+
   if (!isIdle || !showIdleContent) return null;
   
   return (
