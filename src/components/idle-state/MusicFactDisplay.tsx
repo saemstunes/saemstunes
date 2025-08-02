@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Lightbulb, Heart, Bookmark, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -92,27 +92,14 @@ const MusicFactDisplay: React.FC<MusicFactProps> = ({ fact, isOnline, onInteract
             </Button>
           </div>
           
-          <div className="min-h-[120px] mb-6 relative overflow-hidden">
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={fact}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ 
-                  opacity: 0, 
-                  y: -20,
-                  transition: { duration: 0.3 } 
-                }}
-                transition={{ 
-                  duration: 0.5, 
-                  ease: "easeOut" 
-                }}
-                className="text-lg absolute inset-0 leading-relaxed"
-              >
-                {fact}
-              </motion.p>
-            </AnimatePresence>
-          </div>
+          <motion.p 
+            className="text-lg mb-6 leading-relaxed"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
+          >
+            {fact}
+          </motion.p>
           
           <div className="flex justify-end gap-2 mt-2">
             <Button 
