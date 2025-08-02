@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { motion } from 'framer-motion';
-import { getImageUrl } from '@/lib/urlUtils'; // Add this import
+import { supabase } from '@/integrations/supabase/client';
 
 interface Track {
   id: string;
@@ -30,6 +30,16 @@ interface EnhancedAnimatedListProps {
   className?: string;
 }
 
+// Unified URL generator (same as AudioPlayerPage)
+const getStorageUrl = (path: string | null | undefined, bucket = 'tracks'): string => {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  
+  // Handle special characters in paths
+  const encodedPath = encodeURIComponent(path).replace(/%2F/g, '/');
+  return `${supabase.storageUrl}/object/public/${bucket}/${encodedPath}`;
+};
+
 const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
   tracks,
   onTrackSelect,
@@ -39,14 +49,16 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
   const [hoveredTrack, setHoveredTrack] = useState<string | null>(null);
 
   const handleTrackPlay = async (track: Track) => {
-    const audioUrl = getImageUrl(track.audio_path); // Use helper
+    // Use the same URL generation logic as AudioPlayerPage
+    const audioUrl = getStorageUrl(track.audio_path);
+    const artworkUrl = track.cover_path ? getStorageUrl(track.cover_path) : '/placeholder.svg';
 
     const audioTrack = {
       id: track.id,
       src: audioUrl,
       name: track.title,
       artist: track.artist || 'Unknown Artist',
-      artwork: track.cover_path ? getImageUrl(track.cover_path) : '/placeholder.svg',
+      artwork: artworkUrl,
     };
 
     if (state?.currentTrack?.id === track.id && state?.isPlaying) {
@@ -85,7 +97,7 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
             )}>
               {track.cover_path ? (
                 <ResponsiveImage
-                  src={getImageUrl(track.cover_path)} // Use helper
+                  src={getStorageUrl(track.cover_path)} // Use same URL generator
                   alt={track.title}
                   width={48}
                   height={48}
