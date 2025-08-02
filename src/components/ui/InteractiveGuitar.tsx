@@ -795,54 +795,39 @@ const InteractiveGuitar: React.FC = () => {
                         
                         return (
                           <button
-  key={fretIndex}
-  className={`absolute h-full border-r border-amber-600/20 flex items-center justify-center transition-all duration-200 z-20 rounded-sm ${
-    isActive
-      ? 'bg-yellow-400/50 shadow-lg scale-105 border-yellow-500/50'
-      : 'hover:bg-amber-600/20 hover:shadow-md'
-  }`}
-  style={{ 
-    left: leftPosition,
-    width: width,
-    minHeight: '44px',  // Minimum touch target size
-    padding: 'clamp(0.25rem, 1vw, 0.5rem) 0' // Responsive vertical padding
-  }}
-  onClick={() => playNote(fret.frequency, stringIndex, fretIndex)}
-  onMouseDown={(e) => e.preventDefault()}
->
-  {fretIndex === 0 ? (
-    <div 
-      className="rounded-full shadow-md border-2"
-      style={{
-        width: 'clamp(12px, 3vw, 20px)',
-        height: 'clamp(12px, 3vw, 20px)',
-        backgroundColor: isChordFret(stringIndex, fretIndex) 
-          ? '#fbbf24' 
-          : '#b45309',
-        borderColor: isChordFret(stringIndex, fretIndex) 
-          ? '#f59e0b' 
-          : '#92400e',
-        boxShadow: isChordFret(stringIndex, fretIndex) 
-          ? '0 0 8px rgba(245, 158, 11, 0.5)' 
-          : 'none'
-      }}
-    />
-  ) : (
-    <motion.div
-      className="rounded-full border-2 shadow-sm"
-      style={{
-        width: 'clamp(8px, 2vw, 16px)',
-        height: 'clamp(8px, 2vw, 16px)',
-        backgroundColor: isActive ? '#fbbf24' : 'transparent',
-        borderColor: isActive ? '#f59e0b' : 'rgba(255, 255, 255, 0.3)',
-        boxShadow: isActive ? '0 0 6px rgba(245, 158, 11, 0.5)' : 'none'
-      }}
-      initial={{ scale: 0 }}
-      animate={{ scale: isActive ? 1.2 : 1 }}
-      transition={{ duration: 0.2 }}
-    />
-  )}
-</button>
+                            key={fretIndex}
+                            className={`absolute h-full border-r border-amber-600/20 flex items-center justify-center transition-all duration-200 z-20 rounded-sm ${
+                              isActive
+                                ? 'bg-yellow-400/50 shadow-lg scale-105 border-yellow-500/50'
+                                : 'hover:bg-amber-600/20 hover:shadow-md'
+                            }`}
+                            style={{ 
+                              left: leftPosition,
+                              width: width
+                            }}
+                            onClick={() => playNote(fret.frequency, stringIndex, fretIndex)}
+                            onMouseDown={(e) => e.preventDefault()}
+                          >
+                            {fretIndex === 0 && (
+                              <div className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full shadow-md border-2 ${
+                                isChordFret(stringIndex, fretIndex) 
+                                  ? 'bg-yellow-400 border-yellow-500 shadow-yellow-500/50' 
+                                  : 'bg-amber-600 border-amber-500'
+                              }`} />
+                            )}
+                            {fretIndex > 0 && (
+                              <motion.div
+                                className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full border-2 shadow-sm ${
+                                  isActive
+                                    ? 'bg-yellow-400 border-yellow-500 shadow-yellow-500/50' 
+                                    : 'bg-transparent border-white/30'
+                                }`}
+                                initial={{ scale: 0 }}
+                                animate={{ scale: isActive ? 1.2 : 1 }}
+                                transition={{ duration: 0.2 }}
+                              />
+                            )}
+                          </button>
                         );
                       })}
                     </div>
