@@ -218,14 +218,14 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
           <IdleGameOverlay 
               onInteraction={() => setShowIdleContent(false)}
             />
-          )}*/}
+          )}
           
           {idleMode === 'showcase' && (
             <AutoShowcaseFeature 
               path={location.pathname} 
               onInteraction={() => setShowIdleContent(false)}
             />
-          )}
+          )}*/}
         </div>
       )}
     </AnimatePresence>
