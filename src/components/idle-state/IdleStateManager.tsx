@@ -20,7 +20,7 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
   const location = useLocation();
   const idleWrapperRef = useRef<HTMLDivElement>(null);
   const factRotationIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const factRotationTime = 15000; // 15 seconds
+  const factRotationTime = 90000; // 15 seconds
   
   const offlineFacts = [
     "Music connects people across all cultures and time periods.",
