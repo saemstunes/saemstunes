@@ -606,7 +606,6 @@ const InteractiveGuitar: React.FC = () => {
   return (
     <motion.div
       className="relative bg-gradient-to-br from-amber-900 via-amber-800 to-amber-900 rounded-2xl shadow-2xl overflow-hidden w-full max-w-6xl mx-auto p-4 sm:p-6"
-      style={{ touchAction: 'manipulation' }}
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
@@ -628,12 +627,12 @@ const InteractiveGuitar: React.FC = () => {
       <div className="relative w-full h-64 sm:h-80 md:h-96 flex items-center overflow-hidden">
         
         {/* HEADSTOCK - Enhanced Design */}
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[12%] h-[70%] z-10">
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[15%] h-[70%] z-10">
           <div className="relative w-full h-full">
             {/* Headstock shape - more guitar-like */}
             <div className="absolute inset-0 bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800 shadow-lg"
                  style={{
-                   clipPath: 'polygon(0% 30%, 70% 25%, 85% 40%, 90% 50%, 85% 60%, 70% 75%, 0% 70%)'
+                   clipPath: 'polygon(0% 25%, 80% 20%, 95% 35%, 100% 50%, 95% 65%, 80% 80%, 0% 75%)'
                  }}>
               
               {/* Enhanced wood grain */}
@@ -691,10 +690,10 @@ const InteractiveGuitar: React.FC = () => {
           </div>
         </div>
 
-        {/* NECK & FRETBOARD - Proportional adjustments */}
-        <div className="absolute left-[10%] top-1/2 -translate-y-1/2 w-[60%] sm:w-[50%] h-[65%] z-20">
-          {/* Neck back - thinner binding effect */}
-          <div className="absolute inset-0 top-1/2 -translate-y-1/2 h-[65%] bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 shadow-lg rounded-lg">
+        {/* NECK & FRETBOARD - Ends at sound hole */}
+        <div className="absolute left-[12%] top-1/2 -translate-y-1/2 w-[50%] h-[65%] z-20">
+          {/* Neck back */}
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 shadow-lg rounded-lg">
             {/* Enhanced wood grain */}
             <div className="absolute inset-0 opacity-30 rounded-lg"
                  style={{
@@ -705,8 +704,6 @@ const InteractiveGuitar: React.FC = () => {
                      rgba(139, 69, 19, 0.4) 4px
                    )`
                  }} />
-            {/* Binding shadow effect */}
-            <div className="absolute inset-0 shadow-[inset_0_0_2px_1px_rgba(0,0,0,0.4)]"></div>
           </div>
           
           {/* Fretboard - dark ebony overlay */}
@@ -741,23 +738,11 @@ const InteractiveGuitar: React.FC = () => {
                   >
                     {fret === 12 ? (
                       <div className="flex flex-col gap-1.5">
-                        <div className="w-2.5 h-2.5 bg-gradient-to-br from-gray-200 to-gray-400 rounded-full shadow-md border border-gray-300"
-                             style={{
-                               width: 'clamp(8px, 2vw, 16px)',
-                               height: 'clamp(8px, 2vw, 16px)'
-                             }}></div>
-                        <div className="w-2.5 h-2.5 bg-gradient-to-br from-gray-200 to-gray-400 rounded-full shadow-md border border-gray-300"
-                             style={{
-                               width: 'clamp(8px, 2vw, 16px)',
-                               height: 'clamp(8px, 2vw, 16px)'
-                             }}></div>
+                        <div className="w-2.5 h-2.5 bg-gradient-to-br from-gray-200 to-gray-400 rounded-full shadow-md border border-gray-300"></div>
+                        <div className="w-2.5 h-2.5 bg-gradient-to-br from-gray-200 to-gray-400 rounded-full shadow-md border border-gray-300"></div>
                       </div>
                     ) : (
-                      <div className="w-2.5 h-2.5 bg-gradient-to-br from-gray-200 to-gray-400 rounded-full shadow-md border border-gray-300"
-                           style={{
-                             width: 'clamp(8px, 2vw, 16px)',
-                             height: 'clamp(8px, 2vw, 16px)'
-                           }}></div>
+                      <div className="w-2.5 h-2.5 bg-gradient-to-br from-gray-200 to-gray-400 rounded-full shadow-md border border-gray-300"></div>
                     )}
                   </div>
                 );
@@ -765,7 +750,7 @@ const InteractiveGuitar: React.FC = () => {
             </div>
             
             {/* Strings - CORRECTED ORDER (thickest at top) */}
-            <div className="absolute inset-0 flex flex-col justify-evenly py-2">
+            <div className="absolute inset-0 flex flex-col justify-evenly py-1">
               {strings.map((string, stringIndex) => (
                 <motion.div
                   key={stringIndex}
@@ -780,7 +765,7 @@ const InteractiveGuitar: React.FC = () => {
                     style={{ 
                       top: '50%', 
                       transform: 'translateY(-50%)',
-                      height: stringIndex < 3 ? 'var(--string-thick)' : 'var(--string-thin)',
+                      height: `${stringIndex < 3 ? '2px' : '1.5px'}`, // Thicker for lower strings
                       background: `linear-gradient(to right, ${
                         stringIndex < 3 ? '#8B4513, #CD853F, #D2691E' : '#C0C0C0, #E0E0E0, #F5F5F5'
                       })`,
@@ -809,8 +794,7 @@ const InteractiveGuitar: React.FC = () => {
                           }`}
                           style={{ 
                             left: leftPosition,
-                            width: width,
-                            minHeight: '44px'
+                            width: width
                           }}
                           onClick={() => playNote(fret.frequency, stringIndex, fretIndex)}
                           onMouseDown={(e) => e.preventDefault()}
@@ -845,14 +829,14 @@ const InteractiveGuitar: React.FC = () => {
         </div>
 
         {/* STRINGS SPANNING FROM NECK TO BRIDGE */}
-        <div className="absolute left-[65%] top-1/2 -translate-y-1/2 w-[30%] h-[25%] pointer-events-none z-15">
+        <div className="absolute left-[60%] top-1/2 -translate-y-1/2 w-[35%] h-[25%] pointer-events-none z-15">
           <div className="absolute inset-0 flex flex-col justify-evenly">
             {strings.map((string, stringIndex) => (
               <div 
                 key={`span-${stringIndex}`}
                 className="w-full transition-all duration-200 rounded-full"
                 style={{ 
-                  height: stringIndex < 3 ? 'var(--string-thick)' : 'var(--string-thin)',
+                  height: `${stringIndex < 3 ? '2px' : '1.5px'}`,
                   background: `linear-gradient(to right, ${
                     stringIndex < 3 ? '#8B4513, #CD853F, #D2691E' : '#C0C0C0, #E0E0E0, #F5F5F5'
                   })`,
@@ -864,13 +848,13 @@ const InteractiveGuitar: React.FC = () => {
           </div>
         </div>
 
-        {/* GUITAR BODY - Redesigned with better proportions */}
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[45%] h-full">
+        {/* GUITAR BODY - Enhanced Design */}
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[40%] h-full">
+          {/* Guitar body with enhanced figure-8 shape */}
           <div className="relative w-full h-full">
-            {/* Upper bout - smaller */}
-            <div className="absolute top-0 left-0 w-full h-[35%] bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 shadow-lg border-2 border-amber-600/40"
-                 style={{ borderRadius: '80% 80% 40% 40%' }}>
-              <div className="absolute inset-0 opacity-25"
+            {/* Upper bout */}
+            <div className="absolute top-0 left-0 w-full h-[42%] bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 rounded-t-full shadow-lg border-2 border-amber-600/40">
+              <div className="absolute inset-0 opacity-25 rounded-t-full"
                    style={{
                      backgroundImage: `repeating-linear-gradient(
                        45deg,
@@ -881,13 +865,12 @@ const InteractiveGuitar: React.FC = () => {
                    }} />
             </div>
             
-            {/* Waist - more pronounced */}
-            <div className="absolute top-[32%] left-[15%] w-[70%] h-[24%] bg-gradient-to-r from-amber-500 to-amber-600 shadow-inner border-y-2 border-amber-600/40"></div>
+            {/* Waist - natural connection point */}
+            <div className="absolute top-[38%] left-[8%] w-[84%] h-[24%] bg-gradient-to-r from-amber-500 to-amber-600 shadow-inner border-y-2 border-amber-600/40"></div>
             
-            {/* Lower bout - larger */}
-            <div className="absolute bottom-0 left-0 w-full h-[50%] bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 shadow-lg border-2 border-amber-600/40"
-                 style={{ borderRadius: '40% 40% 80% 80%' }}>
-              <div className="absolute inset-0 opacity-25"
+            {/* Lower bout */}
+            <div className="absolute bottom-0 left-0 w-full h-[42%] bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 rounded-b-full shadow-lg border-2 border-amber-600/40">
+              <div className="absolute inset-0 opacity-25 rounded-b-full"
                    style={{
                      backgroundImage: `repeating-linear-gradient(
                        45deg,
@@ -898,10 +881,9 @@ const InteractiveGuitar: React.FC = () => {
                    }} />
             </div>
             
-            {/* Sound hole - responsive positioning */}
-            <div className="absolute top-[25%] left-[25%] -translate-x-1/2 -translate-y-1/2 z-10"
-                 style={{ width: 'clamp(60px, 15vw, 96px)', height: 'clamp(60px, 15vw, 96px)' }}>
-              <div className="w-full h-full rounded-full bg-black shadow-inner relative border-4 border-amber-700">
+            {/* Enhanced Sound hole */}
+            <div className="absolute top-[30%] left-[30%] -translate-x-1/2 -translate-y-1/2 z-10">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-black shadow-inner relative border-4 border-amber-700">
                 {/* Rosette rings - more detailed */}
                 <div className="absolute inset-1 rounded-full border-2 border-amber-500"></div>
                 <div className="absolute inset-2 rounded-full border border-amber-400"></div>
@@ -976,13 +958,13 @@ const InteractiveGuitar: React.FC = () => {
       </div>
 
       {/* Chord selection */}
-      <div className="mt-4 flex justify-center flex-wrap gap-2 sm:gap-3">
+      <div className="mt-4 flex justify-center flex-wrap gap-1 sm:gap-2">
         {chords.map((chord, index) => (
           <motion.button
             key={index}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className={`px-3 py-2 rounded-full text-sm font-medium transition-all ${
+            className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all ${
               heldChord === index 
                 ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg' 
                 : 'bg-amber-700 text-amber-100 hover:bg-amber-600 shadow-md'
@@ -1003,7 +985,7 @@ const InteractiveGuitar: React.FC = () => {
       )}
 
       {/* Control buttons */}
-      <div className="flex justify-center items-center gap-4 sm:gap-6 mt-6 flex-wrap">
+      <div className="flex justify-center items-center gap-4 mt-6 flex-wrap">
         <button
           onClick={playDemo}
           disabled={isMuted}
