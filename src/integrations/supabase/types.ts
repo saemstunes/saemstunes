@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instanciate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.3 (519615d)"
+  }
   public: {
     Tables: {
       activity_logs: {
@@ -59,43 +64,143 @@ export type Database = {
           },
         ]
       }
-      artists: {
+      artist_metadata_submissions: {
         Row: {
+          artist_id: string | null
           bio: string | null
-          created_at: string | null
-          follower_count: number | null
-          genre: string[] | null
+          created_at: string
+          genre: string | null
           id: string
           location: string | null
           name: string
           profile_image_url: string | null
-          social_links: Json | null
-          updated_at: string | null
-          verified_status: boolean | null
+          status: string
+          submitted_by: string | null
+          track_id: string
+          updated_at: string
         }
         Insert: {
+          artist_id?: string | null
           bio?: string | null
-          created_at?: string | null
-          follower_count?: number | null
-          genre?: string[] | null
+          created_at?: string
+          genre?: string | null
           id?: string
           location?: string | null
           name: string
           profile_image_url?: string | null
-          social_links?: Json | null
-          updated_at?: string | null
-          verified_status?: boolean | null
+          status?: string
+          submitted_by?: string | null
+          track_id: string
+          updated_at?: string
         }
         Update: {
+          artist_id?: string | null
           bio?: string | null
-          created_at?: string | null
-          follower_count?: number | null
-          genre?: string[] | null
+          created_at?: string
+          genre?: string | null
           id?: string
           location?: string | null
           name?: string
           profile_image_url?: string | null
+          status?: string
+          submitted_by?: string | null
+          track_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "artist_metadata_submissions_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "artists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "artist_metadata_submissions_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "artist_metadata_submissions_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      artists: {
+        Row: {
+          achievements: Json | null
+          awards: string[] | null
+          bio: string | null
+          courses_available: boolean | null
+          cover_image_url: string | null
+          created_at: string | null
+          favorite_instruments: string[] | null
+          follower_count: number | null
+          fun_facts: string[] | null
+          genre: string[] | null
+          id: string
+          influences: string[] | null
+          lessons_available: boolean | null
+          location: string | null
+          name: string
+          profile_image_url: string | null
+          rating: number | null
+          slug: string
+          social_links: Json | null
+          specialties: string[] | null
+          updated_at: string | null
+          verified_status: boolean | null
+        }
+        Insert: {
+          achievements?: Json | null
+          awards?: string[] | null
+          bio?: string | null
+          courses_available?: boolean | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          favorite_instruments?: string[] | null
+          follower_count?: number | null
+          fun_facts?: string[] | null
+          genre?: string[] | null
+          id?: string
+          influences?: string[] | null
+          lessons_available?: boolean | null
+          location?: string | null
+          name: string
+          profile_image_url?: string | null
+          rating?: number | null
+          slug: string
           social_links?: Json | null
+          specialties?: string[] | null
+          updated_at?: string | null
+          verified_status?: boolean | null
+        }
+        Update: {
+          achievements?: Json | null
+          awards?: string[] | null
+          bio?: string | null
+          courses_available?: boolean | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          favorite_instruments?: string[] | null
+          follower_count?: number | null
+          fun_facts?: string[] | null
+          genre?: string[] | null
+          id?: string
+          influences?: string[] | null
+          lessons_available?: boolean | null
+          location?: string | null
+          name?: string
+          profile_image_url?: string | null
+          rating?: number | null
+          slug?: string
+          social_links?: Json | null
+          specialties?: string[] | null
           updated_at?: string | null
           verified_status?: boolean | null
         }
@@ -443,6 +548,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      missing_artist_requests: {
+        Row: {
+          created_at: string
+          id: number
+          requested_slug: string
+          user_agent: string | null
+          user_ip: unknown | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          requested_slug: string
+          user_agent?: string | null
+          user_ip?: unknown | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          requested_slug?: string
+          user_agent?: string | null
+          user_ip?: unknown | null
+        }
+        Relationships: []
       }
       news_feed: {
         Row: {
@@ -1122,36 +1251,66 @@ export type Database = {
       tracks: {
         Row: {
           access_level: string | null
+          alternate_audio_path: string | null
           approved: boolean | null
+          artist: string | null
           audio_path: string
+          background_gradient: string | null
           cover_path: string | null
           created_at: string | null
           description: string | null
+          duration: number | null
           id: string
+          preview_url: string | null
+          primary_color: string | null
+          secondary_color: string | null
+          slug: string | null
           title: string
           user_id: string | null
+          video_url: string | null
+          youtube_url: string | null
         }
         Insert: {
           access_level?: string | null
+          alternate_audio_path?: string | null
           approved?: boolean | null
+          artist?: string | null
           audio_path: string
+          background_gradient?: string | null
           cover_path?: string | null
           created_at?: string | null
           description?: string | null
+          duration?: number | null
           id?: string
+          preview_url?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          slug?: string | null
           title: string
           user_id?: string | null
+          video_url?: string | null
+          youtube_url?: string | null
         }
         Update: {
           access_level?: string | null
+          alternate_audio_path?: string | null
           approved?: boolean | null
+          artist?: string | null
           audio_path?: string
+          background_gradient?: string | null
           cover_path?: string | null
           created_at?: string | null
           description?: string | null
+          duration?: number | null
           id?: string
+          preview_url?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          slug?: string | null
           title?: string
           user_id?: string | null
+          video_url?: string | null
+          youtube_url?: string | null
         }
         Relationships: [
           {
@@ -1339,21 +1498,25 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -1371,14 +1534,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
@@ -1394,14 +1559,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
@@ -1417,14 +1584,16 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
@@ -1432,14 +1601,16 @@ export type Enums<
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never

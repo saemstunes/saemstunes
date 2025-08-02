@@ -42,12 +42,14 @@ export const ArtistMetadataManager = ({ trackId }: { trackId: string }) => {
       }
 
       // Create metadata submission - using artists table since submissions table might not exist
+      const slug = form.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
       const { error } = await supabase.from('artists').insert({
         name: form.name,
         bio: form.bio,
         genre: form.genre ? [form.genre] : null,
         location: form.location,
-        profile_image_url: imageUrl
+        profile_image_url: imageUrl,
+        slug: slug
       });
 
       if (error) throw error;

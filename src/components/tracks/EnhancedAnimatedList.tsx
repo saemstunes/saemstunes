@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { motion } from 'framer-motion';
-import { supabase } from '@/integrations/supabase/client';
+import { getAudioUrl, getStorageUrl } from '@/lib/audioUtils';
 
 interface Track {
   id: string;
@@ -20,6 +20,7 @@ interface Track {
   artist?: string;
   cover_path?: string;
   audio_path: string;
+  alternate_audio_path?: string;
   description?: string;
   created_at: string;
 }
@@ -30,16 +31,6 @@ interface EnhancedAnimatedListProps {
   className?: string;
 }
 
-// Unified URL generator (same as AudioPlayerPage)
-const getStorageUrl = (path: string | null | undefined, bucket = 'tracks'): string => {
-  if (!path) return '';
-  if (path.startsWith('http')) return path;
-  
-  // Handle special characters in paths
-  const encodedPath = encodeURIComponent(path).replace(/%2F/g, '/');
-  return `${supabase.storageUrl}/object/public/${bucket}/${encodedPath}`;
-};
-
 const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
   tracks,
   onTrackSelect,
@@ -49,9 +40,13 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
   const [hoveredTrack, setHoveredTrack] = useState<string | null>(null);
 
   const handleTrackPlay = async (track: Track) => {
-    // Use the same URL generation logic as AudioPlayerPage
-    const audioUrl = getStorageUrl(track.audio_path);
+    const audioUrl = getAudioUrl(track);
     const artworkUrl = track.cover_path ? getStorageUrl(track.cover_path) : '/placeholder.svg';
+
+    if (!audioUrl) {
+      console.error('No valid audio source found for track:', track.id);
+      return;
+    }
 
     const audioTrack = {
       id: track.id,

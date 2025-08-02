@@ -24,6 +24,7 @@ import CountUp from "@/components/tracks/CountUp";
 import { motion } from "framer-motion";
 import { useWindowSize } from "@uidotdev/usehooks";
 import { AudioStorageManager } from "@/utils/audioStorageManager";
+import { getAudioUrl } from "@/lib/audioUtils";
 
 // Constants - PRESERVE ORIGINAL STRUCTURE
 const STATS = [
@@ -391,8 +392,11 @@ const FEATURED_TRACKS = [
     slug: "pale-ulipo",
     artist: "Saem's Tunes",
     imageSrc: "https://i.imgur.com/VfKXMyG.png",
-    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/" + 
-              encodeURIComponent("Tracks/Pale Ulipo cover.m4a"),
+    audio_path: "Tracks/Pale Ulipo (Afrobeats).m4a",
+    alternate_audio_path: "Tracks/Cover_Tracks/Pale Ulipo cover.m4a",
+    get audioSrc() { 
+      return getAudioUrl(this);
+    },
     likes: 71,
     plays: 1202
   },
@@ -402,8 +406,10 @@ const FEATURED_TRACKS = [
     slug: "i-need-you-more",
     artist: "Saem's Tunes",
     imageSrc: "https://i.imgur.com/6yr8BpG.jpeg",
-    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/" + 
-              encodeURIComponent("Tracks/I Need You More.wav"),
+    audio_path: "Tracks/I Need You More.wav",
+    get audioSrc() { 
+      return getAudioUrl(this);
+    },
     likes: 106,
     plays: 2412
   },
@@ -413,8 +419,10 @@ const FEATURED_TRACKS = [
     slug: "ni-hai",
     artist: "Saem's Tunes ft. Kendi Nkonge",
     imageSrc: "https://i.imgur.com/LJQDADg.jpeg",
-    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/" + 
-              encodeURIComponent("Tracks/Ni Hai (Demo) - Saem's Tunes (OFFICIAL MUSIC VIDEO) (128kbit_AAC).m4a"),
+    audio_path: "Tracks/Ni Hai (Demo) - Saem's Tunes (OFFICIAL MUSIC VIDEO) (128kbit_AAC).m4a",
+    get audioSrc() { 
+      return getAudioUrl(this);
+    },
     likes: 1421,
     plays: 127
   },
@@ -424,8 +432,10 @@ const FEATURED_TRACKS = [
     slug: "mapenzi-ya-ajabu",
     artist: "Saem's Tunes",
     imageSrc: "https://i.imgur.com/wrm7LI1.jpeg",
-    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/" + 
-              encodeURIComponent("Tracks/Mapenzi Ya Ajabu (Demo) - Saem's Tunes (OFFICIAL MUSIC VIDEO) (128kbit_AAC).m4a"),
+    audio_path: "Tracks/Mapenzi Ya Ajabu (Demo) - Saem's Tunes (OFFICIAL MUSIC VIDEO) (128kbit_AAC).m4a",
+    get audioSrc() { 
+      return getAudioUrl(this);
+    },
     likes: 28,
     plays: 154
   }

@@ -38,6 +38,7 @@ import EnhancedAnimatedList from '@/components/tracks/EnhancedAnimatedList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAudioPlayer } from '@/context/AudioPlayerContext';
+import { getAudioUrl, getStorageUrl } from '@/lib/audioUtils';
 
 interface AudioTrack {
   id: string | number;
@@ -65,16 +66,6 @@ const AudioPlayerPage = () => {
   const [tracks, setTracks] = useState<AudioTrack[]>([]);
   const { state, playTrack, pauseTrack, resumeTrack } = useAudioPlayer();
 
-  // Optimized storage URL generator
-  const getStorageUrl = useCallback((path: string | null | undefined, bucket = 'tracks'): string => {
-    if (!path) return '';
-    if (path.startsWith('http')) return path;
-    
-    // Handle special characters in paths
-    const encodedPath = encodeURIComponent(path).replace(/%2F/g, '/');
-    return `${supabase.storageUrl}/object/public/${bucket}/${encodedPath}`;
-  }, []);
-
   // Handle page visibility
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -95,7 +86,7 @@ const AudioPlayerPage = () => {
     try {
       const { data: allTracks, error: tracksError } = await supabase
         .from('tracks')
-        .select('id, title, audio_path, cover_path, artist')
+        .select('id, title, audio_path, alternate_audio_path, cover_path, artist')
         .eq('approved', true)
         .order('created_at', { ascending: false })
         .limit(50); // Limit to 50 tracks for performance
@@ -103,20 +94,23 @@ const AudioPlayerPage = () => {
       if (tracksError) throw tracksError;
       
       if (allTracks) {
-        const mappedTracks = allTracks.map(track => ({
-          id: track.id,
-          src: getStorageUrl(track.audio_path),
-          name: track.title,
-          artist: track.artist,
-          artwork: getStorageUrl(track.cover_path),
-          album: 'Single'
-        }));
+        const mappedTracks = allTracks.map(track => {
+          const audioUrl = getAudioUrl(track);
+          return {
+            id: track.id,
+            src: audioUrl || '/audio/sample.mp3',
+            name: track.title,
+            artist: track.artist,
+            artwork: getStorageUrl(track.cover_path),
+            album: 'Single'
+          };
+        });
         setTracks(mappedTracks);
       }
     } catch (error) {
       console.error('Error fetching tracks:', error);
     }
-  }, [getStorageUrl]);
+  }, []);
 
   // Fetch current track - optimized
   const fetchTrackData = useCallback(async (trackId: string) => {
@@ -153,12 +147,12 @@ const AudioPlayerPage = () => {
       }
 
       if (data) {
-        const audioUrl = getStorageUrl(data.audio_path);
+        const audioUrl = getAudioUrl(data);
         const coverUrl = getStorageUrl(data.cover_path) || '/placeholder.svg';
 
         const newTrack = {
           id: data.id,
-          src: audioUrl,
+          src: audioUrl || '/audio/sample.mp3',
           name: data.title,
           artist: data.artist || 'Unknown Artist',
           artwork: coverUrl,
@@ -188,7 +182,7 @@ const AudioPlayerPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [getStorageUrl, toast, tracks]);
+  }, [toast, tracks]);
 
   // Handle initial data loading
   useEffect(() => {

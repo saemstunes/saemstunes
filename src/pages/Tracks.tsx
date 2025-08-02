@@ -23,12 +23,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import EnhancedAnimatedList from "@/components/tracks/EnhancedAnimatedList";
 import TiltedCard from "@/components/tracks/TiltedCard";
 import { getImageUrl } from "@/lib/urlUtils";
+import { getAudioUrl, getStorageUrl } from "@/lib/audioUtils";
 
 interface Track {
   id: string;
   title: string;
   description: string;
   audio_path: string;
+  alternate_audio_path?: string;
   cover_path?: string;
   access_level: AccessLevel;
   user_id: string;
@@ -148,6 +150,7 @@ const Tracks = () => {
           id,
           title,
           audio_path,
+          alternate_audio_path,
           cover_path,
           description,
           created_at,
@@ -177,9 +180,8 @@ const Tracks = () => {
         const playCount = playCountResult.count || 0;
         const likeCount = likeCountResult.count || 0;
 
-        // Get public URLs for audio and cover
-        const audioUrl = (trackData as any).audio_path ? 
-          supabase.storage.from('tracks').getPublicUrl((trackData as any).audio_path).data.publicUrl : '';
+        // Get public URLs for audio and cover using helpers
+        const audioUrl = getAudioUrl(trackData as any) || '';
         const coverUrl = getImageUrl((trackData as any).cover_path); // Use helper
 
         setFeaturedTrack({
@@ -216,6 +218,7 @@ const Tracks = () => {
           title,
           description,
           audio_path,
+          alternate_audio_path,
           cover_path,
           access_level,
           user_id,
