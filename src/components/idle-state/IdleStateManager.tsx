@@ -214,11 +214,11 @@ const IdleStateManager: React.FC<IdleStateManagerProps> = ({ idleTime = 60000 })
             />
           )}
           
-          {idleMode === 'game' && (
-            <IdleGameOverlay 
+          {/*{idleMode === 'game' && (
+          <IdleGameOverlay 
               onInteraction={() => setShowIdleContent(false)}
             />
-          )}
+          )}*/}
           
           {idleMode === 'showcase' && (
             <AutoShowcaseFeature 
