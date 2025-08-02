@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Lightbulb, Heart, Bookmark, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,27 +19,21 @@ const MusicFactDisplay: React.FC<MusicFactProps> = ({ fact, isOnline, onInteract
   const { toast } = useToast();
   
   useEffect(() => {
-    // Reset state when fact changes
     setLiked(false);
     setSaved(false);
-    setClosed(false);
   }, [fact]);
-// Prevent failure if card fails to render, adds a safety check
+
   if (closed || !fact) return null;
 
-  // Handle any click outside the card to dismiss
   const handleBackgroundClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Check if the click was directly on the background div, not its children
     if (e.currentTarget === e.target) {
       e.stopPropagation();
       onInteraction();
     }
   };
   
-  if (closed) return null;
-  
   const handleLike = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent dismissing when clicking like
+    e.stopPropagation();
     setLiked(!liked);
     if (!liked) {
       toast({
@@ -50,7 +44,7 @@ const MusicFactDisplay: React.FC<MusicFactProps> = ({ fact, isOnline, onInteract
   };
   
   const handleSave = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent dismissing when clicking save
+    e.stopPropagation();
     setSaved(!saved);
     if (!saved) {
       toast({
@@ -61,7 +55,7 @@ const MusicFactDisplay: React.FC<MusicFactProps> = ({ fact, isOnline, onInteract
   };
   
   const handleClose = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent event bubbling
+    e.stopPropagation();
     setClosed(true);
     onInteraction();
   };
@@ -98,14 +92,27 @@ const MusicFactDisplay: React.FC<MusicFactProps> = ({ fact, isOnline, onInteract
             </Button>
           </div>
           
-          <motion.p 
-            className="text-lg mb-6 leading-relaxed"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.4 }}
-          >
-            {fact}
-          </motion.p>
+          <div className="min-h-[120px] mb-6 relative overflow-hidden">
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={fact}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ 
+                  opacity: 0, 
+                  y: -20,
+                  transition: { duration: 0.3 } 
+                }}
+                transition={{ 
+                  duration: 0.5, 
+                  ease: "easeOut" 
+                }}
+                className="text-lg absolute inset-0 leading-relaxed"
+              >
+                {fact}
+              </motion.p>
+            </AnimatePresence>
+          </div>
           
           <div className="flex justify-end gap-2 mt-2">
             <Button 
