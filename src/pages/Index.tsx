@@ -388,6 +388,7 @@ const FEATURED_TRACKS = [
   {
     id: 'featured-1',
     title: "Pale Ulipo",
+    slug: "pale-ulipo",
     artist: "Saem's Tunes",
     imageSrc: "https://i.imgur.com/VfKXMyG.png",
     audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/Pale%20Ulipo%20(Afrobeat).m4a",
@@ -397,6 +398,7 @@ const FEATURED_TRACKS = [
   {
     id: 'featured-2',
     title: "I Need You More",
+    slug: "i-need-you-more",
     artist: "Saem's Tunes",
     imageSrc: "https://i.imgur.com/6yr8BpG.jpeg",
     audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/I%20Need%20You%20More.wav",
@@ -406,6 +408,7 @@ const FEATURED_TRACKS = [
   {
     id: 'featured-3',
     title: "Ni Hai",
+    slug: "ni-hai",
     artist: "Saem's Tunes ft. Kendi Nkonge",
     imageSrc: "https://i.imgur.com/LJQDADg.jpeg",
     audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/Ni%20Hai%20(Demo)%20-%20Saem's%20Tunes%20(OFFICIAL%20MUSIC%20VIDEO)%20(128kbit_AAC).m4a",
@@ -415,6 +418,7 @@ const FEATURED_TRACKS = [
   {
     id: 'featured-4',
     title: "Mapenzi Ya Ajabu",
+    slug: "mapenzi-ya-ajabu",
     artist: "Saem's Tunes",
     imageSrc: "https://i.imgur.com/wrm7LI1.jpeg",
     audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/Mapenzi%20Ya%20Ajabu%20(Demo)%20-%20Saem's%20Tunes%20(OFFICIAL%20MUSIC%20VIDEO)%20(128kbit_AAC).m4a",
