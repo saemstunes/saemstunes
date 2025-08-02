@@ -402,7 +402,8 @@ const FEATURED_TRACKS = [
     slug: "i-need-you-more",
     artist: "Saem's Tunes",
     imageSrc: "https://i.imgur.com/6yr8BpG.jpeg",
-    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/I%20Need%20You%20More.wav",
+    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/" + 
+              encodeURIComponent("Tracks/I Need You More.wav"),
     likes: 106,
     plays: 2412
   },
@@ -412,7 +413,8 @@ const FEATURED_TRACKS = [
     slug: "ni-hai",
     artist: "Saem's Tunes ft. Kendi Nkonge",
     imageSrc: "https://i.imgur.com/LJQDADg.jpeg",
-    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/Ni%20Hai%20(Demo)%20-%20Saem's%20Tunes%20(OFFICIAL%20MUSIC%20VIDEO)%20(128kbit_AAC).m4a",
+    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/" + 
+              encodeURIComponent("Tracks/Ni Hai (Demo) - Saem's Tunes (OFFICIAL MUSIC VIDEO) (128kbit_AAC).m4a"),
     likes: 1421,
     plays: 127
   },
@@ -422,7 +424,8 @@ const FEATURED_TRACKS = [
     slug: "mapenzi-ya-ajabu",
     artist: "Saem's Tunes",
     imageSrc: "https://i.imgur.com/wrm7LI1.jpeg",
-    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/Mapenzi%20Ya%20Ajabu%20(Demo)%20-%20Saem's%20Tunes%20(OFFICIAL%20MUSIC%20VIDEO)%20(128kbit_AAC).m4a",
+    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/" + 
+              encodeURIComponent("Tracks/Mapenzi Ya Ajabu (Demo) - Saem's Tunes (OFFICIAL MUSIC VIDEO) (128kbit_AAC).m4a"),
     likes: 28,
     plays: 154
   }
