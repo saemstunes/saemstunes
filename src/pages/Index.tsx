@@ -391,7 +391,7 @@ const FEATURED_TRACKS = [
     slug: "pale-ulipo",
     artist: "Saem's Tunes",
     imageSrc: "https://i.imgur.com/VfKXMyG.png",
-    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/Pale%20Ulipo%20(Afrobeat).m4a",
+    audioSrc: "https://uxyvhqtwkutstihtxdsv.supabase.co/storage/v1/object/public/tracks/Tracks/Pale%20Ulipo%20%28Afrobeat%29.m4a",
     likes: 71,
     plays: 1202
   },
