@@ -8,6 +8,7 @@ interface AudioTrack {
   artist?: string;
   artwork?: string;
   album?: string;
+  duration?: number;
 }
 
 interface AudioPlayerState {
@@ -23,6 +24,7 @@ interface AudioPlayerState {
   currentIndex: number;
   shuffle: boolean;
   repeat: 'off' | 'all' | 'one';
+  currentPlaylistId?: string | null;
 }
 
 interface AudioPlayerContextType {
@@ -39,17 +41,16 @@ interface AudioPlayerContextType {
   playPrevious: () => void;
   toggleShuffle: () => void;
   toggleRepeat: () => void;
-  setPlaylist: (playlist: AudioTrack[]) => void;
+  setPlaylist: (playlist: AudioTrack[], playlistId?: string) => void;
   setCurrentIndex: (index: number) => void;
 }
 
 const AudioPlayerContext = createContext<AudioPlayerContextType | undefined>(undefined);
 
-const MEMORY_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+const MEMORY_DURATION = 5 * 60 * 1000;
 
 export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { setMediaPlaying } = useMediaState();
-
   const [state, setState] = useState<AudioPlayerState>({
     currentTrack: null,
     isPlaying: false,
@@ -63,13 +64,13 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     currentIndex: -1,
     shuffle: false,
     repeat: 'off',
+    currentPlaylistId: null
   });
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const memoryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const shuffleHistoryRef = useRef<number[]>([]);
 
-  // Load saved state from localStorage on mount
   useEffect(() => {
     const savedState = localStorage.getItem('audioPlayerState');
     if (savedState) {
@@ -88,13 +89,11 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
           isPlaying: false,
         }));
       } catch (error) {
-        console.error('Error loading audio player state:', error);
         localStorage.removeItem('audioPlayerState');
       }
     }
   }, []);
 
-  // Save state to localStorage when it changes
   useEffect(() => {
     if (state.currentTrack) {
       const stateToSave = {
@@ -105,7 +104,6 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [state]);
 
-  // Clear memory after 5 minutes of inactivity
   useEffect(() => {
     if (memoryTimeoutRef.current) {
       clearTimeout(memoryTimeoutRef.current);
@@ -124,7 +122,6 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     };
   }, [state.isPlaying, state.currentTrack]);
 
-  // Clear memory when app is closed
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (audioRef.current) {
@@ -168,7 +165,6 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     audio.addEventListener('error', () => {
       setMediaPlaying(false);
-      console.error('Audio playback error');
       setState(prevState => ({
         ...prevState,
         isPlaying: false,
@@ -182,16 +178,13 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setMediaPlaying(false);
     
     if (state.repeat === 'one') {
-      // Repeat single track
       if (audioRef.current) {
         audioRef.current.currentTime = 0;
         audioRef.current.play().catch(console.error);
       }
     } else if (state.playlist.length > 0 && state.currentIndex !== -1) {
-      // Play next track
       playNext();
     } else {
-      // Stop playback
       setState(prev => ({
         ...prev,
         isPlaying: false,
@@ -325,6 +318,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       currentIndex: -1,
       shuffle: false,
       repeat: 'off',
+      currentPlaylistId: null
     });
     localStorage.removeItem('audioPlayerState');
     if (memoryTimeoutRef.current) {
@@ -338,12 +332,10 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     let nextIndex;
     
     if (state.shuffle) {
-      // Get random index different from current
       do {
         nextIndex = Math.floor(Math.random() * state.playlist.length);
       } while (nextIndex === state.currentIndex && state.playlist.length > 1);
       
-      // Save history for previous navigation
       shuffleHistoryRef.current = [...shuffleHistoryRef.current, state.currentIndex];
     } else {
       nextIndex = (state.currentIndex + 1) % state.playlist.length;
@@ -363,7 +355,6 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     let prevIndex;
     
     if (state.shuffle && shuffleHistoryRef.current.length > 0) {
-      // Pop last index from history
       prevIndex = shuffleHistoryRef.current.pop()!;
     } else {
       prevIndex = state.currentIndex - 1;
@@ -393,10 +384,11 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }));
   };
 
-  const setPlaylist = (playlist: AudioTrack[]) => {
+  const setPlaylist = (playlist: AudioTrack[], playlistId?: string) => {
     setState(prev => ({
       ...prev,
       playlist,
+      currentPlaylistId: playlistId || null
     }));
   };
 
