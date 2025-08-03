@@ -494,34 +494,26 @@ const FeaturedTracksSection = ({ tracks, onPlayTrack, onShareTrack }: { tracks: 
   </section>
 );
 
-const QuickActionsSection = () => {
+cconst QuickActionsSection = () => {
   const navigate = useNavigate();
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [containerWidths, setContainerWidths] = useState<number[]>([]);
   const [isMounted, setIsMounted] = useState(false);
 
-  // Measure container widths on mount and resize with debounce
+  // Measure container widths on mount and resize
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-    
     const updateWidths = () => {
       setContainerWidths(
         cardRefs.current.map(ref => ref?.offsetWidth || 0)
       );
     };
 
-    const handleResize = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(updateWidths, 100);
-    };
-
     updateWidths();
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', updateWidths);
     setIsMounted(true);
     
     return () => {
-      window.removeEventListener('resize', handleResize);
-      clearTimeout(timeoutId);
+      window.removeEventListener('resize', updateWidths);
     };
   }, []);
 
@@ -533,7 +525,7 @@ const QuickActionsSection = () => {
   };
 
   // Loading skeleton while measuring
-  if (!isMounted || containerWidths.length === 0) {
+  if (!isMounted) {
     return (
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         {QUICK_ACTIONS.map((_, index) => (
@@ -565,7 +557,9 @@ const QuickActionsSection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-20px" }}
             transition={{ delay: index * 0.1, duration: 0.5 }}
-            ref={el => cardRefs.current[index] = el}
+            ref={el => {
+              if (el) cardRefs.current[index] = el;
+            }}
           >
             <Card className="h-full group hover:shadow-lg transition-all duration-300 overflow-hidden">
               <CardContent className="flex flex-col items-start justify-start p-4 space-y-3 h-full">
