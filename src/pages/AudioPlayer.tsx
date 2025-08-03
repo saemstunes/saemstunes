@@ -32,12 +32,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { validate as isUuid } from 'uuid';
 import EnhancedAnimatedList from '@/components/tracks/EnhancedAnimatedList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAudioPlayer } from '@/context/AudioPlayerContext';
-import { getAudioUrl, getStorageUrl } from '@/lib/audioUtils';
+import { getAudioUrl, getStorageUrl, fetchPlaylistTracks, fetchUserPlaylists } from '@/lib/playlistUtils';
+import AddToPlaylistModal from '@/components/playlists/AddToPlaylistModal';
 
 interface AudioTrack {
   id: string | number;
@@ -46,6 +46,7 @@ interface AudioTrack {
   artist?: string;
   artwork?: string;
   album?: string;
+  duration?: number;
 }
 
 const AudioPlayerPage = () => {
@@ -63,6 +64,10 @@ const AudioPlayerPage = () => {
   const { setMediaPlaying } = useMediaState();
   const [showMetadataPrompt, setShowMetadataPrompt] = useState(false);
   const [tracks, setTracks] = useState<AudioTrack[]>([]);
+  const [userPlaylists, setUserPlaylists] = useState<any[]>([]);
+  const [selectedPlaylist, setSelectedPlaylist] = useState<any>(null);
+  const [playlistTracks, setPlaylistTracks] = useState<AudioTrack[]>([]);
+  const [activeTab, setActiveTab] = useState('all');
   
   const {
     state: playerState,
@@ -77,7 +82,6 @@ const AudioPlayerPage = () => {
     setCurrentIndex,
   } = useAudioPlayer();
 
-  // Handle page visibility
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
@@ -86,50 +90,42 @@ const AudioPlayerPage = () => {
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [setMediaPlaying]);
 
-  // Fetch all tracks - optimized with caching
   const fetchAllTracks = useCallback(async () => {
     try {
-      const { data: allTracks, error: tracksError } = await supabase
+      const { data: allTracks, error } = await supabase
         .from('tracks')
-        .select('id, title, audio_path, alternate_audio_path, cover_path, artist')
+        .select('id, title, audio_path, alternate_audio_path, cover_path, artist, duration')
         .eq('approved', true)
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (tracksError) throw tracksError;
+      if (error) throw error;
       
       if (allTracks) {
-        const mappedTracks = allTracks.map(track => {
-          const audioUrl = getAudioUrl(track);
-          return {
-            id: track.id,
-            src: audioUrl || '/audio/sample.mp3',
-            name: track.title,
-            artist: track.artist,
-            artwork: getStorageUrl(track.cover_path),
-            album: 'Single'
-          };
-        });
+        const mappedTracks = allTracks.map(track => ({
+          id: track.id,
+          src: getAudioUrl(track),
+          name: track.title,
+          artist: track.artist,
+          artwork: getStorageUrl(track.cover_path),
+          duration: track.duration || 0,
+          album: 'Single'
+        }));
         setTracks(mappedTracks);
         setPlaylist(mappedTracks);
       }
     } catch (error) {
       console.error('Error fetching tracks:', error);
     }
-  }, [setPlaylist]);
+  }, []);
 
-  // Fetch current track - optimized
   const fetchTrackData = useCallback(async (trackId: string) => {
     try {
       let data: any = null;
       
-      // First, check if we already have the track in our list
       const existingTrack = tracks.find(t => t.id === trackId);
       if (existingTrack) {
         setTrackData(existingTrack);
@@ -137,47 +133,30 @@ const AudioPlayerPage = () => {
         return;
       }
       
-      // If not in list, fetch from API
-      if (isUuid(trackId)) {
-        const { data: trackData, error } = await supabase
-          .from('tracks')
-          .select('*')
-          .eq('id', trackId)
-          .single();
-        
-        if (error) throw error;
-        data = trackData;
-      } else {
-        const { data: trackData, error } = await supabase
-          .from('tracks')
-          .select('*')
-          .eq('slug', trackId)
-          .single();
-        
-        if (error) throw error;
-        data = trackData;
-      }
+      const { data: trackData, error } = await supabase
+        .from('tracks')
+        .select('*')
+        .or(`id.eq.${trackId},slug.eq.${trackId}`)
+        .single();
+      
+      if (error) throw error;
+      data = trackData;
 
       if (data) {
-        const audioUrl = getAudioUrl(data);
-        const coverUrl = getStorageUrl(data.cover_path) || '/placeholder.svg';
-
         const newTrack = {
           id: data.id,
-          src: audioUrl || '/audio/sample.mp3',
+          src: getAudioUrl(data),
           name: data.title,
           artist: data.artist || 'Unknown Artist',
-          artwork: coverUrl,
+          artwork: getStorageUrl(data.cover_path) || '/placeholder.svg',
+          duration: data.duration || 0,
           album: 'Single'
         };
         
         setTrackData(newTrack);
-        
-        // Add to tracks list for future use
         setTracks(prev => [...prev, newTrack]);
       }
     } catch (error) {
-      console.error('Error fetching track:', error);
       toast({
         title: "Error",
         description: "Failed to load track data",
@@ -196,7 +175,6 @@ const AudioPlayerPage = () => {
     }
   }, [toast, tracks]);
 
-  // Set current index when trackData changes
   useEffect(() => {
     if (trackData && playerState.playlist.length > 0) {
       const index = playerState.playlist.findIndex(t => t.id === trackData.id);
@@ -206,14 +184,50 @@ const AudioPlayerPage = () => {
     }
   }, [trackData, playerState.playlist, setCurrentIndex]);
 
-  // Handle initial data loading
+  const fetchUserPlaylistsData = useCallback(async () => {
+    if (!user) return;
+    try {
+      const playlists = await fetchUserPlaylists(user.id);
+      setUserPlaylists(playlists);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load playlists",
+        variant: "destructive",
+      });
+    }
+  }, [user, toast]);
+
+  const fetchPlaylistTracksData = useCallback(async (playlistId: string) => {
+    try {
+      const tracks = await fetchPlaylistTracks(playlistId);
+      setPlaylistTracks(tracks);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load playlist tracks",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    if (user) {
+      fetchUserPlaylistsData();
+    }
+  }, [user, fetchUserPlaylistsData]);
+
+  const handlePlaylistSelect = useCallback((playlist: any) => {
+    setSelectedPlaylist(playlist);
+    fetchPlaylistTracksData(playlist.id);
+    setActiveTab('playlist');
+  }, [fetchPlaylistTracksData]);
+
   useEffect(() => {
     const init = async () => {
-      // Fetch all tracks in background
       fetchAllTracks();
       
       if (location.state?.track) {
-        // Handle special case for Pale Ulipo track
         let track = location.state.track;
         if (track.name === "Pale Ulipo") {
           track = {
@@ -242,7 +256,6 @@ const AudioPlayerPage = () => {
     init();
   }, [id, location.state, fetchAllTracks, fetchTrackData]);
 
-  // Like/Save functionality
   const checkIfLiked = useCallback(async () => {
     if (!user || !trackData) return;
     
@@ -372,7 +385,6 @@ const AudioPlayerPage = () => {
         });
       }
     } catch (error) {
-      console.error('Error sharing:', error);
       toast({
         title: "Share failed",
         description: "Unable to share track",
@@ -388,26 +400,28 @@ const AudioPlayerPage = () => {
     });
   }, [toast]);
 
-  const handleAddToPlaylist = useCallback(() => {
-    toast({
-      title: "Add to playlist",
-      description: "Playlist functionality coming soon",
-    });
-  }, [toast]);
-
   const handleTrackSelect = useCallback((track: AudioTrack) => {
     setTrackData(track);
     navigate(`/tracks/${track.id}`);
     
-    // Find index in playlist
-    const index = playerState.playlist.findIndex(t => t.id === track.id);
+    const currentPlaylist = selectedPlaylist ? playlistTracks : tracks;
+    const index = currentPlaylist.findIndex(t => t.id === track.id);
+    
     if (index !== -1) {
       setCurrentIndex(index);
+      setPlaylist(currentPlaylist, selectedPlaylist?.id);
       playTrack(track);
     }
-  }, [navigate, playerState.playlist, setCurrentIndex, playTrack]);
+  }, [
+    navigate, 
+    selectedPlaylist, 
+    playlistTracks, 
+    tracks, 
+    setCurrentIndex, 
+    setPlaylist, 
+    playTrack
+  ]);
 
-  // Handle audio errors
   const handleAudioError = useCallback(() => {
     setAudioError(true);
     toast({
@@ -475,7 +489,6 @@ const AudioPlayerPage = () => {
       <MainLayout>
         <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background">
           <div className="container mx-auto px-4 py-8 max-w-7xl">
-            {/* Header */}
             <div className="flex items-center gap-4 mb-8">
               <Button
                 variant="ghost"
@@ -489,13 +502,10 @@ const AudioPlayerPage = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Main Player */}
               <div className="lg:col-span-2">
                 <Card className="overflow-hidden bg-gradient-to-b from-card to-card/80 border-gold/20 shadow-2xl">
                   <CardContent className="p-6 md:p-8">
-                    {/* Album Artwork and Info */}
                     <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mb-8">
-                      {/* Artwork */}
                       <div className="flex-shrink-0 mx-auto lg:mx-0 w-full max-w-[320px]">
                         <div className="relative group aspect-square">
                           <img
@@ -516,7 +526,6 @@ const AudioPlayerPage = () => {
                         </div>
                       </div>
 
-                      {/* Track Info */}
                       <div className="flex flex-col justify-center space-y-6 flex-1 text-center lg:text-left">
                         <div>
                           <h2 className="text-3xl md:text-4xl font-bold mb-3 text-foreground">{trackData?.name || 'Unknown Track'}</h2>
@@ -526,7 +535,6 @@ const AudioPlayerPage = () => {
                           )}
                         </div>
 
-                        {/* Action Buttons */}
                         <div className="flex items-center justify-center lg:justify-start gap-4 flex-wrap">
                           <Button
                             variant="ghost"
@@ -564,10 +572,20 @@ const AudioPlayerPage = () => {
                                 <Plus className="mr-2 h-4 w-4" />
                                 {isSaved ? 'Remove from saved' : 'Save track'}
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={handleAddToPlaylist}>
-                                <Plus className="mr-2 h-4 w-4" />
-                                Add to playlist
-                              </DropdownMenuItem>
+                              
+                              {user && (
+                                <AddToPlaylistModal 
+                                  trackId={String(trackData.id)} 
+                                  userId={user.id}
+                                  onPlaylistCreated={fetchUserPlaylistsData}
+                                >
+                                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Add to playlist
+                                  </DropdownMenuItem>
+                                </AddToPlaylistModal>
+                              )}
+                              
                               <DropdownMenuItem onClick={handleDownload}>
                                 <Download className="mr-2 h-4 w-4" />
                                 Download
@@ -578,7 +596,6 @@ const AudioPlayerPage = () => {
                       </div>
                     </div>
 
-                    {/* Audio Player */}
                     <div className="space-y-6">
                       {audioError ? (
                         <div className="text-center py-12">
@@ -599,6 +616,59 @@ const AudioPlayerPage = () => {
                           />
                         )
                       )}
+
+                      <div className="flex items-center justify-center gap-4 mt-6">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={toggleShuffle}
+                          className={playerState.shuffle ? "text-primary" : ""}
+                        >
+                          <Shuffle className="h-4 w-4" />
+                        </Button>
+                        
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={playPrevious}
+                        >
+                          <SkipBack className="h-4 w-4" />
+                        </Button>
+                        
+                        <Button 
+                          variant="default" 
+                          size="lg"
+                          onClick={togglePlayPause}
+                          className="h-12 w-12 rounded-full"
+                          disabled={!trackData}
+                        >
+                          {playerState?.isPlaying && playerState?.currentTrack?.id === trackData.id ? (
+                            <Pause className="h-5 w-5" />
+                          ) : (
+                            <Play className="h-5 w-5 ml-0.5" />
+                          )}
+                        </Button>
+                        
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={playNext}
+                        >
+                          <SkipForward className="h-4 w-4" />
+                        </Button>
+                        
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={toggleRepeat}
+                          className={playerState.repeat !== 'off' ? "text-primary" : ""}
+                        >
+                          <Repeat className="h-4 w-4" />
+                          {playerState.repeat === 'one' && (
+                            <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary" />
+                          )}
+                        </Button>
+                      </div>
                     </div>
 
                     {showMetadataPrompt && trackData && (
@@ -608,7 +678,6 @@ const AudioPlayerPage = () => {
                 </Card>
               </div>
 
-              {/* Track List */}
               <div className="lg:col-span-1">
                 <Card className="h-fit">
                   <CardHeader>
@@ -618,19 +687,24 @@ const AudioPlayerPage = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <Tabs defaultValue="all" className="w-full">
-                      <TabsList className="grid w-full grid-cols-3">
+                    <Tabs 
+                      value={activeTab} 
+                      onValueChange={setActiveTab}
+                      className="w-full"
+                    >
+                      <TabsList className="grid w-full grid-cols-4">
                         <TabsTrigger value="all">All</TabsTrigger>
                         <TabsTrigger value="favorites">Favorites</TabsTrigger>
                         <TabsTrigger value="recent">Recent</TabsTrigger>
+                        <TabsTrigger value="playlists">Playlists</TabsTrigger>
                       </TabsList>
                       
                       <TabsContent value="all" className="mt-0">
                         <ScrollArea className="h-[600px]">
                           <div className="p-4">
                             <EnhancedAnimatedList
-                              tracks={tracks as any}
-                              onTrackSelect={handleTrackSelect as any}
+                              tracks={tracks}
+                              onTrackSelect={handleTrackSelect}
                             />
                           </div>
                         </ScrollArea>
@@ -652,6 +726,73 @@ const AudioPlayerPage = () => {
                             <p className="text-center text-muted-foreground py-8">
                               No recent tracks
                             </p>
+                          </div>
+                        </ScrollArea>
+                      </TabsContent>
+                      
+                      <TabsContent value="playlists" className="mt-0">
+                        <ScrollArea className="h-[600px]">
+                          <div className="p-4">
+                            {!user ? (
+                              <p className="text-center text-muted-foreground py-8">
+                                Sign in to view your playlists
+                              </p>
+                            ) : selectedPlaylist ? (
+                              <div>
+                                <Button 
+                                  variant="ghost" 
+                                  onClick={() => setSelectedPlaylist(null)}
+                                  className="mb-4"
+                                >
+                                  <ArrowLeft className="h-4 w-4 mr-2" /> Back to playlists
+                                </Button>
+                                <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                                  {selectedPlaylist.name}
+                                  <span className="text-sm text-muted-foreground">
+                                    ({playlistTracks.length} tracks)
+                                  </span>
+                                </h3>
+                                <EnhancedAnimatedList
+                                  tracks={playlistTracks}
+                                  onTrackSelect={handleTrackSelect}
+                                />
+                              </div>
+                            ) : userPlaylists.length === 0 ? (
+                              <p className="text-center text-muted-foreground py-8">
+                                You don't have any playlists yet
+                              </p>
+                            ) : (
+                              <div className="grid grid-cols-1 gap-3">
+                                {userPlaylists.map(playlist => (
+                                  <div 
+                                    key={playlist.id} 
+                                    className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted cursor-pointer transition-colors"
+                                    onClick={() => handlePlaylistSelect(playlist)}
+                                  >
+                                    <div className="bg-muted border rounded-md w-16 h-16 flex items-center justify-center flex-shrink-0">
+                                      <Music className="h-6 w-6 text-muted-foreground" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <h4 className="font-semibold truncate">{playlist.name}</h4>
+                                      <p className="text-sm text-muted-foreground truncate">
+                                        {playlist.description || 'No description'}
+                                      </p>
+                                      <div className="flex items-center mt-1 text-xs text-muted-foreground">
+                                        <span>
+                                          {playlist.play_count || 0} plays
+                                        </span>
+                                        <span className="mx-2">•</span>
+                                        <span>
+                                          {playlist.total_duration 
+                                            ? `${Math.floor(playlist.total_duration / 60)} min` 
+                                            : '0 min'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         </ScrollArea>
                       </TabsContent>
