@@ -62,7 +62,7 @@ const RecommendedContent = () => {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {recommendedVideos.map((video) => (
-          <VideoCard key={video.id} video={video} />
+          <VideoCard key={video.id} video={video} isPremium={video.isLocked} />
         ))}
       </div>
     </div>

@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search } from "lucide-react";
+import { canAccessContent } from "@/lib/contentAccess";
 
 const Videos = () => {
   const { user } = useAuth();
@@ -26,7 +27,7 @@ const Videos = () => {
   // Get unique levels from videos
   const levels = ["all", ...new Set(mockVideos.map((video) => video.level))];
 
-  // Filter videos based on search term, category, and level
+  // Filter videos based on search term, category, level, and access control
   const filteredVideos = mockVideos.filter((video) => {
     const matchesSearch = video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       video.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -36,10 +37,11 @@ const Videos = () => {
     
     const matchesLevel = levelFilter === "all" || video.level === levelFilter;
 
-    // Show locked videos only if user is subscribed
-    const accessibleToUser = !video.isLocked || (user && user.subscribed);
+    // Use the new access control system
+    const userSubscriptionTier = user?.subscriptionTier || 'free';
+    const hasAccess = canAccessContent(video.accessLevel, user, userSubscriptionTier);
     
-    return matchesSearch && matchesCategory && matchesLevel && accessibleToUser;
+    return matchesSearch && matchesCategory && matchesLevel && hasAccess;
   });
 
   return (
@@ -91,14 +93,18 @@ const Videos = () => {
         {filteredVideos.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredVideos.map((video) => (
-              <VideoCard key={video.id} video={video} />
+              <VideoCard 
+                key={video.id} 
+                video={video} 
+                isPremium={video.accessLevel !== 'free'} 
+              />
             ))}
           </div>
         ) : (
           <div className="text-center py-12">
             <h3 className="text-lg font-medium">No videos found</h3>
             <p className="text-muted-foreground text-sm mt-2">
-              Try adjusting your search or filter criteria.
+              Try adjusting your search or filter criteria, or sign in to access more content.
             </p>
           </div>
         )}

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { VideoContent } from "@/data/mockData";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,10 +10,11 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
 interface VideoCardProps {
-  video: VideoContent;
+  video: VideoContent & { isExclusive?: boolean };
+  isPremium?: boolean; // Make isPremium optional with a default value
 }
 
-const VideoCard = ({ video }: VideoCardProps) => {
+const VideoCard = ({ video, isPremium = false }: VideoCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -72,6 +72,12 @@ const VideoCard = ({ video }: VideoCardProps) => {
         {video.isLocked && (!user || !user.subscribed) && (
           <div className="absolute top-2 right-2">
             <Badge className="bg-gold text-white">Premium</Badge>
+          </div>
+        )}
+
+        {video.isExclusive && (
+          <div className="absolute top-2 left-2">
+            <Badge className="bg-gold text-white">Exclusive</Badge>
           </div>
         )}
         

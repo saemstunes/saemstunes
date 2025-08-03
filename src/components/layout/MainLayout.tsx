@@ -1,5 +1,4 @@
-
-import React, { ReactNode, useState } from "react";
+import React, { ReactNode, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,12 @@ import {
   LogOut,
   Menu,
   X,
+  Search,
+  Instagram,
+  Mail,
+  Heart,
+  Bell,
+  Facebook,
   Music,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -22,6 +27,49 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 import MobileNavigation from "./MobileNavigation";
 import MiniPlayer from "../player/MiniPlayer";
+import Logo from "../branding/Logo";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Badge } from "../ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { FloatingBackButton } from "@/components/ui/floating-back-button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Library } from "lucide-react";
+
+
+// Custom TikTok icon as it's not available in lucide-react
+const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+  </svg>
+);
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -32,7 +80,70 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [hasNotifications] = useState(true);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [backButtonPressCount, setBackButtonPressCount] = useState(0);
+  const { toast } = useToast();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const handleLogoClick = () => { 
+    navigate('/'); 
+  };
+
+  // Handle scroll effect for navbar
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Handle back button press
+  useEffect(() => {
+    const handleBackButton = (e: PopStateEvent) => {
+      if (location.pathname === '/') {
+        e.preventDefault();
+        if (backButtonPressCount === 0) {
+          toast({
+            title: "Tap again to exit app",
+            duration: 2000,
+          });
+          setBackButtonPressCount(1);
+          window.history.pushState(null, document.title, window.location.href);
+          
+          // Reset count after 3 seconds
+          setTimeout(() => {
+            setBackButtonPressCount(0);
+          }, 3000);
+        } else {
+          // In a real mobile app, this would exit the app
+          // For web, we'll just show a notification
+          toast({
+            title: "Exiting application",
+            description: "This would close the app on a mobile device",
+          });
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handleBackButton);
+    
+    // Set initial history state
+    if (location.pathname === '/') {
+      window.history.pushState(null, document.title, window.location.href);
+    }
+    
+    return () => {
+      window.removeEventListener('popstate', handleBackButton);
+    };
+  }, [location.pathname, backButtonPressCount, toast]);
+
+  // Scroll to top when route changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   const navigation = [
     {
@@ -42,26 +153,38 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
       roles: ["student", "adult", "parent", "teacher", "admin"],
     },
     {
-      name: "Videos",
-      href: "/videos",
+      name: "Discover",
+      href: "/discover",
       icon: Video,
       roles: ["student", "adult", "parent", "teacher", "admin"],
     },
     {
-      name: "Resources",
-      href: "/resources",
+      name: "Library",
+      href: "/library",
       icon: BookOpen,
       roles: ["student", "adult", "parent", "teacher", "admin"],
     },
     {
-      name: "Bookings",
-      href: "/bookings",
-      icon: Calendar,
+      name: "Community",
+      href: "/community",
+      icon: Video,
+      roles: ["student", "adult", "parent", "teacher", "admin"],
+    },
+    {
+      name: "Music Tools",
+      href: "/music-tools",
+      icon: Music,
+      roles: ["student", "adult", "parent", "teacher", "admin"],
+    },
+    {
+      name: "Tracks",
+      href: "/tracks",
+      icon: Music,
       roles: ["student", "adult", "parent", "teacher", "admin"],
     },
     {
       name: "Profile",
-      href: "/profile",
+      href: "/auth",
       icon: User,
       roles: ["student", "adult", "parent", "teacher", "admin"],
     },
@@ -73,12 +196,33 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
     },
   ];
 
+  const socialLinks = [
+    {
+      name: "Follow us",
+      href: "/follow-us",
+      icon: Instagram,
+      ariaLabel: "Follow us on social media",
+    },
+    {
+      name: "Contact us",
+      href: "/contact-us",
+      icon: Mail,
+      ariaLabel: "Contact us",
+    },
+    {
+      name: "Support us",
+      href: "/support-us",
+      icon: Heart,
+      ariaLabel: "Support Saem's Tunes",
+    },
+  ];
+
   const isActive = (path: string) => {
     return location.pathname === path;
   };
 
   const filteredNavigation = navigation.filter(
-    (item) => user && item.roles.includes(user.role)
+    (item) => !user || (user && item.roles.includes(user.role))
   );
 
   const handleNavigation = (href: string) => {
@@ -96,10 +240,29 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
     onExpand: () => navigate("/player"),
   };
 
+  const handleLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
+    logout();
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out",
+    });
+    setShowLogoutConfirm(false);
+    navigate("/");
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Mobile Header */}
-      <header className="bg-card shadow-sm sticky top-0 z-40 lg:hidden">
+      {/* Mobile Header - With backdrop blur and transparency */}
+      <header className={cn(
+        "sticky top-0 z-40 lg:hidden transition-all duration-200",
+        isScrolled 
+          ? "bg-background/80 backdrop-blur-md shadow-sm border-b border-border/50" 
+          : "bg-transparent"
+      )}>
         <div className="container flex h-16 items-center justify-between px-4">
           <div className="flex items-center">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
@@ -109,96 +272,187 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
                   <span className="sr-only">Toggle menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[280px] sm:w-[350px]">
-                <nav className="flex flex-col gap-6">
-                  <div className="flex items-center gap-2 mb-6">
-                    <Music className="h-6 w-6 text-gold" />
-                    <h3 className="font-serif text-xl font-bold">Saem's Tunes</h3>
-                  </div>
+              <SheetContent side="left" className="w-[280px] sm:w-[350px] flex flex-col p-0">
+  {/* Fixed Header */}
+  <div className="flex items-center justify-between p-4 border-b border-border bg-background sticky top-0 z-10">
+    <div className="flex items-center gap-3">
+      <Logo size="md" />
+      <div className="flex flex-col leading-tight">
+        <span className="text-yellow-500 font-bold text-base font-nunito">Saem's</span>
+        <span className="text-amber-800 font-bold text-base font-nunito">Tunes</span>
+      </div>
+    </div>
+    <Button
+      size="icon"
+      variant="ghost"
+      onClick={() => setIsMobileMenuOpen(false)}
+    >
+      <X className="h-5 w-5" />
+      <span className="sr-only">Close</span>
+    </Button>
+  </div>
 
-                  {user && (
-                    <>
-                      <div className="flex items-center gap-4 mb-4">
-                        <Avatar>
-                          <AvatarImage src={user.avatar} alt={user.name} />
-                          <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium">{user.name}</p>
-                          <p className="text-sm text-muted-foreground capitalize">{user.role}</p>
-                        </div>
-                      </div>
-                      <Separator className="mb-4" />
-                    </>
-                  )}
-
-                  {filteredNavigation.map((item) => (
-                    <Button
-                      key={item.name}
-                      variant="ghost"
-                      className={cn(
-                        "justify-start gap-4",
-                        isActive(item.href) &&
-                          "bg-muted font-medium text-foreground"
-                      )}
-                      onClick={() => handleNavigation(item.href)}
-                    >
-                      <item.icon className="h-5 w-5" />
-                      {item.name}
-                    </Button>
-                  ))}
-
-                  {user && (
-                    <Button
-                      variant="ghost"
-                      className="justify-start gap-4 text-destructive hover:text-destructive"
-                      onClick={() => {
-                        logout();
-                        setIsMobileMenuOpen(false);
-                        navigate("/");
-                      }}
-                    >
-                      <LogOut className="h-5 w-5" />
-                      Logout
-                    </Button>
-                  )}
-
-                  <div className="mt-auto flex items-center justify-between">
-                    <ThemeToggle />
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <X className="h-5 w-5" />
-                      <span className="sr-only">Close</span>
-                    </Button>
-                  </div>
-                </nav>
-              </SheetContent>
-            </Sheet>
-
-            <div className="flex items-center gap-2 ml-4">
-              <Music className="h-6 w-6 text-gold" />
-              <h1 className="font-serif text-xl font-bold">
-                Saem's <span className="text-gold">Tunes</span>
-              </h1>
+  {/* Scrollable Content */}
+  <div className="flex-1 overflow-y-auto">
+    <nav className="flex flex-col gap-6 p-4">
+      {user && (
+        <>
+          <div className="flex items-center gap-4 mb-4">
+            <Avatar>
+              <AvatarImage src={user.avatar} alt={user.name} />
+              <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="font-medium">{user.name}</p>
+              <p className="text-sm text-muted-foreground capitalize">{user.role}</p>
             </div>
           </div>
+          <Separator className="mb-4" />
+        </>
+      )}
 
-          <div className="flex items-center gap-2">
+      {filteredNavigation.map((item) => (
+        <Button
+          key={item.name}
+          variant="ghost"
+          className={cn(
+            "justify-start gap-4",
+            isActive(item.href) &&
+              "bg-muted font-medium text-foreground"
+          )}
+          onClick={() => handleNavigation(item.href)}
+        >
+          <item.icon className="h-5 w-5" />
+          {item.name}
+        </Button>
+      ))}
+
+      {user && (
+        <Button
+          variant="ghost"
+          className="justify-start gap-4 text-destructive hover:text-destructive"
+          onClick={() => {
+            logout();
+            setIsMobileMenuOpen(false);
+            navigate("/");
+          }}
+        >
+          <LogOut className="h-5 w-5" />
+          Logout
+        </Button>
+      )}
+
+      <Separator className="my-4" />
+      
+      <div className="flex flex-col gap-3">
+        {socialLinks.map((item) => (
+          <Button
+            key={item.name}
+            variant="ghost"
+            size="sm"
+            className="justify-start gap-3 text-muted-foreground hover:text-gold"
+            onClick={() => handleNavigation(item.href)}
+            aria-label={item.ariaLabel}
+          >
+            <item.icon className="h-4 w-4" />
+            {item.name}
+          </Button>
+        ))}
+      </div>
+
+      {/* Footer content - now scrollable and with bottom padding to clear mobile nav */}
+      <Separator className="my-4" />
+      <div className="flex items-center justify-between pb-12">
+        <ThemeToggle />
+        <span className="text-xs text-muted-foreground">v7.1.0</span>
+      </div>
+    </nav>
+  </div>
+</SheetContent>
+            </Sheet>
+
+            <Logo size="md" className="ml-4" />
+          </div>
+
+          <div className="flex items-center gap-1 md:gap-2">
+            <Button 
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/search')}
+              className="ml-auto"
+            >
+              <Search className="h-5 w-5" />
+              <span className="sr-only">Search</span>
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative"
+              onClick={() => navigate("/notifications")}
+            >
+              <Bell className="h-5 w-5" />
+              {hasNotifications && (
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+              )}
+              <span className="sr-only">Notifications</span>
+            </Button>
+            
             <ThemeToggle />
+            
             {user ? (
-              <Avatar
-                className="cursor-pointer"
-                onClick={() => navigate("/profile")}
-              >
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-              </Avatar>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Avatar
+                    className="cursor-pointer h-8 w-8"
+                  >
+                    <AvatarImage src={user.avatar} alt={user.name} />
+                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{user.name}</p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem onClick={() => navigate("/profile")}>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
+                      <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/library")}>
+                      <Library className="mr-2 h-4 w-4" />
+                      <span>Library</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/settings")}>
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Settings</span>
+                      <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                    <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
-              <Button size="sm" onClick={() => navigate("/login")}>
-                Login
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                onClick={() => navigate("/auth")}
+                className="h-8 w-8"
+              >
+                <User className="h-5 w-5" />
+                <span className="sr-only">Login</span>
               </Button>
             )}
           </div>
@@ -206,13 +460,24 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
       </header>
 
       <div className="flex-1 flex">
-        {/* Desktop Sidebar */}
+        {/* Desktop Sidebar - With transparent header */}
         <aside className="hidden lg:flex flex-col w-64 bg-card border-r border-border">
-          <div className="flex items-center gap-2 p-6">
-            <Music className="h-6 w-6 text-gold" />
-            <h1 className="font-serif text-xl font-bold">
-              Saem's <span className="text-gold">Tunes</span>
-            </h1>
+          <div className={cn(
+            "p-6 sticky top-0 z-40 transition-all duration-200 flex items-center gap-3",
+            isScrolled 
+            ? "bg-card/80 backdrop-blur-md" 
+            : "bg-transparent"
+          )}>
+            <div 
+              className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity" 
+              onClick={handleLogoClick}
+            >
+              <Logo size="lg" />
+              <div className="flex flex-col leading-tight">
+                <span className="text-brown-dark dark:text-gold-light font-bold text-lg font-nunito tracking-tighter">Saem's</span>
+                <span className="text-gold-dark dark:text-brown-light font-bold text-lg font-nunito tracking-tighter">Tunes</span>
+              </div>
+            </div>
           </div>
 
           {user && (
@@ -263,22 +528,75 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
             )}
           </nav>
 
-          <div className="p-4 mt-auto">
+          <Separator className="my-4" />
+          
+          <div className="px-4 pb-4 space-y-1">
+            <h3 className="text-sm font-medium text-muted-foreground px-2 mb-2">Resources</h3>
+            {socialLinks.map((item) => (
+              <Button
+                key={item.name}
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start gap-3"
+                onClick={() => handleNavigation(item.href)}
+                aria-label={item.ariaLabel}
+              >
+                <item.icon className="h-4 w-4" />
+                <span>{item.name}</span>
+              </Button>
+            ))}
+          </div>
+
+          <div className="p-4 border-t border-border flex items-center justify-between">
             <ThemeToggle />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative"
+              onClick={() => navigate("/notifications")}
+            >
+              <Bell className="h-5 w-5" />
+              {hasNotifications && (
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+              )}
+              <span className="sr-only">Notifications</span>
+            </Button>
           </div>
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1">
-          <div className="container mx-auto py-6 px-4 lg:px-6 min-h-screen pb-24 lg:pb-6">
-            {children}
-          </div>
+     <main className="flex-1">
+       <div className="container mx-auto px-4 sm:px-6 py-6 min-h-[calc(100vh-6rem)] pb-24 lg:pb-6">
+    {children}
+  </div>
           
-          {/* Mobile Navigation */}
+          {/* Fixed Position Elements */}
+          <FloatingBackButton />
           {showMiniPlayer && <MiniPlayer {...trackData} />}
-          <MobileNavigation />
+          {isMobile && <MobileNavigation />}
         </main>
       </div>
+      <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Logout Confirmation</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to log out from Saem's Tunes?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowLogoutConfirm(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={confirmLogout}
+            >
+              <LogOut className="h-4 w-4 mr-2" /> Logout
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

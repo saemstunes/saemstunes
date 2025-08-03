@@ -1,11 +1,14 @@
-
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Music, ArrowRight } from "lucide-react";
+import { 
+  Music, 
+  ArrowRight, 
+  Loader2, 
+  AlertCircle 
+} from "lucide-react";
 import {
   Card,
   CardContent,
@@ -15,118 +18,318 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { motion } from "framer-motion";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
+import ForgotPasswordForm from "./ForgotPasswordForm";
+import SocialLoginOptions from "./SocialLoginOptions";
 
-const LoginForm = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+const formSchema = z.object({
+  email: z.string().email("Please enter a valid email"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+type FormData = z.infer<typeof formSchema>;
+
+interface LoginFormProps {
+  onAdminTap?: () => void;
+}
+
+const LoginForm = ({ onAdminTap }: LoginFormProps) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [showCaptcha, setShowCaptcha] = useState(false);
   const { login } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<HCaptcha>(null);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  
+  // Get redirect path from location state or default to "/"
+  const from = location.state?.from?.pathname || "/";
+  
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  // Check if we should show captcha based on failed attempts or specific conditions
+  useEffect(() => {
+    // Show captcha after 2 failed login attempts or if coming from verification
+    const shouldShowCaptcha = loginAttempts >= 2 || 
+      location.pathname === '/auth' || 
+      location.state?.requireCaptcha;
+    
+    setShowCaptcha(shouldShowCaptcha);
+  }, [loginAttempts, location]);
+
+  // Load login attempts from sessionStorage on component mount
+  useEffect(() => {
+    const storedAttempts = sessionStorage.getItem('loginAttempts');
+    if (storedAttempts) {
+      const attempts = parseInt(storedAttempts, 10);
+      setLoginAttempts(attempts);
+    }
+  }, []);
+
+  const handleLogin = async (data: FormData) => {
+    setIsSubmitting(true);
+
+    // Only require captcha if it's being shown
+    if (showCaptcha && !captchaToken) {
+      toast({
+        title: "Verification required",
+        description: "Please complete the captcha verification.",
+        variant: "destructive",
+      });
+      form.setError("root", { message: "Please complete the CAPTCHA challenge." });
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
-      await login(email, password);
-      navigate("/");
+      // Pass captchaToken to login function (null if captcha not required)
+      await login(data.email, data.password, captchaToken);
+      
+      // Reset login attempts on successful login
+      setLoginAttempts(0);
+      sessionStorage.removeItem('loginAttempts');
+      
+      navigate(from);
     } catch (error) {
       console.error("Login failed:", error);
-      // Toast is already shown in the auth context
+      
+      // Increment login attempts and store in sessionStorage
+      const newAttempts = loginAttempts + 1;
+      setLoginAttempts(newAttempts);
+      sessionStorage.setItem('loginAttempts', newAttempts.toString());
+      
+      // Show error message
+      form.setError("root", { 
+        message: "Invalid email or password. Please try again." 
+      });
+      
+      // Reset captcha on error if it was shown
+      if (showCaptcha) {
+        captchaRef.current?.resetCaptcha();
+        setCaptchaToken(null);
+      }
+      
+      // Show captcha after failed attempts
+      if (newAttempts >= 2) {
+        setShowCaptcha(true);
+      }
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
+  const handleCaptchaVerify = (token: string) => {
+    setCaptchaToken(token);
+  };
+
+  const handleCaptchaExpire = () => {
+    setCaptchaToken(null);
+  };
+
+  const handleCaptchaError = () => {
+    setCaptchaToken(null);
+    toast({
+      title: "Captcha Error",
+      description: "There was an error loading the captcha. Please try again.",
+      variant: "destructive",
+    });
+  };
+
+  if (showForgotPassword) {
+    return (
+      <ForgotPasswordForm onCancel={() => setShowForgotPassword(false)} />
+    );
+  }
+
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="w-full border-gold/20 shadow-lg">
       <CardHeader className="space-y-1">
-        <div className="flex justify-center mb-4">
-          <div className="bg-gold/10 p-3 rounded-full">
+        <motion.div 
+          className="flex justify-center mb-4"
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          onClick={onAdminTap}
+        >
+          <div className="bg-gold/10 p-3 rounded-full cursor-pointer">
             <Music className="h-8 w-8 text-gold" />
           </div>
-        </div>
-        <CardTitle className="text-2xl text-center font-serif">
-          Welcome Back
-        </CardTitle>
-        <CardDescription className="text-center">
-          Enter your credentials to access your account
-        </CardDescription>
+        </motion.div>
+        <motion.div
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1, duration: 0.3 }}
+        >
+          <CardTitle className="text-2xl text-center font-serif">
+            Welcome Back
+          </CardTitle>
+          <CardDescription className="text-center">
+            Enter your credentials to access your account
+          </CardDescription>
+        </motion.div>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleLogin}>
-          <div className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@example.com"
-                required
-                disabled={isLoading}
-              />
-            </div>
-            <div className="grid gap-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Button
-                  variant="link"
-                  size="sm"
-                  className="text-xs text-gold hover:text-gold-dark"
-                  type="button"
-                  onClick={() => {
-                    toast({
-                      title: "Reset Password",
-                      description: "This feature will be available soon!",
-                    });
-                  }}
-                >
-                  Forgot password?
-                </Button>
-              </div>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                disabled={isLoading}
-              />
-            </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-4">
+            {form.formState.errors.root && (
+              <motion.div 
+                className="bg-destructive/10 text-destructive p-3 rounded-md flex items-center gap-2 text-sm"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+              >
+                <AlertCircle className="h-4 w-4" />
+                {form.formState.errors.root.message}
+              </motion.div>
+            )}
+            
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="email" 
+                      placeholder="name@example.com" 
+                      {...field} 
+                      disabled={isSubmitting} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="flex items-center justify-between">
+                    <FormLabel>Password</FormLabel>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="text-xs text-gold hover:text-gold-dark px-0 h-auto"
+                      type="button"
+                      onClick={() => setShowForgotPassword(true)}
+                    >
+                      Forgot password?
+                    </Button>
+                  </div>
+                  <FormControl>
+                    <Input 
+                      type="password"
+                      placeholder="••••••••"
+                      {...field}
+                      disabled={isSubmitting}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Conditionally render captcha */}
+            {showCaptcha && (
+              <motion.div 
+                className="flex justify-center my-4"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <HCaptcha
+                  sitekey="6ddca290-02b6-4572-90ce-dcdcc1d2c4ca"
+                  onVerify={handleCaptchaVerify}
+                  onExpire={handleCaptchaExpire}
+                  onError={handleCaptchaError}
+                  ref={captchaRef}
+                  theme="light"
+                />
+              </motion.div>
+            )}
+
+            {/* Show attempt warning */}
+            {loginAttempts > 0 && loginAttempts < 2 && (
+              <motion.div 
+                className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-3 rounded-md text-sm"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+              >
+                <AlertCircle className="h-4 w-4 inline mr-2" />
+                {loginAttempts === 1 ? "1 failed attempt. " : `${loginAttempts} failed attempts. `}
+                Captcha will be required after 2 failed attempts.
+              </motion.div>
+            )}
+
             <Button
               type="submit"
-              disabled={isLoading}
-              className="bg-gold hover:bg-gold-dark text-white"
+              disabled={isSubmitting || (showCaptcha && !captchaToken)}
+              className="w-full bg-gold hover:bg-gold/90 text-white"
             >
-              {isLoading ? "Logging in..." : "Login"}
-              {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  Sign In
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
             </Button>
-            <div className="text-center text-sm">
-              Don't have an account?{" "}
-              <Button
-                variant="link"
-                className="p-0 text-gold hover:text-gold-dark"
-                onClick={() => navigate("/signup")}
-              >
-                Sign up
-              </Button>
-            </div>
-          </div>
-        </form>
+          </form>
+        </Form>
+
+        <div className="mt-4">
+          <SocialLoginOptions />
+        </div>
       </CardContent>
-      <CardFooter className="border-t pt-4">
+      <CardFooter className="flex flex-col gap-4 border-t pt-4">
+        <div className="text-center text-sm">
+          Don't have an account?{" "}
+          <Button
+            variant="link"
+            className="p-0 text-gold hover:text-gold/80"
+            onClick={() => navigate("/auth?tab=signup")}
+          >
+            Sign up
+          </Button>
+        </div>
+        
         <div className="text-xs text-muted-foreground text-center w-full">
-          For demo purposes, you can use:
+          Making
           <br />
           <code className="bg-muted px-1 py-0.5 rounded text-xs">
-            student@example.com
+            music
           </code>{" "}
-          or any role with password{" "}
-          <code className="bg-muted px-1 py-0.5 rounded text-xs">password</code>
+          , representing
+          <code className="bg-muted px-1 py-0.5 rounded text-xs">Christ</code>
         </div>
       </CardFooter>
     </Card>
