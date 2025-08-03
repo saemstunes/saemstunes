@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { AuthProvider } from "@/context/AuthContext";
-import { AudioPlayerProvider } from "@/context/AudioPlayerContext";
+import { AudioPlayerContext } from "@/context/AudioPlayerContext";
 import { MediaStateProvider } from '@/components/idle-state/mediaStateContext';
 import { PlaylistProvider } from '@/context/PlaylistContext';
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
@@ -75,7 +75,7 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <MediaStateProvider>
-          <AudioPlayerProvider>
+          <AudioPlayerContext>
             <PlaylistProvider>
             <TooltipProvider>
               <Toaster />
@@ -159,7 +159,7 @@ const App = () => {
                 </BrowserRouter>
               </TooltipProvider>
               </PlaylistProvider> 
-            </AudioPlayerProvider>
+            </AudioPlayerContext>
           </MediaStateProvider>
       </AuthProvider>
     </QueryClientProvider>
