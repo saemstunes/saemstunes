@@ -1,48 +1,14 @@
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
 
 User-agent: *
 Allow: /
-Disallow: /src/
-Disallow: /supabase/
-Disallow: /components.json
-Disallow: /package.json
-Disallow: /package-lock.json
-Disallow: /bun.lockb
-Disallow: /tsconfig.json
-Disallow: /tsconfig.app.json
-Disallow: /tsconfig.node.json
-Disallow: /vite.config.ts
-Disallow: /tailwind.config.ts
-Disallow: /postcss.config.js
-Disallow: /eslint.config.js
-Disallow: /About Saem's Tunes App.md
-Disallow: /admin
-Disallow: /profile
-Disallow: /settings
-Disallow: /user-details
-Disallow: /bookings
-Disallow: /notifications
-Disallow: /verification-waiting
-Disallow: /unauthorized
-Disallow: /auth/callback
-
-# Allow important pages for SEO
-Allow: /discover
-Allow: /videos
-Allow: /resources
-Allow: /learning-hub
-Allow: /community
-Allow: /library
-Allow: /music-tools
-Allow: /services
-Allow: /contact-us
-Allow: /support-us
-Allow: /follow-us
-Allow: /subscriptions
-Allow: /privacy
-Allow: /terms
-
-# Sitemap location
-Sitemap: https://saemstunes.app/sitemap.xml
-
-# Crawl delay (optional - be respectful to server resources)
-Crawl-delay: 1

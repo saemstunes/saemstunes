@@ -1,215 +1,205 @@
 
-import React, {
-  createContext,
-  useState,
-  useEffect,
-  useContext,
-  ReactNode,
-} from "react";
-import {
-  Session,
-  User,
-  AuthChangeEvent,
-} from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { useToast } from "@/hooks/use-toast";
 
-export type UserRole = 'student' | 'adult' | 'parent' | 'teacher' | 'admin';
+// Define user roles
+export type UserRole = "student" | "adult" | "parent" | "teacher" | "admin";
 
-interface ExtendedUser extends User {
-  role: UserRole;
-  subscribed?: boolean;
-  subscriptionTier?: SubscriptionTier;
+// Define user interface
+export interface User {
+  id: string;
   name: string;
+  email: string;
+  role: UserRole;
   avatar?: string;
+  subscribed: boolean;
+  parentId?: string;
 }
 
-interface AuthContextProps {
-  session: Session | null;
-  user: ExtendedUser | null;
+// Define context interface
+interface AuthContextType {
+  user: User | null;
+  isAuthenticated: boolean;
   isLoading: boolean;
-  signIn: (email: string) => Promise<void>;
-  signOut: () => Promise<void>;
-  signUp: (email: string, password?: string) => Promise<void>;
-  login: (email: string, password: string, captchaToken?: string | null) => Promise<void>;
-  updateUser: (data: any) => Promise<void>;
-  updateUserProfile: (userData: ExtendedUser) => void;
-  logout: () => Promise<void>;
-  subscription: UserSubscription | null;
+  login: (email: string, password: string) => Promise<void>;
+  signup: (name: string, email: string, password: string, role: UserRole) => Promise<void>;
+  logout: () => void;
 }
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
+// Create the context
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-interface UserSubscription {
-  tier: SubscriptionTier;
-  isActive: boolean;
-  expiresAt: Date | null;
-}
+// Mock user data - In a real app, this would come from an API
+const MOCK_USERS: User[] = [
+  {
+    id: "1",
+    name: "Student User",
+    email: "student@example.com",
+    role: "student",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=student",
+    subscribed: false,
+  },
+  {
+    id: "2",
+    name: "Adult Learner",
+    email: "adult@example.com",
+    role: "adult",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=adult",
+    subscribed: true,
+  },
+  {
+    id: "3",
+    name: "Parent User",
+    email: "parent@example.com",
+    role: "parent",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=parent",
+    subscribed: true,
+  },
+  {
+    id: "4",
+    name: "Teacher User",
+    email: "teacher@example.com",
+    role: "teacher",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=teacher",
+    subscribed: true,
+  },
+  {
+    id: "5",
+    name: "Admin User",
+    email: "admin@example.com",
+    role: "admin",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=admin",
+    subscribed: true,
+  },
+];
 
-export type SubscriptionTier = 'free' | 'basic' | 'premium' | 'professional';
+// Create the provider
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { toast } = useToast();
 
-const AuthContext = createContext<AuthContextProps | undefined>(undefined);
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<ExtendedUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [subscription, setSubscription] = useState<UserSubscription | null>(null);
-
+  // Check for existing session on mount
   useEffect(() => {
-    const loadSession = async () => {
-      setIsLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
-
-      setSession(session);
-      if (session?.user) {
-        // Create extended user with default values
-        const extendedUser: ExtendedUser = {
-          ...session.user,
-          role: 'student', // default role
-          name: session.user.user_metadata?.full_name || session.user.email || 'User',
-          avatar: session.user.user_metadata?.avatar_url,
-          subscribed: false,
-          subscriptionTier: 'free' // default subscription tier
-        };
-        setUser(extendedUser);
-      } else {
-        setUser(null);
-      }
-      setIsLoading(false);
-    };
-
-    loadSession();
-
-    supabase.auth.onAuthStateChange(
-      async (event: AuthChangeEvent, session: Session | null) => {
-        setSession(session);
-        if (session?.user) {
-          const extendedUser: ExtendedUser = {
-            ...session.user,
-            role: 'student', // default role
-            name: session.user.user_metadata?.full_name || session.user.email || 'User',
-            avatar: session.user.user_metadata?.avatar_url,
-            subscribed: false,
-            subscriptionTier: 'free' // default subscription tier
-          };
-          setUser(extendedUser);
-        } else {
-          setUser(null);
+    const checkAuth = async () => {
+      try {
+        // In a real app, this would verify the token with your backend
+        const storedUser = localStorage.getItem("saems_user");
+        
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
         }
+      } catch (error) {
+        console.error("Auth check failed:", error);
+      } finally {
+        setIsLoading(false);
       }
-    );
+    };
+    
+    checkAuth();
   }, []);
 
-  useEffect(() => {
-    const getSubscription = async () => {
-      if (user) {
-        // Mock subscription check - replace with actual logic
-        const mockSubscription: UserSubscription = {
-          tier: 'professional',
-          isActive: true,
-          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-        };
-        setSubscription(mockSubscription);
+  // Mock login function - In a real app, this would call your API
+  const login = async (email: string, password: string) => {
+    setIsLoading(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const foundUser = MOCK_USERS.find(u => u.email === email);
+      
+      if (foundUser && password === "password") { // In a real app, never hardcode passwords!
+        setUser(foundUser);
+        localStorage.setItem("saems_user", JSON.stringify(foundUser));
+        toast({
+          title: "Welcome back!",
+          description: `Logged in as ${foundUser.name}`,
+        });
       } else {
-        setSubscription(null);
+        throw new Error("Invalid credentials");
       }
-    };
-
-    getSubscription();
-  }, [user]);
-
-  const signIn = async (email: string) => {
-    try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.signInWithOtp({ email });
-      if (error) throw error;
-      alert("Check your email for the magic link to sign in!");
-    } catch (error: any) {
-      alert(error.error_description || error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const login = async (email: string, password: string, captchaToken?: string | null) => {
-    try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-    } catch (error: any) {
+    } catch (error) {
+      toast({
+        title: "Login failed",
+        description: error instanceof Error ? error.message : "Please check your credentials",
+        variant: "destructive",
+      });
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const signOut = async () => {
+  // Mock signup function - In a real app, this would call your API
+  const signup = async (name: string, email: string, password: string, role: UserRole) => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      await supabase.auth.signOut();
-    } catch (error: any) {
-      alert(error.error_description || error.message);
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Check if email is already in use
+      if (MOCK_USERS.some(u => u.email === email)) {
+        throw new Error("Email already in use");
+      }
+      
+      // Create new user
+      const newUser: User = {
+        id: `${MOCK_USERS.length + 1}`,
+        name,
+        email,
+        role,
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
+        subscribed: false,
+      };
+      
+      // In a real app, this would save the user to your database
+      // For now, we'll just set the user in state
+      setUser(newUser);
+      localStorage.setItem("saems_user", JSON.stringify(newUser));
+      
+      toast({
+        title: "Account created!",
+        description: `Welcome to Saem's Tunes, ${name}!`,
+      });
+    } catch (error) {
+      toast({
+        title: "Signup failed",
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive",
+      });
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = async () => {
-    await signOut();
-  };
-
-  const signUp = async (email: string, password?: string) => {
-    try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) throw error;
-      alert("Check your email to verify your account!");
-    } catch (error: any) {
-      alert(error.error_description || error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const updateUser = async (data: any) => {
-    try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.updateUser(data);
-      if (error) throw error;
-    } catch (error: any) {
-      alert(error.error_description || error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const updateUserProfile = (userData: ExtendedUser) => {
-    setUser(userData);
+  // Logout function
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem("saems_user");
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out",
+    });
   };
 
   const value = {
-    session,
     user,
+    isAuthenticated: !!user,
     isLoading,
-    signIn,
-    signOut,
-    signUp,
     login,
-    updateUser,
-    updateUserProfile,
+    signup,
     logout,
-    subscription,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
+}
 
-export const useAuth = () => {
+// Custom hook for using auth context
+export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-};
+}

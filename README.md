@@ -1,135 +1,73 @@
-📘 Saem’s Tunes — README
+# Welcome to your Lovable project
 
-🎵 Saem’s Tunes: Jesus, Music, Community, Knowledge
+## Project info
 
-Saem’s Tunes is a music learning and creative collaboration platform designed to help learners grow from voice to heart to industry. Whether you're a curious beginner or a seasoned musician, Saem’s Tunes provides the tools to learn, practice, collaborate, and thrive in your musical journey.
+**URL**: https://lovable.dev/projects/a91e7ff0-1883-4689-b1ec-7a9565162fcf
 
-Built with accessibility and simplicity in mind, the app combines a structured curriculum, community-driven learning, and a clean interface that echoes musical warmth through its signature golden-brown aesthetic.
+## How can I edit this code?
 
-✨ Features at a Glance
+There are several ways of editing your application.
 
-🎓 Structured Learning Path ‣ Tiered music curriculum with guided lessons ‣ Video tutorials, interactive theory, and exercises
+**Use Lovable**
 
-📚 Resource Hub ‣ Music theory explanations, cheat sheets, and infographics ‣ Downloadable guides for learners and educators
+Simply visit the [Lovable Project](https://lovable.dev/projects/a91e7ff0-1883-4689-b1ec-7a9565162fcf) and start prompting.
 
-👥 Community & Collaboration ‣ Peer-to-peer project sharing ‣ Collaborative spaces for duets, remixes, and critiques
+Changes made via Lovable will be committed automatically to this repo.
 
-📈 Personalized Dashboard ‣ Track learning progress ‣ Schedule classes and receive feedback
+**Use your preferred IDE**
 
-💬 Support & FAQs ‣ Step-by-step onboarding ‣ In-app support articles and help requests
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 
-🎨 Signature UI Design ‣ Golden-dark brown color scheme ‣ Minimalist and mobile-optimized UX
+The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
-⚙️ Tech Stack
+Follow these steps:
 
-Frontend: React, Capacitor
+```sh
+# Step 1: Clone the repository using the project's Git URL.
+git clone <YOUR_GIT_URL>
 
-Backend: Firebase (Authentication, Firestore, Hosting, Messaging)
+# Step 2: Navigate to the project directory.
+cd <YOUR_PROJECT_NAME>
 
-Styling: Tailwind CSS
+# Step 3: Install the necessary dependencies.
+npm i
 
-CI/CD: GitHub Actions
+# Step 4: Start the development server with auto-reloading and an instant preview.
+npm run dev
+```
 
-App Platform: Android WebView (via Capacitor), PWA
+**Edit a file directly in GitHub**
 
-🛠 Installation Guide
+- Navigate to the desired file(s).
+- Click the "Edit" button (pencil icon) at the top right of the file view.
+- Make your changes and commit the changes.
 
-📋 Prerequisites
+**Use GitHub Codespaces**
 
-Make sure you have the following installed:
+- Navigate to the main page of your repository.
+- Click on the "Code" button (green button) near the top right.
+- Select the "Codespaces" tab.
+- Click on "New codespace" to launch a new Codespace environment.
+- Edit files directly within the Codespace and commit and push your changes once you're done.
 
-Node.js v16+
+## What technologies are used for this project?
 
-npm v8+
+This project is built with:
 
-🔧 Local Setup
+- Vite
+- TypeScript
+- React
+- shadcn-ui
+- Tailwind CSS
 
-Clone and install dependencies:
+## How can I deploy this project?
 
-git clone https://github.com/saem/tunes-app.git cd tunes-app npm install
+Simply open [Lovable](https://lovable.dev/projects/a91e7ff0-1883-4689-b1ec-7a9565162fcf) and click on Share -> Publish.
 
-To start the development server:
+## Can I connect a custom domain to my Lovable project?
 
-npm start
+Yes, you can!
 
-Visit http://localhost:3000 in your browser.
+To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
-📦 Production Build
-
-To generate an optimized build:
-
-npm run build
-
-The production-ready files will be located in the dist/ directory, ready for deployment.
-
-📲 Android Build (via Capacitor)
-
-To build and run the app as an Android package:
-
-npx cap sync android npx cap open android
-
-From there, you can run or build your APK/AAB via Android Studio.
-
-🤝 Contributing
-
-We welcome contributions from developers, designers, educators, and musicians!
-
-To contribute:
-
-Fork the repository
-
-Create a feature branch: git checkout -b feature/your-feature-name
-
-Commit your changes: git commit -m "Add your feature"
-
-Push to your branch: git push origin feature/your-feature-name
-
-Open a Pull Request
-
-Make sure to follow our code style and pass any linting rules before submitting.
-
-💡 Roadmap Highlights
-
-Subscription-enabled video access
-
-In-app music challenges and badges
-
-Advanced content for instrument-specific learners
-
-Offline-first mobile support
-
-Creator studio for user-submitted lessons
-
-☕ Support Saem’s Tunes
-
-Saem’s Tunes is a passion project. If you believe in accessible music education:
-
-→ Support on Ko-fi: https://ko-fi.com/saemstunes
-
-Supporters enjoy:
-
-Early access to beta features
-
-Listed credits (optional)
-
-Influence on new curriculum modules
-
-Exclusive behind-the-scenes updates
-
-📄 License
-
-This project is licensed under the MIT License — see the LICENSE file for more details.
-
-📬 Contact
-
-Have questions, feedback, or want to collaborate?
-
-GitHub Issues: Submit here
-
-Email: saemstunes@gmail.com
-
-Website: https://saemstunes.setmore.com
-
-Instagram: https://instagram.com/saemstunes
-
-Thank you for tuning in to Saem’s Tunes. Every learner. Every note. Every time.
+Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)

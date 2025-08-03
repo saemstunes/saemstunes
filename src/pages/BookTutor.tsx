@@ -9,11 +9,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, Star, Check, Clock } from "lucide-react";
+import { ArrowLeft, Calendar as CalendarIcon, Star, Check, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import CalendarIntegration from "@/components/booking/CalendarIntegration";
 import {
   Select,
   SelectContent,
@@ -30,12 +32,13 @@ const BookTutor = () => {
   const tutor = mockTutors.find((t) => t.id === id);
   
   const [date, setDate] = useState<Date | undefined>(undefined);
+  const [timeSlot, setTimeSlot] = useState<string>("");
   const [sessionType, setSessionType] = useState<string>("individual");
   const [location, setLocation] = useState<string>("online");
   const [notes, setNotes] = useState<string>("");
   
   const handleBooking = () => {
-    if (!date) {
+    if (!date || !timeSlot) {
       toast({
         title: "Incomplete Booking",
         description: "Please select a date and time for your session.",
@@ -50,6 +53,18 @@ const BookTutor = () => {
     });
     
     navigate("/bookings");
+  };
+  
+  // Generate some mock available time slots
+  const getAvailableTimeSlots = () => {
+    return [
+      "09:00",
+      "10:30",
+      "12:00",
+      "14:00",
+      "15:30",
+      "17:00",
+    ];
   };
   
   if (!tutor) {
@@ -91,12 +106,56 @@ const BookTutor = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Calendar Integration */}
-              <CalendarIntegration
-                onDateSelect={setDate}
-                selectedDate={date}
-                instructorAvailability={tutor.availability}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label>Select Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !date && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {date ? format(date, "PPP") : "Pick a date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={setDate}
+                        initialFocus
+                        disabled={(date) => {
+                          // Disable past dates and dates where tutor is not available
+                          const day = date.getDay();
+                          const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+                          const isDayAvailable = tutor.availability.includes(dayNames[day]);
+                          return date < new Date() || !isDayAvailable;
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Select Time</Label>
+                  <Select value={timeSlot} onValueChange={setTimeSlot}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a time slot" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getAvailableTimeSlots().map((time) => (
+                        <SelectItem key={time} value={time}>
+                          {time}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
@@ -140,8 +199,8 @@ const BookTutor = () => {
             <CardFooter>
               <Button 
                 onClick={handleBooking}
-                className="bg-gold hover:bg-gold/90 text-white"
-                disabled={!date}
+                className="bg-gold hover:bg-gold-dark text-white"
+                disabled={!date || !timeSlot}
               >
                 Book Session (${tutor.hourlyRate}.00)
               </Button>
