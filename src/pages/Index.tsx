@@ -494,7 +494,7 @@ const FeaturedTracksSection = ({ tracks, onPlayTrack, onShareTrack }: { tracks: 
   </section>
 );
 
-cconst QuickActionsSection = () => {
+const QuickActionsSection = () => {
   const navigate = useNavigate();
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [containerWidths, setContainerWidths] = useState<number[]>([]);
