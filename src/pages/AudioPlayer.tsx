@@ -616,59 +616,6 @@ const AudioPlayerPage = () => {
                           />
                         )
                       )}
-
-                      <div className="flex items-center justify-center gap-4 mt-6">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={toggleShuffle}
-                          className={playerState.shuffle ? "text-primary" : ""}
-                        >
-                          <Shuffle className="h-4 w-4" />
-                        </Button>
-                        
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={playPrevious}
-                        >
-                          <SkipBack className="h-4 w-4" />
-                        </Button>
-                        
-                        <Button 
-                          variant="default" 
-                          size="lg"
-                          onClick={togglePlayPause}
-                          className="h-12 w-12 rounded-full"
-                          disabled={!trackData}
-                        >
-                          {playerState?.isPlaying && playerState?.currentTrack?.id === trackData.id ? (
-                            <Pause className="h-5 w-5" />
-                          ) : (
-                            <Play className="h-5 w-5 ml-0.5" />
-                          )}
-                        </Button>
-                        
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={playNext}
-                        >
-                          <SkipForward className="h-4 w-4" />
-                        </Button>
-                        
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={toggleRepeat}
-                          className={playerState.repeat !== 'off' ? "text-primary" : ""}
-                        >
-                          <Repeat className="h-4 w-4" />
-                          {playerState.repeat === 'one' && (
-                            <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary" />
-                          )}
-                        </Button>
-                      </div>
                     </div>
 
                     {showMetadataPrompt && trackData && (
