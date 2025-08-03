@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -64,7 +63,19 @@ const AudioPlayerPage = () => {
   const { setMediaPlaying } = useMediaState();
   const [showMetadataPrompt, setShowMetadataPrompt] = useState(false);
   const [tracks, setTracks] = useState<AudioTrack[]>([]);
-  const { state, playTrack, pauseTrack, resumeTrack } = useAudioPlayer();
+  
+  const {
+    state: playerState,
+    playTrack,
+    pauseTrack,
+    resumeTrack,
+    playNext,
+    playPrevious,
+    toggleShuffle,
+    toggleRepeat,
+    setPlaylist,
+    setCurrentIndex,
+  } = useAudioPlayer();
 
   // Handle page visibility
   useEffect(() => {
@@ -89,7 +100,7 @@ const AudioPlayerPage = () => {
         .select('id, title, audio_path, alternate_audio_path, cover_path, artist')
         .eq('approved', true)
         .order('created_at', { ascending: false })
-        .limit(50); // Limit to 50 tracks for performance
+        .limit(50);
 
       if (tracksError) throw tracksError;
       
@@ -106,11 +117,12 @@ const AudioPlayerPage = () => {
           };
         });
         setTracks(mappedTracks);
+        setPlaylist(mappedTracks);
       }
     } catch (error) {
       console.error('Error fetching tracks:', error);
     }
-  }, []);
+  }, [setPlaylist]);
 
   // Fetch current track - optimized
   const fetchTrackData = useCallback(async (trackId: string) => {
@@ -183,6 +195,16 @@ const AudioPlayerPage = () => {
       setLoading(false);
     }
   }, [toast, tracks]);
+
+  // Set current index when trackData changes
+  useEffect(() => {
+    if (trackData && playerState.playlist.length > 0) {
+      const index = playerState.playlist.findIndex(t => t.id === trackData.id);
+      if (index !== -1) {
+        setCurrentIndex(index);
+      }
+    }
+  }, [trackData, playerState.playlist, setCurrentIndex]);
 
   // Handle initial data loading
   useEffect(() => {
@@ -376,7 +398,14 @@ const AudioPlayerPage = () => {
   const handleTrackSelect = useCallback((track: AudioTrack) => {
     setTrackData(track);
     navigate(`/tracks/${track.id}`);
-  }, [navigate]);
+    
+    // Find index in playlist
+    const index = playerState.playlist.findIndex(t => t.id === track.id);
+    if (index !== -1) {
+      setCurrentIndex(index);
+      playTrack(track);
+    }
+  }, [navigate, playerState.playlist, setCurrentIndex, playTrack]);
 
   // Handle audio errors
   const handleAudioError = useCallback(() => {
@@ -391,10 +420,10 @@ const AudioPlayerPage = () => {
   const togglePlayPause = useCallback(() => {
     if (!trackData) return;
     
-    if (state?.isPlaying) {
+    if (playerState?.isPlaying) {
       pauseTrack();
     } else {
-      if (state?.currentTrack?.id === trackData.id) {
+      if (playerState?.currentTrack?.id === trackData.id) {
         resumeTrack();
       } else {
         playTrack({
@@ -406,7 +435,7 @@ const AudioPlayerPage = () => {
         });
       }
     }
-  }, [trackData, state, playTrack, pauseTrack, resumeTrack]);
+  }, [trackData, playerState, playTrack, pauseTrack, resumeTrack]);
 
   if (loading) {
     return (
