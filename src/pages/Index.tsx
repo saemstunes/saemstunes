@@ -17,7 +17,7 @@ import { Helmet } from "react-helmet";
 import { 
   Music, PlayCircle, Star, BookOpen, Calendar, 
   Headphones, Heart, Play, Share, RotateCw, 
-  Users, TrendingUp, Zap, X, Gift
+  Users, TrendingUp, Zap, X, Gift, ArrowRight
 } from "lucide-react";
 import { ResponsiveImage } from "@/components/ui/responsive-image";
 import CountUp from "@/components/tracks/CountUp";
@@ -38,19 +38,40 @@ const QUICK_ACTIONS = [
   { 
     icon: BookOpen, 
     title: "Learning Hub", 
+    smTitle: "Learning Hub",
+    narrowTitle: "Learn",
     description: "Access courses, tutorials, and structured learning paths",
+    smDescription: "Courses, tutorials & learning paths",
+    narrowDescription: "Courses & tutorials",
+    cta: "Explore Hub",
+    smCta: "Explore",
+    narrowCta: "Explore",
     path: "/learning-hub"
   },
   { 
     icon: Calendar, 
     title: "Book Sessions", 
+    smTitle: "Book Sessions",
+    narrowTitle: "Book",
     description: "Schedule one-on-one lessons with expert instructors",
+    smDescription: "Schedule lessons with experts",
+    narrowDescription: "Schedule lessons",
+    cta: "View Availability",
+    smCta: "Schedule",
+    narrowCta: "Book",
     path: "/bookings"
   },
   { 
     icon: Users, 
     title: "Join Community", 
+    smTitle: "Community",
+    narrowTitle: "Connect",
     description: "Connect with fellow musicians and share your journey",
+    smDescription: "Connect with fellow musicians",
+    narrowDescription: "Musician community",
+    cta: "Join Now",
+    smCta: "Join",
+    narrowCta: "Join",
     path: "/community"
   }
 ];
@@ -473,22 +494,123 @@ const FeaturedTracksSection = ({ tracks, onPlayTrack, onShareTrack }: { tracks: 
   </section>
 );
 
-const QuickActionsSection = () => (
-  <section className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-    {QUICK_ACTIONS.map((action, index) => (
-      <Card key={index} className="bg-card text-card-foreground shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
-        <CardContent className="flex flex-col items-start justify-start p-4 space-y-3">
-          <action.icon className="h-5 w-5 text-primary" />
-          <h3 className="text-lg font-semibold">{action.title}</h3>
-          <p className="text-sm text-muted-foreground">{action.description}</p>
-          <Link to={action.path} className="text-sm text-primary hover:underline">
-            Learn More
-          </Link>
-        </CardContent>
-      </Card>
-    ))}
-  </section>
-);
+const QuickActionsSection = () => {
+  const navigate = useNavigate();
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [containerWidths, setContainerWidths] = useState<number[]>([]);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Measure container widths on mount and resize with debounce
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
+    const updateWidths = () => {
+      setContainerWidths(
+        cardRefs.current.map(ref => ref?.offsetWidth || 0)
+      );
+    };
+
+    const handleResize = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(updateWidths, 100);
+    };
+
+    updateWidths();
+    window.addEventListener('resize', handleResize);
+    setIsMounted(true);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(timeoutId);
+    };
+  }, []);
+
+  // Get optimal text version based on container width
+  const getTextVariant = (width: number) => {
+    if (width < 220) return 'narrow';
+    if (width < 320) return 'sm';
+    return 'default';
+  };
+
+  // Loading skeleton while measuring
+  if (!isMounted || containerWidths.length === 0) {
+    return (
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        {QUICK_ACTIONS.map((_, index) => (
+          <Card key={index} className="h-full overflow-hidden">
+            <CardContent className="flex flex-col items-start justify-start p-4 space-y-3 h-full">
+              <div className="bg-gray-200 dark:bg-gray-700 rounded-lg p-3 w-fit mb-1">
+                <div className="h-5 w-5 bg-transparent" />
+              </div>
+              <div className="h-6 w-3/4 bg-gray-200 dark:bg-gray-700 rounded" />
+              <div className="h-4 w-full bg-gray-200 dark:bg-gray-700 rounded flex-grow" />
+              <div className="h-4 w-1/3 bg-gray-200 dark:bg-gray-700 rounded" />
+            </CardContent>
+          </Card>
+        ))}
+      </section>
+    );
+  }
+
+  return (
+    <section className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+      {QUICK_ACTIONS.map((action, index) => {
+        const containerWidth = containerWidths[index] || 0;
+        const textVariant = getTextVariant(containerWidth);
+        
+        return (
+          <motion.div
+            key={action.title}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-20px" }}
+            transition={{ delay: index * 0.1, duration: 0.5 }}
+            ref={el => cardRefs.current[index] = el}
+          >
+            <Card className="h-full group hover:shadow-lg transition-all duration-300 overflow-hidden">
+              <CardContent className="flex flex-col items-start justify-start p-4 space-y-3 h-full">
+                <div className="bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-lg p-3 w-fit mb-1 group-hover:scale-110 transition-transform">
+                  <action.icon className="h-5 w-5 text-primary" />
+                </div>
+                
+                <h3 className="font-semibold text-base sm:text-lg group-hover:text-primary transition-colors">
+                  {textVariant === 'narrow' 
+                    ? action.narrowTitle 
+                    : textVariant === 'sm' 
+                      ? action.smTitle 
+                      : action.title}
+                </h3>
+                
+                <p className="text-muted-foreground text-xs sm:text-sm flex-grow">
+                  {textVariant === 'narrow' 
+                    ? action.narrowDescription 
+                    : textVariant === 'sm' 
+                      ? action.smDescription 
+                      : action.description}
+                </p>
+                
+                <Button 
+                  variant="ghost" 
+                  className="group/btn p-0 h-auto justify-start hover:bg-transparent"
+                  onClick={() => navigate(action.path)}
+                >
+                  <span className="text-primary font-medium text-xs sm:text-sm">
+                    {textVariant === 'narrow' 
+                      ? action.narrowCta 
+                      : textVariant === 'sm' 
+                        ? action.smCta 
+                        : action.cta}
+                  </span>
+                  <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4 text-primary group-hover/btn:translate-x-1 transition-transform" />
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        );
+      })}
+    </section>
+  );
+};
 
 const OrientationHint = () => {
   const { isMobile, isLandscape } = useWindowOrientation();
