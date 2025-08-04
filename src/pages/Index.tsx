@@ -24,7 +24,7 @@ import CountUp from "@/components/tracks/CountUp";
 import { motion } from "framer-motion";
 import { useWindowSize } from "@uidotdev/usehooks";
 import { AudioStorageManager } from "@/utils/audioStorageManager";
-import { getAudioUrl } from "@/lib/audioUtils";
+import { getAudioUrl, convertTrackToAudioTrack, generateTrackUrl } from "@/lib/audioUtils";
 
 // Constants - PRESERVE ORIGINAL STRUCTURE
 const STATS = [
@@ -262,30 +262,20 @@ const Index = () => {
   };
 
   const handlePlayTrack = async (track: any) => {
-  // Use slug if available, otherwise use ID directly for non-database tracks
-  const identifier = track.slug || (!isUuid(track.id) ? track.id : null);
-  
-  if (identifier && user?.id) {
-    try {
-      await AudioStorageManager.trackPlay(identifier, user.id);
-    } catch (error) {
-      console.error('Play tracking failed:', error);
-    }
-  }
-  
-  navigate(`/audio-player/${track.id}`, {
-    state: {
-      track: {
-        id: track.id,
-        src: track.audio_url || track.audioSrc,
-        name: track.title,
-        artist: track.artist,
-        artwork: track.cover_art_url || track.imageSrc,
-        album: 'Featured'
+    // Step 1: Navigate to track page using slug
+    const trackUrl = generateTrackUrl(track);
+    navigate(trackUrl);
+
+    // Track play analytics
+    const identifier = track.slug || (!isUuid(track.id) ? track.id : null);
+    if (identifier && user?.id) {
+      try {
+        await AudioStorageManager.trackPlay(identifier, user.id);
+      } catch (error) {
+        console.error('Play tracking failed:', error);
       }
     }
-  });
-};
+  };
 
   // PRESERVED ORIGINAL SHARE FUNCTIONALITY
   const handleShareTrack = async (track: any) => {

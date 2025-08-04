@@ -5,6 +5,8 @@ import { Slider } from '@/components/ui/slider';
 import { useAudioPlayer } from '@/context/AudioPlayerContext';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { generateTrackUrl } from '@/lib/audioUtils';
 import './StarBorder.css'; // Import the CSS for the star border effect
 
 const formatTime = (seconds: number): string => {
@@ -15,6 +17,7 @@ const formatTime = (seconds: number): string => {
 
 const GlobalMiniPlayer: React.FC = () => {
   const { state, pauseTrack, resumeTrack, seek, clearPlayer } = useAudioPlayer();
+  const navigate = useNavigate();
 
   if (!state.currentTrack) return null;
 
@@ -32,6 +35,13 @@ const GlobalMiniPlayer: React.FC = () => {
 
   const handleClose = () => {
     clearPlayer();
+  };
+
+  const handleTrackClick = () => {
+    if (state.currentTrack) {
+      const trackUrl = generateTrackUrl(state.currentTrack);
+      navigate(trackUrl);
+    }
   };
 
   return (
@@ -67,8 +77,11 @@ const GlobalMiniPlayer: React.FC = () => {
         )}>
           <div className="p-3">
             <div className="flex items-center gap-3">
-              {/* Track Info */}
-              <div className="flex items-center flex-1 min-w-0">
+              {/* Track Info - Clickable */}
+              <div 
+                className="flex items-center flex-1 min-w-0 cursor-pointer"
+                onClick={handleTrackClick}
+              >
                 <div className="h-10 w-10 rounded-lg overflow-hidden flex-shrink-0">
                   <img 
                     src={state.currentTrack.artwork || '/placeholder.svg'} 
@@ -82,8 +95,11 @@ const GlobalMiniPlayer: React.FC = () => {
                 </div>
               </div>
               
-              {/* Controls */}
-              <div className="flex items-center gap-2">
+              {/* Controls - Prevent click propagation */}
+              <div 
+                className="flex items-center gap-2"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <motion.div
                   whileTap={{ scale: 0.95 }}
                   whileHover={{ scale: 1.05 }}
