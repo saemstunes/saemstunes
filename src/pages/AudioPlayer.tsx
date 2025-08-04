@@ -36,21 +36,15 @@ import EnhancedAnimatedList from '@/components/tracks/EnhancedAnimatedList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAudioPlayer } from '@/context/AudioPlayerContext';
-import { getAudioUrl, getStorageUrl, fetchPlaylistTracks, fetchUserPlaylists } from '@/lib/playlistUtils';
+import { fetchPlaylistTracks, fetchUserPlaylists } from '@/lib/playlistUtils';
+import { getAudioUrl, getStorageUrl, convertTrackToAudioTrack, generateTrackUrl } from '@/lib/audioUtils';
 import AddToPlaylistModal from '@/components/playlists/AddToPlaylistModal';
+import { AudioTrack } from '@/types/music';
 
-interface AudioTrack {
-  id: string | number;
-  src: string;
-  name: string;
-  artist?: string;
-  artwork?: string;
-  album?: string;
-  duration?: number;
-}
+// AudioTrack is now imported from types/music.ts
 
 const AudioPlayerPage = () => {
-  const { id } = useParams();
+  const { slug } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -97,7 +91,7 @@ const AudioPlayerPage = () => {
     try {
       const { data: allTracks, error } = await supabase
         .from('tracks')
-        .select('id, title, audio_path, alternate_audio_path, cover_path, artist, duration')
+        .select('id, title, audio_path, alternate_audio_path, cover_path, artist, duration, slug')
         .eq('approved', true)
         .order('created_at', { ascending: false })
         .limit(50);
@@ -105,15 +99,7 @@ const AudioPlayerPage = () => {
       if (error) throw error;
       
       if (allTracks) {
-        const mappedTracks = allTracks.map(track => ({
-          id: track.id,
-          src: getAudioUrl(track),
-          name: track.title,
-          artist: track.artist,
-          artwork: getStorageUrl(track.cover_path),
-          duration: track.duration || 0,
-          album: 'Single'
-        }));
+        const mappedTracks = allTracks.map(track => convertTrackToAudioTrack(track));
         setTracks(mappedTracks);
         setPlaylist(mappedTracks);
       }
@@ -122,39 +108,50 @@ const AudioPlayerPage = () => {
     }
   }, []);
 
-  const fetchTrackData = useCallback(async (trackId: string) => {
+  const fetchTrackData = useCallback(async (trackSlug: string) => {
     try {
       let data: any = null;
       
-      const existingTrack = tracks.find(t => t.id === trackId);
+      // First try to find existing track by slug or ID
+      const existingTrack = tracks.find(t => {
+        const trackSlug = 'slug' in t ? t.slug : undefined;
+        return t.id === trackSlug || trackSlug === trackSlug;
+      });
+      
       if (existingTrack) {
         setTrackData(existingTrack);
         setLoading(false);
         return;
       }
       
-      const { data: trackData, error } = await supabase
+      // First try to fetch by slug
+      let { data: trackData, error } = await supabase
         .from('tracks')
         .select('*')
-        .or(`id.eq.${trackId},slug.eq.${trackId}`)
+        .eq('slug', trackSlug)
         .single();
       
-      if (error) throw error;
-      data = trackData;
-
-      if (data) {
-        const newTrack = {
-          id: data.id,
-          src: getAudioUrl(data),
-          name: data.title,
-          artist: data.artist || 'Unknown Artist',
-          artwork: getStorageUrl(data.cover_path) || '/placeholder.svg',
-          duration: data.duration || 0,
-          album: 'Single'
-        };
+      // Fallback to ID if slug not found (backward compatibility)
+      if (error && trackSlug) {
+        const { data: idData, error: idError } = await supabase
+          .from('tracks')
+          .select('*')
+          .eq('id', trackSlug)
+          .single();
         
+        if (idError) throw idError;
+        trackData = idData;
+      }
+      
+      if (trackData) {
+        const newTrack = convertTrackToAudioTrack(trackData);
         setTrackData(newTrack);
         setTracks(prev => [...prev, newTrack]);
+        
+        // Redirect to correct slug if needed
+        if (trackData.slug && trackSlug !== trackData.slug) {
+          navigate(generateTrackUrl(newTrack), { replace: true });
+        }
       }
     } catch (error) {
       toast({
@@ -162,18 +159,11 @@ const AudioPlayerPage = () => {
         description: "Failed to load track data",
         variant: "destructive",
       });
-      setTrackData({
-        id: 1,
-        src: '/audio/sample.mp3',
-        name: 'Sample Track',
-        artist: 'Sample Artist',
-        artwork: '/placeholder.svg',
-        album: 'Sample Album'
-      });
+      navigate('/tracks');
     } finally {
       setLoading(false);
     }
-  }, [toast, tracks]);
+  }, [toast, tracks, navigate]);
 
   useEffect(() => {
     if (trackData && playerState.playlist.length > 0) {
@@ -238,8 +228,8 @@ const AudioPlayerPage = () => {
         
         setTrackData(track);
         setLoading(false);
-      } else if (id) {
-        await fetchTrackData(id);
+      } else if (slug) {
+        await fetchTrackData(slug);
       } else {
         setTrackData({
           id: 1,
@@ -254,7 +244,7 @@ const AudioPlayerPage = () => {
     };
 
     init();
-  }, [id, location.state, fetchAllTracks, fetchTrackData]);
+  }, [slug, location.state, fetchAllTracks, fetchTrackData]);
 
   const checkIfLiked = useCallback(async () => {
     if (!user || !trackData) return;
@@ -402,7 +392,8 @@ const AudioPlayerPage = () => {
 
   const handleTrackSelect = useCallback((track: AudioTrack) => {
     setTrackData(track);
-    navigate(`/tracks/${track.id}`);
+    const trackUrl = generateTrackUrl(track);
+    navigate(trackUrl);
     
     const currentPlaylist = selectedPlaylist ? playlistTracks : tracks;
     const index = currentPlaylist.findIndex(t => t.id === track.id);

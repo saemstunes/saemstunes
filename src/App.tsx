@@ -152,7 +152,8 @@ const App = () => {
                   } />
                   
                   <Route path="/coming-soon" element={<ComingSoon />} />
-                  <Route path="/audio-player/:id" element={<AudioPlayer />} />
+                  <Route path="/tracks/:slug" element={<AudioPlayer />} />
+                  <Route path="/audio-player/:id" element={<Navigate to="/tracks" replace />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
                 <GlobalMiniPlayer />

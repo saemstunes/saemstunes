@@ -23,7 +23,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import EnhancedAnimatedList from "@/components/tracks/EnhancedAnimatedList";
 import TiltedCard from "@/components/tracks/TiltedCard";
 import { getImageUrl } from "@/lib/urlUtils";
-import { getAudioUrl, getStorageUrl } from "@/lib/audioUtils";
+import { getAudioUrl, getStorageUrl, convertTrackToAudioTrack } from "@/lib/audioUtils";
 
 interface Track {
   id: string;
@@ -701,7 +701,7 @@ const Tracks = () => {
                     </CardHeader>
                     <CardContent>
                       <ScrollArea className="h-[400px] w-full">
-                        <EnhancedAnimatedList tracks={filteredTracks.slice(0, 10)} />
+                        <EnhancedAnimatedList tracks={filteredTracks.slice(0, 10).map(convertTrackToAudioTrack)} />
                       </ScrollArea>
                     </CardContent>
                   </Card>
@@ -816,7 +816,7 @@ const Tracks = () => {
                     </CardHeader>
                     <CardContent>
                       <ScrollArea className="h-[500px] w-full">
-                        <EnhancedAnimatedList tracks={filteredTracks} />
+                        <EnhancedAnimatedList tracks={filteredTracks.map(convertTrackToAudioTrack)} />
                       </ScrollArea>
                     </CardContent>
                   </Card>

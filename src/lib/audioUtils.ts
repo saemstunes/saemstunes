@@ -1,4 +1,5 @@
 // Audio utilities for handling primary and alternate audio paths
+import { Track, AudioTrack } from '@/types/music';
 const SUPABASE_URL = "https://uxyvhqtwkutstihtxdsv.supabase.co";
 
 interface TrackWithAudio {
@@ -33,4 +34,24 @@ export const getStorageUrl = (path: string | null | undefined, bucket = 'tracks'
   // Handle special characters in paths
   const encodedPath = encodeURIComponent(path).replace(/%2F/g, '/');
   return `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${encodedPath}`;
+};
+
+// Convert Track to AudioTrack
+export const convertTrackToAudioTrack = (track: Track): AudioTrack => {
+  return {
+    id: track.id,
+    src: getAudioUrl(track) || '',
+    name: track.title,
+    artist: track.artist || 'Unknown Artist',
+    artwork: getStorageUrl(track.cover_path) || '/placeholder.svg',
+    duration: track.duration || 0,
+    slug: track.slug || ''
+  };
+};
+
+// Generate track URL for navigation
+export const generateTrackUrl = (track: Track | AudioTrack): string => {
+  const slug = 'slug' in track ? track.slug : undefined;
+  const id = track.id;
+  return slug ? `/tracks/${slug}` : `/tracks/${id}`;
 };

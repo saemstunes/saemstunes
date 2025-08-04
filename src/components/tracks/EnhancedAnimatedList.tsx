@@ -24,6 +24,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { generateTrackUrl } from '@/lib/audioUtils';
 
 interface AudioTrack {
   id: string | number;
@@ -55,6 +57,7 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
   const [favorites, setFavorites] = useState<string[]>([]);
   const { toast } = useToast();
   const { state, playTrack } = useAudioPlayer();
+  const navigate = useNavigate();
 
   const toggleFavorite = (trackId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -93,18 +96,28 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
   const handleShare = (track: AudioTrack, e: React.MouseEvent) => {
     e.stopPropagation();
     
+    const trackUrl = generateTrackUrl(track);
+    const shareData = {
+      title: track.name,
+      text: `Listen to ${track.name} by ${track.artist} on Saem's Tunes`,
+      url: window.location.origin + trackUrl,
+    };
+    
     if (navigator.share) {
-      navigator.share({
-        title: track.name,
-        text: `Listen to ${track.name} by ${track.artist} on Saem's Tunes`,
-        url: window.location.origin + `/tracks/${track.slug || track.id}`,
-      })
+      navigator.share(shareData)
       .then(() => console.log('Successful share'))
       .catch((error) => console.log('Error sharing', error));
     } else {
-      toast({
-        title: "Share",
-        description: "Sharing is not supported on this browser"
+      navigator.clipboard.writeText(shareData.url).then(() => {
+        toast({
+          title: "Link copied",
+          description: "Track link copied to clipboard"
+        });
+      }).catch(() => {
+        toast({
+          title: "Share failed",
+          description: "Unable to share or copy link"
+        });
       });
     }
   };
@@ -121,7 +134,15 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
             "flex items-center justify-between p-3 rounded-md hover:bg-accent cursor-pointer transition-colors",
             state.currentTrack?.id === track.id && "bg-accent"
           )}
-          onClick={() => onTrackSelect && onTrackSelect(track)}
+          onClick={() => {
+            if (onTrackSelect) {
+              onTrackSelect(track);
+            } else {
+              // Navigate to track page using slug or id
+              const trackUrl = generateTrackUrl(track);
+              navigate(trackUrl);
+            }
+          }}
         >
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="relative h-10 w-10 flex-shrink-0">

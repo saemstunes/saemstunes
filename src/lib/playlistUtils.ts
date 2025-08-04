@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { AudioTrack } from '@/types';
+import { AudioTrack } from '@/types/music';
 
 // Fetch playlists for the current user
 export const fetchUserPlaylists = async (userId: string) => {

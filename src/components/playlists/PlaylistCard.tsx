@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Play, MoreHorizontal } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAudioPlayer } from '@/context/AudioPlayerContext';
+import { fetchPlaylistTracks } from '@/lib/playlistUtils';
 
 interface PlaylistCardProps {
   playlist: any;

@@ -3,11 +3,32 @@ export interface Track {
   title: string;
   description?: string;
   audio_path: string;
+  alternate_audio_path?: string;
   cover_path?: string;
   user_id?: string;
   access_level?: string;
   approved?: boolean;
   created_at?: string;
+  artist?: string;
+  duration?: number;
+  slug?: string;
+  youtube_url?: string;
+  preview_url?: string;
+  video_url?: string;
+  primary_color?: string;
+  secondary_color?: string;
+  background_gradient?: string;
+}
+
+export interface AudioTrack {
+  id: string | number;
+  src: string;
+  name: string;
+  artist?: string;
+  artwork?: string;
+  album?: string;
+  duration?: number;
+  slug?: string;
 }
 
 export interface Artist {
