@@ -41,6 +41,8 @@ import { getAudioUrl, getStorageUrl, convertTrackToAudioTrack, generateTrackUrl 
 import AddToPlaylistModal from '@/components/playlists/AddToPlaylistModal';
 import { AudioTrack } from '@/types/music';
 
+// AudioTrack is now imported from types/music.ts
+
 const AudioPlayerPage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -108,19 +110,28 @@ const AudioPlayerPage = () => {
 
   const fetchTrackData = useCallback(async (trackSlug: string) => {
     try {
-      const existingTrack = tracks.find(t => t.slug === trackSlug || t.id === trackSlug);
+      let data: any = null;
+      
+      // First try to find existing track by slug or ID
+      const existingTrack = tracks.find(t => {
+        const trackSlug = 'slug' in t ? t.slug : undefined;
+        return t.id === trackSlug || trackSlug === trackSlug;
+      });
+      
       if (existingTrack) {
         setTrackData(existingTrack);
         setLoading(false);
         return;
       }
       
+      // First try to fetch by slug
       let { data: trackData, error } = await supabase
         .from('tracks')
         .select('*')
         .eq('slug', trackSlug)
         .single();
       
+      // Fallback to ID if slug not found (backward compatibility)
       if (error && trackSlug) {
         const { data: idData, error: idError } = await supabase
           .from('tracks')
@@ -137,6 +148,7 @@ const AudioPlayerPage = () => {
         setTrackData(newTrack);
         setTracks(prev => [...prev, newTrack]);
         
+        // Redirect to correct slug if needed
         if (trackData.slug && trackSlug !== trackData.slug) {
           navigate(generateTrackUrl(newTrack), { replace: true });
         }
@@ -206,7 +218,15 @@ const AudioPlayerPage = () => {
       fetchAllTracks();
       
       if (location.state?.track) {
-        setTrackData(location.state.track);
+        let track = location.state.track;
+        if (track.name === "Pale Ulipo") {
+          track = {
+            ...track,
+            src: track.src.replace(/ /g, '%20').replace(/\(/g, '%28').replace(/\)/g, '%29')
+          };
+        }
+        
+        setTrackData(track);
         setLoading(false);
       } else if (slug) {
         await fetchTrackData(slug);
