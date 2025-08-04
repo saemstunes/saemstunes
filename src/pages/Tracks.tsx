@@ -186,7 +186,6 @@ const Tracks = () => {
 
         setFeaturedTrack({
           id: (trackData as any).id,
-          slug: trackData.slug,
           imageSrc: coverUrl,
           title: (trackData as any).title,
           artist: (trackData as any).artist || "Unknown Artist",
@@ -278,22 +277,23 @@ const Tracks = () => {
   const handlePlayNow = () => {
     if (!featuredTrack) return;
     
-    // Use slug-based URL if available
-    const trackUrl = featuredTrack.slug 
-      ? `/tracks/${featuredTrack.slug}`
-      : `/tracks/${featuredTrack.id}`;
+    if (featuredTrack.id) {
+      trackPlay(featuredTrack.id);
+    }
     
-    navigate(trackUrl);
+    navigate('/audio-player/featured', {
+      state: {
+        track: {
+          id: featuredTrack.id,
+          src: featuredTrack.audioSrc,
+          name: featuredTrack.title,
+          artist: featuredTrack.artist,
+          artwork: featuredTrack.imageSrc,
+          album: 'Featured'
+        }
+      }
+    });
   };
-
-  // FIXED: Track selection handler
-  const handleTrackSelect = (track: AudioTrack) => {
-    const trackUrl = track.slug 
-      ? `/tracks/${track.slug}`
-      : `/tracks/${track.id}`;
-    navigate(trackUrl);
-  };
-
 
   const handleUpload = async () => {
     if (!user) {
@@ -701,10 +701,7 @@ const Tracks = () => {
                     </CardHeader>
                     <CardContent>
                       <ScrollArea className="h-[400px] w-full">
-                        <EnhancedAnimatedList
-                          tracks={filteredTracks.slice(0, 10).map(convertTrackToAudioTrack)}
-                          onTrackSelect={handleTrackSelect}  // ADDED HANDLER
-                          />
+                        <EnhancedAnimatedList tracks={filteredTracks.slice(0, 10).map(convertTrackToAudioTrack)} />
                       </ScrollArea>
                     </CardContent>
                   </Card>
@@ -991,8 +988,6 @@ const TrackCard = ({ track, user }: { track: Track; user: any }) => {
         return 'https://saemstunes.vercel.app';
       } else if (hostname === 'saemstunes.lovable.app') {
         return 'https://saemstunes.lovable.app';
-      } else if (hostname === 'saemstunes.com') {
-        return 'https://www.saemstunes.com';
       } else {
         return window.location.origin;
       }
