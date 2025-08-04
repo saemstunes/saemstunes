@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Lightbulb, Heart, Bookmark, X } from 'lucide-react';
@@ -8,11 +7,12 @@ import { useToast } from '@/hooks/use-toast';
 
 interface MusicFactProps {
   fact: string;
+  category: 'fun' | 'didyouknow' | 'foryou';
   isOnline: boolean;
   onInteraction: () => void;
 }
 
-const MusicFactDisplay: React.FC<MusicFactProps> = ({ fact, isOnline, onInteraction }) => {
+const MusicFactDisplay: React.FC<MusicFactProps> = ({ fact, category, isOnline, onInteraction }) => {
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
   const [closed, setClosed] = useState(false);
@@ -60,6 +60,20 @@ const MusicFactDisplay: React.FC<MusicFactProps> = ({ fact, isOnline, onInteract
     onInteraction();
   };
   
+  // Determine header based on category
+  const getHeader = () => {
+    switch (category) {
+      case 'fun': 
+        return "Fun Fact";
+      case 'didyouknow':
+        return "Did You Know";
+      case 'foryou':
+        return "For You";
+      default:
+        return isOnline ? "Did You Know?" : "Music Fact";
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
@@ -77,7 +91,7 @@ const MusicFactDisplay: React.FC<MusicFactProps> = ({ fact, isOnline, onInteract
                 <Lightbulb className="h-4 w-4 text-gold" />
               </div>
               <span className="font-medium text-lg">
-                {isOnline ? "Did you know?" : "Music Fact"}
+                {getHeader()}
               </span>
             </div>
             
