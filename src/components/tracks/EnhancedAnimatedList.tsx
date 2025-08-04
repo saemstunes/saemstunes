@@ -134,14 +134,10 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
             "flex items-center justify-between p-3 rounded-md hover:bg-accent cursor-pointer transition-colors",
             state.currentTrack?.id === track.id && "bg-accent"
           )}
+          // Simplify onClick handler:
           onClick={() => {
-            if (onTrackSelect) {
-              onTrackSelect(track);
-            } else {
-              // Navigate to track page using slug or id
-              const trackUrl = generateTrackUrl(track);
-              navigate(trackUrl);
-            }
+            const trackUrl = generateTrackUrl(track);
+            navigate(trackUrl);
           }}
         >
           <div className="flex items-center gap-3 flex-1 min-w-0">
