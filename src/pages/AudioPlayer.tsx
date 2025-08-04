@@ -41,8 +41,6 @@ import { getAudioUrl, getStorageUrl, convertTrackToAudioTrack, generateTrackUrl 
 import AddToPlaylistModal from '@/components/playlists/AddToPlaylistModal';
 import { AudioTrack } from '@/types/music';
 
-// AudioTrack is now imported from types/music.ts
-
 const AudioPlayerPage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -62,6 +60,7 @@ const AudioPlayerPage = () => {
   const [selectedPlaylist, setSelectedPlaylist] = useState<any>(null);
   const [playlistTracks, setPlaylistTracks] = useState<AudioTrack[]>([]);
   const [activeTab, setActiveTab] = useState('all');
+  const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
   
   const {
     state: playerState,
@@ -106,23 +105,11 @@ const AudioPlayerPage = () => {
     } catch (error) {
       console.error('Error fetching tracks:', error);
     }
-  }, []);
+  }, [setPlaylist]);
 
   const fetchTrackData = useCallback(async (trackSlug: string) => {
     try {
-      let data: any = null;
-      
-      // First try to find existing track by slug or ID
-      const existingTrack = tracks.find(t => {
-        const trackSlug = 'slug' in t ? t.slug : undefined;
-        return t.id === trackSlug || trackSlug === trackSlug;
-      });
-      
-      if (existingTrack) {
-        setTrackData(existingTrack);
-        setLoading(false);
-        return;
-      }
+      let track: any = null;
       
       // First try to fetch by slug
       let { data: trackData, error } = await supabase
@@ -131,8 +118,8 @@ const AudioPlayerPage = () => {
         .eq('slug', trackSlug)
         .single();
       
-      // Fallback to ID if slug not found (backward compatibility)
-      if (error && trackSlug) {
+      // Fallback to ID if slug not found
+      if (error) {
         const { data: idData, error: idError } = await supabase
           .from('tracks')
           .select('*')
@@ -146,7 +133,13 @@ const AudioPlayerPage = () => {
       if (trackData) {
         const newTrack = convertTrackToAudioTrack(trackData);
         setTrackData(newTrack);
-        setTracks(prev => [...prev, newTrack]);
+        setSelectedTrackId(newTrack.id);
+        
+        // Update context if needed
+        if (playerState.currentTrack?.id !== newTrack.id) {
+          setPlaylist([newTrack]);
+          setCurrentIndex(0);
+        }
         
         // Redirect to correct slug if needed
         if (trackData.slug && trackSlug !== trackData.slug) {
@@ -163,16 +156,25 @@ const AudioPlayerPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [toast, tracks, navigate]);
+  }, [toast, navigate, playerState, setPlaylist, setCurrentIndex]);
 
   useEffect(() => {
-    if (trackData && playerState.playlist.length > 0) {
-      const index = playerState.playlist.findIndex(t => t.id === trackData.id);
-      if (index !== -1) {
-        setCurrentIndex(index);
+    if (selectedTrackId) {
+      const newTrack = [...tracks, ...playlistTracks].find(t => t.id === selectedTrackId);
+      if (newTrack) {
+        setTrackData(newTrack);
+        
+        // Update context
+        const currentPlaylist = selectedPlaylist ? playlistTracks : tracks;
+        const index = currentPlaylist.findIndex(t => t.id === newTrack.id);
+        
+        if (index !== -1) {
+          setCurrentIndex(index);
+          setPlaylist(currentPlaylist, selectedPlaylist?.id);
+        }
       }
     }
-  }, [trackData, playerState.playlist, setCurrentIndex]);
+  }, [selectedTrackId, tracks, playlistTracks, selectedPlaylist, setPlaylist, setCurrentIndex]);
 
   const fetchUserPlaylistsData = useCallback(async () => {
     if (!user) return;
@@ -218,26 +220,21 @@ const AudioPlayerPage = () => {
       fetchAllTracks();
       
       if (location.state?.track) {
-        let track = location.state.track;
-        if (track.name === "Pale Ulipo") {
-          track = {
-            ...track,
-            src: track.src.replace(/ /g, '%20').replace(/\(/g, '%28').replace(/\)/g, '%29')
-          };
-        }
-        
+        const track = location.state.track;
         setTrackData(track);
+        setSelectedTrackId(track.id);
         setLoading(false);
       } else if (slug) {
         await fetchTrackData(slug);
       } else {
         setTrackData({
-          id: 1,
+          id: '1',
           src: '/audio/sample.mp3',
           name: 'Sample Track',
           artist: 'Sample Artist',
           artwork: '/placeholder.svg',
-          album: 'Sample Album'
+          album: 'Sample Album',
+          slug: 'sample-track'
         });
         setLoading(false);
       }
@@ -391,27 +388,15 @@ const AudioPlayerPage = () => {
   }, [toast]);
 
   const handleTrackSelect = useCallback((track: AudioTrack) => {
-    setTrackData(track);
+    setSelectedTrackId(track.id);
     const trackUrl = generateTrackUrl(track);
     navigate(trackUrl);
     
-    const currentPlaylist = selectedPlaylist ? playlistTracks : tracks;
-    const index = currentPlaylist.findIndex(t => t.id === track.id);
-    
-    if (index !== -1) {
-      setCurrentIndex(index);
-      setPlaylist(currentPlaylist, selectedPlaylist?.id);
-      playTrack(track);
+    // Add to tracks if not already present
+    if (!tracks.some(t => t.id === track.id)) {
+      setTracks(prev => [...prev, track]);
     }
-  }, [
-    navigate, 
-    selectedPlaylist, 
-    playlistTracks, 
-    tracks, 
-    setCurrentIndex, 
-    setPlaylist, 
-    playTrack
-  ]);
+  }, [navigate, tracks]);
 
   const handleAudioError = useCallback(() => {
     setAudioError(true);
@@ -437,6 +422,7 @@ const AudioPlayerPage = () => {
           name: trackData.name,
           artist: trackData.artist || '',
           artwork: trackData.artwork || '',
+          slug: trackData.slug || ''
         });
       }
     }
