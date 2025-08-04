@@ -274,26 +274,14 @@ const Tracks = () => {
     }
   };
 
-  const handlePlayNow = () => {
-    if (!featuredTrack) return;
-    
-    if (featuredTrack.id) {
-      trackPlay(featuredTrack.id);
-    }
-    
-    navigate('/audio-player/featured', {
-      state: {
-        track: {
-          id: featuredTrack.id,
-          src: featuredTrack.audioSrc,
-          name: featuredTrack.title,
-          artist: featuredTrack.artist,
-          artwork: featuredTrack.imageSrc,
-          album: 'Featured'
-        }
-      }
-    });
-  };
+  // Replace handlePlayNow with:
+const handlePlayNow = () => {
+  if (!featuredTrack) return;
+  trackPlay(featuredTrack.id);
+  
+  // Use consistent track URL format
+  navigate(`/tracks/${featuredTrack.slug || featuredTrack.id}`);
+};
 
   const handleUpload = async () => {
     if (!user) {
