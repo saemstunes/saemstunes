@@ -138,10 +138,20 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
             if (onTrackSelect) {
               onTrackSelect(track);
             } else {
-              // Navigate to track page using slug or id
-              const trackUrl = generateTrackUrl(track);
+              // Use track slug if available, else fallback to ID
+              const trackUrl = track.slug 
+                ? `/tracks/${track.slug}`
+                : `/tracks/${track.id}`;
               navigate(trackUrl);
             }
+
+            // Always update audio player context
+            playTrack({
+              id: track.id.toString(),
+              src: track.src,
+              name: track.name,
+              artist: track.artist || '',
+              artwork: track.artwork || '',
           }}
         >
           <div className="flex items-center gap-3 flex-1 min-w-0">
