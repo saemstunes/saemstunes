@@ -153,17 +153,17 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
   // Track play analytics
   const trackPlayAnalytics = useCallback(async (trackId: string) => {
-    if (!trackId) return;
-    
+    if (!trackId || !supabase.auth.session()) return;
+  
     try {
       await supabase.from('track_plays').insert({
-        track_id: trackId,
-        user_id: user?.id || null
-      });
-    } catch (error) {
-      console.error('Error tracking play:', error);
-    }
-  }, [user]);
+      track_id: trackId,
+      user_id: user?.id || null
+    });
+  }   catch (error) {
+    console.error('Error tracking play:', error);
+  }
+}, [user]);
 
   // Fetch track metadata if trackId is provided
   useEffect(() => {
