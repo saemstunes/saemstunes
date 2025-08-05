@@ -518,133 +518,263 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   if (fullPageMode) {
     if (loading) {
       return (
-        <div className="flex items-center justify-center p-8">
-          <div className="text-center">
-            <div className="h-8 w-8 rounded-full border-2 border-t-transparent border-gold animate-spin mx-auto mb-4"></div>
-            <p>Loading track...</p>
+        <MainLayout>
+          <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background flex items-center justify-center">
+            <div className="text-center">
+              <div className="h-8 w-8 rounded-full border-2 border-t-transparent border-gold animate-spin mx-auto mb-4"></div>
+              <p>Loading track...</p>
+            </div>
           </div>
-        </div>
+        </MainLayout>
       );
     }
 
     if (!trackData) {
       return (
-        <div className="flex items-center justify-center p-8">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold mb-4">Track not found</h2>
-            <Button onClick={() => navigate('/tracks')}>
-              Back to Tracks
-            </Button>
+        <MainLayout>
+          <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background flex items-center justify-center">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold mb-4">Track not found</h2>
+              <Button onClick={() => navigate('/tracks')}>
+                Back to Tracks
+              </Button>
+            </div>
           </div>
-        </div>
+        </MainLayout>
       );
     }
 
     return (
-      <div className="w-full max-w-2xl mx-auto p-6">
+      <div>
         <Helmet>
           <title>{`${trackData?.name || 'Audio Player'} - Saem's Tunes`}</title>
           <meta name="description" content={`Listen to ${trackData?.name || 'music'} by ${trackData?.artist || 'artist'}`} />
         </Helmet>
         
-        {/* Enhanced Audio Controls */}
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <div className="relative">
-              <Slider 
-                value={[currentTime]}
-                max={duration || 100} 
-                step={0.1}
-                onValueChange={handleProgressChange}
-                className="cursor-pointer"
-              />
-            </div>
-            
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{formatTime(currentTime)}</span>
-              <span>{formatTime(duration)}</span>
-            </div>
-          </div>
+        <MainLayout>
+          <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background">
+            <div className="container mx-auto px-4 py-8 max-w-7xl">
+              <div className="flex items-center gap-4 mb-8">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate(-1)}
+                  className="h-10 w-10"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <h1 className="text-2xl font-bold">Now Playing</h1>
+              </div>
 
-          <div className="flex items-center justify-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={playPrevious}
-              className="h-12 w-12"
-              title="Previous"
-            >
-              <SkipBack className="h-6 w-6" />
-            </Button>
-            
-            <Button 
-              variant="default" 
-              size="icon" 
-              onClick={togglePlay}
-              className="h-16 w-16 rounded-full bg-primary hover:bg-primary/90"
-              title={isPlaying ? "Pause" : "Play"}
-              disabled={!audioUrl}
-            >
-              {isPlaying ? <Pause className="h-8 w-8" /> : <Play className="h-8 w-8 ml-1" />}
-            </Button>
-            
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={playNext}
-              className="h-12 w-12"
-              title="Next"
-            >
-              <SkipForward className="h-6 w-6" />
-            </Button>
-          </div>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2">
+                  <Card className="overflow-hidden bg-gradient-to-b from-card to-card/80 border-gold/20 shadow-2xl">
+                    <CardContent className="p-6 md:p-8">
+                      <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mb-8">
+                        <div className="flex-shrink-0 mx-auto lg:mx-0 w-full max-w-[320px]">
+                          <div className="relative group aspect-square">
+                            <img
+                              src={trackData?.artwork || '/placeholder.svg'}
+                              alt={trackData?.name || 'Track artwork'}
+                              className={cn(
+                                "w-full h-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300",
+                                !imageLoaded && "opacity-0"
+                              )}
+                              onLoad={() => setImageLoaded(true)}
+                            />
+                            
+                            {!imageLoaded && (
+                              <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-2xl" />
+                            )}
+                            
+                            <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          </div>
+                        </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className={cn("h-10 w-10", state?.shuffle && "text-primary")}
-                onClick={toggleShuffle}
-                title="Shuffle"
-              >
-                <Shuffle className="h-5 w-5" />
-              </Button>
-              
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className={cn("h-10 w-10", state?.repeat !== 'off' && "text-primary")}
-                onClick={toggleRepeat}
-                title="Repeat"
-              >
-                <Repeat className="h-5 w-5" />
-              </Button>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={toggleMute} 
-                className="h-10 w-10"
-                title={state?.isMuted ? "Unmute" : "Mute"}
-              >
-                {state?.isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
-              </Button>
-              
-              <div className="w-24">
-                <Slider
-                  value={[state?.isMuted ? 0 : (state?.volume || 1)]} 
-                  min={0} 
-                  max={1} 
-                  step={0.01}
-                  onValueChange={handleVolumeChange}
-                />
+                        <div className="flex flex-col justify-center space-y-6 flex-1 text-center lg:text-left">
+                          <div>
+                            <h2 className="text-3xl md:text-4xl font-bold mb-3 text-foreground">{trackData?.name || 'Unknown Track'}</h2>
+                            <p className="text-xl md:text-2xl text-muted-foreground mb-2">{trackData?.artist || 'Unknown Artist'}</p>
+                          </div>
+
+                          {enableSocialFeatures && (
+                            <div className="flex items-center justify-center lg:justify-start gap-4 flex-wrap">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={toggleLike}
+                                className={cn(
+                                  "h-12 w-12",
+                                  isLiked ? "text-red-500" : "text-muted-foreground"
+                                )}
+                              >
+                                <Heart className={cn("h-6 w-6", isLiked && "fill-current")} />
+                              </Button>
+                              
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={handleShare}
+                                className="h-12 w-12 text-muted-foreground hover:text-foreground"
+                              >
+                                <Share className="h-6 w-6" />
+                              </Button>
+                              
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-12 w-12 text-muted-foreground hover:text-foreground"
+                                  >
+                                    <MoreHorizontal className="h-6 w-6" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem>
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Save track
+                                  </DropdownMenuItem>
+                                  
+                                  <DropdownMenuItem>
+                                    <Download className="mr-2 h-4 w-4" />
+                                    Download
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Enhanced Audio Controls */}
+                      <div className="space-y-6">
+                        <div className="space-y-2">
+                          <div className="relative">
+                            <Slider 
+                              value={[currentTime]}
+                              max={duration || 100} 
+                              step={0.1}
+                              onValueChange={handleProgressChange}
+                              className="cursor-pointer"
+                            />
+                          </div>
+                          
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>{formatTime(currentTime)}</span>
+                            <span>{formatTime(duration)}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-center gap-4">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={playPrevious}
+                            className="h-12 w-12"
+                            title="Previous"
+                          >
+                            <SkipBack className="h-6 w-6" />
+                          </Button>
+                          
+                          <Button 
+                            variant="default" 
+                            size="icon" 
+                            onClick={togglePlay}
+                            className="h-16 w-16 rounded-full bg-primary hover:bg-primary/90"
+                            title={isPlaying ? "Pause" : "Play"}
+                            disabled={!audioUrl}
+                          >
+                            {isPlaying ? <Pause className="h-8 w-8" /> : <Play className="h-8 w-8 ml-1" />}
+                          </Button>
+                          
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={playNext}
+                            className="h-12 w-12"
+                            title="Next"
+                          >
+                            <SkipForward className="h-6 w-6" />
+                          </Button>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className={cn("h-10 w-10", state?.shuffle && "text-primary")}
+                              onClick={toggleShuffle}
+                              title="Shuffle"
+                            >
+                              <Shuffle className="h-5 w-5" />
+                            </Button>
+                            
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className={cn("h-10 w-10", state?.repeat !== 'off' && "text-primary")}
+                              onClick={toggleRepeat}
+                              title="Repeat"
+                            >
+                              <Repeat className="h-5 w-5" />
+                            </Button>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={toggleMute} 
+                              className="h-10 w-10"
+                              title={state?.isMuted ? "Unmute" : "Mute"}
+                            >
+                              {state?.isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+                            </Button>
+                            
+                            <div className="w-24">
+                              <Slider
+                                value={[state?.isMuted ? 0 : (state?.volume || 1)]} 
+                                min={0} 
+                                max={1} 
+                                step={0.01}
+                                onValueChange={handleVolumeChange}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {showTrackList && (
+                  <div className="lg:col-span-1">
+                    <Card className="h-fit">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Music className="h-5 w-5" />
+                          Tracks
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-0">
+                        <ScrollArea className="h-[600px]">
+                          <div className="p-4">
+                            <EnhancedAnimatedList
+                              tracks={tracks}
+                              onTrackSelect={handleTrackSelect}
+                            />
+                          </div>
+                        </ScrollArea>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
               </div>
             </div>
           </div>
-        </div>
+        </MainLayout>
       </div>
     );
   }
