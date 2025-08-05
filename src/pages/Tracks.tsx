@@ -579,8 +579,8 @@ const Tracks = () => {
               </Card>
             )}
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full overflow-x-auto">
+              <TabsList className="grid w-full grid-cols-5 min-w-[300px]">
                 <TabsTrigger value="showcase">Showcase</TabsTrigger>
                 <TabsTrigger value="covers">Covers</TabsTrigger>
                 <TabsTrigger value="playlists">Playlists</TabsTrigger>
@@ -597,8 +597,8 @@ const Tracks = () => {
                     </div>
                     
                     <div className="grid md:grid-cols-2 gap-6 lg:gap-8 items-center">
-                    <div className="flex justify-center relative order-2 md:order-1 px-4">
-                      <div className="hover:z-[9999] relative transition-all duration-300 w-full max-w-xs sm:max-w-sm">
+                    <div className="flex justify-center relative order-2 md:order-1">
+                      <div className="hover:z-[9999] relative transition-all duration-300 w-full max-w-sm">
                         <TiltedCard
                           imageSrc={featuredTrack.imageSrc}
                           altText="Featured Track Cover"
@@ -606,7 +606,7 @@ const Tracks = () => {
                           containerHeight="300px"
                           containerWidth="300px"
                           rotateAmplitude={12}
-                          scaleOnHover={1..05}
+                          scaleOnHover={1.2}
                           showMobileWarning={false}
                           showTooltip={true}
                           displayOverlayContent={true}
