@@ -577,26 +577,28 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
         </main>
       </div>
       <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Logout Confirmation</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to log out from Saem's Tunes?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowLogoutConfirm(false)}>
-              Cancel
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={confirmLogout}
-            >
-              <LogOut className="h-4 w-4 mr-2" /> Logout
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+  <DialogContent>
+    <DialogHeader>
+      {/* Add DialogTitle here */}
+      <DialogTitle>Logout Confirmation</DialogTitle>
+      {/* Ensure DialogDescription is present */}
+      <DialogDescription>
+        Are you sure you want to log out from Saem's Tunes?
+      </DialogDescription>
+    </DialogHeader>
+    <DialogFooter>
+      <Button variant="outline" onClick={() => setShowLogoutConfirm(false)}>
+        Cancel
+      </Button>
+      <Button 
+        variant="destructive" 
+        onClick={confirmLogout}
+      >
+        <LogOut className="h-4 w-4 mr-2" /> Logout
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
     </div>
   );
 };
