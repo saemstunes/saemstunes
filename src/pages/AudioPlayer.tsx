@@ -1,46 +1,44 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
-  Play, 
-  Pause, 
-  SkipBack, 
-  SkipForward, 
-  Volume2, 
-  VolumeX,
-  Repeat,
-  Shuffle,
-  MoreHorizontal,
   ArrowLeft,
   Heart,
   Share,
+  MoreHorizontal,
   Download,
   Plus,
-  Music
+  Music,
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  Shuffle,
+  Repeat
 } from 'lucide-react';
-import { Slider } from '@/components/ui/slider';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
+import MainLayout from '@/components/layout/MainLayout';
+import { Helmet } from 'react-helmet';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import AudioPlayer from '@/components/media/AudioPlayer';
+import { ArtistMetadataManager } from '@/components/artists/ArtistMetadataManager';
+import { useMediaState } from '@/components/idle-state/mediaStateContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
-import { useAudioPlayer } from '@/context/AudioPlayerContext';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useMediaState } from '@/components/idle-state/mediaStateContext';
-import { supabase } from '@/integrations/supabase/client';
-import MainLayout from '@/components/layout/MainLayout';
-import { Helmet } from 'react-helmet';
-import { useAuth } from '@/context/AuthContext';
 import EnhancedAnimatedList from '@/components/tracks/EnhancedAnimatedList';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useAudioPlayer } from '@/context/AudioPlayerContext';
 import { fetchPlaylistTracks, fetchUserPlaylists } from '@/lib/playlistUtils';
 import { getAudioUrl, getStorageUrl, convertTrackToAudioTrack, generateTrackUrl } from '@/lib/audioUtils';
-import { ArtistMetadataManager } from '@/components/artists/ArtistMetadataManager';
+import AddToPlaylistModal from '@/components/playlists/AddToPlaylistModal';
 import { AudioTrack } from '@/types/music';
 
 const AudioPlayerPage = () => {
@@ -110,28 +108,19 @@ const AudioPlayerPage = () => {
 
   const fetchTrackData = useCallback(async (trackSlug: string) => {
     try {
-      let data: any = null;
-      
-      // First try to find existing track by slug or ID
-      const existingTrack = tracks.find(t => {
-        const trackSlug = 'slug' in t ? t.slug : undefined;
-        return t.id === trackSlug || trackSlug === trackSlug;
-      });
-      
+      const existingTrack = tracks.find(t => t.slug === trackSlug || t.id === trackSlug);
       if (existingTrack) {
         setTrackData(existingTrack);
         setLoading(false);
         return;
       }
       
-      // First try to fetch by slug
       let { data: trackData, error } = await supabase
         .from('tracks')
         .select('*')
         .eq('slug', trackSlug)
         .single();
       
-      // Fallback to ID if slug not found (backward compatibility)
       if (error && trackSlug) {
         const { data: idData, error: idError } = await supabase
           .from('tracks')
@@ -148,7 +137,6 @@ const AudioPlayerPage = () => {
         setTrackData(newTrack);
         setTracks(prev => [...prev, newTrack]);
         
-        // Redirect to correct slug if needed
         if (trackData.slug && trackSlug !== trackData.slug) {
           navigate(generateTrackUrl(newTrack), { replace: true });
         }
@@ -376,20 +364,11 @@ const AudioPlayerPage = () => {
   }, [trackData, toast]);
 
   const handleDownload = useCallback(() => {
-    if (!trackData) return;
-    
-    const link = document.createElement('a');
-    link.href = trackData.src;
-    link.download = `${trackData.artist} - ${trackData.name}.mp3`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
     toast({
-      title: "Download started",
-      description: `Downloading "${trackData.name}"`
+      title: "Download feature",
+      description: "Download functionality will be available for premium users",
     });
-  }, [trackData, toast]);
+  }, [toast]);
 
   const handleTrackSelect = useCallback((track: AudioTrack) => {
     setTrackData(track);
@@ -565,6 +544,19 @@ const AudioPlayerPage = () => {
                                 {isSaved ? 'Remove from saved' : 'Save track'}
                               </DropdownMenuItem>
                               
+                              {user && (
+                                <AddToPlaylistModal 
+                                  trackId={String(trackData.id)} 
+                                  userId={user.id}
+                                  onPlaylistCreated={fetchUserPlaylistsData}
+                                >
+                                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Add to playlist
+                                  </DropdownMenuItem>
+                                </AddToPlaylistModal>
+                              )}
+                              
                               <DropdownMenuItem onClick={handleDownload}>
                                 <Download className="mr-2 h-4 w-4" />
                                 Download
@@ -584,113 +576,17 @@ const AudioPlayerPage = () => {
                           </Button>
                         </div>
                       ) : (
-                        <div className="w-full bg-muted/10 rounded-lg p-4">
-                          <div className="flex items-center justify-center gap-4">
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={playPrevious}
-                              className="h-12 w-12"
-                              title="Previous"
-                            >
-                              <SkipBack className="h-6 w-6" />
-                            </Button>
-                            
-                            <Button 
-                              variant="default" 
-                              size="icon" 
-                              onClick={togglePlayPause}
-                              className="h-16 w-16 rounded-full bg-primary hover:bg-primary/90"
-                              title={playerState?.isPlaying ? "Pause" : "Play"}
-                            >
-                              {playerState?.isPlaying ? 
-                                <Pause className="h-8 w-8" /> : 
-                                <Play className="h-8 w-8 ml-1" />
-                              }
-                            </Button>
-                            
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={playNext}
-                              className="h-12 w-12"
-                              title="Next"
-                            >
-                              <SkipForward className="h-6 w-6" />
-                            </Button>
-                          </div>
-                          
-                          <div className="mt-6 space-y-2">
-                            <div className="flex items-center justify-between text-xs text-muted-foreground">
-                              <span>
-                                {playerState?.currentTime ? 
-                                  formatTime(playerState.currentTime) : '0:00'}
-                              </span>
-                              <span>
-                                {playerState?.duration ? 
-                                  formatTime(playerState.duration) : '0:00'}
-                              </span>
-                            </div>
-                            
-                            <Slider 
-                              value={[playerState?.currentTime || 0]}
-                              max={playerState?.duration || 100}
-                              step={0.1}
-                              className="w-full"
-                            />
-                          </div>
-                          
-                          <div className="flex items-center justify-center gap-4 mt-4">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className={cn(
-                                "h-10 w-10", 
-                                playerState?.shuffle && "text-primary"
-                              )}
-                              onClick={toggleShuffle}
-                              title="Shuffle"
-                            >
-                              <Shuffle className="h-5 w-5" />
-                            </Button>
-                            
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className={cn(
-                                "h-10 w-10", 
-                                playerState?.repeat !== 'off' && "text-primary"
-                              )}
-                              onClick={toggleRepeat}
-                              title="Repeat"
-                            >
-                              <Repeat className="h-5 w-5" />
-                            </Button>
-                            
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => playerState && toggleMute(!playerState.isMuted)} 
-                              className="h-10 w-10"
-                              title={playerState?.isMuted ? "Unmute" : "Mute"}
-                            >
-                              {playerState?.isMuted ? 
-                                <VolumeX className="h-5 w-5" /> : 
-                                <Volume2 className="h-5 w-5" />
-                              }
-                            </Button>
-                            
-                            <div className="w-24">
-                              <Slider
-                                value={[playerState?.volume || 1]} 
-                                min={0} 
-                                max={1} 
-                                step={0.01}
-                                onValueChange={(values) => setVolume(values[0])}
-                              />
-                            </div>
-                          </div>
-                        </div>
+                        trackData && (
+                          <AudioPlayer
+                            trackId={String(trackData.id)}
+                            src={trackData.src}
+                            title={trackData.name}
+                            artist={trackData.artist}
+                            artwork={trackData.artwork}
+                            className="bg-transparent border-0 shadow-none"
+                            onError={handleAudioError}
+                          />
+                        )
                       )}
                     </div>
 
