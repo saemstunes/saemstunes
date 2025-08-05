@@ -24,7 +24,6 @@ import EnhancedAnimatedList from "@/components/tracks/EnhancedAnimatedList";
 import TiltedCard from "@/components/tracks/TiltedCard";
 import { getImageUrl } from "@/lib/urlUtils";
 import { getAudioUrl, getStorageUrl, convertTrackToAudioTrack, generateTrackUrl } from "@/lib/audioUtils";
-import { AudioTrack } from "@/types/music";
 
 interface Track {
   id: string;
@@ -81,15 +80,6 @@ const Tracks = () => {
   const [showUpload, setShowUpload] = useState(false);
   const [activeTab, setActiveTab] = useState("showcase");
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // Upload form state
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [accessLevel, setAccessLevel] = useState<AccessLevel>('free');
-  const [audioFile, setAudioFile] = useState<File | null>(null);
-  const [coverFile, setCoverFile] = useState<File | null>(null);
-  const [youtubeUrl, setYoutubeUrl] = useState('');
-  const [uploading, setUploading] = useState(false);
   
   const navigate = useNavigate();
 
@@ -277,29 +267,17 @@ const Tracks = () => {
   const handlePlayNow = () => {
     if (!featuredTrack) return;
     
-    // Convert featured track to AudioTrack format
-    const audioTrack: AudioTrack = {
-      id: featuredTrack.id,
-      src: featuredTrack.audioSrc,
-      name: featuredTrack.title,
-      artist: featuredTrack.artist,
-      artwork: featuredTrack.imageSrc,
-      slug: featuredTrack.slug
-    };
-    
-    // Record play count
     if (featuredTrack.id) {
       trackPlay(featuredTrack.id);
     }
     
-    // Navigate to track page with slug
-    const trackUrl = generateTrackUrl(audioTrack);
-    navigate(trackUrl, {
-      state: { track: audioTrack }
-    });
+    navigate(featuredTrack.slug 
+      ? `/tracks/${featuredTrack.slug}` 
+      : `/tracks/${featuredTrack.id}`
+    );
   };
 
-  const handleTrackSelect = (track: AudioTrack) => {
+  const handleTrackSelect = (track: Track) => {
     navigate(track.slug 
       ? `/tracks/${track.slug}` 
       : `/tracks/${track.id}`

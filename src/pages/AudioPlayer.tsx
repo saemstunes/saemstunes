@@ -370,19 +370,11 @@ const AudioPlayerPage = () => {
     });
   }, [toast]);
 
-  // Sync trackData with AudioPlayerContext when context changes
-  useEffect(() => {
-    if (playerState.currentTrack && playerState.currentTrack.id !== trackData?.id) {
-      setTrackData(playerState.currentTrack);
-      const trackUrl = generateTrackUrl(playerState.currentTrack);
-      if (window.location.pathname !== trackUrl) {
-        navigate(trackUrl, { replace: true });
-      }
-    }
-  }, [playerState.currentTrack, trackData, navigate]);
-
   const handleTrackSelect = useCallback((track: AudioTrack) => {
-    // Update global player state first
+    setTrackData(track);
+    const trackUrl = generateTrackUrl(track);
+    navigate(trackUrl);
+    
     const currentPlaylist = selectedPlaylist ? playlistTracks : tracks;
     const index = currentPlaylist.findIndex(t => t.id === track.id);
     
@@ -391,11 +383,6 @@ const AudioPlayerPage = () => {
       setPlaylist(currentPlaylist, selectedPlaylist?.id);
       playTrack(track);
     }
-
-    // Update local page state
-    setTrackData(track);
-    const trackUrl = generateTrackUrl(track);
-    navigate(trackUrl);
   }, [
     navigate, 
     selectedPlaylist, 
