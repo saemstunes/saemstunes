@@ -9,7 +9,13 @@ import {
   MoreHorizontal,
   Download,
   Plus,
-  Music
+  Music,
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  Shuffle,
+  Repeat
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import MainLayout from '@/components/layout/MainLayout';
@@ -31,7 +37,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAudioPlayer } from '@/context/AudioPlayerContext';
 import { fetchPlaylistTracks, fetchUserPlaylists } from '@/lib/playlistUtils';
-import { getAudioUrl, convertTrackToAudioTrack, generateTrackUrl } from '@/lib/audioUtils';
+import { getAudioUrl, getStorageUrl, convertTrackToAudioTrack, generateTrackUrl } from '@/lib/audioUtils';
 import AddToPlaylistModal from '@/components/playlists/AddToPlaylistModal';
 import { AudioTrack } from '@/types/music';
 
@@ -60,8 +66,12 @@ const AudioPlayerPage = () => {
     playTrack,
     pauseTrack,
     resumeTrack,
+    playNext,
+    playPrevious,
+    toggleShuffle,
+    toggleRepeat,
     setPlaylist,
-    setCurrentIndex
+    setCurrentIndex,
   } = useAudioPlayer();
 
   useEffect(() => {
@@ -94,21 +104,28 @@ const AudioPlayerPage = () => {
     } catch (error) {
       console.error('Error fetching tracks:', error);
     }
-  }, [setPlaylist]);
+  }, []);
 
-  const fetchTrackData = useCallback(async (trackIdentifier: string) => {
+  const fetchTrackData = useCallback(async (trackSlug: string) => {
     try {
+      const existingTrack = tracks.find(t => t.slug === trackSlug || t.id === trackSlug);
+      if (existingTrack) {
+        setTrackData(existingTrack);
+        setLoading(false);
+        return;
+      }
+      
       let { data: trackData, error } = await supabase
         .from('tracks')
         .select('*')
-        .eq('slug', trackIdentifier)
+        .eq('slug', trackSlug)
         .single();
       
-      if (error) {
+      if (error && trackSlug) {
         const { data: idData, error: idError } = await supabase
           .from('tracks')
           .select('*')
-          .eq('id', trackIdentifier)
+          .eq('id', trackSlug)
           .single();
         
         if (idError) throw idError;
@@ -116,18 +133,34 @@ const AudioPlayerPage = () => {
       }
       
       if (trackData) {
-        return convertTrackToAudioTrack(trackData);
+        const newTrack = convertTrackToAudioTrack(trackData);
+        setTrackData(newTrack);
+        setTracks(prev => [...prev, newTrack]);
+        
+        if (trackData.slug && trackSlug !== trackData.slug) {
+          navigate(generateTrackUrl(newTrack), { replace: true });
+        }
       }
-      return null;
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to load track data",
         variant: "destructive",
       });
-      return null;
+      navigate('/tracks');
+    } finally {
+      setLoading(false);
     }
-  }, [toast]);
+  }, [toast, tracks, navigate]);
+
+  useEffect(() => {
+    if (trackData && playerState.playlist.length > 0) {
+      const index = playerState.playlist.findIndex(t => t.id === trackData.id);
+      if (index !== -1) {
+        setCurrentIndex(index);
+      }
+    }
+  }, [trackData, playerState.playlist, setCurrentIndex]);
 
   const fetchUserPlaylistsData = useCallback(async () => {
     if (!user) return;
@@ -170,40 +203,28 @@ const AudioPlayerPage = () => {
 
   useEffect(() => {
     const init = async () => {
-      await fetchAllTracks();
+      fetchAllTracks();
       
-      let track: AudioTrack | null = null;
       if (location.state?.track) {
-        track = location.state.track;
+        setTrackData(location.state.track);
+        setLoading(false);
       } else if (slug) {
-        track = await fetchTrackData(slug);
-      }
-
-      if (track) {
-        setTrackData(track);
-        playTrack(track);
-        const index = tracks.findIndex(t => t.id === track?.id);
-        if (index !== -1) {
-          setCurrentIndex(index);
-        }
+        await fetchTrackData(slug);
       } else {
-        const defaultTrack = tracks.length > 0 ? tracks[0] : null;
-        if (defaultTrack) {
-          setTrackData(defaultTrack);
-          playTrack(defaultTrack);
-        }
+        setTrackData({
+          id: 1,
+          src: '/audio/sample.mp3',
+          name: 'Sample Track',
+          artist: 'Sample Artist',
+          artwork: '/placeholder.svg',
+          album: 'Sample Album'
+        });
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     init();
-  }, [slug, location.state, fetchAllTracks, fetchTrackData, playTrack, tracks, setCurrentIndex]);
-
-  useEffect(() => {
-    if (trackData) {
-      playTrack(trackData);
-    }
-  }, [trackData, playTrack]);
+  }, [slug, location.state, fetchAllTracks, fetchTrackData]);
 
   const checkIfLiked = useCallback(async () => {
     if (!user || !trackData) return;
@@ -320,11 +341,11 @@ const AudioPlayerPage = () => {
     const shareData = {
       title: `${trackData.name} by ${trackData.artist}`,
       text: `Listen to ${trackData.name} on Saem's Tunes`,
-      url: window.location.origin + generateTrackUrl(trackData),
+      url: window.location.href,
     };
 
     try {
-      if (navigator.share) {
+      if (navigator.share && navigator.canShare(shareData)) {
         await navigator.share(shareData);
       } else {
         await navigator.clipboard.writeText(shareData.url);
@@ -343,26 +364,34 @@ const AudioPlayerPage = () => {
   }, [trackData, toast]);
 
   const handleDownload = useCallback(() => {
-    if (!trackData) return;
-    
-    const link = document.createElement('a');
-    link.href = trackData.src;
-    link.download = `${trackData.artist} - ${trackData.name}.mp3`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
     toast({
-      title: "Download started",
-      description: `Downloading "${trackData.name}"`
+      title: "Download feature",
+      description: "Download functionality will be available for premium users",
     });
-  }, [trackData, toast]);
+  }, [toast]);
 
   const handleTrackSelect = useCallback((track: AudioTrack) => {
     setTrackData(track);
-    navigate(generateTrackUrl(track));
-    playTrack(track);
-  }, [navigate, playTrack]);
+    const trackUrl = generateTrackUrl(track);
+    navigate(trackUrl);
+    
+    const currentPlaylist = selectedPlaylist ? playlistTracks : tracks;
+    const index = currentPlaylist.findIndex(t => t.id === track.id);
+    
+    if (index !== -1) {
+      setCurrentIndex(index);
+      setPlaylist(currentPlaylist, selectedPlaylist?.id);
+      playTrack(track);
+    }
+  }, [
+    navigate, 
+    selectedPlaylist, 
+    playlistTracks, 
+    tracks, 
+    setCurrentIndex, 
+    setPlaylist, 
+    playTrack
+  ]);
 
   const handleAudioError = useCallback(() => {
     setAudioError(true);
@@ -372,6 +401,26 @@ const AudioPlayerPage = () => {
       variant: "destructive",
     });
   }, [toast]);
+
+  const togglePlayPause = useCallback(() => {
+    if (!trackData) return;
+    
+    if (playerState?.isPlaying) {
+      pauseTrack();
+    } else {
+      if (playerState?.currentTrack?.id === trackData.id) {
+        resumeTrack();
+      } else {
+        playTrack({
+          id: trackData.id.toString(),
+          src: trackData.src,
+          name: trackData.name,
+          artist: trackData.artist || '',
+          artwork: trackData.artwork || '',
+        });
+      }
+    }
+  }, [trackData, playerState, playTrack, pauseTrack, resumeTrack]);
 
   if (loading) {
     return (
@@ -404,8 +453,8 @@ const AudioPlayerPage = () => {
   return (
     <div>
       <Helmet>
-        <title>{`${trackData.name} - Saem's Tunes`}</title>
-        <meta name="description" content={`Listen to ${trackData.name} by ${trackData.artist}`} />
+        <title>{`${trackData?.name || 'Audio Player'} - Saem's Tunes`}</title>
+        <meta name="description" content={`Listen to ${trackData?.name || 'music'} by ${trackData?.artist || 'artist'}`} />
       </Helmet>
       
       <MainLayout>
@@ -431,8 +480,8 @@ const AudioPlayerPage = () => {
                       <div className="flex-shrink-0 mx-auto lg:mx-0 w-full max-w-[320px]">
                         <div className="relative group aspect-square">
                           <img
-                            src={trackData.artwork || '/placeholder.svg'}
-                            alt={trackData.name}
+                            src={trackData?.artwork || '/placeholder.svg'}
+                            alt={trackData?.name || 'Track artwork'}
                             className={cn(
                               "w-full h-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300",
                               !imageLoaded && "opacity-0"
@@ -450,9 +499,9 @@ const AudioPlayerPage = () => {
 
                       <div className="flex flex-col justify-center space-y-6 flex-1 text-center lg:text-left">
                         <div>
-                          <h2 className="text-3xl md:text-4xl font-bold mb-3 text-foreground">{trackData.name}</h2>
-                          <p className="text-xl md:text-2xl text-muted-foreground mb-2">{trackData.artist || 'Unknown Artist'}</p>
-                          {trackData.album && (
+                          <h2 className="text-3xl md:text-4xl font-bold mb-3 text-foreground">{trackData?.name || 'Unknown Track'}</h2>
+                          <p className="text-xl md:text-2xl text-muted-foreground mb-2">{trackData?.artist || 'Unknown Artist'}</p>
+                          {trackData?.album && (
                             <p className="text-lg text-muted-foreground/80">{trackData.album}</p>
                           )}
                         </div>
@@ -527,18 +576,20 @@ const AudioPlayerPage = () => {
                           </Button>
                         </div>
                       ) : (
-                        <AudioPlayer
-                          src={trackData.src}
-                          title={trackData.name}
-                          artist={trackData.artist}
-                          artwork={trackData.artwork}
-                          className="bg-transparent border-0 shadow-none"
-                          onError={handleAudioError}
-                        />
+                        trackData && (
+                          <AudioPlayer
+                            src={trackData.src}
+                            title={trackData.name}
+                            artist={trackData.artist}
+                            artwork={trackData.artwork}
+                            className="bg-transparent border-0 shadow-none"
+                            onError={handleAudioError}
+                          />
+                        )
                       )}
                     </div>
 
-                    {showMetadataPrompt && (
+                    {showMetadataPrompt && trackData && (
                       <ArtistMetadataManager trackId={String(trackData.id)} />
                     )}
                   </CardContent>
@@ -634,7 +685,7 @@ const AudioPlayerPage = () => {
                                   <div 
                                     key={playlist.id} 
                                     className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted cursor-pointer transition-colors"
-                                    onClick={() => setSelectedPlaylist(playlist)}
+                                    onClick={() => handlePlaylistSelect(playlist)}
                                   >
                                     <div className="bg-muted border rounded-md w-16 h-16 flex items-center justify-center flex-shrink-0">
                                       <Music className="h-6 w-6 text-muted-foreground" />

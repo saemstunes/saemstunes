@@ -47,6 +47,7 @@ interface Track {
   primary_color?: string;
   secondary_color?: string;
   background_gradient?: string;
+  slug?: string;
 }
 
 interface Playlist {
@@ -66,6 +67,7 @@ interface FeaturedTrack {
   audioSrc: string;
   description?: string;
   youtube_url?: string;
+  slug?: string;
 }
 
 const Tracks = () => {
@@ -79,14 +81,6 @@ const Tracks = () => {
   const [activeTab, setActiveTab] = useState("showcase");
   const [searchTerm, setSearchTerm] = useState('');
   
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [accessLevel, setAccessLevel] = useState<AccessLevel>('free');
-  const [audioFile, setAudioFile] = useState<File | null>(null);
-  const [coverFile, setCoverFile] = useState<File | null>(null);
-  const [youtubeUrl, setYoutubeUrl] = useState('');
-  const [uploading, setUploading] = useState(false);
-
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -152,7 +146,8 @@ const Tracks = () => {
           description,
           created_at,
           artist,
-          youtube_url
+          youtube_url,
+          slug
         `)
         .eq('approved', true)
         .order('created_at', { ascending: false })
@@ -166,29 +161,30 @@ const Tracks = () => {
           supabase
             .from('track_plays')
             .select('*', { count: 'exact', head: true })
-            .eq('track_id', (trackData as any).id),
+            .eq('track_id', trackData.id),
           supabase
             .from('likes')
             .select('*', { count: 'exact', head: true })
-            .eq('track_id', (trackData as any).id)
+            .eq('track_id', trackData.id)
         ]);
 
         const playCount = playCountResult.count || 0;
         const likeCount = likeCountResult.count || 0;
 
-        const audioUrl = getAudioUrl(trackData as any) || '';
-        const coverUrl = getImageUrl((trackData as any).cover_path);
+        const audioUrl = getAudioUrl(trackData) || '';
+        const coverUrl = getImageUrl(trackData.cover_path);
 
         setFeaturedTrack({
-          id: (trackData as any).id,
+          id: trackData.id,
+          slug: trackData.slug,
           imageSrc: coverUrl,
-          title: (trackData as any).title,
-          artist: (trackData as any).artist || "Unknown Artist",
+          title: trackData.title,
+          artist: trackData.artist || "Unknown Artist",
           plays: playCount,
           likes: likeCount,
           audioSrc: audioUrl,
-          description: (trackData as any).description,
-          youtube_url: (trackData as any).youtube_url
+          description: trackData.description,
+          youtube_url: trackData.youtube_url
         });
       }
     } catch (error) {
@@ -226,6 +222,7 @@ const Tracks = () => {
           primary_color,
           secondary_color,
           background_gradient,
+          slug,
           profiles:user_id (
             avatar_url
           )
@@ -274,14 +271,17 @@ const Tracks = () => {
       trackPlay(featuredTrack.id);
     }
     
-    navigate(generateTrackUrl({
-      id: featuredTrack.id,
-      name: featuredTrack.title,
-      artist: featuredTrack.artist,
-      artwork: featuredTrack.imageSrc,
-      src: featuredTrack.audioSrc,
-      slug: featuredTrack.id
-    }));
+    navigate(featuredTrack.slug 
+      ? `/tracks/${featuredTrack.slug}` 
+      : `/tracks/${featuredTrack.id}`
+    );
+  };
+
+  const handleTrackSelect = (track: Track) => {
+    navigate(track.slug 
+      ? `/tracks/${track.slug}` 
+      : `/tracks/${track.id}`
+    );
   };
 
   const handleUpload = async () => {
@@ -676,7 +676,10 @@ const Tracks = () => {
                     </CardHeader>
                     <CardContent>
                       <ScrollArea className="h-[400px] w-full">
-                        <EnhancedAnimatedList tracks={filteredTracks.slice(0, 10).map(convertTrackToAudioTrack)} />
+                        <EnhancedAnimatedList 
+                          tracks={filteredTracks.slice(0, 10).map(convertTrackToAudioTrack)} 
+                          onTrackSelect={handleTrackSelect}
+                        />
                       </ScrollArea>
                     </CardContent>
                   </Card>
@@ -791,7 +794,10 @@ const Tracks = () => {
                     </CardHeader>
                     <CardContent>
                       <ScrollArea className="h-[500px] w-full">
-                        <EnhancedAnimatedList tracks={filteredTracks.map(convertTrackToAudioTrack)} />
+                        <EnhancedAnimatedList 
+                          tracks={filteredTracks.map(convertTrackToAudioTrack)} 
+                          onTrackSelect={handleTrackSelect}
+                        />
                       </ScrollArea>
                     </CardContent>
                   </Card>
