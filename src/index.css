@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap'); /* Placeholder for Proxima Nova - needs actual license */
 
@@ -8,7 +7,7 @@
 
 @layer base {
   :root {
-    /* Default Gold Theme */
+    /* Updated Gold and Brown Theme - Light Mode */
     --background: 36 33% 97%;
     --foreground: 20 14% 21%;
 
@@ -39,15 +38,19 @@
 
     --radius: 0.75rem;
 
-    /* Theme Colors */
+    /* Updated Theme Colors */
     --gold: 43 100% 33%;
-    --gold-light: 43 100% 50%;
-    --gold-dark: 43 100% 25%;
+    --gold-light: 48 100% 52%;
+    --gold-dark: 43 100% 24%;
     
-    /* Teal theme will override these via JavaScript */
+    /* Brown variants */
+    --brown: 20 14% 21%;
+    --brown-light: 20 14% 35%;
+    --brown-dark: 20 14% 8%;
   }
 
   .dark {
+    /* Updated Gold and Brown Theme - Dark Mode */
     --background: 20 14% 10%;
     --foreground: 0 0% 95%;
 
@@ -76,12 +79,41 @@
     --input: 20 14% 25%;
     --ring: 43 100% 33%;
   }
-}
 
-@layer base {
+  /* Global Scrollbar Styling */
   * {
     @apply border-border;
     box-sizing: border-box;
+    
+    /* Firefox scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--gold)) hsl(var(--muted));
+  }
+
+  /* WebKit browsers scrollbar (Chrome, Safari, Edge) */
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 4px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--gold));
+    border-radius: 4px;
+    border: 1px solid hsl(var(--muted));
+    transition: background-color 0.2s ease;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--gold-light));
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: hsl(var(--muted));
   }
 
   html {
@@ -206,17 +238,30 @@
     @apply bg-clip-text text-transparent bg-gradient-to-r from-gold-light via-gold to-gold-dark;
   }
   
-  /* Custom scrollbar */
+  /* Updated custom scrollbar class for specific elements */
   .custom-scrollbar::-webkit-scrollbar {
     @apply w-2;
   }
   
   .custom-scrollbar::-webkit-scrollbar-track {
-    @apply bg-muted rounded-full;
+    background: hsl(var(--muted));
+    border-radius: 8px;
   }
   
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-gold/50 rounded-full hover:bg-gold;
+    background: hsl(var(--gold));
+    border-radius: 8px;
+    border: 1px solid hsl(var(--muted));
+    transition: background-color 0.2s ease;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--gold-light));
+  }
+
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--gold)) hsl(var(--muted));
   }
   
   /* Added styles for logo and links */
