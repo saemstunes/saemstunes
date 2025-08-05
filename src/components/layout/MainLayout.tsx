@@ -579,9 +579,7 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
       <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
   <DialogContent>
     <DialogHeader>
-      {/* Add DialogTitle here */}
       <DialogTitle>Logout Confirmation</DialogTitle>
-      {/* Ensure DialogDescription is present */}
       <DialogDescription>
         Are you sure you want to log out from Saem's Tunes?
       </DialogDescription>
