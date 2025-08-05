@@ -23,7 +23,7 @@ import { Helmet } from 'react-helmet';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import AudioPlayer from '@/components/media/AudioPlayer';
+
 import { ArtistMetadataManager } from '@/components/artists/ArtistMetadataManager';
 import { useMediaState } from '@/components/idle-state/mediaStateContext';
 import {
@@ -575,17 +575,6 @@ const AudioPlayerPage = () => {
                             Try Again
                           </Button>
                         </div>
-                      ) : (
-                        trackData && (
-                          <AudioPlayer
-                            src={trackData.src}
-                            title={trackData.name}
-                            artist={trackData.artist}
-                            artwork={trackData.artwork}
-                            className="bg-transparent border-0 shadow-none"
-                            onError={handleAudioError}
-                          />
-                        )
                       )}
                     </div>
 
