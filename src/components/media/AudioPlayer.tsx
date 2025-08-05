@@ -129,6 +129,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const [selectedPlaylist, setSelectedPlaylist] = useState<any>(null);
   const [playlistTracks, setPlaylistTracks] = useState<AudioTrack[]>([]);
   const [activeTab, setActiveTab] = useState('all');
+  const [isPlayingRequested, setIsPlayingRequested] = useState(false); // Add this
   
   const { toast } = useToast();
   const { requestPermissionWithFeedback } = usePermissionRequest();
@@ -345,9 +346,14 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     }
   }, [autoPlay, audioUrl]);
 
+   // Handle play with concurrency protection
   const handlePlay = async () => {
+    if (isPlayingRequested || !audioUrl) return;
+    
     try {
+      setIsPlayingRequested(true);
       setIsLoading(true);
+      
       if (autoPlay) {
         const hasPermission = await requestPermissionWithFeedback('microphone', 'Audio playback');
         if (!hasPermission) {
@@ -365,35 +371,47 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         artwork: track.artwork,
         slug: track.slug,
       };
-      playTrack(audioTrack, startTime);
       
-      // Track analytics
+      await playTrack(audioTrack, startTime);
+      
       if (track.id) {
         trackPlayAnalytics(String(track.id));
       }
     } catch (err) {
-      console.error('Error playing audio:', err);
-      setError('Failed to play audio');
-      onError?.();
+      if (err.name !== 'AbortError') {
+        console.error('Error playing audio:', err);
+        setError('Failed to play audio');
+        onError?.();
+      }
     } finally {
       setIsLoading(false);
+      setIsPlayingRequested(false);
     }
   };
 
+  // Toggle play with concurrency protection
   const togglePlay = async () => {
+    if (isPlayingRequested) return;
+    
     if (!audioUrl) {
       setError('No audio source available');
       return;
     }
     
-    if (isCurrentTrack) {
-      if (isPlaying) {
-        pauseTrack();
+    try {
+      setIsPlayingRequested(true);
+      
+      if (isCurrentTrack) {
+        if (isPlaying) {
+          pauseTrack();
+        } else {
+          await resumeTrack();
+        }
       } else {
-        resumeTrack();
+        await handlePlay();
       }
-    } else {
-      await handlePlay();
+    } finally {
+      setIsPlayingRequested(false);
     }
   };
   
