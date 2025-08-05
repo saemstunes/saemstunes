@@ -603,8 +603,8 @@ const Tracks = () => {
                           imageSrc={featuredTrack.imageSrc}
                           altText="Featured Track Cover"
                           captionText={featuredTrack.title}
-                          containerHeight="300px"
-                          containerWidth="300px"
+                          containerHeight="200px"
+                          containerWidth="200px"
                           rotateAmplitude={12}
                           scaleOnHover={1.2}
                           showMobileWarning={false}
