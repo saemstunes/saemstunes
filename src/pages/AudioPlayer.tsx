@@ -578,6 +578,7 @@ const AudioPlayerPage = () => {
                       ) : (
                         trackData && (
                           <AudioPlayer
+                            trackId={String(trackData.id)}
                             src={trackData.src}
                             title={trackData.name}
                             artist={trackData.artist}
