@@ -80,7 +80,12 @@ const App = () => {
             <TooltipProvider>
               <Toaster />
               <Sonner />
-              <SplashScreen loading={loading} />
+              <SplashScreen 
+                loading={loading} 
+                onFinish={handleAppLoaded}
+                logoUrl="public/lovable-uploads/logo-full-md.svg" // or `logo` if imported from assets
+                />
+
               <BrowserRouter>
                 <IdleStateManager idleTime={60000} />
                 <Routes>
