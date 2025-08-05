@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Play, 
   Pause, 
@@ -9,6 +10,7 @@ import {
   Repeat,
   Shuffle,
   MoreHorizontal,
+  ArrowLeft,
   Heart,
   Share,
   Download,
@@ -34,10 +36,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useMediaState } from '@/components/idle-state/mediaStateContext';
 import { supabase } from '@/integrations/supabase/client';
 import { validate as isUuid } from 'uuid';
+import MainLayout from '@/components/layout/MainLayout';
+import { Helmet } from 'react-helmet';
+import { useAuth } from '@/context/AuthContext';
 import EnhancedAnimatedList from '@/components/tracks/EnhancedAnimatedList';
+import { fetchPlaylistTracks, fetchUserPlaylists } from '@/lib/playlistUtils';
+import { getAudioUrl, getStorageUrl, convertTrackToAudioTrack, generateTrackUrl } from '@/lib/audioUtils';
 import AddToPlaylistModal from '@/components/playlists/AddToPlaylistModal';
 import { ArtistMetadataManager } from '@/components/artists/ArtistMetadataManager';
-import { useAuth } from '@/context/AuthContext';
 import { AudioTrack } from '@/types/music';
 
 interface Track {
@@ -73,9 +79,6 @@ interface AudioPlayerProps {
   showTrackList?: boolean;
   enablePlaylistFeatures?: boolean;
   enableSocialFeatures?: boolean;
-  trackList?: AudioTrack[];
-  onTrackSelect?: (track: AudioTrack) => void;
-  onBack?: () => void;
 }
 
 const formatTime = (seconds: number): string => {
@@ -99,11 +102,11 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   isFullPage = false,
   showTrackList = false,
   enablePlaylistFeatures = false,
-  enableSocialFeatures = false,
-  trackList = [],
-  onTrackSelect,
-  onBack
+  enableSocialFeatures = false
 }) => {
+  const { slug } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { setMediaPlaying } = useMediaState();
   const { user } = useAuth();
   const [isRepeat, setIsRepeat] = useState(false);
@@ -112,12 +115,20 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [showAdvancedControls, setShowAdvancedControls] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [trackData, setTrackData] = useState<Track | null>(null);
+  const [trackData, setTrackData] = useState<AudioTrack | null>(null);
   const [audioUrl, setAudioUrl] = useState<string>(src || '');
   const [coverUrl, setCoverUrl] = useState<string>(artwork);
+  
+  // Full page mode states
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [showMetadataPrompt, setShowMetadataPrompt] = useState(false);
+  const [tracks, setTracks] = useState<AudioTrack[]>([]);
+  const [userPlaylists, setUserPlaylists] = useState<any[]>([]);
+  const [selectedPlaylist, setSelectedPlaylist] = useState<any>(null);
+  const [playlistTracks, setPlaylistTracks] = useState<AudioTrack[]>([]);
+  const [activeTab, setActiveTab] = useState('all');
   
   const { toast } = useToast();
   const { requestPermissionWithFeedback } = usePermissionRequest();
@@ -133,12 +144,31 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     playPrevious,
     toggleShuffle: globalToggleShuffle,
     toggleRepeat: globalToggleRepeat,
+    setPlaylist,
+    setCurrentIndex,
   } = useAudioPlayer();
+
+  // Determine if this is full page mode
+  const fullPageMode = isFullPage || !!slug || !!location.state?.track;
+
+  // Track play analytics
+  const trackPlayAnalytics = useCallback(async (trackId: string) => {
+    if (!trackId) return;
+    
+    try {
+      await supabase.from('track_plays').insert({
+        track_id: trackId,
+        user_id: user?.id || null
+      });
+    } catch (error) {
+      console.error('Error tracking play:', error);
+    }
+  }, [user]);
 
   // Fetch track metadata if trackId is provided
   useEffect(() => {
     const fetchTrackData = async () => {
-      if (!trackId) return;
+      if (!trackId && !slug) return;
       
       try {
         setIsLoading(true);
@@ -149,50 +179,130 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
             title,
             artist,
             audio_path,
+            alternate_audio_path,
             cover_path,
             description,
+            duration,
+            slug,
             profiles:user_id (
               avatar_url
             )
           `);
 
-        // Check if trackId is a valid UUID
-        if (typeof trackId === 'string' && isUuid(trackId)) {
-          query = query.eq('id', trackId);
+        const searchId = trackId || slug;
+        
+        // Check if searchId is a valid UUID
+        if (typeof searchId === 'string' && isUuid(searchId)) {
+          query = query.eq('id', searchId);
         } else {
-          query = query.eq('slug', trackId);
+          query = query.eq('slug', searchId);
         }
 
-        const { data, error }: { data: any; error: any } = await query.single();
+        let { data, error }: { data: any; error: any } = await query.single();
 
-        if (error) throw error;
+        if (error) {
+          // Try alternate search method
+          if (searchId) {
+            const { data: altData, error: altError } = await supabase
+              .from('tracks')
+              .select('*')
+              .or(`id.eq.${searchId},slug.eq.${searchId}`)
+              .single();
+            
+            if (!altError && altData) {
+              data = altData;
+            } else {
+              throw error;
+            }
+          } else {
+            throw error;
+          }
+        }
+        
         if (!data) return;
 
-        setTrackData(data as any);
+        const convertedTrack = convertTrackToAudioTrack(data);
+        setTrackData(convertedTrack);
 
         // Get public URL for audio
-        const audioUrl = (data as any).audio_path 
-          ? supabase.storage.from('tracks').getPublicUrl((data as any).audio_path).data.publicUrl 
-          : src || '';
+        const audioUrl = getAudioUrl(data) || src || '';
         setAudioUrl(audioUrl);
 
         // Get cover URL
-        const coverUrl = (data as any).cover_path 
-          ? ((data as any).cover_path.startsWith('http') 
-              ? (data as any).cover_path 
-              : supabase.storage.from('tracks').getPublicUrl((data as any).cover_path).data.publicUrl)
+        const coverUrl = data.cover_path 
+          ? (data.cover_path.startsWith('http') 
+              ? data.cover_path 
+              : getStorageUrl(data.cover_path))
           : artwork;
         setCoverUrl(coverUrl);
+
+        // Track analytics for play
+        if (data.id) {
+          trackPlayAnalytics(data.id);
+        }
       } catch (err) {
         console.error('Error fetching track:', err);
         setError('Failed to load track metadata');
       } finally {
         setIsLoading(false);
+        setLoading(false);
       }
     };
 
     fetchTrackData();
-  }, [trackId, src, artwork]);
+  }, [trackId, slug, src, artwork, trackPlayAnalytics]);
+
+  // Fetch all tracks for full page mode
+  const fetchAllTracks = useCallback(async () => {
+    if (!fullPageMode) return;
+    
+    try {
+      const { data: allTracks, error } = await supabase
+        .from('tracks')
+        .select('id, title, audio_path, alternate_audio_path, cover_path, artist, duration, slug')
+        .eq('approved', true)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      
+      if (allTracks) {
+        const mappedTracks = allTracks.map(track => convertTrackToAudioTrack(track));
+        setTracks(mappedTracks);
+        setPlaylist(mappedTracks);
+      }
+    } catch (error) {
+      console.error('Error fetching tracks:', error);
+    }
+  }, [fullPageMode]);
+
+  // Initialize for full page mode
+  useEffect(() => {
+    if (!fullPageMode) return;
+    
+    const init = async () => {
+      fetchAllTracks();
+      
+      if (location.state?.track) {
+        setTrackData(location.state.track);
+        setLoading(false);
+      } else if (slug) {
+        // Track data will be fetched by the other useEffect
+      } else {
+        setTrackData({
+          id: 1,
+          src: '/audio/sample.mp3',
+          name: 'Sample Track',
+          artist: 'Sample Artist',
+          artwork: '/placeholder.svg',
+          album: 'Sample Album'
+        });
+        setLoading(false);
+      }
+    };
+
+    init();
+  }, [slug, location.state, fetchAllTracks, fullPageMode]);
 
   // Handle artwork changes
   useEffect(() => {
@@ -216,11 +326,12 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
   // Create track object
   const track = {
-    id: trackId || src || '',
+    id: trackId || trackData?.id || src || '',
     src: audioUrl,
-    name: trackData?.title || title || 'Unknown Track',
+    name: trackData?.name || title || 'Unknown Track',
     artist: trackData?.artist || artist || 'Unknown Artist',
     artwork: coverUrl,
+    slug: trackData?.slug,
   };
 
   const isCurrentTrack = state?.currentTrack?.id === track.id;
@@ -246,7 +357,20 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       }
       
       const startTime = isCurrentTrack ? (state?.lastPlayedTime || 0) : 0;
-      playTrack(track, startTime);
+      const audioTrack = {
+        id: track.id.toString(),
+        src: track.src,
+        name: track.name,
+        artist: track.artist,
+        artwork: track.artwork,
+        slug: track.slug,
+      };
+      playTrack(audioTrack, startTime);
+      
+      // Track analytics
+      if (track.id) {
+        trackPlayAnalytics(String(track.id));
+      }
     } catch (err) {
       console.error('Error playing audio:', err);
       setError('Failed to play audio');
@@ -284,7 +408,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   };
   
   const toggleRepeat = () => {
-    if (isFullPage) {
+    if (fullPageMode) {
       globalToggleRepeat();
     } else {
       setIsRepeat(!isRepeat);
@@ -296,7 +420,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   };
   
   const toggleShuffle = () => {
-    if (isFullPage) {
+    if (fullPageMode) {
       globalToggleShuffle();
     } else {
       setIsShuffle(!isShuffle);
@@ -307,7 +431,27 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     }
   };
 
-  const toggleLike = async () => {
+  // Full page mode handlers
+  const handleTrackSelect = useCallback((track: AudioTrack) => {
+    if (track.id) {
+      trackPlayAnalytics(String(track.id));
+    }
+    
+    setTrackData(track);
+    const trackUrl = generateTrackUrl(track);
+    navigate(trackUrl);
+    
+    const currentPlaylist = selectedPlaylist ? playlistTracks : tracks;
+    const index = currentPlaylist.findIndex(t => t.id === track.id);
+    
+    if (index !== -1) {
+      setCurrentIndex(index);
+      setPlaylist(currentPlaylist, selectedPlaylist?.id);
+      playTrack(track);
+    }
+  }, [navigate, selectedPlaylist, playlistTracks, tracks, setCurrentIndex, setPlaylist, playTrack, trackPlayAnalytics]);
+
+  const toggleLike = useCallback(async () => {
     if (!user) {
       toast({
         title: "Sign In Required",
@@ -340,14 +484,14 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         description: "Track added to your favorites",
       });
     }
-  };
+  }, [user, trackData, isLiked, toast]);
 
-  const handleShare = async () => {
+  const handleShare = useCallback(async () => {
     if (!trackData) return;
 
     const shareData = {
-      title: `${trackData?.title || 'Unknown Track'} by ${trackData?.artist || 'Unknown Artist'}`,
-      text: `Listen to this track on Saem's Tunes`,
+      title: `${trackData.name} by ${trackData.artist}`,
+      text: `Listen to ${trackData.name} on Saem's Tunes`,
       url: window.location.href,
     };
 
@@ -368,23 +512,274 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         variant: "destructive",
       });
     }
-  };
+  }, [trackData, toast]);
 
-  const handleDownload = () => {
-    toast({
-      title: "Download feature",
-      description: "Download functionality will be available for premium users",
-    });
-  };
-
-  const handleTrackSelect = (track: AudioTrack) => {
-    if (onTrackSelect) {
-      onTrackSelect(track);
-    } else {
-      playTrack(track);
+  // Return full page layout for full page mode
+  if (fullPageMode) {
+    if (loading) {
+      return (
+        <MainLayout>
+          <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background flex items-center justify-center">
+            <div className="text-center">
+              <div className="h-8 w-8 rounded-full border-2 border-t-transparent border-gold animate-spin mx-auto mb-4"></div>
+              <p>Loading track...</p>
+            </div>
+          </div>
+        </MainLayout>
+      );
     }
-  };
 
+    if (!trackData) {
+      return (
+        <MainLayout>
+          <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background flex items-center justify-center">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold mb-4">Track not found</h2>
+              <Button onClick={() => navigate('/tracks')}>
+                Back to Tracks
+              </Button>
+            </div>
+          </div>
+        </MainLayout>
+      );
+    }
+
+    return (
+      <div>
+        <Helmet>
+          <title>{`${trackData?.name || 'Audio Player'} - Saem's Tunes`}</title>
+          <meta name="description" content={`Listen to ${trackData?.name || 'music'} by ${trackData?.artist || 'artist'}`} />
+        </Helmet>
+        
+        <MainLayout>
+          <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background">
+            <div className="container mx-auto px-4 py-8 max-w-7xl">
+              <div className="flex items-center gap-4 mb-8">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate(-1)}
+                  className="h-10 w-10"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <h1 className="text-2xl font-bold">Now Playing</h1>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2">
+                  <Card className="overflow-hidden bg-gradient-to-b from-card to-card/80 border-gold/20 shadow-2xl">
+                    <CardContent className="p-6 md:p-8">
+                      <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mb-8">
+                        <div className="flex-shrink-0 mx-auto lg:mx-0 w-full max-w-[320px]">
+                          <div className="relative group aspect-square">
+                            <img
+                              src={trackData?.artwork || '/placeholder.svg'}
+                              alt={trackData?.name || 'Track artwork'}
+                              className={cn(
+                                "w-full h-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300",
+                                !imageLoaded && "opacity-0"
+                              )}
+                              onLoad={() => setImageLoaded(true)}
+                            />
+                            
+                            {!imageLoaded && (
+                              <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-2xl" />
+                            )}
+                            
+                            <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col justify-center space-y-6 flex-1 text-center lg:text-left">
+                          <div>
+                            <h2 className="text-3xl md:text-4xl font-bold mb-3 text-foreground">{trackData?.name || 'Unknown Track'}</h2>
+                            <p className="text-xl md:text-2xl text-muted-foreground mb-2">{trackData?.artist || 'Unknown Artist'}</p>
+                          </div>
+
+                          {enableSocialFeatures && (
+                            <div className="flex items-center justify-center lg:justify-start gap-4 flex-wrap">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={toggleLike}
+                                className={cn(
+                                  "h-12 w-12",
+                                  isLiked ? "text-red-500" : "text-muted-foreground"
+                                )}
+                              >
+                                <Heart className={cn("h-6 w-6", isLiked && "fill-current")} />
+                              </Button>
+                              
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={handleShare}
+                                className="h-12 w-12 text-muted-foreground hover:text-foreground"
+                              >
+                                <Share className="h-6 w-6" />
+                              </Button>
+                              
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-12 w-12 text-muted-foreground hover:text-foreground"
+                                  >
+                                    <MoreHorizontal className="h-6 w-6" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem>
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Save track
+                                  </DropdownMenuItem>
+                                  
+                                  <DropdownMenuItem>
+                                    <Download className="mr-2 h-4 w-4" />
+                                    Download
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Enhanced Audio Controls */}
+                      <div className="space-y-6">
+                        <div className="space-y-2">
+                          <div className="relative">
+                            <Slider 
+                              value={[currentTime]}
+                              max={duration || 100} 
+                              step={0.1}
+                              onValueChange={handleProgressChange}
+                              className="cursor-pointer"
+                            />
+                          </div>
+                          
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>{formatTime(currentTime)}</span>
+                            <span>{formatTime(duration)}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-center gap-4">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={playPrevious}
+                            className="h-12 w-12"
+                            title="Previous"
+                          >
+                            <SkipBack className="h-6 w-6" />
+                          </Button>
+                          
+                          <Button 
+                            variant="default" 
+                            size="icon" 
+                            onClick={togglePlay}
+                            className="h-16 w-16 rounded-full bg-primary hover:bg-primary/90"
+                            title={isPlaying ? "Pause" : "Play"}
+                            disabled={!audioUrl}
+                          >
+                            {isPlaying ? <Pause className="h-8 w-8" /> : <Play className="h-8 w-8 ml-1" />}
+                          </Button>
+                          
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={playNext}
+                            className="h-12 w-12"
+                            title="Next"
+                          >
+                            <SkipForward className="h-6 w-6" />
+                          </Button>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className={cn("h-10 w-10", state?.shuffle && "text-primary")}
+                              onClick={toggleShuffle}
+                              title="Shuffle"
+                            >
+                              <Shuffle className="h-5 w-5" />
+                            </Button>
+                            
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className={cn("h-10 w-10", state?.repeat !== 'off' && "text-primary")}
+                              onClick={toggleRepeat}
+                              title="Repeat"
+                            >
+                              <Repeat className="h-5 w-5" />
+                            </Button>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={toggleMute} 
+                              className="h-10 w-10"
+                              title={state?.isMuted ? "Unmute" : "Mute"}
+                            >
+                              {state?.isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+                            </Button>
+                            
+                            <div className="w-24">
+                              <Slider
+                                value={[state?.isMuted ? 0 : (state?.volume || 1)]} 
+                                min={0} 
+                                max={1} 
+                                step={0.01}
+                                onValueChange={handleVolumeChange}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {showTrackList && (
+                  <div className="lg:col-span-1">
+                    <Card className="h-fit">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Music className="h-5 w-5" />
+                          Tracks
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-0">
+                        <ScrollArea className="h-[600px]">
+                          <div className="p-4">
+                            <EnhancedAnimatedList
+                              tracks={tracks}
+                              onTrackSelect={handleTrackSelect}
+                            />
+                          </div>
+                        </ScrollArea>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </MainLayout>
+      </div>
+    );
+  }
+
+  // Original compact/widget mode
   if (error) {
     return (
       <div className={cn("bg-muted rounded-md p-4 text-center", className)}>
@@ -437,251 +832,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     );
   }
   
-  if (isFullPage) {
-    return (
-      <div className={cn("min-h-screen bg-gradient-to-br from-background via-muted/30 to-background w-full", className)}>
-        <div className="container mx-auto px-4 py-8 max-w-7xl">
-          {onBack && (
-            <div className="flex items-center gap-4 mb-8">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onBack}
-                className="h-10 w-10"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <h1 className="text-2xl font-bold">Now Playing</h1>
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
-              <Card className="overflow-hidden bg-gradient-to-b from-card to-card/80 border-gold/20 shadow-2xl">
-                <CardContent className="p-6 md:p-8">
-                  <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mb-8">
-                    <div className="flex-shrink-0 mx-auto lg:mx-0 w-full max-w-[320px]">
-                      <div className="relative group aspect-square">
-                        <img
-                          src={coverUrl}
-                          alt={track.name || "Album art"}
-                          className={cn(
-                            "w-full h-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300",
-                            !imageLoaded && "opacity-0"
-                          )}
-                          onLoad={() => setImageLoaded(true)}
-                          onError={handleImageError}
-                        />
-                        
-                        {!imageLoaded && (
-                          <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-2xl" />
-                        )}
-                        
-                        <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col justify-center space-y-6 flex-1 text-center lg:text-left">
-                      <div>
-                        <h2 className="text-3xl md:text-4xl font-bold mb-3 text-foreground">{track.name}</h2>
-                        <p className="text-xl md:text-2xl text-muted-foreground mb-2">{track.artist}</p>
-                      </div>
-
-                      {enableSocialFeatures && (
-                        <div className="flex items-center justify-center lg:justify-start gap-4 flex-wrap">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={toggleLike}
-                            className={cn(
-                              "h-12 w-12",
-                              isLiked ? "text-red-500" : "text-muted-foreground"
-                            )}
-                          >
-                            <Heart className={cn("h-6 w-6", isLiked && "fill-current")} />
-                          </Button>
-                          
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={handleShare}
-                            className="h-12 w-12 text-muted-foreground hover:text-foreground"
-                          >
-                            <Share className="h-6 w-6" />
-                          </Button>
-                          
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-12 w-12 text-muted-foreground hover:text-foreground"
-                              >
-                                <MoreHorizontal className="h-6 w-6" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => setIsSaved(!isSaved)}>
-                                <Plus className="mr-2 h-4 w-4" />
-                                {isSaved ? 'Remove from saved' : 'Save track'}
-                              </DropdownMenuItem>
-                              
-                              {user && (
-                                <AddToPlaylistModal 
-                                  trackId={String(track.id)} 
-                                  userId={user.id}
-                                >
-                                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Add to playlist
-                                  </DropdownMenuItem>
-                                </AddToPlaylistModal>
-                              )}
-                              
-                              <DropdownMenuItem onClick={handleDownload}>
-                                <Download className="mr-2 h-4 w-4" />
-                                Download
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <div className="relative">
-                        <Slider 
-                          value={[currentTime]}
-                          max={duration || 100} 
-                          step={0.1}
-                          onValueChange={handleProgressChange}
-                          className="cursor-pointer"
-                        />
-                      </div>
-                      
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>{formatTime(currentTime)}</span>
-                        <span>{formatTime(duration)}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-center gap-4">
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={playPrevious}
-                        className="h-12 w-12"
-                        title="Previous"
-                      >
-                        <SkipBack className="h-6 w-6" />
-                      </Button>
-                      
-                      <Button 
-                        variant="default" 
-                        size="icon" 
-                        onClick={togglePlay}
-                        className="h-16 w-16 rounded-full bg-primary hover:bg-primary/90"
-                        title={isPlaying ? "Pause" : "Play"}
-                        disabled={!audioUrl}
-                      >
-                        {isPlaying ? <Pause className="h-8 w-8" /> : <Play className="h-8 w-8 ml-1" />}
-                      </Button>
-                      
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={playNext}
-                        className="h-12 w-12"
-                        title="Next"
-                      >
-                        <SkipForward className="h-6 w-6" />
-                      </Button>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className={cn("h-10 w-10", state?.isShuffled && "text-primary")}
-                          onClick={toggleShuffle}
-                          title="Shuffle"
-                        >
-                          <Shuffle className="h-5 w-5" />
-                        </Button>
-                        
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className={cn("h-10 w-10", state?.isRepeating && "text-primary")}
-                          onClick={toggleRepeat}
-                          title="Repeat"
-                        >
-                          <Repeat className="h-5 w-5" />
-                        </Button>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={toggleMute} 
-                          className="h-10 w-10"
-                          title={state?.isMuted ? "Unmute" : "Mute"}
-                        >
-                          {state?.isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
-                        </Button>
-                        
-                        <div className="w-24">
-                          <Slider
-                            value={[state?.isMuted ? 0 : (state?.volume || 1)]} 
-                            min={0} 
-                            max={1} 
-                            step={0.01}
-                            onValueChange={handleVolumeChange}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {showMetadataPrompt && trackData && (
-                    <ArtistMetadataManager trackId={String(trackData.id)} />
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-
-            {showTrackList && trackList.length > 0 && (
-              <div className="lg:col-span-1">
-                <Card className="h-fit">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Music className="h-5 w-5" />
-                      Tracks
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <ScrollArea className="h-[600px]">
-                      <div className="p-4">
-                        <EnhancedAnimatedList
-                          tracks={trackList}
-                          onTrackSelect={handleTrackSelect}
-                        />
-                      </div>
-                    </ScrollArea>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
   return (
     <div className={cn("bg-background border rounded-lg overflow-hidden w-full", className)}>
       {/* Track info - Always visible */}
@@ -708,11 +858,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
             <div className="min-w-0 flex-1">
               {track.name && <p className="font-medium text-sm sm:text-base truncate">{track.name}</p>}
               {track.artist && <p className="text-xs sm:text-sm text-muted-foreground truncate">{track.artist}</p>}
-              {trackData?.description && (
-                <p className="text-xs text-muted-foreground/80 mt-1 line-clamp-1">
-                  {trackData.description}
-                </p>
-              )}
             </div>
           </div>
         </div>
@@ -892,26 +1037,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           </>
         )}
       </div>
-
-      {/* Custom CSS */}
-      <style>{`
-        @media (max-width: 475px) {
-          .xs\\:block { display: block !important; }
-          .xs\\:flex { display: flex !important; }
-          .xs\\:h-12 { height: 3rem !important; }
-          .xs\\:w-12 { width: 3rem !important; }
-          .xs\\:text-base { font-size: 1rem !important; }
-          .xs\\:text-sm { font-size: 0.875rem !important; }
-        }
-        @media (min-width: 475px) {
-          .xs\\:block { display: block !important; }
-          .xs\\:flex { display: flex !important; }
-          .xs\\:h-12 { height: 3rem !important; }
-          .xs\\:w-12 { width: 3rem !important; }
-          .xs\\:text-base { font-size: 1rem !important; }
-          .xs\\:text-sm { font-size: 0.875rem !important; }
-        }
-      `}</style>
     </div>
   );
 };
