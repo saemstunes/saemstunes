@@ -28,6 +28,7 @@ const SplashScreen = ({
   const [showSplash, setShowSplash] = useState(true);
   const [progress, setProgress] = useState(0);
   const [currentMessage, setCurrentMessage] = useState(0);
+  const [titleAnimationComplete, setTitleAnimationComplete] = useState(false);
 
   const loadingMessages = [
     "Tuning instruments...",
@@ -238,17 +239,18 @@ const SplashScreen = ({
               })}
             </div>
 
-            {/* Title section */}
+            {/* Title section with integrated music icon */}
             <motion.div
               className="text-center mb-6"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.6 }}
+              onAnimationComplete={() => setTitleAnimationComplete(true)}
             >
-              <h1 className="text-4xl font-bold text-foreground mb-2">
+              <h1 className="text-4xl font-bold text-foreground mb-2 flex items-center justify-center">
                 Saem's{" "}
                 <motion.span
-                  style={{ color: THEME_COLORS.primary }}
+                  style={{ color: THEME_COLORS.primary, position: 'relative' }}
                   animate={{
                     textShadow: [
                       `0 0 8px rgba(${THEME_COLORS.primaryRgb}, 0.4)`,
@@ -263,6 +265,24 @@ const SplashScreen = ({
                   }}
                 >
                   Tunes
+                  {/* Music icon at the end of "Tunes" */}
+                  <motion.span
+                    className="absolute -right-6 top-0"
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={titleAnimationComplete ? { 
+                      scale: [0, 1.2, 1], 
+                      opacity: 1,
+                      rotate: [0, 15, -15, 0]
+                    } : {}}
+                    transition={{ 
+                      delay: 0.4,
+                      duration: 0.6,
+                      times: [0, 0.5, 1],
+                      rotate: { duration: 0.8 }
+                    }}
+                  >
+                    <Music className="w-5 h-5" />
+                  </motion.span>
                 </motion.span>
               </h1>
 
