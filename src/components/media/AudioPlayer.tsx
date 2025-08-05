@@ -9,25 +9,10 @@ import {
   VolumeX,
   Repeat,
   Shuffle,
-  MoreHorizontal,
-  ArrowLeft,
-  Heart,
-  Share,
-  Download,
-  Plus,
-  Music
+  MoreHorizontal
 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { usePermissionRequest } from '@/lib/permissionsHelper';
@@ -36,14 +21,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useMediaState } from '@/components/idle-state/mediaStateContext';
 import { supabase } from '@/integrations/supabase/client';
 import { validate as isUuid } from 'uuid';
-import MainLayout from '@/components/layout/MainLayout';
-import { Helmet } from 'react-helmet';
 import { useAuth } from '@/context/AuthContext';
-import EnhancedAnimatedList from '@/components/tracks/EnhancedAnimatedList';
-import { fetchPlaylistTracks, fetchUserPlaylists } from '@/lib/playlistUtils';
-import { getAudioUrl, getStorageUrl, convertTrackToAudioTrack, generateTrackUrl } from '@/lib/audioUtils';
-import AddToPlaylistModal from '@/components/playlists/AddToPlaylistModal';
-import { ArtistMetadataManager } from '@/components/artists/ArtistMetadataManager';
+import { getAudioUrl, getStorageUrl, convertTrackToAudioTrack } from '@/lib/audioUtils';
 import { AudioTrack } from '@/types/music';
 
 interface Track {
@@ -119,7 +98,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const [audioUrl, setAudioUrl] = useState<string>(src || '');
   const [coverUrl, setCoverUrl] = useState<string>(artwork);
   
-  // Full page mode states
+  // Full page mode states (kept but unused)
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -431,355 +410,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     }
   };
 
-  // Full page mode handlers
-  const handleTrackSelect = useCallback((track: AudioTrack) => {
-    if (track.id) {
-      trackPlayAnalytics(String(track.id));
-    }
-    
-    setTrackData(track);
-    const trackUrl = generateTrackUrl(track);
-    navigate(trackUrl);
-    
-    const currentPlaylist = selectedPlaylist ? playlistTracks : tracks;
-    const index = currentPlaylist.findIndex(t => t.id === track.id);
-    
-    if (index !== -1) {
-      setCurrentIndex(index);
-      setPlaylist(currentPlaylist, selectedPlaylist?.id);
-      playTrack(track);
-    }
-  }, [navigate, selectedPlaylist, playlistTracks, tracks, setCurrentIndex, setPlaylist, playTrack, trackPlayAnalytics]);
-
-  const toggleLike = useCallback(async () => {
-    if (!user) {
-      toast({
-        title: "Sign In Required",
-        description: "Please sign in to like tracks",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!trackData) return;
-    
-    if (isLiked) {
-      await supabase
-        .from('likes')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('track_id', String(trackData.id));
-      setIsLiked(false);
-      toast({
-        title: "Removed from favorites",
-        description: "Track removed from your favorites",
-      });
-    } else {
-      await supabase
-        .from('likes')
-        .insert({ user_id: user.id, track_id: String(trackData.id) });
-      setIsLiked(true);
-      toast({
-        title: "Added to favorites",
-        description: "Track added to your favorites",
-      });
-    }
-  }, [user, trackData, isLiked, toast]);
-
-  const handleShare = useCallback(async () => {
-    if (!trackData) return;
-
-    const shareData = {
-      title: `${trackData.name} by ${trackData.artist}`,
-      text: `Listen to ${trackData.name} on Saem's Tunes`,
-      url: window.location.href,
-    };
-
-    try {
-      if (navigator.share && navigator.canShare(shareData)) {
-        await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(shareData.url);
-        toast({
-          title: "Link copied",
-          description: "Track link copied to clipboard",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Share failed",
-        description: "Unable to share track",
-        variant: "destructive",
-      });
-    }
-  }, [trackData, toast]);
-
-  // Return full page layout for full page mode
-  if (fullPageMode) {
-    if (loading) {
-      return (
-        <MainLayout>
-          <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background flex items-center justify-center">
-            <div className="text-center">
-              <div className="h-8 w-8 rounded-full border-2 border-t-transparent border-gold animate-spin mx-auto mb-4"></div>
-              <p>Loading track...</p>
-            </div>
-          </div>
-        </MainLayout>
-      );
-    }
-
-    if (!trackData) {
-      return (
-        <MainLayout>
-          <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background flex items-center justify-center">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold mb-4">Track not found</h2>
-              <Button onClick={() => navigate('/tracks')}>
-                Back to Tracks
-              </Button>
-            </div>
-          </div>
-        </MainLayout>
-      );
-    }
-
-    return (
-      <div>
-        <Helmet>
-          <title>{`${trackData?.name || 'Audio Player'} - Saem's Tunes`}</title>
-          <meta name="description" content={`Listen to ${trackData?.name || 'music'} by ${trackData?.artist || 'artist'}`} />
-        </Helmet>
-        
-        <MainLayout>
-          <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background">
-            <div className="container mx-auto px-4 py-8 max-w-7xl">
-              <div className="flex items-center gap-4 mb-8">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => navigate(-1)}
-                  className="h-10 w-10"
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-                <h1 className="text-2xl font-bold">Now Playing</h1>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2">
-                  <Card className="overflow-hidden bg-gradient-to-b from-card to-card/80 border-gold/20 shadow-2xl">
-                    <CardContent className="p-6 md:p-8">
-                      <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mb-8">
-                        <div className="flex-shrink-0 mx-auto lg:mx-0 w-full max-w-[320px]">
-                          <div className="relative group aspect-square">
-                            <img
-                              src={trackData?.artwork || '/placeholder.svg'}
-                              alt={trackData?.name || 'Track artwork'}
-                              className={cn(
-                                "w-full h-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300",
-                                !imageLoaded && "opacity-0"
-                              )}
-                              onLoad={() => setImageLoaded(true)}
-                            />
-                            
-                            {!imageLoaded && (
-                              <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-2xl" />
-                            )}
-                            
-                            <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                          </div>
-                        </div>
-
-                        <div className="flex flex-col justify-center space-y-6 flex-1 text-center lg:text-left">
-                          <div>
-                            <h2 className="text-3xl md:text-4xl font-bold mb-3 text-foreground">{trackData?.name || 'Unknown Track'}</h2>
-                            <p className="text-xl md:text-2xl text-muted-foreground mb-2">{trackData?.artist || 'Unknown Artist'}</p>
-                          </div>
-
-                          {enableSocialFeatures && (
-                            <div className="flex items-center justify-center lg:justify-start gap-4 flex-wrap">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={toggleLike}
-                                className={cn(
-                                  "h-12 w-12",
-                                  isLiked ? "text-red-500" : "text-muted-foreground"
-                                )}
-                              >
-                                <Heart className={cn("h-6 w-6", isLiked && "fill-current")} />
-                              </Button>
-                              
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={handleShare}
-                                className="h-12 w-12 text-muted-foreground hover:text-foreground"
-                              >
-                                <Share className="h-6 w-6" />
-                              </Button>
-                              
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-12 w-12 text-muted-foreground hover:text-foreground"
-                                  >
-                                    <MoreHorizontal className="h-6 w-6" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem>
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Save track
-                                  </DropdownMenuItem>
-                                  
-                                  <DropdownMenuItem>
-                                    <Download className="mr-2 h-4 w-4" />
-                                    Download
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Enhanced Audio Controls */}
-                      <div className="space-y-6">
-                        <div className="space-y-2">
-                          <div className="relative">
-                            <Slider 
-                              value={[currentTime]}
-                              max={duration || 100} 
-                              step={0.1}
-                              onValueChange={handleProgressChange}
-                              className="cursor-pointer"
-                            />
-                          </div>
-                          
-                          <div className="flex justify-between text-xs text-muted-foreground">
-                            <span>{formatTime(currentTime)}</span>
-                            <span>{formatTime(duration)}</span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-center gap-4">
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={playPrevious}
-                            className="h-12 w-12"
-                            title="Previous"
-                          >
-                            <SkipBack className="h-6 w-6" />
-                          </Button>
-                          
-                          <Button 
-                            variant="default" 
-                            size="icon" 
-                            onClick={togglePlay}
-                            className="h-16 w-16 rounded-full bg-primary hover:bg-primary/90"
-                            title={isPlaying ? "Pause" : "Play"}
-                            disabled={!audioUrl}
-                          >
-                            {isPlaying ? <Pause className="h-8 w-8" /> : <Play className="h-8 w-8 ml-1" />}
-                          </Button>
-                          
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={playNext}
-                            className="h-12 w-12"
-                            title="Next"
-                          >
-                            <SkipForward className="h-6 w-6" />
-                          </Button>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className={cn("h-10 w-10", state?.shuffle && "text-primary")}
-                              onClick={toggleShuffle}
-                              title="Shuffle"
-                            >
-                              <Shuffle className="h-5 w-5" />
-                            </Button>
-                            
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className={cn("h-10 w-10", state?.repeat !== 'off' && "text-primary")}
-                              onClick={toggleRepeat}
-                              title="Repeat"
-                            >
-                              <Repeat className="h-5 w-5" />
-                            </Button>
-                          </div>
-                          
-                          <div className="flex items-center gap-2">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={toggleMute} 
-                              className="h-10 w-10"
-                              title={state?.isMuted ? "Unmute" : "Mute"}
-                            >
-                              {state?.isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
-                            </Button>
-                            
-                            <div className="w-24">
-                              <Slider
-                                value={[state?.isMuted ? 0 : (state?.volume || 1)]} 
-                                min={0} 
-                                max={1} 
-                                step={0.01}
-                                onValueChange={handleVolumeChange}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {showTrackList && (
-                  <div className="lg:col-span-1">
-                    <Card className="h-fit">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Music className="h-5 w-5" />
-                          Tracks
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-0">
-                        <ScrollArea className="h-[600px]">
-                          <div className="p-4">
-                            <EnhancedAnimatedList
-                              tracks={tracks}
-                              onTrackSelect={handleTrackSelect}
-                            />
-                          </div>
-                        </ScrollArea>
-                      </CardContent>
-                    </Card>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </MainLayout>
-      </div>
-    );
-  }
-
-  // Original compact/widget mode
   if (error) {
     return (
       <div className={cn("bg-muted rounded-md p-4 text-center", className)}>
@@ -834,7 +464,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   
   return (
     <div className={cn("bg-background border rounded-lg overflow-hidden w-full", className)}>
-      {/* Track info - Always visible */}
       {(track.name || track.artist) && (
         <div className="p-3 sm:p-4">
           <div className="flex items-center gap-3 min-w-0">
@@ -863,7 +492,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         </div>
       )}
       
-      {/* Progress section */}
       <div className="px-3 sm:px-4 pb-3 sm:pb-4">
         <div className="space-y-2">
           <div className="relative">
@@ -882,7 +510,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           </div>
         </div>
 
-        {/* Essential controls */}
         <div className="flex items-center justify-center gap-2 mt-4">
           <Button 
             variant="ghost" 
@@ -916,7 +543,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           </Button>
         </div>
 
-        {/* Advanced controls */}
         {showControls && (
           <>
             <div className="sm:hidden">
