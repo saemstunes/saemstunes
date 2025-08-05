@@ -19,11 +19,13 @@ const THEME_COLORS = {
 interface SplashScreenProps {
   loading?: boolean;
   onFinish?: () => void;
+  logoUrl?: string; // Add prop for custom logo
 }
 
 const SplashScreen = ({
   loading = true,
   onFinish,
+  logoUrl, // Custom logo image URL
 }: SplashScreenProps) => {
   const [showSplash, setShowSplash] = useState(true);
   const [progress, setProgress] = useState(0);
@@ -169,13 +171,39 @@ const SplashScreen = ({
               {/* Main logo */}
               <div className="relative z-10 flex items-center justify-center bg-card/80 backdrop-blur-sm rounded-full p-5 border border-primary/20">
                 <div 
-                  className="w-20 h-20 rounded-full flex items-center justify-center"
+                  className="w-20 h-20 rounded-full flex items-center justify-center overflow-hidden"
                   style={{
-                    background: `linear-gradient(135deg, ${THEME_COLORS.primaryLight}, ${THEME_COLORS.primary})`,
+                    background: logoUrl 
+                      ? 'transparent' 
+                      : `linear-gradient(135deg, ${THEME_COLORS.primaryLight}, ${THEME_COLORS.primary})`,
                     boxShadow: `0 0 20px rgba(${THEME_COLORS.primaryRgb}, 0.3)`
                   }}
                 >
-                  <Music className="w-10 h-10 text-white" />
+                  {logoUrl ? (
+                    // Custom image logo
+                    <motion.img
+                      src={logoUrl}
+                      alt="App Logo"
+                      className="w-full h-full object-contain p-2"
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ 
+                        scale: 1, 
+                        opacity: 1,
+                        rotate: [0, 5, -5, 0],
+                      }}
+                      transition={{
+                        duration: 0.8,
+                        rotate: {
+                          duration: 4,
+                          repeat: Infinity,
+                          repeatType: "reverse",
+                        }
+                      }}
+                    />
+                  ) : (
+                    // Fallback music icon
+                    <Music className="w-10 h-10 text-white" />
+                  )}
                 </div>
               </div>
 
