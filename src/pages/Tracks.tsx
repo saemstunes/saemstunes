@@ -597,14 +597,14 @@ const Tracks = () => {
                     </div>
                     
                     <div className="grid md:grid-cols-2 gap-6 lg:gap-8 items-center">
-                    <div className="flex justify-center relative order-2 md:order-1">
-                      <div className="hover:z-[9999] relative transition-all duration-300 w-full max-w-sm">
+                    <div className="flex justify-center relative order-2 md:order-1 px-4">
+                      <div className="hover:z-[9999] relative transition-all duration-300 w-full max-w-xs sm:max-w-sm">
                         <TiltedCard
                           imageSrc={featuredTrack.imageSrc}
                           altText="Featured Track Cover"
                           captionText={featuredTrack.title}
-                          containerHeight="200px"
-                          containerWidth="200px"
+                          containerHeight="300px"
+                          containerWidth="300px"
                           rotateAmplitude={12}
                           scaleOnHover={1.2}
                           showMobileWarning={false}
