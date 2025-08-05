@@ -162,6 +162,20 @@ const AudioPlayerPage = () => {
     }
   }, [trackData, playerState.playlist, setCurrentIndex]);
 
+  // Track play analytics
+  const trackPlayAnalytics = useCallback(async (trackId: string) => {
+    if (!trackId) return;
+    
+    try {
+      await supabase.from('track_plays').insert({
+        track_id: trackId,
+        user_id: user?.id || null
+      });
+    } catch (error) {
+      console.error('Error tracking play:', error);
+    }
+  }, [user]);
+
   const fetchUserPlaylistsData = useCallback(async () => {
     if (!user) return;
     try {
@@ -371,6 +385,11 @@ const AudioPlayerPage = () => {
   }, [toast]);
 
   const handleTrackSelect = useCallback((track: AudioTrack) => {
+    // Track play analytics
+    if (track.id) {
+      trackPlayAnalytics(String(track.id));
+    }
+    
     setTrackData(track);
     const trackUrl = generateTrackUrl(track);
     navigate(trackUrl);
@@ -390,7 +409,8 @@ const AudioPlayerPage = () => {
     tracks, 
     setCurrentIndex, 
     setPlaylist, 
-    playTrack
+    playTrack,
+    trackPlayAnalytics
   ]);
 
   const handleAudioError = useCallback(() => {
