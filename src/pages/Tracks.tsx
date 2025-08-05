@@ -606,7 +606,7 @@ const Tracks = () => {
                           containerHeight="300px"
                           containerWidth="300px"
                           rotateAmplitude={12}
-                          scaleOnHover={1.2}
+                          scaleOnHover={1..05}
                           showMobileWarning={false}
                           showTooltip={true}
                           displayOverlayContent={true}
