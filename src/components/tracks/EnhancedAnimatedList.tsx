@@ -141,6 +141,13 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
               const trackUrl = generateTrackUrl(track);
               navigate(trackUrl);
             }
+            playTrack({
+              id: track.id.toString(),
+              src: track.src,
+              name: track.name,
+              artist: track.artist || '',
+              artwork: track.artwork || '',
+            });
           }}
         >
           <div className="flex items-center gap-3 flex-1 min-w-0">
