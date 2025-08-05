@@ -589,6 +589,36 @@ const AudioPlayerPage = () => {
                       )}
                     </div>
 
+                    {/* Enhanced Controls */}
+                      <div className="flex items-center justify-center gap-4 mt-6">
+                        <Button variant="ghost" size="sm" disabled>
+                          <Shuffle className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" disabled>
+                          <SkipBack className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="default" 
+                          size="lg"
+                          onClick={togglePlayPause}
+                          className="h-12 w-12 rounded-full"
+                          disabled={!trackData}
+                        >
+                          {state?.isPlaying && state?.currentTrackId === trackData.id ? (
+                            <Pause className="h-5 w-5" />
+                          ) : (
+                            <Play className="h-5 w-5 ml-0.5" />
+                          )}
+                        </Button>
+                        <Button variant="ghost" size="sm" disabled>
+                          <SkipForward className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" disabled>
+                          <Repeat className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+
                     {showMetadataPrompt && trackData && (
                       <ArtistMetadataManager trackId={String(trackData.id)} />
                     )}
