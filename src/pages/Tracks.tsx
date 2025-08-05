@@ -579,8 +579,8 @@ const Tracks = () => {
               </Card>
             )}
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full overflow-x-auto">
+              <TabsList className="grid w-full grid-cols-5 min-w-[300px]">
                 <TabsTrigger value="showcase">Showcase</TabsTrigger>
                 <TabsTrigger value="covers">Covers</TabsTrigger>
                 <TabsTrigger value="playlists">Playlists</TabsTrigger>
