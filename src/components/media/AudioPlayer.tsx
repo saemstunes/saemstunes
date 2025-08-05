@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { 
   Play, 
   Pause, 
@@ -21,9 +20,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useMediaState } from '@/components/idle-state/mediaStateContext';
 import { supabase } from '@/integrations/supabase/client';
 import { validate as isUuid } from 'uuid';
-import { useAuth } from '@/context/AuthContext';
-import { getAudioUrl, getStorageUrl, convertTrackToAudioTrack } from '@/lib/audioUtils';
-import { AudioTrack } from '@/types/music';
 
 interface Track {
   id: string | number;
@@ -32,11 +28,6 @@ interface Track {
   audio_path: string;
   cover_path?: string | null;
   description?: string;
-  album?: string;
-  slug?: string;
-  duration?: number;
-  approved?: boolean;
-  created_at?: string;
   profiles?: {
     avatar_url: string;
   };
@@ -54,10 +45,6 @@ interface AudioPlayerProps {
   className?: string;
   showControls?: boolean;
   compact?: boolean;
-  isFullPage?: boolean;
-  showTrackList?: boolean;
-  enablePlaylistFeatures?: boolean;
-  enableSocialFeatures?: boolean;
 }
 
 const formatTime = (seconds: number): string => {
@@ -77,77 +64,27 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   onError,
   className,
   showControls = true,
-  compact = false,
-  isFullPage = false,
-  showTrackList = false,
-  enablePlaylistFeatures = false,
-  enableSocialFeatures = false
+  compact = false
 }) => {
-  const { slug } = useParams();
-  const navigate = useNavigate();
-  const location = useLocation();
   const { setMediaPlaying } = useMediaState();
-  const { user } = useAuth();
   const [isRepeat, setIsRepeat] = useState(false);
   const [isShuffle, setIsShuffle] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showAdvancedControls, setShowAdvancedControls] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [trackData, setTrackData] = useState<AudioTrack | null>(null);
+  const [trackData, setTrackData] = useState<Track | null>(null);
   const [audioUrl, setAudioUrl] = useState<string>(src || '');
   const [coverUrl, setCoverUrl] = useState<string>(artwork);
   
-  // Full page mode states (kept but unused)
-  const [isLiked, setIsLiked] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [showMetadataPrompt, setShowMetadataPrompt] = useState(false);
-  const [tracks, setTracks] = useState<AudioTrack[]>([]);
-  const [userPlaylists, setUserPlaylists] = useState<any[]>([]);
-  const [selectedPlaylist, setSelectedPlaylist] = useState<any>(null);
-  const [playlistTracks, setPlaylistTracks] = useState<AudioTrack[]>([]);
-  const [activeTab, setActiveTab] = useState('all');
-  
   const { toast } = useToast();
   const { requestPermissionWithFeedback } = usePermissionRequest();
-  const { 
-    state, 
-    playTrack, 
-    pauseTrack, 
-    resumeTrack, 
-    seek, 
-    setVolume, 
-    toggleMute, 
-    playNext,
-    playPrevious,
-    toggleShuffle: globalToggleShuffle,
-    toggleRepeat: globalToggleRepeat,
-    setPlaylist,
-    setCurrentIndex,
-  } = useAudioPlayer();
-
-  // Determine if this is full page mode
-  const fullPageMode = isFullPage || !!slug || !!location.state?.track;
-
-  // Track play analytics
-  const trackPlayAnalytics = useCallback(async (trackId: string) => {
-    if (!trackId) return;
-    
-    try {
-      await supabase.from('track_plays').insert({
-        track_id: trackId,
-        user_id: user?.id || null
-      });
-    } catch (error) {
-      console.error('Error tracking play:', error);
-    }
-  }, [user]);
+  const { state, playTrack, pauseTrack, resumeTrack, seek, setVolume, toggleMute } = useAudioPlayer();
 
   // Fetch track metadata if trackId is provided
   useEffect(() => {
     const fetchTrackData = async () => {
-      if (!trackId && !slug) return;
+      if (!trackId) return;
       
       try {
         setIsLoading(true);
@@ -158,130 +95,50 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
             title,
             artist,
             audio_path,
-            alternate_audio_path,
             cover_path,
             description,
-            duration,
-            slug,
             profiles:user_id (
               avatar_url
             )
           `);
 
-        const searchId = trackId || slug;
-        
-        // Check if searchId is a valid UUID
-        if (typeof searchId === 'string' && isUuid(searchId)) {
-          query = query.eq('id', searchId);
+        // Check if trackId is a valid UUID
+        if (typeof trackId === 'string' && isUuid(trackId)) {
+          query = query.eq('id', trackId);
         } else {
-          query = query.eq('slug', searchId);
+          query = query.eq('slug', trackId);
         }
 
-        let { data, error }: { data: any; error: any } = await query.single();
+        const { data, error }: { data: any; error: any } = await query.single();
 
-        if (error) {
-          // Try alternate search method
-          if (searchId) {
-            const { data: altData, error: altError } = await supabase
-              .from('tracks')
-              .select('*')
-              .or(`id.eq.${searchId},slug.eq.${searchId}`)
-              .single();
-            
-            if (!altError && altData) {
-              data = altData;
-            } else {
-              throw error;
-            }
-          } else {
-            throw error;
-          }
-        }
-        
+        if (error) throw error;
         if (!data) return;
 
-        const convertedTrack = convertTrackToAudioTrack(data);
-        setTrackData(convertedTrack);
+        setTrackData(data as any);
 
         // Get public URL for audio
-        const audioUrl = getAudioUrl(data) || src || '';
+        const audioUrl = (data as any).audio_path 
+          ? supabase.storage.from('tracks').getPublicUrl((data as any).audio_path).data.publicUrl 
+          : src || '';
         setAudioUrl(audioUrl);
 
         // Get cover URL
-        const coverUrl = data.cover_path 
-          ? (data.cover_path.startsWith('http') 
-              ? data.cover_path 
-              : getStorageUrl(data.cover_path))
+        const coverUrl = (data as any).cover_path 
+          ? ((data as any).cover_path.startsWith('http') 
+              ? (data as any).cover_path 
+              : supabase.storage.from('tracks').getPublicUrl((data as any).cover_path).data.publicUrl)
           : artwork;
         setCoverUrl(coverUrl);
-
-        // Track analytics for play
-        if (data.id) {
-          trackPlayAnalytics(data.id);
-        }
       } catch (err) {
         console.error('Error fetching track:', err);
         setError('Failed to load track metadata');
       } finally {
         setIsLoading(false);
-        setLoading(false);
       }
     };
 
     fetchTrackData();
-  }, [trackId, slug, src, artwork, trackPlayAnalytics]);
-
-  // Fetch all tracks for full page mode
-  const fetchAllTracks = useCallback(async () => {
-    if (!fullPageMode) return;
-    
-    try {
-      const { data: allTracks, error } = await supabase
-        .from('tracks')
-        .select('id, title, audio_path, alternate_audio_path, cover_path, artist, duration, slug')
-        .eq('approved', true)
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      if (error) throw error;
-      
-      if (allTracks) {
-        const mappedTracks = allTracks.map(track => convertTrackToAudioTrack(track));
-        setTracks(mappedTracks);
-        setPlaylist(mappedTracks);
-      }
-    } catch (error) {
-      console.error('Error fetching tracks:', error);
-    }
-  }, [fullPageMode]);
-
-  // Initialize for full page mode
-  useEffect(() => {
-    if (!fullPageMode) return;
-    
-    const init = async () => {
-      fetchAllTracks();
-      
-      if (location.state?.track) {
-        setTrackData(location.state.track);
-        setLoading(false);
-      } else if (slug) {
-        // Track data will be fetched by the other useEffect
-      } else {
-        setTrackData({
-          id: 1,
-          src: '/audio/sample.mp3',
-          name: 'Sample Track',
-          artist: 'Sample Artist',
-          artwork: '/placeholder.svg',
-          album: 'Sample Album'
-        });
-        setLoading(false);
-      }
-    };
-
-    init();
-  }, [slug, location.state, fetchAllTracks, fullPageMode]);
+  }, [trackId, src, artwork]);
 
   // Handle artwork changes
   useEffect(() => {
@@ -305,12 +162,11 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
   // Create track object
   const track = {
-    id: trackId || trackData?.id || src || '',
+    id: trackId || src || '',
     src: audioUrl,
-    name: trackData?.name || title || 'Unknown Track',
+    name: trackData?.title || title || 'Unknown Track',
     artist: trackData?.artist || artist || 'Unknown Artist',
     artwork: coverUrl,
-    slug: trackData?.slug,
   };
 
   const isCurrentTrack = state?.currentTrack?.id === track.id;
@@ -336,20 +192,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       }
       
       const startTime = isCurrentTrack ? (state?.lastPlayedTime || 0) : 0;
-      const audioTrack = {
-        id: track.id.toString(),
-        src: track.src,
-        name: track.name,
-        artist: track.artist,
-        artwork: track.artwork,
-        slug: track.slug,
-      };
-      playTrack(audioTrack, startTime);
-      
-      // Track analytics
-      if (track.id) {
-        trackPlayAnalytics(String(track.id));
-      }
+      playTrack(track, startTime);
     } catch (err) {
       console.error('Error playing audio:', err);
       setError('Failed to play audio');
@@ -387,29 +230,21 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   };
   
   const toggleRepeat = () => {
-    if (fullPageMode) {
-      globalToggleRepeat();
-    } else {
-      setIsRepeat(!isRepeat);
-      toast({
-        title: isRepeat ? 'Repeat Off' : 'Repeat On',
-        description: isRepeat ? 'Track will not repeat' : 'Track will repeat when finished',
-      });
-    }
+    setIsRepeat(!isRepeat);
+    toast({
+      title: isRepeat ? 'Repeat Off' : 'Repeat On',
+      description: isRepeat ? 'Track will not repeat' : 'Track will repeat when finished',
+    });
   };
   
   const toggleShuffle = () => {
-    if (fullPageMode) {
-      globalToggleShuffle();
-    } else {
-      setIsShuffle(!isShuffle);
-      toast({
-        title: isShuffle ? 'Shuffle Off' : 'Shuffle On',
-        description: 'This feature will work when playing multiple tracks',
-      });
-    }
+    setIsShuffle(!isShuffle);
+    toast({
+      title: isShuffle ? 'Shuffle Off' : 'Shuffle On',
+      description: 'This feature will work when playing multiple tracks',
+    });
   };
-
+  
   if (error) {
     return (
       <div className={cn("bg-muted rounded-md p-4 text-center", className)}>
@@ -464,6 +299,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   
   return (
     <div className={cn("bg-background border rounded-lg overflow-hidden w-full", className)}>
+      {/* Track info - Always visible */}
       {(track.name || track.artist) && (
         <div className="p-3 sm:p-4">
           <div className="flex items-center gap-3 min-w-0">
@@ -487,11 +323,17 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
             <div className="min-w-0 flex-1">
               {track.name && <p className="font-medium text-sm sm:text-base truncate">{track.name}</p>}
               {track.artist && <p className="text-xs sm:text-sm text-muted-foreground truncate">{track.artist}</p>}
+              {trackData?.description && (
+                <p className="text-xs text-muted-foreground/80 mt-1 line-clamp-1">
+                  {trackData.description}
+                </p>
+              )}
             </div>
           </div>
         </div>
       )}
       
+      {/* Progress section */}
       <div className="px-3 sm:px-4 pb-3 sm:pb-4">
         <div className="space-y-2">
           <div className="relative">
@@ -510,13 +352,14 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           </div>
         </div>
 
+        {/* Essential controls */}
         <div className="flex items-center justify-center gap-2 mt-4">
           <Button 
             variant="ghost" 
             size="icon"
             className="h-8 w-8 hidden xs:flex"
             title="Previous"
-            onClick={playPrevious}
+            disabled
           >
             <SkipBack className="h-4 w-4" />
           </Button>
@@ -537,12 +380,13 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
             size="icon"
             className="h-8 w-8 hidden xs:flex"
             title="Next"
-            onClick={playNext}
+            disabled
           >
             <SkipForward className="h-4 w-4" />
           </Button>
         </div>
 
+        {/* Advanced controls */}
         {showControls && (
           <>
             <div className="sm:hidden">
@@ -663,6 +507,26 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           </>
         )}
       </div>
+
+      {/* Custom CSS */}
+      <style>{`
+        @media (max-width: 475px) {
+          .xs\\:block { display: block !important; }
+          .xs\\:flex { display: flex !important; }
+          .xs\\:h-12 { height: 3rem !important; }
+          .xs\\:w-12 { width: 3rem !important; }
+          .xs\\:text-base { font-size: 1rem !important; }
+          .xs\\:text-sm { font-size: 0.875rem !important; }
+        }
+        @media (min-width: 475px) {
+          .xs\\:block { display: block !important; }
+          .xs\\:flex { display: flex !important; }
+          .xs\\:h-12 { height: 3rem !important; }
+          .xs\\:w-12 { width: 3rem !important; }
+          .xs\\:text-base { font-size: 1rem !important; }
+          .xs\\:text-sm { font-size: 0.875rem !important; }
+        }
+      `}</style>
     </div>
   );
 };
