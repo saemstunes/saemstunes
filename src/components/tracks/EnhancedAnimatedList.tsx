@@ -26,7 +26,6 @@ import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { generateTrackUrl } from '@/lib/audioUtils';
-import { useAuth } from '@/context/AuthContext';
 
 interface AudioTrack {
   id: string | number;
@@ -59,7 +58,6 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
   const { toast } = useToast();
   const { state, playTrack } = useAudioPlayer();
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   const toggleFavorite = (trackId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -93,20 +91,6 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
       title: "Download started",
       description: `Downloading "${track.name}"`
     });
-  };
-
-  // Track play analytics
-  const trackPlayAnalytics = async (trackId: string) => {
-    if (!trackId) return;
-    
-    try {
-      await supabase.from('track_plays').insert({
-        track_id: trackId,
-        user_id: user?.id || null
-      });
-    } catch (error) {
-      console.error('Error tracking play:', error);
-    }
   };
 
   const handleShare = (track: AudioTrack, e: React.MouseEvent) => {
@@ -151,18 +135,12 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
             state.currentTrack?.id === track.id && "bg-accent"
           )}
           onClick={() => {
-            // Track play analytics
-            if (track.id) {
-              trackPlayAnalytics(String(track.id));
-            }
-            
             if (onTrackSelect) {
               onTrackSelect(track);
             } else {
               const trackUrl = generateTrackUrl(track);
               navigate(trackUrl);
             }
-            
             playTrack({
               id: track.id.toString(),
               src: track.src,
