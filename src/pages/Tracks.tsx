@@ -81,6 +81,15 @@ const Tracks = () => {
   const [activeTab, setActiveTab] = useState("showcase");
   const [searchTerm, setSearchTerm] = useState('');
   
+  // Upload form states
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [accessLevel, setAccessLevel] = useState<AccessLevel>("free");
+  const [uploading, setUploading] = useState(false);
+  
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -553,7 +562,7 @@ const Tracks = () => {
                   <div className="flex gap-2">
                     <Button 
                       onClick={handleUpload} 
-                      disabled={uploading || !title.trim() || !audioFile}
+          disabled={uploading || !title.trim() || !audioFile}
                       className="bg-gold hover:bg-gold/90"
                     >
                       {uploading ? (
@@ -678,7 +687,7 @@ const Tracks = () => {
                       <ScrollArea className="h-[400px] w-full">
                         <EnhancedAnimatedList 
                           tracks={filteredTracks.slice(0, 10).map(convertTrackToAudioTrack)} 
-                          onTrackSelect={handleTrackSelect}
+                          onTrackSelect={(track) => handleTrackSelect(filteredTracks.find(t => t.id === track.id)!)}
                         />
                       </ScrollArea>
                     </CardContent>
@@ -796,7 +805,7 @@ const Tracks = () => {
                       <ScrollArea className="h-[500px] w-full">
                         <EnhancedAnimatedList 
                           tracks={filteredTracks.map(convertTrackToAudioTrack)} 
-                          onTrackSelect={handleTrackSelect}
+                          onTrackSelect={(track) => handleTrackSelect(filteredTracks.find(t => t.id === track.id)!)}
                         />
                       </ScrollArea>
                     </CardContent>

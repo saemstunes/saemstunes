@@ -154,7 +154,8 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
   // Track play analytics
   const trackPlayAnalytics = useCallback(async (trackId: string) => {
-    if (!trackId || !supabase.auth.session()) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!trackId || !session) return;
   
     try {
       await supabase.from('track_plays').insert({
