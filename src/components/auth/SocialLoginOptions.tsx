@@ -5,15 +5,11 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 
-// Declare global interfaces for Web3 wallets
 declare global {
   interface Window {
-    solana?: {
-      connect: () => Promise<void>;
-      isPhantom?: boolean;
-    };
-    braveSolana?: any;
+    solana?: any;
     phantom?: any;
+    braveSolana?: any;
   }
 }
 
@@ -28,7 +24,6 @@ export const SocialLoginOptions = () => {
         provider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
-          // Spotify-specific parameters
           ...(provider === "spotify" ? {
             scopes: "user-read-email user-read-private",
             queryParams: {
@@ -55,8 +50,8 @@ export const SocialLoginOptions = () => {
   const handleSolanaLogin = async () => {
     setIsLoading("solana");
     try {
-      // Check if Solana wallet is available
-      if (!window.solana) {
+      const solanaProvider = window.solana || window.phantom?.solana || window.braveSolana;
+      if (!solanaProvider) {
         toast({
           title: "Wallet not found",
           description: "Please install a Solana wallet (like Phantom) to continue",
@@ -66,12 +61,13 @@ export const SocialLoginOptions = () => {
         return;
       }
 
-      // Connect to the wallet
-      await window.solana.connect();
+      await solanaProvider.connect();
+      const publicKey = solanaProvider.publicKey.toString();
       
       const { data, error } = await supabase.auth.signInWithWeb3({
         chain: 'solana',
-        statement: 'I accept the Terms of Service at https://www.saemstunes.com/terms',
+        statement: 'I accept the Terms of Service (https://www.saemstunes.com/terms)',
+        wallet: solanaProvider,
       });
 
       if (error) throw error;
@@ -79,10 +75,8 @@ export const SocialLoginOptions = () => {
       if (data.user) {
         toast({
           title: "Success!",
-          description: "Successfully signed in with Solana wallet",
+          description: `Signed in with ${publicKey.slice(0, 4)}...${publicKey.slice(-4)}`,
         });
-        
-        // Force page reload for clean state
         window.location.href = '/';
       }
     } catch (error: any) {
