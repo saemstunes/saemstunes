@@ -56,7 +56,6 @@ import Artists from "./pages/Artists";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import MusicShowcase from "./pages/MusicShowcase";
-import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -115,7 +114,6 @@ const App = () => {
                   <Route path="/contact-us" element={<ContactUs />} />
                   <Route path="/support-us" element={<SupportUs />} />
                   <Route path="/settings" element={<Settings />} />
-                  <Route path="/profile" element={<Profile />}></>
                   <Route path="/services" element={<Services />} />
                   <Route path="/payment" element={<Payment />} />
                   <Route path="/payment-success" element={<PaymentSuccess />} />
