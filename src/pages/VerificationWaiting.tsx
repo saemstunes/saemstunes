@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Mail, ArrowLeft, RefreshCw, AlertCircle, CheckCircle, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import EmailVerificationHandler from "@/components/auth/EmailVerificationHandler";
+import { EmailVerificationHandler } from "@/components/auth/EmailVerificationHandler";
 
 const VerificationWaiting = () => {
   const navigate = useNavigate();

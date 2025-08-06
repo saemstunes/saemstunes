@@ -10,10 +10,20 @@ declare global {
   interface Window {
     solana?: {
       connect: () => Promise<void>;
+      publicKey: { toString: () => string; toBase58: () => string };
       isPhantom?: boolean;
     };
-    braveSolana?: any;
-    phantom?: any;
+    phantom?: {
+      solana?: {
+        connect: () => Promise<void>;
+        publicKey: { toString: () => string; toBase58: () => string };
+        isPhantom?: boolean;
+      };
+    };
+    braveSolana?: {
+      connect: () => Promise<void>;
+      publicKey: { toString: () => string; toBase58: () => string };
+    };
   }
 }
 
@@ -55,40 +65,44 @@ export const SocialLoginOptions = () => {
   const handleSolanaLogin = async () => {
     setIsLoading("solana");
     try {
-      // Check if Solana wallet is available
-      if (!window.solana) {
+      // Check for Solana wallet providers
+      const solanaProvider = window.solana || window.phantom?.solana || window.braveSolana;
+      
+      if (!solanaProvider) {
         toast({
           title: "Wallet not found",
-          description: "Please install a Solana wallet (like Phantom) to continue",
+          description: "Please install a Solana wallet like Phantom to continue",
           variant: "destructive",
         });
         setIsLoading(null);
         return;
       }
 
-      // Connect to the wallet
-      await window.solana.connect();
-      
+      // Connect to wallet
+      await solanaProvider.connect();
+      const publicKey = solanaProvider.publicKey.toString();
+
+      // Sign in with Supabase
       const { data, error } = await supabase.auth.signInWithWeb3({
         chain: 'solana',
         statement: 'I accept the Terms of Service at https://www.saemstunes.com/terms',
+        wallet: solanaProvider,
       });
 
       if (error) throw error;
 
-      if (data.user) {
-        toast({
-          title: "Success!",
-          description: "Successfully signed in with Solana wallet",
-        });
-        
-        // Force page reload for clean state
-        window.location.href = '/';
-      }
+      // Success handling
+      toast({
+        title: "Wallet Connected!",
+        description: `Signed in with ${publicKey.slice(0, 4)}...${publicKey.slice(-4)}`,
+      });
+      
+      // Force page reload for clean state
+      window.location.href = '/';
     } catch (error: any) {
       console.error("Solana login error:", error);
       toast({
-        title: "Login failed",
+        title: "Authentication Failed",
         description: error.message || "Could not sign in with Solana wallet",
         variant: "destructive",
       });

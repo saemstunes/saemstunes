@@ -121,7 +121,13 @@ export const EmailVerificationHandler = ({
       if (cooldownTime > 0) {
         setCooldown(cooldownTime);
         const timer = setInterval(() => {
-          setCooldown(prev => (prev <= 1 ? (clearInterval(timer), 0) : prev - 1));
+          setCooldown(prev => {
+            if (prev <= 1) {
+              clearInterval(timer);
+              return 0;
+            }
+            return prev - 1;
+          });
         }, 1000);
       }
     } finally {
@@ -195,7 +201,13 @@ export const EmailVerificationHandler = ({
       setCooldown(cooldowns[attemptIndex]);
       
       const timer = setInterval(() => {
-        setCooldown(prev => (prev <= 1 ? (clearInterval(timer), 0) : prev - 1));
+        setCooldown(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
       }, 1000);
     }
     

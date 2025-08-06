@@ -7,9 +7,22 @@ import bs58 from 'bs58';
 
 declare global {
   interface Window {
-    solana?: any;
-    phantom?: any;
-    braveSolana?: any;
+    solana?: {
+      connect: () => Promise<void>;
+      publicKey: { toString: () => string; toBase58: () => string };
+      isPhantom?: boolean;
+    };
+    phantom?: {
+      solana?: {
+        connect: () => Promise<void>;
+        publicKey: { toString: () => string; toBase58: () => string };
+        isPhantom?: boolean;
+      };
+    };
+    braveSolana?: {
+      connect: () => Promise<void>;
+      publicKey: { toString: () => string; toBase58: () => string };
+    };
   }
 }
 
@@ -44,7 +57,7 @@ export const SolanaLoginButton = ({ onLoginSuccess }: SolanaLoginButtonProps) =>
       // Sign in with Supabase
       const { data, error } = await supabase.auth.signInWithWeb3({
         chain: 'solana',
-        statement: 'I accept the Terms of Service at https://saemstunes.com/terms',
+        statement: 'I accept the Terms of Service at https://www.saemstunes.com/terms',
         wallet: solanaProvider,
       });
 
