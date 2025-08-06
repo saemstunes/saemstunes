@@ -2,9 +2,19 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, CheckCircle, ShieldAlert, MailCheck, Key, UserPlus, MagicWand, Lock, AlertCircle } from 'lucide-react';
+import { 
+  RefreshCw, 
+  CheckCircle, 
+  ShieldAlert, 
+  MailCheck, 
+  Key, 
+  UserPlus, 
+  MagicWand, 
+  Lock, 
+  AlertCircle 
+} from 'lucide-react';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom'; // Updated to React Router
 import { useAuth } from '@/context/AuthContext';
 
 type VerificationType = 
@@ -43,7 +53,7 @@ export const EmailVerificationHandler = ({
   const [actionState, setActionState] = useState<'idle' | 'processing' | 'completed'>('idle');
   const captchaRef = useRef<HCaptcha>(null);
   const { toast } = useToast();
-  const router = useRouter();
+  const navigate = useNavigate(); // React Router navigation
   const { user: authUser } = useAuth();
   const checkIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -168,7 +178,7 @@ export const EmailVerificationHandler = ({
         
         onVerificationComplete?.(data.session);
         if (redirectPath) {
-          router.push(redirectPath);
+          navigate(redirectPath); // Updated to React Router navigation
         }
       }
     } catch (error) {
@@ -181,7 +191,7 @@ export const EmailVerificationHandler = ({
     } finally {
       setActionState('completed');
     }
-  }, [checkVerificationStatus, onVerificationComplete, redirectPath, router, toast, verificationType, newEmail]);
+  }, [checkVerificationStatus, onVerificationComplete, redirectPath, navigate, toast, verificationType, newEmail]);
 
   // Initialize verification check
   useEffect(() => {
@@ -485,7 +495,13 @@ export const EmailVerificationHandler = ({
           </p>
           <Button 
             variant="default"
-            onClick={() => redirectPath ? router.push(redirectPath) : onVerificationComplete?.()}
+            onClick={() => {
+              if (redirectPath) {
+                navigate(redirectPath); // Updated to React Router navigation
+              } else {
+                onVerificationComplete?.();
+              }
+            }}
             className="w-full"
           >
             {actionState === 'processing' 
@@ -528,7 +544,7 @@ export const EmailVerificationHandler = ({
                   Complete security verification to continue
                 </p>
                 <HCaptcha
-                  sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || "02409832-47f4-48c0-ac48-d98828b23724"}
+                  sitekey={import.meta.env.VITE_HCAPTCHA_SITE_KEY || "02409832-47f4-48c0-ac48-d98828b23724"}
                   onVerify={handleCaptchaVerify}
                   onExpire={handleCaptchaExpire}
                   onError={handleCaptchaError}
