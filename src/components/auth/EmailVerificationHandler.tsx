@@ -1,5 +1,4 @@
-
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -20,116 +19,97 @@ export const EmailVerificationHandler = ({
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [showCaptcha, setShowCaptcha] = useState(false);
   const [resendAttempts, setResendAttempts] = useState(0);
+  const [isVerificationChecked, setIsVerificationChecked] = useState(false);
   const captchaRef = useRef<HCaptcha>(null);
   const { toast } = useToast();
+  const checkIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const checkVerificationStatus = async () => {
+  // Unified verification checker with leak detection
+  const checkVerificationStatus = useCallback(async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user && user.email_confirmed_at) {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      
+      if (error) {
+        // Handle expired sessions specifically
+        if (error.message.includes("Invalid Refresh Token")) {
+          return 'SESSION_EXPIRED';
+        }
+        throw error;
+      }
+      
+      if (user?.email_confirmed_at) {
         toast({
           title: "Email verified!",
           description: "Your account has been successfully verified.",
         });
         onVerificationComplete?.();
-        return true;
+        return 'VERIFIED';
       }
-      return false;
-    } catch (error) {
-      console.error('Error checking verification status:', error);
-      return false;
+      return 'UNVERIFIED';
+    } catch (error: any) {
+      console.error('Verification check error:', error);
+      
+      // Handle leaked credentials
+      if (error.message.includes("leaked credentials")) {
+        toast({
+          title: "Security Alert",
+          description: "This password has been compromised. Please choose a different one.",
+          variant: "destructive",
+        });
+      }
+      
+      return 'ERROR';
     }
-  };
+  }, [toast, onVerificationComplete]);
 
-  const handleResendEmail = async () => {
-    if (cooldown > 0 || !email) return;
+  // Handle all user scenarios
+  const handleUserScenarios = useCallback(async () => {
+    const status = await checkVerificationStatus();
     
-    // Show captcha after first attempt
-    if (resendAttempts > 0 && !captchaToken) {
-      setShowCaptcha(true);
-      return;
-    }
-    
-    setIsResending(true);
+    if (status === 'VERIFIED') return;
     
     try {
-      // Check if already verified first
-      const isVerified = await checkVerificationStatus();
-      if (isVerified) return;
-
-      const resendOptions: any = {
-        type: 'signup',
-        email: email,
-        options: {}
-      };
-      
-      // Include captcha token if we have one
-      if (captchaToken) {
-        resendOptions.options.captchaToken = captchaToken;
+      // First-time users - resend initial verification
+      if (status === 'UNVERIFIED') {
+        await supabase.auth.resend({
+          type: 'signup',
+          email,
+          options: { captchaToken }
+        });
       }
       
-      const { error } = await supabase.auth.resend(resendOptions);
-      
-      if (error) {
-        throw error;
+      // Returning users - magic link with OTP
+      if (status === 'SESSION_EXPIRED' || status === 'ERROR') {
+        const { error } = await supabase.auth.signInWithOtp({
+          email,
+          options: {
+            emailRedirectTo: window.location.origin,
+            shouldCreateUser: false
+          }
+        });
+        
+        if (error) throw error;
       }
-      
-      setResendAttempts(prev => prev + 1);
       
       toast({
         title: "Verification email sent",
         description: "Please check your email inbox and spam folder.",
       });
-      
-      // Set progressive cooldown
-      const cooldownTime = resendAttempts === 0 ? 60 : 120;
-      setCooldown(cooldownTime);
-      
-      // Start cooldown timer
-      const timer = setInterval(() => {
-        setCooldown(prev => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      
-      setShowCaptcha(false);
-      setCaptchaToken(null);
-      if (captchaRef.current) {
-        captchaRef.current.resetCaptcha();
-      }
-      
     } catch (error: any) {
       console.error('Resend error:', error);
       
-      let errorMessage = "Failed to resend verification email";
+      let errorMessage = "Failed to send verification email";
       let cooldownTime = 60;
       
-      if (error.message?.includes("Email rate limit exceeded") || error.message?.includes("rate limit")) {
-        errorMessage = "Too many emails sent. Please wait before requesting another.";
-        cooldownTime = 300; // 5 minute cooldown for rate limit
-      } else if (error.message?.includes("User already registered")) {
-        errorMessage = "This email is already registered. Try logging in instead.";
+      if (error.message?.includes("rate limit")) {
+        errorMessage = "Too many requests. Please wait before trying again.";
+        cooldownTime = 3600; // Respect 4/hour project limit
+      } else if (error.message?.includes("already registered")) {
+        errorMessage = "This email is already registered. Please sign in.";
       } else if (error.message?.includes("captcha")) {
         errorMessage = "Please complete the captcha verification.";
         setShowCaptcha(true);
         cooldownTime = 0;
-      }
-      
-      if (cooldownTime > 0) {
-        setCooldown(cooldownTime);
-        const timer = setInterval(() => {
-          setCooldown(prev => {
-            if (prev <= 1) {
-              clearInterval(timer);
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
       }
       
       toast({
@@ -138,27 +118,100 @@ export const EmailVerificationHandler = ({
         variant: "destructive",
       });
       
-      if (captchaRef.current) {
-        captchaRef.current.resetCaptcha();
+      if (cooldownTime > 0) {
+        setCooldown(cooldownTime);
+        const timer = setInterval(() => {
+          setCooldown(prev => (prev <= 1 ? (clearInterval(timer), 0) : prev - 1);
+        }, 1000);
       }
-      setCaptchaToken(null);
     } finally {
       setIsResending(false);
     }
+  }, [email, checkVerificationStatus, toast]);
+
+  // Smart verification polling
+  useEffect(() => {
+    const startVerificationCheck = async () => {
+      const status = await checkVerificationStatus();
+      
+      if (status === 'VERIFIED') {
+        if (checkIntervalRef.current) clearInterval(checkIntervalRef.current);
+        return;
+      }
+      
+      // Progressive backoff: 5s, 10s, 30s, 60s
+      const intervals = [5000, 10000, 30000, 60000];
+      const intervalIndex = Math.min(resendAttempts, intervals.length - 1);
+      
+      checkIntervalRef.current = setTimeout(
+        startVerificationCheck, 
+        intervals[intervalIndex]
+      );
+    };
+
+    startVerificationCheck();
+    
+    return () => {
+      if (checkIntervalRef.current) clearTimeout(checkIntervalRef.current);
+    };
+  }, [isVerificationChecked, resendAttempts, checkVerificationStatus]);
+
+  // Handle initial verification state
+  useEffect(() => {
+    const initializeVerification = async () => {
+      const status = await checkVerificationStatus();
+      setIsVerificationChecked(true);
+      
+      if (status === 'UNVERIFIED' || status === 'SESSION_EXPIRED') {
+        // Only auto-send for first-time users
+        if (resendAttempts === 0) {
+          handleUserScenarios();
+        }
+      }
+    };
+
+    initializeVerification();
+  }, [handleUserScenarios, checkVerificationStatus]);
+
+  const handleResendEmail = async () => {
+    if (cooldown > 0 || !email) return;
+    
+    // Require CAPTCHA after first attempt
+    if (resendAttempts >= 1 && !captchaToken) {
+      setShowCaptcha(true);
+      return;
+    }
+    
+    setIsResending(true);
+    await handleUserScenarios();
+    
+    // Update attempt count and cooldown
+    if (cooldown === 0) {
+      setResendAttempts(prev => prev + 1);
+      
+      // Progressive cooldowns: 60s, 120s, 300s
+      const cooldowns = [60, 120, 300];
+      const attemptIndex = Math.min(resendAttempts, cooldowns.length - 1);
+      setCooldown(cooldowns[attemptIndex]);
+      
+      const timer = setInterval(() => {
+        setCooldown(prev => (prev <= 1 ? (clearInterval(timer), 0) : prev - 1));
+      }, 1000);
+    }
+    
+    // Reset CAPTCHA
+    setShowCaptcha(false);
+    setCaptchaToken(null);
+    captchaRef.current?.resetCaptcha();
   };
 
   const handleCaptchaVerify = (token: string) => {
     setCaptchaToken(token);
-    // Auto-proceed with resend after captcha is verified
-    setTimeout(() => {
-      handleResendEmail();
-    }, 100);
+    setTimeout(handleResendEmail, 100);
   };
 
-  const handleCaptchaExpire = () => {
-    setCaptchaToken(null);
-  };
-
+  // CAPTCHA handlers remain the same
+  const handleCaptchaExpire = () => setCaptchaToken(null);
   const handleCaptchaError = () => {
     setCaptchaToken(null);
     toast({
@@ -189,9 +242,7 @@ export const EmailVerificationHandler = ({
             onClick={() => {
               setShowCaptcha(false);
               setCaptchaToken(null);
-              if (captchaRef.current) {
-                captchaRef.current.resetCaptcha();
-              }
+              captchaRef.current?.resetCaptcha();
             }}
           >
             Cancel
@@ -220,10 +271,13 @@ export const EmailVerificationHandler = ({
       {resendAttempts > 0 && (
         <p className="text-xs text-center text-muted-foreground">
           Email sent {resendAttempts} time{resendAttempts !== 1 ? 's' : ''}
+          {resendAttempts >= 2 && (
+            <span className="block mt-1 text-orange-500">
+              Tip: Check your spam folder or contact support
+            </span>
+          )}
         </p>
       )}
     </div>
   );
 };
-
-export default EmailVerificationHandler;
