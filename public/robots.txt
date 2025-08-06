@@ -42,7 +42,7 @@ Allow: /privacy
 Allow: /terms
 
 # Sitemap location
-Sitemap: https://saemstunes.app/sitemap.xml
+Sitemap: https://saemstunes.com/sitemap.xml
 
 # Crawl delay (optional - be respectful to server resources)
 Crawl-delay: 1
