@@ -85,7 +85,7 @@ export const SocialLoginOptions = () => {
       // Sign in with Supabase
       const { data, error } = await supabase.auth.signInWithWeb3({
         chain: 'solana',
-        statement: 'I accept the Terms of Service (https://www.saemstunes.com/terms)',
+        statement: 'I accept the Terms of Service at https://www.saemstunes.com/terms',
         wallet: solanaProvider,
       });
 
