@@ -1,0 +1,249 @@
+# LLM.txt for saemstunes.com
+
+## Project Overview
+Saemstunes.com is a comprehensive music ministry, education, and community platform that goes far beyond personal artist promotion. It serves as a complete ecosystem for Christian music education, ministry outreach, and musical development. The platform combines personal ministry work with extensive educational resources, digital tools, and community features to serve music enthusiasts, students, ministers, and professionals.
+
+## Core Mission & Vision
+- **Music Ministry**: Using music as a vehicle for Christian outreach and spiritual growth
+- **Music Education**: Comprehensive learning platform for all skill levels
+- **Community Building**: Creating connections among Christian music enthusiasts
+- **Resource Hub**: Vast library of materials, tools, and educational content
+- **Digital Innovation**: Cutting-edge tools and instruments for modern music creation
+- **Personal Development**: Individual growth through structured learning and practice
+
+## Technical Architecture
+- **Frontend**: React 18+ with TypeScript and Vite build system
+- **Backend**: Supabase (PostgreSQL database, authentication, real-time, storage)
+- **State Management**: React Context (AuthContext, AudioPlayerContext, PlaylistContext)
+- **Styling**: Tailwind CSS with custom components and animations
+- **UI Components**: Custom component library with shadcn/ui foundation
+- **Audio Processing**: Advanced web audio APIs for music player and instruments
+- **File Storage**: Supabase Storage for audio, video, images, and documents
+- **Authentication**: Supabase Auth with social login options and Solana integration
+- **Payment**: Integrated payment processing for subscriptions and courses
+- **Deployment**: Vercel hosting with optimized performance
+
+## Platform Features & Sections
+
+### Music Education Hub
+- **Singing Courses**: Structured modules and exercises
+- **Breathing Techniques**: Comprehensive vocal training programs
+- **Music Theory**: From beginner to advanced concepts
+- **Instrument Training**: Digital and traditional instrument lessons
+- **Music Production**: Creating and recording music
+- **Worship Leading**: Specialized ministry training
+
+### Digital Music Tools
+- **Interactive Piano**: Full piano interface with learning capabilities
+- **Interactive Guitar**: Guitar learning and practice tool
+- **Metronome**: Professional metronome with visual and audio cues
+- **Pitch Finder**: Real-time pitch detection and tuning assistance
+- **Music Player**: Advanced audio player with playlist management
+- **Audio Tools**: Comprehensive audio utilities and processing
+- **Tool Suggestions**: AI-powered tool recommendations for users
+
+### Resource Library
+- **Music Sheets**: Vast collection of Christian and educational music
+- **Video Tutorials**: Comprehensive visual learning content
+- **Audio Resources**: Backing tracks, samples, reference recordings
+- **Study Materials**: Theoretical and practical learning resources
+- **Worship Resources**: Church and ministry-specific content
+- **Exercise Libraries**: Practice routines and skill-building exercises
+
+### Authentication & User Management
+- **Multi-platform Login**: Email, social media, and Solana wallet authentication
+- **Profile Management**: Comprehensive user profiles with avatar editing
+- **Subscription Tiers**: Multiple access levels with payment integration
+- **Progress Tracking**: Detailed learning analytics and achievements
+- **Community Features**: Direct messaging, audio sharing, social interaction
+
+### Personal Ministry Integration
+- **Artist Portfolio**: Saem's personal work and ministry
+- **Original Content**: Songs, teachings, and ministry materials
+- **Testimony Sharing**: Faith journey and musical ministry stories
+- **Live Ministry**: Concert updates and ministry event information
+- **Personal Teaching**: Direct instruction and mentorship opportunities
+
+## File Structure & Key Components
+```
+src/
+├── components/
+│   ├── admin/             # Admin panel and content management
+│   ├── artists/           # Artist profiles and metadata management
+│   ├── auth/              # Authentication (login, signup, social auth, Solana)
+│   ├── booking/           # Tutor booking and calendar integration
+│   ├── community/         # Audio sharing, direct messaging, social features
+│   ├── courses/           # Course catalog and educational content
+│   ├── dashboard/         # User dashboard with stats and recommendations
+│   ├── discover/          # Music discovery, search, featured content
+│   ├── learning/          # Breathing techniques, course modules, course player
+│   ├── media/             # Audio lists, advanced audio player
+│   ├── music-tools/       # Metronome, pitch finder, interactive instruments
+│   ├── player/            # Global and mini audio players
+│   ├── playlists/         # Playlist management, creation, customization
+│   ├── profile/           # User profile management and avatar editing
+│   ├── quiz/              # Dynamic music quizzes and assessments
+│   ├── resources/         # Educational resources, infographics, offline content
+│   ├── subscription/      # Payment and pricing management
+│   ├── tracks/            # Advanced track display with animations
+│   ├── ui/                # Interactive instruments (piano, guitar), UI components
+│   └── videos/            # Video content and educational materials
+├── pages/
+│   ├── Admin.tsx          # Admin dashboard
+│   ├── Artists.tsx        # Artist directory
+│   ├── BookTutor.tsx      # Tutor booking system
+│   ├── Community.tsx      # Social community features
+│   ├── Discover.tsx       # Music discovery hub
+│   ├── LearningHub.tsx    # Educational content center
+│   ├── Library.tsx        # Resource library
+│   ├── MusicTools.tsx     # Digital instruments and utilities
+│   ├── Payment.tsx        # Subscription and payment processing
+│   └── [30+ other pages]  # Comprehensive page structure
+├── context/               # React contexts for audio, auth, playlists
+├── hooks/                 # Custom hooks for mobile, payments, analytics
+├── integrations/          # Supabase integration and type definitions
+├── services/              # Quiz service and other API integrations
+├── utils/                 # Audio utilities, playlist management, SEO tools
+└── assets/icons/          # Extensive music-themed icon library
+```
+
+## Development Stack & Tools
+### Core Technologies
+- **React 18+ with TypeScript**: Type-safe component development
+- **Vite**: Lightning-fast development and optimized builds
+- **Tailwind CSS**: Utility-first styling with custom animations
+- **Supabase**: Backend-as-a-Service with PostgreSQL, Auth, Storage, Real-time
+
+### Key Libraries & Integrations
+- **shadcn/ui**: High-quality component library foundation
+- **Audio APIs**: Web Audio API for advanced sound processing
+- **Payment Processing**: Integrated subscription and payment handling
+- **Calendar Integration**: Booking system for tutoring sessions
+- **SEO Tools**: Structured data, sitemap generation, meta optimization
+- **Analytics**: User behavior and listening pattern tracking
+
+### Development Features
+- **TypeScript**: Full type safety across the application
+- **Component Library**: Extensive custom UI component system
+- **Animation System**: Custom CSS animations and transitions
+- **Responsive Design**: Mobile-first approach with adaptive layouts
+- **Error Handling**: Comprehensive error boundaries and user feedback
+- **Performance**: Optimized images, lazy loading, and efficient rendering
+
+## Content Strategy & SEO
+### Target Keywords
+- Christian music education, online music lessons, vocal training
+- Music ministry training, worship leader education
+- Digital music tools, virtual instruments, music theory
+- Christian music resources, worship music sheets
+- Music community, online music school, singing exercises
+- Breathing techniques for singers, music production training
+
+### Content Categories
+- **Educational Content**: Structured courses, tutorials, exercises
+- **Resource Materials**: Music sheets, backing tracks, references
+- **Community Content**: User showcases, testimonials, discussions
+- **Ministry Content**: Worship resources, ministry training, outreach
+- **Tool Documentation**: Guides for digital instruments and features
+- **Personal Ministry**: Saem's music, testimony, and teaching content
+
+## Target Audiences
+### Primary Users
+- **Music Students**: All levels seeking Christian music education
+- **Worship Leaders**: Church musicians needing training and resources
+- **Music Ministers**: Those using music for evangelism and ministry
+- **Christian Musicians**: Professional and amateur artists
+- **Music Educators**: Teachers looking for resources and tools
+- **Church Communities**: Congregations needing worship materials
+
+### User Needs
+- Comprehensive music education from Christian perspective
+- Access to vast library of Christian music resources
+- Digital tools for music creation and practice
+- Community connection with like-minded musicians
+- Professional development in music ministry
+- Personal spiritual growth through musical expression
+
+## Business Model & Revenue
+### Revenue Streams
+- **Course Subscriptions**: Tiered access to educational content
+- **Premium Tools**: Advanced digital instruments and features
+- **Resource Library**: Subscription or pay-per-download model
+- **Private Instruction**: One-on-one teaching and mentorship
+- **Certification Programs**: Accredited music ministry training
+- **Community Memberships**: Enhanced social and networking features
+
+### Ministry Integration
+- **Outreach Programs**: Free access for underserved communities
+- **Church Partnerships**: Bulk licensing and training programs
+- **Missionary Support**: Resources for international ministry
+- **Scholarship Programs**: Need-based access to premium content
+- **Ministry Events**: Conferences, workshops, and gatherings
+
+## AI Assistant Guidelines
+### Development Focus
+- Prioritize user experience in educational interfaces
+- Ensure accessibility across all learning tools and content
+- Optimize for various device types and internet speeds
+- Implement robust progress tracking and analytics
+- Consider scalability for growing user base and content library
+
+### Content Creation
+- Maintain educational clarity in all instructional content
+- Balance technical accuracy with accessibility for beginners
+- Integrate Christian worldview naturally into secular music concepts
+- Create engaging, interactive learning experiences
+- Develop assessment and feedback systems for student growth
+
+### Community Management
+- Foster positive, encouraging community atmosphere
+- Facilitate meaningful connections between users
+- Support user-generated content while maintaining quality
+- Encourage collaboration and peer learning
+- Moderate discussions to maintain Christian values and inclusivity
+
+## Technical Challenges & Solutions
+### Performance Optimization
+- Efficient delivery of large video and audio libraries
+- Real-time audio processing for digital instruments
+- Smooth user experience with complex interactive features
+- Scalable infrastructure for growing user base
+- Mobile optimization for all educational and tool features
+
+### Educational Technology
+- Adaptive learning algorithms for personalized education
+- Progress tracking across multiple learning paths
+- Interactive assessment and feedback systems
+- Collaborative tools for group learning
+- Integration with external music education standards
+
+## Success Metrics
+### Educational Impact
+- Student progress and skill development tracking
+- Course completion rates and learning outcomes
+- User engagement with educational content
+- Community participation and collaboration levels
+- Ministry training program effectiveness
+
+### Platform Growth
+- User registration and retention rates
+- Content library usage and popular resources
+- Community interaction and user-generated content
+- Revenue growth from educational services
+- Ministry outreach and impact measurement
+
+## Integration Points
+- **Music Software**: Compatibility with DAWs and music notation software
+- **Streaming Services**: Integration with major music platforms
+- **Church Management**: Connection with church planning and worship tools
+- **Social Media**: Sharing capabilities across all major platforms
+- **Payment Systems**: Multiple options for global accessibility
+- **Video Conferencing**: Live instruction and community meetings
+- **Learning Management**: Integration with educational tracking systems
+
+---
+
+*Mission: "Making Music, Representing Christ" through comprehensive education, community, and ministry*
+*Platform Type: Music Ministry, Education & Community Ecosystem*
+*Last Updated: [Current Date]*
+*Version: 3.0 - Complete Platform Vision*
