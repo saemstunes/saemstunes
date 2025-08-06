@@ -1,3 +1,4 @@
+# ================ ORIGINAL ENTRIES ================
 # Logs
 logs
 *.log
@@ -23,3 +24,53 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# ================ CRITICAL SECURITY ADDITIONS ================
+# Secrets and credentials
+.env
+*.env
+.env.*
+secrets.**
+credentials.*
+*.key
+*.pem
+*.cert
+
+# Python-specific security ignores
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.python-version
+.pytest_cache/
+venv/
+.venv/
+env/
+
+# Script output and sensitive data
+*.csv
+*.json
+*.xlsx
+*.db
+*.sqlite
+*.dump
+*.bak
+
+# System files
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
+
+# Container and cloud files
+.dockerignore
+docker-compose*.yml
+*.tfstate
+*.tfstate.backup
+
+# IDE specific
+.idea_modules/
+*.iml
+*.ipr
+*.iws
+*.sublime-*
+*.code-workspace
