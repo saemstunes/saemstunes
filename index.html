@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 
-    <!-- Content Security Policy - Updated to include Google and Wikipedia images -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://uxyvhqtwkutstihtxdsv.supabase.co https://cdn.gpteng.co https://newassets.hcaptcha.com https://hcaptcha.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://uxyvhqtwkutstihtxdsv.supabase.co https://images.unsplash.com https://i.imgur.com https://img.youtube.com https://lh3.googleusercontent.com https://upload.wikimedia.org https://*.googleusercontent.com; connect-src 'self' https://uxyvhqtwkutstihtxdsv.supabase.co wss://uxyvhqtwkutstihtxdsv.supabase.co https://sentry.hcaptcha.com; frame-src 'self' https://newassets.hcaptcha.com https://hcaptcha.com https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.hcaptcha.com https://cdn.gpteng.co https://static.cloudflareinsights.com;">
+    <!-- ✅ Content Security Policy - Updated to include Tawk.to -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://uxyvhqtwkutstihtxdsv.supabase.co https://cdn.gpteng.co https://newassets.hcaptcha.com https://hcaptcha.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://uxyvhqtwkutstihtxdsv.supabase.co https://images.unsplash.com https://i.imgur.com https://img.youtube.com https://lh3.googleusercontent.com https://upload.wikimedia.org https://*.googleusercontent.com; connect-src 'self' https://uxyvhqtwkutstihtxdsv.supabase.co wss://uxyvhqtwkutstihtxdsv.supabase.co https://sentry.hcaptcha.com https://embed.tawk.to; frame-src 'self' https://newassets.hcaptcha.com https://hcaptcha.com https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://embed.tawk.to; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.hcaptcha.com https://cdn.gpteng.co https://static.cloudflareinsights.com https://embed.tawk.to;">
 
     <title>The Saem's Tunes App</title>
     <meta name="description" content="Making Music, Representing Christ - Tots to teens to adults: everyone's go-to music learning space!" />
@@ -43,10 +43,7 @@
     <!-- Nunito Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet" />
 
     <!-- Structured Data for Organization -->
     <script type="application/ld+json">
@@ -87,9 +84,25 @@
 
   <body>
     <div id="root"></div>
-    <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
+
+    <!-- GPT Engineer & App Entrypoint -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
-    <style>#lovable-badge{display:none!important}</style>
+    <style>#lovable-badge { display: none !important; }</style>
+
+    <!-- ✅ Start of Tawk.to Script -->
+    <script type="text/javascript">
+      var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
+      (function () {
+        var s1 = document.createElement("script"),
+            s0 = document.getElementsByTagName("script")[0];
+        s1.async = true;
+        s1.src = "https://embed.tawk.to/68941c75ed02831924d1805c/1j218uapl";
+        s1.charset = "UTF-8";
+        s1.setAttribute("crossorigin", "*");
+        s0.parentNode.insertBefore(s1, s0);
+      })();
+    </script>
+    <!-- ✅ End of Tawk.to Script -->
   </body>
 </html>
