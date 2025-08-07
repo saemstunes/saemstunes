@@ -130,6 +130,7 @@ The Saem's Tunes App project is open-source and welcomes contributions from deve
 
 ### Links & Resources
 
-- **Visit the app**: https://saemstunes-app.lovable.app
-- **GitHub & contact**: [*[Github Repo]*](https://github.com/saemstunes/saemstunes-app-MAIN) / [*[Email]*](saemstunes@gmail.com)
+- **Visit the app**: https://saemstunes.com/
+- **GitHub & contact**: [*[Github Repo]*](https://github.com/saemstunes/saemstunes-app-MAIN) / [*[Email]*](saem@saemstunes.com)
 - **Follow our sounds**: https://soundcloud.com/saemstunes
+
