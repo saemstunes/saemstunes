@@ -287,20 +287,20 @@ Available for Academy and Enterprise license holders:
 ### Contact Information
 #### Sales and Consultation
 - **Sales Email**: sales@saemstunes.com
-- **Phone**: +1-555-SAEM-EDU (555-723-6338)
+- **Phone**: +254-798-903-373 (254-798-903-373)
 - **Demo Scheduling**: [Calendar booking link]
-- **Enterprise Inquiries**: enterprise@saemstunes.com
+- **Enterprise Inquiries**: sales@saemstunes.com
 
 #### Customer Support
-- **Support Portal**: support.saemstunes.com
+- **Support Portal**: ko-fi.com/saemstunes
 - **Email Support**: support@saemstunes.com
 - **Priority Support Hotline**: Available for Academy and Enterprise customers
 - **Emergency Contact**: 24/7 emergency support for Enterprise customers
 
 #### Partnership and Integration
-- **Partnership Inquiries**: partnerships@saemstunes.com
-- **Technical Integration**: integrations@saemstunes.com
-- **Developer Relations**: developers@saemstunes.com
+- **Partnership Inquiries**: contact@saemstunes.com
+- **Technical Integration**: contact@saemstunes.com
+- **Developer Relations**: contact@saemstunes.com
 
 ## ⚖️ Legal Terms and Conditions
 
