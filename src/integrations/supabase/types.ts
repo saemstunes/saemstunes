@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_tiers: {
+        Row: {
+          download_limit: number | null
+          features: Json | null
+          id: number
+          max_quality: string
+          name: string
+          price_monthly: number | null
+          priority: number
+        }
+        Insert: {
+          download_limit?: number | null
+          features?: Json | null
+          id?: number
+          max_quality: string
+          name: string
+          price_monthly?: number | null
+          priority: number
+        }
+        Update: {
+          download_limit?: number | null
+          features?: Json | null
+          id?: number
+          max_quality?: string
+          name?: string
+          price_monthly?: number | null
+          priority?: number
+        }
+        Relationships: []
+      }
       activity_logs: {
         Row: {
           action: string | null
@@ -545,6 +575,47 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_files: {
+        Row: {
+          access_tier_id: number | null
+          bucket: string
+          created_at: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+        }
+        Insert: {
+          access_tier_id?: number | null
+          bucket: string
+          created_at?: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+        }
+        Update: {
+          access_tier_id?: number | null
+          bucket?: string
+          created_at?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_files_access_tier_id_fkey"
+            columns: ["access_tier_id"]
+            isOneToOne: false
+            referencedRelation: "access_tiers"
             referencedColumns: ["id"]
           },
         ]
