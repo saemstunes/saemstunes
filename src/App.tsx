@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { AuthProvider } from "@/context/AuthContext";
+import { WalletProvider } from "@/context/WalletContext";
 import { AudioPlayerProvider } from "@/context/AudioPlayerContext";
 import { MediaStateProvider } from '@/components/idle-state/mediaStateContext';
 import { PlaylistProvider } from '@/context/PlaylistContext';
@@ -74,10 +75,11 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <MediaStateProvider>
-          <AudioPlayerProvider>
-            <PlaylistProvider>
-            <TooltipProvider>
+        <WalletProvider>
+          <MediaStateProvider>
+            <AudioPlayerProvider>
+              <PlaylistProvider>
+                <TooltipProvider>
               <Toaster />
               <Sonner />
               <SplashScreen loading={loading} />
@@ -158,10 +160,11 @@ const App = () => {
                 </Routes>
                 <GlobalMiniPlayer />
                 </BrowserRouter>
-              </TooltipProvider>
-              </PlaylistProvider> 
+                </TooltipProvider>
+              </PlaylistProvider>
             </AudioPlayerProvider>
           </MediaStateProvider>
+        </WalletProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

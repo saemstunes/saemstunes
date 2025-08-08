@@ -185,41 +185,22 @@ export const EmailVerificationHandler = ({
     // Require CAPTCHA after first attempt
     if (resendAttempts >= 1 && !captchaToken) {
       setShowCaptcha(true);
+      toast({
+        title: "Verification required",
+        description: "Please complete the captcha to resend the email.",
+        variant: "default",
+      });
       return;
     }
     
-    setIsResending(true);
     await handleUserScenarios();
-    
-    // Update attempt count and cooldown
-    if (cooldown === 0) {
-      setResendAttempts(prev => prev + 1);
-      
-      // Progressive cooldowns: 60s, 120s, 300s
-      const cooldowns = [60, 120, 300];
-      const attemptIndex = Math.min(resendAttempts, cooldowns.length - 1);
-      setCooldown(cooldowns[attemptIndex]);
-      
-      const timer = setInterval(() => {
-        setCooldown(prev => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    
-    // Reset CAPTCHA
-    setShowCaptcha(false);
-    setCaptchaToken(null);
-    captchaRef.current?.resetCaptcha();
   };
 
   const handleCaptchaVerify = (token: string) => {
     setCaptchaToken(token);
-    setTimeout(handleResendEmail, 100);
+    setTimeout(() => {
+      handleResendEmail();
+    }, 100);
   };
 
   // CAPTCHA handlers remain the same
