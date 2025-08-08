@@ -11,10 +11,7 @@ import { mockSubscriptionPlans } from "@/data/mockData";
 import AvatarEditor from "@/components/profile/AvatarEditor";
 import { Link } from "react-router-dom";
 import { ExternalLink, LogOut, Lock, Mail } from "lucide-react";
-import { useProfile } from "@/hooks/useProfile";
-import { useAvatarUpload } from "@/hooks/useProfile";
-import { usePasswordChange } from "@/hooks/usePasswordChange";
-import { useEmailUpdate } from "@/hooks/useEmailUpdate";
+import { useProfile, useAvatarUpload, usePasswordChange, useEmailUpdate } from "@/hooks/useProfile";
 import { validateProfileForm, sanitizeInput, hasProfileChanges } from "@/utils/validation";
 import {
   Dialog,
