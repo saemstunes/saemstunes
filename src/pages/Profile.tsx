@@ -12,7 +12,7 @@ import AvatarEditor from "@/components/profile/AvatarEditor";
 import { Link } from "react-router-dom";
 import { ExternalLink, LogOut, Lock, Mail } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
-import { useAvatarUpload } from "@/hooks/useAvatarUpload";
+import { useAvatarUpload } from "@/hooks/useProfile";
 import { usePasswordChange } from "@/hooks/usePasswordChange";
 import { useEmailUpdate } from "@/hooks/useEmailUpdate";
 import { validateProfileForm, sanitizeInput, hasProfileChanges } from "@/utils/validation";
