@@ -52,11 +52,11 @@ import Subscriptions from "./pages/Subscriptions";
 import ComingSoon from "./pages/ComingSoon";
 import Tracks from "@/pages/Tracks";
 import AudioPlayer from "./pages/AudioPlayer";
+// Missing imports from the first file
 import Artists from "./pages/Artists";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import MusicShowcase from "./pages/MusicShowcase";
-import Profile from "./pages/Profile";  // ADDED PROFILE IMPORT
 
 const queryClient = new QueryClient();
 
@@ -64,6 +64,7 @@ const App = () => {
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
+    // Simulate loading resources
     const timer = setTimeout(() => {
       setLoading(false);
     }, 2000);
@@ -115,19 +116,13 @@ const App = () => {
                   <Route path="/contact-us" element={<ContactUs />} />
                   <Route path="/support-us" element={<SupportUs />} />
                   <Route path="/settings" element={<Settings />} />
-                  
-                  {/* ADDED PROFILE ROUTE */}
-                  <Route path="/profile" element={
-                    <ProtectedRoute>
-                      <Profile />
-                    </ProtectedRoute>
-                  } />
-                  
                   <Route path="/services" element={<Services />} />
                   <Route path="/payment" element={<Payment />} />
                   <Route path="/payment-success" element={<PaymentSuccess />} />
                   <Route path="/subscriptions" element={<Subscriptions />} />
                   <Route path="/music-tools" element={<MusicTools />} />
+                  
+                  {/* Missing routes from the first file */}
                   <Route path="/artists" element={<Artists />} />
                   <Route path="/learning-hub/:moduleId" element={<LearningModulePage />} />
                   
