@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -18,7 +17,7 @@ import {
 } from "@/components/ui/form";
 
 const formSchema = z.object({
-  email: z.string().email("Please enter a valid email"),
+  email: z.string().min(1, "Email or username is required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   adminCode: z.string().min(1, "Admin code is required"),
 });
@@ -28,6 +27,12 @@ type FormData = z.infer<typeof formSchema>;
 interface AdminLoginFormProps {
   onClose?: () => void;
 }
+
+// Fixed admin credentials - same as in Admin.tsx
+const FIXED_ADMIN_CREDENTIALS = {
+  username: 'saemstunes',
+  password: 'ilovetosing123'
+};
 
 const AdminLoginForm = ({ onClose = () => {} }: AdminLoginFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,34 +49,46 @@ const AdminLoginForm = ({ onClose = () => {} }: AdminLoginFormProps) => {
   });
 
   const handleAdminLogin = async (data: FormData) => {
-  setIsSubmitting(true);
+    setIsSubmitting(true);
 
-  try {
-    // First verify if admin code is correct
-    const isValidAdminCode = data.adminCode === "ST-ADMIN-2024";
-    
-    if (!isValidAdminCode) {
-      form.setError("adminCode", { 
-        message: "Invalid admin code" 
+    try {
+      // Verify admin code first
+      if (data.adminCode !== "ST-ADMIN-2024") {
+        form.setError("adminCode", { 
+          message: "Invalid admin code" 
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Check if credentials match fixed admin
+      if (
+        data.email === FIXED_ADMIN_CREDENTIALS.username && 
+        data.password === FIXED_ADMIN_CREDENTIALS.password
+      ) {
+        // Fixed admin authentication
+        sessionStorage.setItem('adminAuth', 'true');
+        navigate("/admin");
+        onClose();
+        return;
+      }
+      
+      // Regular user authentication
+      await login(data.email, data.password);
+      
+      // Set admin access for regular user
+      sessionStorage.setItem('adminAuth', 'true');
+      navigate("/admin");
+      onClose();
+    } catch (error) {
+      console.error("Admin login failed:", error);
+      form.setError("root", { 
+        message: "Authentication failed. Please verify your credentials." 
       });
+    } finally {
       setIsSubmitting(false);
-      return;
     }
-    
-    // Fixed: Remove extra parameters from login call
-    await login(data.email, data.password);
-    
-    navigate("/admin");
-    onClose();
-  } catch (error) {
-    console.error("Admin login failed:", error);
-    form.setError("root", { 
-      message: "Authentication failed. Please verify your credentials." 
-    });
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
   return (
     <Form {...form}>
@@ -88,11 +105,11 @@ const AdminLoginForm = ({ onClose = () => {} }: AdminLoginFormProps) => {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>Email or Username</FormLabel>
               <FormControl>
                 <Input 
-                  type="email" 
-                  placeholder="admin@example.com" 
+                  type="text" 
+                  placeholder="admin@example.com or saemstunes" 
                   {...field} 
                   disabled={isSubmitting} 
                 />
