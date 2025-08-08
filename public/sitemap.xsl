@@ -5,7 +5,7 @@
   <xsl:template match="/">
     <html lang="en">
       <head>
-        <title>SAEMS Tunes Sitemap</title>
+        <title>Saem's Tunes Sitemap</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
         <style>
           :root {
@@ -133,7 +133,7 @@
       <body>
         <div class="container">
           <header>
-            <h1>SAEMS Tunes Sitemap</h1>
+            <h1>Saem's Tunes Sitemap</h1>
             <p class="subtitle">Complete list of website resources</p>
           </header>
           
