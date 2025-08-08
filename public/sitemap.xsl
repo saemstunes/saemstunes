@@ -128,6 +128,20 @@
             color: var(--primary);
             font-size: 0.9rem;
           }
+
+          .footer-link {
+          color: var(--primary);
+          text-decoration: none;
+          font-weight: 500;
+          transition: color 0.3s ease, text-decoration-color 0.3s ease;
+          }
+          
+          .footer-link:hover {
+          color: hsl(43 100% 25%); /* Darker gold */
+          text-decoration: underline;
+          text-decoration-color: hsl(43 100% 25%);
+          }
+
         </style>
       </head>
       <body>
