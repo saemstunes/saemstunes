@@ -8,7 +8,7 @@ export interface ProfileData {
   display_name: string | null;
   full_name: string | null;
   avatar_url: string | null;
-  role: 'student' | 'adult' | 'parent' | 'teacher' | 'admin';
+  role: 'student' | 'adult_learner' | 'parent' | 'tutor' | 'admin' | 'user';
   phone: string | null;
   parent_id: string | null;
   bio: string | null;
@@ -177,7 +177,17 @@ class ProfileService {
   }
 
   async completeOnboarding(userId: string): Promise<void> {
-    await this.updateProfile(userId, { onboarding_complete: true } as any);
+    const { error } = await supabase
+      .from('profiles')
+      .update({ 
+        onboarding_complete: true,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId);
+
+    if (error) {
+      throw new Error('Failed to complete onboarding');
+    }
   }
 
   async deleteAccount(userId: string): Promise<void> {

@@ -86,10 +86,11 @@ const Profile = () => {
 
   const roleMapping: Record<string, string> = {
     student: "Student",
-    adult: "Adult Learner",
+    adult_learner: "Adult Learner",
     parent: "Parent/Guardian",
-    teacher: "Teacher",
+    tutor: "Tutor",
     admin: "Administrator",
+    user: "User",
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
