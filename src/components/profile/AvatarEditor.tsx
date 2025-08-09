@@ -1,291 +1,217 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Slider } from "@/components/ui/slider"; 
-import { Camera, Upload, ZoomIn, RotateCw, CheckCircle, Trash } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useAuth } from "@/context/AuthContext";
-
-// Default avatars for users to choose from
-const DEFAULT_AVATARS = [
-  '/lovable-uploads/avatar-1.png',
-  '/lovable-uploads/avatar-2.png',
-  '/lovable-uploads/avatar-3.png',
-  '/lovable-uploads/avatar-4.png',
-  '/lovable-uploads/avatar-5.png',
-  '/lovable-uploads/avatar-6.png',
-  '/lovable-uploads/avatar-7.png',
-  '/lovable-uploads/avatar-8.png',
-];
+import { useState, useRef, useCallback } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Upload, Trash2, Camera, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface AvatarEditorProps {
-  currentAvatar?: string;
+  currentAvatar?: string | null;
   username: string;
-  onSave: (avatarUrl: string) => void;
+  onSave: (file: File) => Promise<void>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const AvatarEditor: React.FC<AvatarEditorProps> = ({ 
-  currentAvatar, 
-  username, 
-  onSave, 
-  open, 
-  onOpenChange 
-}) => {
-  const [selectedAvatar, setSelectedAvatar] = useState<string | null>(currentAvatar || null);
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [zoom, setZoom] = useState(100);
-  const [rotation, setRotation] = useState(0);
-  const [isUploading, setIsUploading] = useState(false);
-  const [activeTab, setActiveTab] = useState("default");
+const AvatarEditor = ({ currentAvatar, username, onSave, open, onOpenChange }: AvatarEditorProps) => {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const { user, updateUserProfile } = useAuth();
-  
-  // Get initials for avatar fallback
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase();
-  };
-  
-  useEffect(() => {
-    if (currentAvatar) {
-      setSelectedAvatar(currentAvatar);
-    }
-  }, [currentAvatar]);
-  
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    // Check file type
-    if (!file.type.match('image.*')) {
+
+  const handleFileSelect = useCallback((file: File) => {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
       toast({
-        title: "Invalid file type",
-        description: "Please upload an image file.",
-        variant: "destructive",
+        title: 'Invalid File Type',
+        description: 'Please select a JPEG, PNG, or WebP image.',
+        variant: 'destructive'
       });
       return;
     }
-    
-    // Check file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
+
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
       toast({
-        title: "File too large",
-        description: "Please upload an image smaller than 5MB.",
-        variant: "destructive",
+        title: 'File Too Large',
+        description: 'Please select an image smaller than 5MB.',
+        variant: 'destructive'
       });
       return;
     }
-    
-    setIsUploading(true);
-    
-    // Read the file and convert to data URL
+
+    setSelectedFile(file);
     const reader = new FileReader();
-    reader.onload = (event) => {
-      setUploadedImage(event.target?.result as string);
-      setSelectedAvatar(event.target?.result as string);
-      setActiveTab("upload");
-      setIsUploading(false);
+    reader.onload = (e) => {
+      setPreviewUrl(e.target?.result as string);
     };
-    
-    reader.onerror = () => {
-      toast({
-        title: "Error",
-        description: "Failed to read the image file.",
-        variant: "destructive",
-      });
-      setIsUploading(false);
-    };
-    
     reader.readAsDataURL(file);
+  }, [toast]);
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleFileSelect(file);
   };
-  
-  const handleDefaultAvatarSelect = (avatarUrl: string) => {
-    setSelectedAvatar(avatarUrl);
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleFileSelect(file);
   };
-  
-  const handleSave = () => {
-    if (selectedAvatar) {
-      // Save avatar change
-      onSave(selectedAvatar);
-      
-      // Update user profile in context for immediate effect
-      if (user) {
-        updateUserProfile({ ...user, avatar: selectedAvatar });
-      }
-      
-      toast({
-        title: "Success",
-        description: "Avatar updated successfully.",
-      });
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+  };
+
+  const handleSave = async () => {
+    if (!selectedFile) return;
+    try {
+      setSaving(true);
+      await onSave(selectedFile);
+      setSelectedFile(null);
+      setPreviewUrl(null);
       onOpenChange(false);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to upload avatar',
+        variant: 'destructive'
+      });
+    } finally {
+      setSaving(false);
     }
   };
-  
-  const handleRemoveAvatar = () => {
-    setSelectedAvatar(null);
-    setUploadedImage(null);
-    toast({
-      title: "Avatar removed",
-      description: "You can select a new avatar or use your initials.",
-    });
+
+  const handleCancel = () => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    onOpenChange(false);
   };
-  
-  const triggerFileUpload = () => {
-    fileInputRef.current?.click();
-  };
-  
-  const handleRotate = () => {
-    setRotation(prev => (prev + 90) % 360);
-  };
-  
+
+  const displayAvatar = previewUrl || currentAvatar;
+  const initials = username.split(' ').map(n => n[0]).join('').toUpperCase();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit Your Avatar</DialogTitle>
+          <DialogTitle>Change Profile Picture</DialogTitle>
           <DialogDescription>
-            Choose a default avatar or upload your own image.
+            Upload a new profile picture
           </DialogDescription>
         </DialogHeader>
-        
-        <div className="flex flex-col items-center gap-6 py-4">
-          {/* Avatar preview */}
-          <div className="relative">
+
+        <div className="space-y-6">
+          <div className="flex justify-center">
             <Avatar className="h-32 w-32">
-              <AvatarImage 
-                src={selectedAvatar || undefined}
-                alt={username}
-                style={{
-                  transform: uploadedImage ? `scale(${zoom/100}) rotate(${rotation}deg)` : undefined,
-                  transformOrigin: 'center'
-                }}
-              />
-              <AvatarFallback className="text-3xl">
-                {getInitials(username)}
-              </AvatarFallback>
+              <AvatarImage src={displayAvatar || undefined} alt={username} />
+              <AvatarFallback className="text-2xl">{initials}</AvatarFallback>
             </Avatar>
-            
-            <Badge className="absolute bottom-0 right-0 bg-gold">
-              Preview
-            </Badge>
           </div>
-          
-          {/* Tabs for avatar selection method */}
-          <Tabs 
-            defaultValue="default" 
-            value={activeTab} 
-            onValueChange={setActiveTab}
-            className="w-full"
+
+          <div
+            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+              dragOver 
+                ? 'border-primary bg-primary/5' 
+                : 'border-muted-foreground/25 hover:border-muted-foreground/50'
+            }`}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onClick={() => fileInputRef.current?.click()}
           >
-            <TabsList className="grid grid-cols-2 w-full">
-              <TabsTrigger value="default">Default Avatars</TabsTrigger>
-              <TabsTrigger value="upload">Upload Image</TabsTrigger>
-            </TabsList>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
+              onChange={handleFileInputChange}
+              className="hidden"
+            />
             
-            <TabsContent value="default" className="space-y-4 py-4">
-              <div className="grid grid-cols-4 gap-2">
-                {DEFAULT_AVATARS.map((avatar, index) => (
-                  <div
-                    key={index}
-                    className={`relative cursor-pointer rounded-md p-1 ${
-                      selectedAvatar === avatar ? 'ring-2 ring-gold bg-gold/10' : 'hover:bg-muted'
-                    }`}
-                    onClick={() => handleDefaultAvatarSelect(avatar)}
-                  >
-                    <Avatar>
-                      <AvatarImage src={avatar} alt={`Avatar option ${index + 1}`} />
-                      <AvatarFallback>{index + 1}</AvatarFallback>
-                    </Avatar>
-                    
-                    {selectedAvatar === avatar && (
-                      <div className="absolute -top-1 -right-1 bg-gold text-white rounded-full p-0.5">
-                        <CheckCircle className="h-3 w-3" />
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="upload" className="space-y-4 py-4">
-              <div className="space-y-4">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleFileUpload}
-                />
-                
-                <Button 
-                  onClick={triggerFileUpload}
-                  variant="outline"
-                  className="w-full"
-                  disabled={isUploading}
+            <Camera className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-sm text-muted-foreground mb-2">
+              Drop an image here, or click to select
+            </p>
+            <p className="text-xs text-muted-foreground">
+              JPEG, PNG, or WebP • Max 5MB
+            </p>
+          </div>
+
+          {selectedFile && (
+            <div className="bg-muted rounded-lg p-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-sm">{selectedFile.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedFile(null);
+                    setPreviewUrl(null);
+                  }}
                 >
-                  <Upload className="h-4 w-4 mr-2" />
-                  {isUploading ? "Uploading..." : uploadedImage ? "Change Image" : "Upload Image"}
+                  <Trash2 className="h-4 w-4" />
                 </Button>
-                
-                {uploadedImage && (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <ZoomIn className="h-4 w-4 mr-2" />
-                          <span>Zoom</span>
-                        </div>
-                        <span className="text-sm">{zoom}%</span>
-                      </div>
-                      <Slider
-                        value={[zoom]}
-                        min={50}
-                        max={150}
-                        step={1}
-                        onValueChange={(values) => setZoom(values[0])}
-                      />
-                    </div>
-                    
-                    <Button 
-                      variant="outline" 
-                      onClick={handleRotate}
-                      className="w-full"
-                    >
-                      <RotateCw className="h-4 w-4 mr-2" />
-                      Rotate Image
-                    </Button>
-                  </div>
-                )}
               </div>
-            </TabsContent>
-          </Tabs>
+            </div>
+          )}
         </div>
-        
-        <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2">
-          <Button 
-            variant="outline" 
-            onClick={handleRemoveAvatar}
-            className="w-full sm:w-auto"
-          >
-            <Trash className="h-4 w-4 mr-2" />
-            Remove Avatar
-          </Button>
-          <Button 
-            onClick={handleSave}
-            className="w-full sm:w-auto bg-gold hover:bg-gold-dark"
-            disabled={!selectedAvatar}
-          >
-            Save Changes
-          </Button>
+
+        <DialogFooter className="gap-2">
+          <div className="flex justify-between w-full">
+            <div>
+              {currentAvatar && (
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    toast({
+                      title: 'Not Implemented',
+                      description: 'Avatar removal coming soon',
+                    });
+                  }}
+                  disabled={saving}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Remove
+                </Button>
+              )}
+            </div>
+            
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={handleCancel} disabled={saving}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSave} 
+                disabled={!selectedFile || saving}
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Save
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
