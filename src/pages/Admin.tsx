@@ -123,7 +123,6 @@ const FeaturedItemForm = ({
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `featured/${fileName}`;
       
-      // Ensure we're using a client with service role for uploads
       const { error: uploadError } = await supabase.storage
         .from('featured-images')
         .upload(filePath, imageFile, {
@@ -133,7 +132,6 @@ const FeaturedItemForm = ({
       
       if (uploadError) throw uploadError;
       
-      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('featured-images')
         .getPublicUrl(filePath);
@@ -478,20 +476,136 @@ const Admin = () => {
   const fetchContent = async () => {
     setContentLoading(true);
     try {
-      // Corrected RPC call
-      const { data, error } = await supabase.rpc('get_all_content');
-      
-      if (error) {
-        console.error("Supabase content error:", {
-          message: error.message,
-          code: error.code,
-          details: error.details,
-          hint: error.hint
-        });
-        throw error;
-      }
-      
-      setAllContent(data || []);
+      // Use direct table queries instead of RPC to avoid function overloading issues
+      const [
+        { data: videos, error: videosError },
+        { data: audio, error: audioError },
+        { data: courses, error: coursesError }
+      ] = await Promise.all([
+        supabase
+          .from('video_content')
+          .select('id, title, created_at')
+          .then((res) => {
+            if (res.error) throw res.error;
+            return {
+              data: res.data?.map(item => ({
+                ...item,
+                type: 'video',
+                views: 0, // Will be populated separately
+                created_at: new Date(item.created_at).toISOString()
+              })),
+              error: null
+            };
+          }),
+        supabase
+          .from('tracks')
+          .select('id, title, created_at')
+          .then((res) => {
+            if (res.error) throw res.error;
+            return {
+              data: res.data?.map(item => ({
+                ...item,
+                type: 'audio',
+                plays: 0, // Will be populated separately
+                created_at: new Date(item.created_at).toISOString()
+              })),
+              error: null
+            };
+          }),
+        supabase
+          .from('learning_paths')
+          .select('id, title, created_at')
+          .then((res) => {
+            if (res.error) throw res.error;
+            return {
+              data: res.data?.map(item => ({
+                ...item,
+                type: 'course',
+                enrollments: 0, // Will be populated separately
+                created_at: new Date(item.created_at).toISOString()
+              })),
+              error: null
+            };
+          })
+      ]);
+
+      if (videosError) throw videosError;
+      if (audioError) throw audioError;
+      if (coursesError) throw coursesError;
+
+      // Fetch engagement stats separately
+      const videoIds = videos?.map(v => v.id) || [];
+      const audioIds = audio?.map(a => a.id) || [];
+      const courseIds = courses?.map(c => c.id) || [];
+
+      const [
+        { data: videoStats },
+        { data: audioStats },
+        { data: courseStats }
+      ] = await Promise.all([
+        supabase
+          .from('lesson_progress')
+          .select('video_content_id, count')
+          .then(res => {
+            if (res.error) throw res.error;
+            return {
+              data: res.data?.reduce((acc, curr) => {
+                acc[curr.video_content_id] = (acc[curr.video_content_id] || 0) + 1;
+                return acc;
+              }, {} as Record<string, number>),
+              error: null
+            };
+          }),
+        supabase
+          .from('track_plays')
+          .select('track_id, count')
+          .then(res => {
+            if (res.error) throw res.error;
+            return {
+              data: res.data?.reduce((acc, curr) => {
+                acc[curr.track_id] = (acc[curr.track_id] || 0) + 1;
+                return acc;
+              }, {} as Record<string, number>),
+              error: null
+            };
+          }),
+        supabase
+          .from('course_enrollments')
+          .select('learning_path_id, count')
+          .then(res => {
+            if (res.error) throw res.error;
+            return {
+              data: res.data?.reduce((acc, curr) => {
+                acc[curr.learning_path_id] = (acc[curr.learning_path_id] || 0) + 1;
+                return acc;
+              }, {} as Record<string, number>),
+              error: null
+            };
+          })
+      ]);
+
+      // Combine all content with stats
+      const combinedContent = [
+        ...(videos?.map(video => ({
+          ...video,
+          views: videoStats?.[video.id] || 0
+        })) || []),
+        ...(audio?.map(track => ({
+          ...track,
+          plays: audioStats?.[track.id] || 0
+        })) || []),
+        ...(courses?.map(course => ({
+          ...course,
+          enrollments: courseStats?.[course.id] || 0
+        })) || [])
+      ];
+
+      // Sort by creation date
+      combinedContent.sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setAllContent(combinedContent);
     } catch (error) {
       toast({ 
         title: "Failed to load content",
@@ -541,9 +655,17 @@ const Admin = () => {
 
         if (error) throw error;
       } else {
+        // Use direct insert with required columns
         const { data, error } = await supabase
           .from('featured_items')
-          .insert([{ ...item, order: featuredItems.length }])
+          .insert([{
+            title: item.title,
+            description: item.description,
+            image: item.image,
+            link: item.link,
+            is_external: item.is_external || false,
+            order: featuredItems.length
+          }])
           .select();
 
         if (error) throw error;
