@@ -1,6 +1,6 @@
 // src/context/FeaturedItemsContext.tsx
 import { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from "@/integrations/supabase/client";
 
 interface FeaturedItem {
   id: string;
