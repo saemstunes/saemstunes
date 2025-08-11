@@ -57,6 +57,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import MusicShowcase from "./pages/MusicShowcase";
 import Profile from "./pages/Profile";  // ADDED PROFILE IMPORT
+import { FeaturedItemsProvider } from '@/context/FeaturedItemsContext';
 
 const queryClient = new QueryClient();
 
