@@ -27,14 +27,9 @@ import Logo from "@/components/branding/Logo";
 import AdminUpload from "@/components/admin/AdminUpload";
 import { useFeaturedItems } from "@/context/FeaturedItemsContext";
 import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import {
-  DragDropContext,
-  Droppable,
-  Draggable
-} from '@dnd-kit/core';
-import {
-  DndContext, 
+  DndContext,
   closestCenter,
   KeyboardSensor,
   PointerSensor,
@@ -42,7 +37,6 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import {
-  arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
@@ -237,6 +231,73 @@ const FeaturedItemForm = ({
   );
 };
 
+const SortableRow = ({ 
+  item, 
+  onEdit, 
+  onDelete 
+}: { 
+  item: FeaturedItem; 
+  onEdit: (item: FeaturedItem) => void; 
+  onDelete: (id: string) => void;
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <tr 
+      ref={setNodeRef}
+      style={style}
+      className="border-b hover:bg-muted/50"
+    >
+      <td 
+        className="p-3 cursor-move"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-4 w-4 text-muted-foreground" />
+      </td>
+      <td className="p-3 font-medium">{item.title}</td>
+      <td className="p-3">
+        <img 
+          src={item.image} 
+          alt={item.title}
+          className="w-16 h-10 object-cover rounded"
+        />
+      </td>
+      <td className="p-3 text-sm">{item.link}</td>
+      <td className="p-3">
+        <div className="flex gap-2">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => onEdit(item)}
+          >
+            Edit
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-destructive"
+            onClick={() => onDelete(item.id)}
+          >
+            Delete
+          </Button>
+        </div>
+      </td>
+    </tr>
+  );
+};
+
 const Admin = () => {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -370,7 +431,7 @@ const Admin = () => {
     })
   );
 
-  const handleDragEnd = (event) => {
+  const handleDragEnd = (event: any) => {
     const { active, over } = event;
     
     if (active.id !== over.id) {
@@ -898,55 +959,13 @@ const Admin = () => {
                           strategy={verticalListSortingStrategy}
                         >
                           <tbody>
-                            {featuredItems.map((item, index) => (
-                              <Draggable key={item.id} draggableId={item.id} index={index}>
-                                {({attributes, listeners, setNodeRef, transform, transition}) => (
-                                  <tr 
-                                    ref={setNodeRef}
-                                    className="border-b hover:bg-muted/50"
-                                    style={{
-                                      transform: CSS.Transform.toString(transform),
-                                      transition,
-                                    }}
-                                  >
-                                    <td 
-                                      className="p-3 cursor-move"
-                                      {...attributes}
-                                      {...listeners}
-                                    >
-                                      <GripVertical className="h-4 w-4 text-muted-foreground" />
-                                    </td>
-                                    <td className="p-3 font-medium">{item.title}</td>
-                                    <td className="p-3">
-                                      <img 
-                                        src={item.image} 
-                                        alt={item.title}
-                                        className="w-16 h-10 object-cover rounded"
-                                      />
-                                    </td>
-                                    <td className="p-3 text-sm">{item.link}</td>
-                                    <td className="p-3">
-                                      <div className="flex gap-2">
-                                        <Button 
-                                          variant="ghost" 
-                                          size="sm"
-                                          onClick={() => setEditingItem(item)}
-                                        >
-                                          Edit
-                                        </Button>
-                                        <Button 
-                                          variant="ghost" 
-                                          size="sm" 
-                                          className="text-destructive"
-                                          onClick={() => handleDeleteFeaturedItem(item.id)}
-                                        >
-                                          Delete
-                                        </Button>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                )}
-                              </Draggable>
+                            {featuredItems.map((item) => (
+                              <SortableRow 
+                                key={item.id} 
+                                item={item} 
+                                onEdit={setEditingItem} 
+                                onDelete={handleDeleteFeaturedItem} 
+                              />
                             ))}
                           </tbody>
                         </SortableContext>
