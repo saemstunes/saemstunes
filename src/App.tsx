@@ -82,6 +82,7 @@ const App = () => {
               <Toaster />
               <Sonner />
               <SplashScreen loading={loading} />
+              <FeaturedItemsProvider>
               <BrowserRouter>
                 <IdleStateManager idleTime={60000} />
                 <Routes>
@@ -165,6 +166,7 @@ const App = () => {
                 </Routes>
                 <GlobalMiniPlayer />
                 </BrowserRouter>
+                </FeaturedItemsProvider>
                 </TooltipProvider>
               </PlaylistProvider>
             </AudioPlayerProvider>
