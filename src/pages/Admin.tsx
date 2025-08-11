@@ -543,47 +543,26 @@ const Admin = () => {
         { data: audioStats },
         { data: courseStats }
       ] = await Promise.all([
-        supabase
-          .from('lesson_progress')
-          .select('video_content_id, count')
-          .then(res => {
-            if (res.error) throw res.error;
-            return {
-              data: res.data?.reduce((acc, curr) => {
-                acc[curr.video_content_id] = (acc[curr.video_content_id] || 0) + 1;
-                return acc;
-              }, {} as Record<string, number>),
-              error: null
-            };
-          }),
-        supabase
-          .from('track_plays')
-          .select('track_id, count')
-          .then(res => {
-            if (res.error) throw res.error;
-            return {
-              data: res.data?.reduce((acc, curr) => {
-                acc[curr.track_id] = (acc[curr.track_id] || 0) + 1;
-                return acc;
-              }, {} as Record<string, number>),
-              error: null
-            };
-          }),
-        supabase
-          .from('course_enrollments')
-          .select('learning_path_id, count')
-          .then(res => {
-            if (res.error) throw res.error;
-            return {
-              data: res.data?.reduce((acc, curr) => {
-                acc[curr.learning_path_id] = (acc[curr.learning_path_id] || 0) + 1;
-                return acc;
-              }, {} as Record<string, number>),
-              error: null
-            };
-          })
+        supabase.rpc('get_video_view_counts').then(res => ({
+          data: res.data?.reduce((acc, curr) => {
+            acc[curr.video_content_id] = curr.view_count;
+            return acc;
+          }, {} as Record<string, number>)
+        })),
+        supabase.rpc('get_audio_play_counts').then(res => ({
+          data: res.data?.reduce((acc, curr) => {
+            acc[curr.track_id] = curr.play_count;
+            return acc;
+          }, {} as Record<string, number>)
+        })),
+        supabase.rpc('get_course_enrollment_counts').then(res => ({
+          data: res.data?.reduce((acc, curr) => {
+            acc[curr.learning_path_id] = curr.enrollment_count;
+            return acc;
+          }, {} as Record<string, number>)
+        }))
       ]);
-
+      
       // Combine all content with stats
       const combinedContent = [
         ...(videos?.map(video => ({
