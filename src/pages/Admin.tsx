@@ -1,5 +1,5 @@
 // src/pages/Admin.tsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { 
   Users, 
@@ -13,7 +13,8 @@ import {
   Search,
   Upload,
   Star,
-  GripVertical
+  GripVertical,
+  RefreshCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -305,6 +306,24 @@ const SortableRow = ({
   );
 };
 
+// Helper function for safe RPC calls
+const safeRpcCall = async (fnName: string, params: object) => {
+  const { data, error, count } = await supabase.rpc(fnName, params);
+  
+  if (error) {
+    console.error(`Supabase RPC Error (${fnName}):`, {
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint
+    });
+    
+    throw new Error(`RPC call failed: ${error.message}`);
+  }
+  
+  return { data, count };
+};
+
 const Admin = () => {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -334,12 +353,26 @@ const Admin = () => {
   const [usersSearch, setUsersSearch] = useState('');
   
   // Content state
-  const [content, setContent] = useState<ContentItem[]>([]);
+  const [allContent, setAllContent] = useState<ContentItem[]>([]);
   const [contentLoading, setContentLoading] = useState(false);
   const [contentPage, setContentPage] = useState(1);
   const [contentPerPage] = useState(8);
-  const [totalContentCount, setTotalContentCount] = useState(0);
   const [contentSearch, setContentSearch] = useState('');
+
+  // Memoized filtered and paginated content
+  const filteredContent = useMemo(() => {
+    if (!contentSearch) return allContent;
+    return allContent.filter(item => 
+      item.title.toLowerCase().includes(contentSearch.toLowerCase())
+    );
+  }, [allContent, contentSearch]);
+
+  const paginatedContent = useMemo(() => {
+    const start = (contentPage - 1) * contentPerPage;
+    return filteredContent.slice(start, start + contentPerPage);
+  }, [filteredContent, contentPage, contentPerPage]);
+
+  const totalContentCount = filteredContent.length;
 
   // Check if user is authenticated on component mount
   useEffect(() => {
@@ -368,7 +401,7 @@ const Admin = () => {
     if (isAuthenticated && activeTab === 'content') {
       fetchContent();
     }
-  }, [isAuthenticated, activeTab, contentPage, contentSearch]);
+  }, [isAuthenticated, activeTab]);
 
   const fetchDashboardData = async () => {
     setDashboardLoading(true);
@@ -385,12 +418,9 @@ const Admin = () => {
           .select('*', { count: 'exact', head: true })
           .eq('status', 'active')
           .gt('valid_until', new Date().toISOString()),
-        supabase.rpc('get_total_content_views'),
-        supabase.rpc('get_current_month_revenue')
+        safeRpcCall('get_total_content_views', {}),
+        safeRpcCall('get_current_month_revenue', {})
       ]);
-
-      if (viewsError) throw viewsError;
-      if (revenueError) throw revenueError;
 
       // Fetch recent users
       const { data: usersData, error: usersError } = await supabase
@@ -401,12 +431,10 @@ const Admin = () => {
 
       if (usersError) throw usersError;
 
-      // Fetch recent content
-      const { data: contentData, error: contentError } = await supabase
-        .rpc('get_recent_content')
-        .limit(4);
-
-      if (contentError) throw contentError;
+      // Fetch recent content - corrected RPC call
+      const { data: contentData } = await safeRpcCall('get_recent_content', {
+        limit_count: 4
+      });
 
       setDashboardStats({
         totalUsers: totalUsers || 0,
@@ -461,20 +489,10 @@ const Admin = () => {
   const fetchContent = async () => {
     setContentLoading(true);
     try {
-      let query = supabase
-        .rpc('get_all_content')
-        .range((contentPage - 1) * contentPerPage, contentPage * contentPerPage - 1);
-
-      if (contentSearch) {
-        query = query.ilike('title', `%${contentSearch}%`);
-      }
-
-      const { data, error, count } = await query;
-
-      if (error) throw error;
+      // Corrected RPC call with parameters in body
+      const { data } = await safeRpcCall('get_all_content_unified', {});
       
-      setContent(data || []);
-      setTotalContentCount(count || 0);
+      setAllContent(data || []);
     } catch (error) {
       toast({ 
         title: "Failed to load content",
@@ -642,8 +660,11 @@ const Admin = () => {
         case 'course':
           tableName = 'learning_paths';
           break;
+        case 'sheet':
+          tableName = 'sheet_music';
+          break;
         default:
-          throw new Error('Invalid content type');
+          throw new Error(`Unknown content type: ${contentType}`);
       }
 
       const { error } = await supabase
@@ -653,6 +674,7 @@ const Admin = () => {
 
       if (error) throw error;
       
+      // Refresh content after deletion
       fetchContent();
       toast({ title: "Content deleted successfully!" });
     } catch (error) {
@@ -1138,9 +1160,18 @@ const Admin = () => {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <h1 className="text-2xl font-bold">Content Management</h1>
-                  <Button className="bg-gold hover:bg-gold/90 text-white">
-                    Add New Content
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="secondary"
+                      onClick={fetchContent}
+                    >
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Refresh
+                    </Button>
+                    <Button className="bg-gold hover:bg-gold/90 text-white">
+                      Add New Content
+                    </Button>
+                  </div>
                 </div>
                 
                 <Card>
@@ -1183,7 +1214,7 @@ const Admin = () => {
                           </div>
                         ))}
                       </div>
-                    ) : content.length === 0 ? (
+                    ) : allContent.length === 0 ? (
                       <div className="p-6 text-center text-muted-foreground">
                         No content found
                       </div>
@@ -1199,7 +1230,7 @@ const Admin = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {content.map((item) => (
+                          {paginatedContent.map((item) => (
                             <tr key={item.id} className="border-b last:border-0 hover:bg-muted/50">
                               <td className="p-3 font-medium">{item.title}</td>
                               <td className="p-3">
@@ -1237,7 +1268,7 @@ const Admin = () => {
                   </CardContent>
                   <CardFooter className="border-t p-3 flex items-center justify-between">
                     <div className="text-sm text-muted-foreground">
-                      Showing {Math.min(contentPerPage, content.length)} of {totalContentCount} content items
+                      Showing {Math.min(contentPerPage, paginatedContent.length)} of {totalContentCount} content items
                     </div>
                     <div className="flex items-center gap-2">
                       <Button 
