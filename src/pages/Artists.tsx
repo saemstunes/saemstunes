@@ -9,6 +9,7 @@ import {
   Users, 
   Heart, 
   Play,
+  Star,
   Verified,
   TrendingUp,
   Grid,
