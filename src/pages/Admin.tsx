@@ -27,7 +27,7 @@ import Logo from "@/components/branding/Logo";
 import AdminUpload from "@/components/admin/AdminUpload";
 import { useFeaturedItems } from "@/context/FeaturedItemsContext";
 import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DragDropContext,
   Droppable,
