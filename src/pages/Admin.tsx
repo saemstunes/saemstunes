@@ -766,18 +766,24 @@ const Admin = () => {
         default:
           throw new Error(`Unknown content type: ${contentType}`);
       }
-
+      
       const { error } = await supabase
         .from(tableName)
         .delete()
         .eq('id', contentId);
-
+      
       if (error) throw error;
       
       // Refresh content after deletion
       fetchContent();
       toast({ title: "Content deleted successfully!" });
     } catch (error) {
+      console.error("Delete error details:", {
+        message: error.message,
+        code: error.code,
+        details: error.details
+      });
+      
       toast({ 
         title: "Failed to delete content",
         description: error.message,
