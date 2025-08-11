@@ -9,7 +9,6 @@ import {
   BarChart3, 
   Bell, 
   FileText,
-  User,
   LogOut,
   Search,
   Upload,
@@ -44,21 +43,6 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-// Mock data for the dashboard
-const RECENT_USERS = [
-  { id: 1, name: "Alex Johnson", role: "student", email: "alex@example.com", joined: "2024-04-20" },
-  { id: 2, name: "Maria Garcia", role: "teacher", email: "maria@example.com", joined: "2024-04-18" },
-  { id: 3, name: "Sam Taylor", role: "student", email: "sam@example.com", joined: "2024-04-15" },
-  { id: 4, name: "Leslie Wong", role: "parent", email: "leslie@example.com", joined: "2024-04-12" },
-];
-
-const RECENT_CONTENT = [
-  { id: 1, title: "Beginner Piano Lesson 1", type: "video", views: 234, created: "2024-04-22" },
-  { id: 2, title: "Jazz Theory Fundamentals", type: "course", enrollments: 45, created: "2024-04-19" },
-  { id: 3, title: "Voice Training Exercises", type: "audio", plays: 156, created: "2024-04-17" },
-  { id: 4, title: "Guitar Chord Progressions", type: "sheet", downloads: 89, created: "2024-04-15" },
-];
-
 // Navigation items
 const NAV_ITEMS = [
   { icon: BarChart3, label: "Dashboard", value: "dashboard" },
@@ -72,11 +56,34 @@ const NAV_ITEMS = [
   { icon: Upload, label: "Upload", value: "upload" },
 ];
 
-// Admin credentials - stored as constants for this implementation
-const ADMIN_CREDENTIALS = {
-  username: 'saemstunes',
-  password: 'ilovetosing123'
-};
+// Types for Supabase data
+interface UserProfile {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  role: string;
+  created_at: string;
+  avatar_url?: string;
+}
+
+interface ContentItem {
+  id: string;
+  title: string;
+  type: string;
+  created_at: string;
+  views?: number;
+  enrollments?: number;
+  plays?: number;
+  downloads?: number;
+}
+
+interface DashboardStats {
+  totalUsers: number;
+  activeSubscriptions: number;
+  contentViews: number;
+  revenue: number;
+}
 
 interface FeaturedItem {
   id: string;
@@ -306,6 +313,33 @@ const Admin = () => {
   const [loginError, setLoginError] = useState('');
   const [editingItem, setEditingItem] = useState<FeaturedItem | null>(null);
   const { featuredItems, loading, refreshItems } = useFeaturedItems();
+  
+  // Dashboard state
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
+    totalUsers: 0,
+    activeSubscriptions: 0,
+    contentViews: 0,
+    revenue: 0
+  });
+  const [recentUsers, setRecentUsers] = useState<UserProfile[]>([]);
+  const [recentContent, setRecentContent] = useState<ContentItem[]>([]);
+  const [dashboardLoading, setDashboardLoading] = useState(false);
+  
+  // Users state
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [usersPage, setUsersPage] = useState(1);
+  const [usersPerPage] = useState(8);
+  const [totalUsersCount, setTotalUsersCount] = useState(0);
+  const [usersSearch, setUsersSearch] = useState('');
+  
+  // Content state
+  const [content, setContent] = useState<ContentItem[]>([]);
+  const [contentLoading, setContentLoading] = useState(false);
+  const [contentPage, setContentPage] = useState(1);
+  const [contentPerPage] = useState(8);
+  const [totalContentCount, setTotalContentCount] = useState(0);
+  const [contentSearch, setContentSearch] = useState('');
 
   // Check if user is authenticated on component mount
   useEffect(() => {
@@ -315,13 +349,150 @@ const Admin = () => {
     }
   }, []);
 
+  // Fetch dashboard data when authenticated and dashboard tab is active
+  useEffect(() => {
+    if (isAuthenticated && activeTab === 'dashboard') {
+      fetchDashboardData();
+    }
+  }, [isAuthenticated, activeTab]);
+
+  // Fetch users when users tab is active
+  useEffect(() => {
+    if (isAuthenticated && activeTab === 'users') {
+      fetchUsers();
+    }
+  }, [isAuthenticated, activeTab, usersPage, usersSearch]);
+
+  // Fetch content when content tab is active
+  useEffect(() => {
+    if (isAuthenticated && activeTab === 'content') {
+      fetchContent();
+    }
+  }, [isAuthenticated, activeTab, contentPage, contentSearch]);
+
+  const fetchDashboardData = async () => {
+    setDashboardLoading(true);
+    try {
+      // Fetch dashboard stats
+      const [
+        { count: totalUsers },
+        { count: activeSubscriptions },
+        { data: contentViewsData, error: viewsError },
+        { data: revenueData, error: revenueError }
+      ] = await Promise.all([
+        supabase.from('profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('subscriptions')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'active')
+          .gt('valid_until', new Date().toISOString()),
+        supabase.rpc('get_total_content_views'),
+        supabase.rpc('get_current_month_revenue')
+      ]);
+
+      if (viewsError) throw viewsError;
+      if (revenueError) throw revenueError;
+
+      // Fetch recent users
+      const { data: usersData, error: usersError } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, email, role, created_at')
+        .order('created_at', { ascending: false })
+        .limit(4);
+
+      if (usersError) throw usersError;
+
+      // Fetch recent content
+      const { data: contentData, error: contentError } = await supabase
+        .rpc('get_recent_content')
+        .limit(4);
+
+      if (contentError) throw contentError;
+
+      setDashboardStats({
+        totalUsers: totalUsers || 0,
+        activeSubscriptions: activeSubscriptions || 0,
+        contentViews: contentViewsData?.[0]?.total_views || 0,
+        revenue: revenueData?.[0]?.total_revenue || 0
+      });
+      
+      setRecentUsers(usersData || []);
+      setRecentContent(contentData || []);
+    } catch (error) {
+      toast({ 
+        title: "Failed to load dashboard data",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setDashboardLoading(false);
+    }
+  };
+
+  const fetchUsers = async () => {
+    setUsersLoading(true);
+    try {
+      let query = supabase
+        .from('profiles')
+        .select('id, first_name, last_name, email, role, created_at', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range((usersPage - 1) * usersPerPage, usersPage * usersPerPage - 1);
+
+      if (usersSearch) {
+        query = query.or(`first_name.ilike.%${usersSearch}%,last_name.ilike.%${usersSearch}%,email.ilike.%${usersSearch}%`);
+      }
+
+      const { data, error, count } = await query;
+
+      if (error) throw error;
+      
+      setUsers(data || []);
+      setTotalUsersCount(count || 0);
+    } catch (error) {
+      toast({ 
+        title: "Failed to load users",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  const fetchContent = async () => {
+    setContentLoading(true);
+    try {
+      let query = supabase
+        .rpc('get_all_content')
+        .range((contentPage - 1) * contentPerPage, contentPage * contentPerPage - 1);
+
+      if (contentSearch) {
+        query = query.ilike('title', `%${contentSearch}%`);
+      }
+
+      const { data, error, count } = await query;
+
+      if (error) throw error;
+      
+      setContent(data || []);
+      setTotalContentCount(count || 0);
+    } catch (error) {
+      toast({ 
+        title: "Failed to load content",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setContentLoading(false);
+    }
+  };
+
   const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
 
     if (
-      loginForm.username === ADMIN_CREDENTIALS.username &&
-      loginForm.password === ADMIN_CREDENTIALS.password
+      loginForm.username === process.env.NEXT_PUBLIC_ADMIN_USERNAME &&
+      loginForm.password === process.env.NEXT_PUBLIC_ADMIN_PASSWORD
     ) {
       setIsAuthenticated(true);
       sessionStorage.setItem('adminAuth', 'true');
@@ -346,7 +517,6 @@ const Admin = () => {
   const handleSaveFeaturedItem = async (item: FeaturedItem) => {
     try {
       if (item.id) {
-        // Update existing
         const { error } = await supabase
           .from('featured_items')
           .update(item)
@@ -354,7 +524,6 @@ const Admin = () => {
 
         if (error) throw error;
       } else {
-        // Create new
         const { data, error } = await supabase
           .from('featured_items')
           .insert([{ ...item, order: featuredItems.length }])
@@ -401,7 +570,6 @@ const Admin = () => {
     const [removed] = items.splice(startIndex, 1);
     items.splice(endIndex, 0, removed);
     
-    // Update orders
     const updatedItems = items.map((item, index) => ({
       ...item,
       order: index
@@ -441,7 +609,61 @@ const Admin = () => {
     }
   };
 
-  // Show login form if not authenticated
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+
+      if (error) throw error;
+      
+      fetchUsers();
+      toast({ title: "User deleted successfully!" });
+    } catch (error) {
+      toast({ 
+        title: "Failed to delete user",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteContent = async (contentId: string, contentType: string) => {
+    try {
+      let tableName = '';
+      switch (contentType) {
+        case 'video':
+          tableName = 'video_content';
+          break;
+        case 'audio':
+          tableName = 'tracks';
+          break;
+        case 'course':
+          tableName = 'learning_paths';
+          break;
+        default:
+          throw new Error('Invalid content type');
+      }
+
+      const { error } = await supabase
+        .from(tableName)
+        .delete()
+        .eq('id', contentId);
+
+      if (error) throw error;
+      
+      fetchContent();
+      toast({ title: "Content deleted successfully!" });
+    } catch (error) {
+      toast({ 
+        title: "Failed to delete content",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-muted/30">
@@ -499,7 +721,6 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-muted/30">
-      {/* Header */}
       <header className="bg-background border-b sticky top-0 z-10">
         <div className="container flex items-center justify-between py-3">
           <div className="flex items-center gap-2">
@@ -531,9 +752,7 @@ const Admin = () => {
         </div>
       </header>
       
-      {/* Main content */}
       <div className="flex flex-1">
-        {/* Sidebar */}
         <aside className="hidden md:block w-64 bg-background border-r p-4">
           <nav className="space-y-1">
             {NAV_ITEMS.map((item) => (
@@ -559,7 +778,6 @@ const Admin = () => {
           </div>
         </aside>
         
-        {/* Mobile navigation */}
         <div className="md:hidden w-full border-b bg-background">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="w-full overflow-x-auto justify-start py-1 h-auto">
@@ -573,115 +791,151 @@ const Admin = () => {
           </Tabs>
         </div>
         
-        {/* Content area */}
         <main className="flex-1 p-4 md:p-6 overflow-auto">
           <Tabs value={activeTab} className="w-full">
-            {/* Dashboard Tab */}
             <TabsContent value="dashboard" className="space-y-6">
               <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-                <p className="text-sm text-muted-foreground">Last updated: Today at 10:30 AM</p>
+                <p className="text-sm text-muted-foreground">Last updated: {new Date().toLocaleString()}</p>
               </div>
               
-              {/* Stats cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Total Users
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">2,468</div>
-                    <p className="text-xs text-green-600 flex items-center mt-1">
-                      +12% from last month
-                    </p>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Active Subscriptions
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">1,892</div>
-                    <p className="text-xs text-green-600 flex items-center mt-1">
-                      +5% from last month
-                    </p>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Content Views
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">14,589</div>
-                    <p className="text-xs text-green-600 flex items-center mt-1">
-                      +22% from last month
-                    </p>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Revenue
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">$12,834</div>
-                    <p className="text-xs text-green-600 flex items-center mt-1">
-                      +18% from last month
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
+              {dashboardLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {[...Array(4)].map((_, i) => (
+                    <Card key={i} className="animate-pulse">
+                      <CardHeader className="pb-2">
+                        <div className="h-4 bg-muted rounded w-3/4"></div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="h-6 bg-muted rounded w-1/2 mb-2"></div>
+                        <div className="h-3 bg-muted rounded w-3/4"></div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                        Total Users
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{dashboardStats.totalUsers.toLocaleString()}</div>
+                      <p className="text-xs text-green-600 flex items-center mt-1">
+                        +12% from last month
+                      </p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                        Active Subscriptions
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{dashboardStats.activeSubscriptions.toLocaleString()}</div>
+                      <p className="text-xs text-green-600 flex items-center mt-1">
+                        +5% from last month
+                      </p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                        Content Views
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{dashboardStats.contentViews.toLocaleString()}</div>
+                      <p className="text-xs text-green-600 flex items-center mt-1">
+                        +22% from last month
+                      </p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                        Revenue
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">${dashboardStats.revenue.toLocaleString()}</div>
+                      <p className="text-xs text-green-600 flex items-center mt-1">
+                        +18% from last month
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
               
-              {/* Recent users and content */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle>Recent Users</CardTitle>
                     <CardDescription>
-                      Users who joined in the last 2 weeks
+                      Users who joined recently
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <table className="w-full">
-                      <thead className="border-b">
-                        <tr className="text-xs text-muted-foreground font-medium">
-                          <th className="text-left p-3">Name</th>
-                          <th className="text-left p-3">Role</th>
-                          <th className="text-left p-3 hidden md:table-cell">Joined</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {RECENT_USERS.map((user) => (
-                          <tr key={user.id} className="border-b last:border-0 hover:bg-muted/50">
-                            <td className="p-3">
-                              <div className="font-medium">{user.name}</div>
-                              <div className="text-xs text-muted-foreground">{user.email}</div>
-                            </td>
-                            <td className="p-3">
-                              <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-gold/10 text-gold">
-                                {user.role}
-                              </span>
-                            </td>
-                            <td className="p-3 hidden md:table-cell text-sm">
-                              {new Date(user.joined).toLocaleDateString()}
-                            </td>
-                          </tr>
+                    {dashboardLoading ? (
+                      <div className="p-6">
+                        {[...Array(4)].map((_, i) => (
+                          <div key={i} className="flex items-center justify-between py-3 border-b last:border-0">
+                            <div className="space-y-2">
+                              <div className="h-4 bg-muted rounded w-32"></div>
+                              <div className="h-3 bg-muted rounded w-48"></div>
+                            </div>
+                            <div className="h-3 bg-muted rounded w-16"></div>
+                          </div>
                         ))}
-                      </tbody>
-                    </table>
+                      </div>
+                    ) : recentUsers.length === 0 ? (
+                      <div className="p-6 text-center text-muted-foreground">
+                        No recent users found
+                      </div>
+                    ) : (
+                      <table className="w-full">
+                        <thead className="border-b">
+                          <tr className="text-xs text-muted-foreground font-medium">
+                            <th className="text-left p-3">Name</th>
+                            <th className="text-left p-3">Role</th>
+                            <th className="text-left p-3 hidden md:table-cell">Joined</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {recentUsers.map((user) => (
+                            <tr key={user.id} className="border-b last:border-0 hover:bg-muted/50">
+                              <td className="p-3">
+                                <div className="font-medium">{user.first_name} {user.last_name}</div>
+                                <div className="text-xs text-muted-foreground">{user.email}</div>
+                              </td>
+                              <td className="p-3">
+                                <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-gold/10 text-gold">
+                                  {user.role}
+                                </span>
+                              </td>
+                              <td className="p-3 hidden md:table-cell text-sm">
+                                {new Date(user.created_at).toLocaleDateString()}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
                   </CardContent>
                   <CardFooter className="border-t p-3">
-                    <Button variant="link" className="text-gold h-auto p-0">View all users</Button>
+                    <Button 
+                      variant="link" 
+                      className="text-gold h-auto p-0"
+                      onClick={() => setActiveTab("users")}
+                    >
+                      View all users
+                    </Button>
                   </CardFooter>
                 </Card>
                 
@@ -689,51 +943,74 @@ const Admin = () => {
                   <CardHeader className="pb-2">
                     <CardTitle>Recent Content</CardTitle>
                     <CardDescription>
-                      Content created in the last 2 weeks
+                      Recently added content
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <table className="w-full">
-                      <thead className="border-b">
-                        <tr className="text-xs text-muted-foreground font-medium">
-                          <th className="text-left p-3">Title</th>
-                          <th className="text-left p-3">Type</th>
-                          <th className="text-left p-3 hidden md:table-cell">Created</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {RECENT_CONTENT.map((content) => (
-                          <tr key={content.id} className="border-b last:border-0 hover:bg-muted/50">
-                            <td className="p-3">
-                              <div className="font-medium">{content.title}</div>
-                              <div className="text-xs text-muted-foreground">
-                                {content.views ? `${content.views} views` : 
-                                 content.enrollments ? `${content.enrollments} enrollments` :
-                                 content.plays ? `${content.plays} plays` :
-                                 content.downloads ? `${content.downloads} downloads` : ''}
-                                </div>
-                            </td>
-                            <td className="p-3">
-                              <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-gold/10 text-gold">
-                                {content.type}
-                              </span>
-                            </td>
-                            <td className="p-3 hidden md:table-cell text-sm">
-                              {new Date(content.created).toLocaleDateString()}
-                            </td>
-                          </tr>
+                    {dashboardLoading ? (
+                      <div className="p-6">
+                        {[...Array(4)].map((_, i) => (
+                          <div key={i} className="flex items-center justify-between py-3 border-b last:border-0">
+                            <div className="space-y-2">
+                              <div className="h-4 bg-muted rounded w-40"></div>
+                              <div className="h-3 bg-muted rounded w-24"></div>
+                            </div>
+                            <div className="h-3 bg-muted rounded w-16"></div>
+                          </div>
                         ))}
-                      </tbody>
-                    </table>
+                      </div>
+                    ) : recentContent.length === 0 ? (
+                      <div className="p-6 text-center text-muted-foreground">
+                        No recent content found
+                      </div>
+                    ) : (
+                      <table className="w-full">
+                        <thead className="border-b">
+                          <tr className="text-xs text-muted-foreground font-medium">
+                            <th className="text-left p-3">Title</th>
+                            <th className="text-left p-3">Type</th>
+                            <th className="text-left p-3 hidden md:table-cell">Created</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {recentContent.map((content) => (
+                            <tr key={content.id} className="border-b last:border-0 hover:bg-muted/50">
+                              <td className="p-3">
+                                <div className="font-medium">{content.title}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {content.views ? `${content.views} views` : 
+                                  content.enrollments ? `${content.enrollments} enrollments` :
+                                  content.plays ? `${content.plays} plays` :
+                                  content.downloads ? `${content.downloads} downloads` : 'N/A'}
+                                  </div>
+                              </td>
+                              <td className="p-3">
+                                <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-gold/10 text-gold">
+                                  {content.type}
+                                </span>
+                              </td>
+                              <td className="p-3 hidden md:table-cell text-sm">
+                                {new Date(content.created_at).toLocaleDateString()}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
                   </CardContent>
                   <CardFooter className="border-t p-3">
-                    <Button variant="link" className="text-gold h-auto p-0">View all content</Button>
+                    <Button 
+                      variant="link" 
+                      className="text-gold h-auto p-0"
+                      onClick={() => setActiveTab("content")}
+                    >
+                      View all content
+                    </Button>
                   </CardFooter>
                 </Card>
               </div>
             </TabsContent>
             
-            {/* Users Tab */}
             <TabsContent value="users">
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
@@ -756,59 +1033,107 @@ const Admin = () => {
                         <Input 
                           placeholder="Search users..." 
                           className="w-64" 
+                          value={usersSearch}
+                          onChange={(e) => {
+                            setUsersSearch(e.target.value);
+                            setUsersPage(1);
+                          }}
                         />
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <table className="w-full">
-                      <thead className="border-b">
-                        <tr className="text-xs text-muted-foreground font-medium">
-                          <th className="text-left p-3">Name</th>
-                          <th className="text-left p-3">Email</th>
-                          <th className="text-left p-3">Role</th>
-                          <th className="text-left p-3">Joined</th>
-                          <th className="text-left p-3">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {[...RECENT_USERS, ...RECENT_USERS].map((user, index) => (
-                          <tr key={`${user.id}-${index}`} className="border-b last:border-0 hover:bg-muted/50">
-                            <td className="p-3 font-medium">{user.name}</td>
-                            <td className="p-3">{user.email}</td>
-                            <td className="p-3">
-                              <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-gold/10 text-gold">
-                                {user.role}
-                              </span>
-                            </td>
-                            <td className="p-3">
-                              {new Date(user.joined).toLocaleDateString()}
-                            </td>
-                            <td className="p-3">
-                              <div className="flex items-center gap-2">
-                                <Button variant="ghost" size="sm">Edit</Button>
-                                <Button variant="ghost" size="sm" className="text-destructive">Delete</Button>
-                              </div>
-                            </td>
-                          </tr>
+                    {usersLoading ? (
+                      <div className="p-6">
+                        {[...Array(8)].map((_, i) => (
+                          <div key={i} className="flex items-center justify-between py-3 border-b last:border-0">
+                            <div className="space-y-2">
+                              <div className="h-4 bg-muted rounded w-40"></div>
+                              <div className="h-3 bg-muted rounded w-56"></div>
+                            </div>
+                            <div className="h-3 bg-muted rounded w-24"></div>
+                            <div className="h-3 bg-muted rounded w-16"></div>
+                            <div className="flex gap-2">
+                              <div className="h-8 w-16 bg-muted rounded"></div>
+                              <div className="h-8 w-16 bg-muted rounded"></div>
+                            </div>
+                          </div>
                         ))}
-                      </tbody>
-                    </table>
+                      </div>
+                    ) : users.length === 0 ? (
+                      <div className="p-6 text-center text-muted-foreground">
+                        No users found
+                      </div>
+                    ) : (
+                      <table className="w-full">
+                        <thead className="border-b">
+                          <tr className="text-xs text-muted-foreground font-medium">
+                            <th className="text-left p-3">Name</th>
+                            <th className="text-left p-3">Email</th>
+                            <th className="text-left p-3">Role</th>
+                            <th className="text-left p-3">Joined</th>
+                            <th className="text-left p-3">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {users.map((user) => (
+                            <tr key={user.id} className="border-b last:border-0 hover:bg-muted/50">
+                              <td className="p-3 font-medium">{user.first_name} {user.last_name}</td>
+                              <td className="p-3">{user.email}</td>
+                              <td className="p-3">
+                                <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-gold/10 text-gold">
+                                  {user.role}
+                                </span>
+                              </td>
+                              <td className="p-3">
+                                {new Date(user.created_at).toLocaleDateString()}
+                              </td>
+                              <td className="p-3">
+                                <div className="flex items-center gap-2">
+                                  <Button variant="ghost" size="sm">Edit</Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="text-destructive"
+                                    onClick={() => handleDeleteUser(user.id)}
+                                  >
+                                    Delete
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
                   </CardContent>
                   <CardFooter className="border-t p-3 flex items-center justify-between">
                     <div className="text-sm text-muted-foreground">
-                      Showing 8 of 2,468 users
+                      Showing {Math.min(usersPerPage, users.length)} of {totalUsersCount} users
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" disabled>Previous</Button>
-                      <Button variant="outline" size="sm">Next</Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        disabled={usersPage === 1}
+                        onClick={() => setUsersPage(usersPage - 1)}
+                      >
+                        Previous
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        disabled={usersPage * usersPerPage >= totalUsersCount}
+                        onClick={() => setUsersPage(usersPage + 1)}
+                      >
+                        Next
+                      </Button>
                     </div>
                   </CardFooter>
                 </Card>
               </div>
             </TabsContent>
             
-            {/* Content Tab */}
             <TabsContent value="content">
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
@@ -831,64 +1156,112 @@ const Admin = () => {
                         <Input 
                           placeholder="Search content..." 
                           className="w-64" 
+                          value={contentSearch}
+                          onChange={(e) => {
+                            setContentSearch(e.target.value);
+                            setContentPage(1);
+                          }}
                         />
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <table className="w-full">
-                      <thead className="border-b">
-                        <tr className="text-xs text-muted-foreground font-medium">
-                          <th className="text-left p-3">Title</th>
-                          <th className="text-left p-3">Type</th>
-                          <th className="text-left p-3">Engagement</th>
-                          <th className="text-left p-3">Created</th>
-                          <th className="text-left p-3">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {[...RECENT_CONTENT, ...RECENT_CONTENT].map((content, index) => (
-                          <tr key={`${content.id}-${index}`} className="border-b last:border-0 hover:bg-muted/50">
-                            <td className="p-3 font-medium">{content.title}</td>
-                            <td className="p-3">
-                              <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-gold/10 text-gold">
-                                {content.type}
-                              </span>
-                            </td>
-                            <td className="p-3">
-                              {content.views ? `${content.views} views` : 
-                               content.enrollments ? `${content.enrollments} enrollments` :
-                               content.plays ? `${content.plays} plays` :
-                               content.downloads ? `${content.downloads} downloads` : ''}
-                            </td>
-                            <td className="p-3">
-                              {new Date(content.created).toLocaleDateString()}
-                            </td>
-                            <td className="p-3">
-                              <div className="flex items-center gap-2">
-                                <Button variant="ghost" size="sm">Edit</Button>
-                                <Button variant="ghost" size="sm" className="text-destructive">Delete</Button>
-                              </div>
-                            </td>
-                          </tr>
+                    {contentLoading ? (
+                      <div className="p-6">
+                        {[...Array(8)].map((_, i) => (
+                          <div key={i} className="flex items-center justify-between py-3 border-b last:border-0">
+                            <div className="space-y-2">
+                              <div className="h-4 bg-muted rounded w-48"></div>
+                              <div className="h-3 bg-muted rounded w-24"></div>
+                            </div>
+                            <div className="h-3 bg-muted rounded w-16"></div>
+                            <div className="h-3 bg-muted rounded w-24"></div>
+                            <div className="flex gap-2">
+                              <div className="h-8 w-16 bg-muted rounded"></div>
+                              <div className="h-8 w-16 bg-muted rounded"></div>
+                            </div>
+                          </div>
                         ))}
-                      </tbody>
-                    </table>
+                      </div>
+                    ) : content.length === 0 ? (
+                      <div className="p-6 text-center text-muted-foreground">
+                        No content found
+                      </div>
+                    ) : (
+                      <table className="w-full">
+                        <thead className="border-b">
+                          <tr className="text-xs text-muted-foreground font-medium">
+                            <th className="text-left p-3">Title</th>
+                            <th className="text-left p-3">Type</th>
+                            <th className="text-left p-3">Engagement</th>
+                            <th className="text-left p-3">Created</th>
+                            <th className="text-left p-3">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {content.map((item) => (
+                            <tr key={item.id} className="border-b last:border-0 hover:bg-muted/50">
+                              <td className="p-3 font-medium">{item.title}</td>
+                              <td className="p-3">
+                                <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-gold/10 text-gold">
+                                  {item.type}
+                                </span>
+                              </td>
+                              <td className="p-3">
+                                {item.views ? `${item.views} views` : 
+                                item.enrollments ? `${item.enrollments} enrollments` :
+                                item.plays ? `${item.plays} plays` :
+                                item.downloads ? `${item.downloads} downloads` : 'N/A'}
+                              </td>
+                              <td className="p-3">
+                                {new Date(item.created_at).toLocaleDateString()}
+                              </td>
+                              <td className="p-3">
+                                <div className="flex items-center gap-2">
+                                  <Button variant="ghost" size="sm">Edit</Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="text-destructive"
+                                    onClick={() => handleDeleteContent(item.id, item.type)}
+                                  >
+                                    Delete
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
                   </CardContent>
                   <CardFooter className="border-t p-3 flex items-center justify-between">
                     <div className="text-sm text-muted-foreground">
-                      Showing 8 of 342 content items
+                      Showing {Math.min(contentPerPage, content.length)} of {totalContentCount} content items
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" disabled>Previous</Button>
-                      <Button variant="outline" size="sm">Next</Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        disabled={contentPage === 1}
+                        onClick={() => setContentPage(contentPage - 1)}
+                      >
+                        Previous
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        disabled={contentPage * contentPerPage >= totalContentCount}
+                        onClick={() => setContentPage(contentPage + 1)}
+                      >
+                        Next
+                      </Button>
                     </div>
                   </CardFooter>
                 </Card>
               </div>
             </TabsContent>
             
-            {/* Featured Items Tab */}
             <TabsContent value="featured" className="space-y-6">
               <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold">Featured Items</h1>
@@ -976,7 +1349,6 @@ const Admin = () => {
               )}
             </TabsContent>
             
-            {/* Upload Tab */}
             <TabsContent value="upload" className="space-y-6">
               <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold">Content Upload</h1>
@@ -986,7 +1358,6 @@ const Admin = () => {
               <AdminUpload />
             </TabsContent>
             
-            {/* Placeholder for other tabs */}
             {['schedule', 'notifications', 'reports', 'settings'].map((tab) => (
               <TabsContent key={tab} value={tab}>
                 <div className="flex flex-col items-center justify-center py-12">
