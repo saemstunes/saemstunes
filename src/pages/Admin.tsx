@@ -123,12 +123,17 @@ const FeaturedItemForm = ({
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `featured/${fileName}`;
       
+      // Ensure we're using a client with service role for uploads
       const { error: uploadError } = await supabase.storage
         .from('featured-images')
-        .upload(filePath, imageFile);
+        .upload(filePath, imageFile, {
+          cacheControl: '3600',
+          upsert: false
+        });
       
       if (uploadError) throw uploadError;
       
+      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('featured-images')
         .getPublicUrl(filePath);
