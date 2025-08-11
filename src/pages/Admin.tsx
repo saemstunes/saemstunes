@@ -96,6 +96,23 @@ interface FeaturedItem {
   order?: number;
 }
 
+const handleSupabaseError = (error: any, context: string) => {
+  console.error(`Supabase Error (${context}):`, {
+    message: error.message,
+    code: error.code,
+    details: error.details,
+    hint: error.hint
+  });
+  
+  toast({
+    title: `Database Error: ${context}`,
+    description: error.message,
+    variant: "destructive"
+  });
+  
+  throw error;
+};
+
 const FeaturedItemForm = ({ 
   item, 
   onSave, 
