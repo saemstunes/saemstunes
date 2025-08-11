@@ -49,7 +49,7 @@ const Logo: React.FC<LogoProps> = ({
     )}>
       <picture>
         <img
-          src="/lovable-uploads/logo-icon-md.svg"
+          src="/lovable-uploads/logo-icon-md.webp"
           alt="Saem's Tunes Logo"
           className={cn(config.width, config.height, "object-contain")}
           fetchPriority="high"
