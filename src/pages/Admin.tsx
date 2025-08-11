@@ -1,4 +1,3 @@
-// src/pages/Admin.tsx
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { 
@@ -44,7 +43,6 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-// Navigation items
 const NAV_ITEMS = [
   { icon: BarChart3, label: "Dashboard", value: "dashboard" },
   { icon: Users, label: "Users", value: "users" },
@@ -57,7 +55,6 @@ const NAV_ITEMS = [
   { icon: Upload, label: "Upload", value: "upload" },
 ];
 
-// Types for Supabase data
 interface UserProfile {
   id: string;
   first_name: string;
@@ -109,8 +106,6 @@ const handleSupabaseError = (error: any, context: string) => {
     description: error.message,
     variant: "destructive"
   });
-  
-  throw error;
 };
 
 const FeaturedItemForm = ({ 
@@ -147,7 +142,10 @@ const FeaturedItemForm = ({
           upsert: false
         });
       
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        handleSupabaseError(uploadError, 'image upload');
+        return;
+      }
       
       const { data: { publicUrl } } = supabase.storage
         .from('featured-images')
@@ -339,7 +337,6 @@ const Admin = () => {
   const [editingItem, setEditingItem] = useState<FeaturedItem | null>(null);
   const { featuredItems, loading, refreshItems } = useFeaturedItems();
   
-  // Dashboard state
   const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
     totalUsers: 0,
     activeSubscriptions: 0,
@@ -350,7 +347,6 @@ const Admin = () => {
   const [recentContent, setRecentContent] = useState<ContentItem[]>([]);
   const [dashboardLoading, setDashboardLoading] = useState(false);
   
-  // Users state
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersPage, setUsersPage] = useState(1);
@@ -358,14 +354,12 @@ const Admin = () => {
   const [totalUsersCount, setTotalUsersCount] = useState(0);
   const [usersSearch, setUsersSearch] = useState('');
   
-  // Content state
   const [allContent, setAllContent] = useState<ContentItem[]>([]);
   const [contentLoading, setContentLoading] = useState(false);
   const [contentPage, setContentPage] = useState(1);
   const [contentPerPage] = useState(8);
   const [contentSearch, setContentSearch] = useState('');
 
-  // Memoized filtered and paginated content
   const filteredContent = useMemo(() => {
     if (!contentSearch) return allContent;
     return allContent.filter(item => 
@@ -380,7 +374,6 @@ const Admin = () => {
 
   const totalContentCount = filteredContent.length;
 
-  // Check if user is authenticated on component mount
   useEffect(() => {
     const adminAuth = sessionStorage.getItem('adminAuth');
     if (adminAuth === 'true') {
@@ -388,21 +381,18 @@ const Admin = () => {
     }
   }, []);
 
-  // Fetch dashboard data when authenticated and dashboard tab is active
   useEffect(() => {
     if (isAuthenticated && activeTab === 'dashboard') {
       fetchDashboardData();
     }
   }, [isAuthenticated, activeTab]);
 
-  // Fetch users when users tab is active
   useEffect(() => {
     if (isAuthenticated && activeTab === 'users') {
       fetchUsers();
     }
   }, [isAuthenticated, activeTab, usersPage, usersSearch]);
 
-  // Fetch content when content tab is active
   useEffect(() => {
     if (isAuthenticated && activeTab === 'content') {
       fetchContent();
@@ -412,12 +402,13 @@ const Admin = () => {
   const fetchDashboardData = async () => {
     setDashboardLoading(true);
     try {
-      // Fetch dashboard stats
       const [
-        { count: totalUsers },
-        { count: activeSubscriptions },
-        { data: contentViewsData },
-        { data: revenueData }
+        totalUsersRes,
+        activeSubscriptionsRes,
+        contentViewsRes,
+        revenueRes,
+        usersRes,
+        contentRes
       ] = await Promise.all([
         supabase.from('profiles').select('*', { count: 'exact', head: true }),
         supabase.from('subscriptions')
@@ -425,30 +416,31 @@ const Admin = () => {
           .eq('status', 'active')
           .gt('valid_until', new Date().toISOString()),
         supabase.rpc('get_total_content_views'),
-        supabase.rpc('get_current_month_revenue')
+        supabase.rpc('get_current_month_revenue'),
+        supabase
+          .from('profiles')
+          .select('id, first_name, last_name, email, role, created_at')
+          .order('created_at', { ascending: false })
+          .limit(4),
+        supabase.rpc('get_recent_content', { limit_count: 4 })
       ]);
 
-      // Fetch recent users
-      const { data: usersData } = await supabase
-        .from('profiles')
-        .select('id, first_name, last_name, email, role, created_at')
-        .order('created_at', { ascending: false })
-        .limit(4);
-
-      // Fetch recent content - corrected RPC call
-      const { data: contentData } = await supabase.rpc('get_recent_content', {
-        limit_count: 4
-      });
+      if (totalUsersRes.error) handleSupabaseError(totalUsersRes.error, 'total users');
+      if (activeSubscriptionsRes.error) handleSupabaseError(activeSubscriptionsRes.error, 'active subscriptions');
+      if (contentViewsRes.error) handleSupabaseError(contentViewsRes.error, 'content views');
+      if (revenueRes.error) handleSupabaseError(revenueRes.error, 'revenue');
+      if (usersRes.error) handleSupabaseError(usersRes.error, 'recent users');
+      if (contentRes.error) handleSupabaseError(contentRes.error, 'recent content');
 
       setDashboardStats({
-        totalUsers: totalUsers || 0,
-        activeSubscriptions: activeSubscriptions || 0,
-        contentViews: contentViewsData?.[0]?.total_views || 0,
-        revenue: revenueData?.[0]?.total_revenue || 0
+        totalUsers: totalUsersRes.count || 0,
+        activeSubscriptions: activeSubscriptionsRes.count || 0,
+        contentViews: contentViewsRes.data?.[0]?.total_views || 0,
+        revenue: revenueRes.data?.[0]?.total_revenue || 0
       });
       
-      setRecentUsers(usersData || []);
-      setRecentContent(contentData || []);
+      setRecentUsers(usersRes.data || []);
+      setRecentContent(contentRes.data || []);
     } catch (error) {
       toast({ 
         title: "Failed to load dashboard data",
@@ -474,8 +466,11 @@ const Admin = () => {
       }
 
       const { data, error, count } = await query;
-
-      if (error) throw error;
+      
+      if (error) {
+        handleSupabaseError(error, 'fetch users');
+        return;
+      }
       
       setUsers(data || []);
       setTotalUsersCount(count || 0);
@@ -493,110 +488,89 @@ const Admin = () => {
   const fetchContent = async () => {
     setContentLoading(true);
     try {
-      // Use direct table queries instead of RPC to avoid function overloading issues
       const [
-        { data: videos, error: videosError },
-        { data: audio, error: audioError },
-        { data: courses, error: coursesError }
+        videosRes,
+        audioRes,
+        coursesRes
       ] = await Promise.all([
-        supabase
-          .from('video_content')
-          .select('id, title, created_at')
-          .then((res) => {
-            if (res.error) throw res.error;
-            return {
-              data: res.data?.map(item => ({
-                ...item,
-                type: 'video',
-                views: 0, // Will be populated separately
-                created_at: new Date(item.created_at).toISOString()
-              })),
-              error: null
-            };
-          }),
-        supabase
-          .from('tracks')
-          .select('id, title, created_at')
-          .then((res) => {
-            if (res.error) throw res.error;
-            return {
-              data: res.data?.map(item => ({
-                ...item,
-                type: 'audio',
-                plays: 0, // Will be populated separately
-                created_at: new Date(item.created_at).toISOString()
-              })),
-              error: null
-            };
-          }),
-        supabase
-          .from('learning_paths')
-          .select('id, title, created_at')
-          .then((res) => {
-            if (res.error) throw res.error;
-            return {
-              data: res.data?.map(item => ({
-                ...item,
-                type: 'course',
-                enrollments: 0, // Will be populated separately
-                created_at: new Date(item.created_at).toISOString()
-              })),
-              error: null
-            };
-          })
+        supabase.from('video_content').select('id, title, created_at'),
+        supabase.from('tracks').select('id, title, created_at'),
+        supabase.from('learning_paths').select('id, title, created_at')
       ]);
 
-      if (videosError) throw videosError;
-      if (audioError) throw audioError;
-      if (coursesError) throw coursesError;
+      if (videosRes.error) handleSupabaseError(videosRes.error, 'fetch videos');
+      if (audioRes.error) handleSupabaseError(audioRes.error, 'fetch audio');
+      if (coursesRes.error) handleSupabaseError(coursesRes.error, 'fetch courses');
 
-      // Fetch engagement stats separately
-      const videoIds = videos?.map(v => v.id) || [];
-      const audioIds = audio?.map(a => a.id) || [];
-      const courseIds = courses?.map(c => c.id) || [];
+      const videos = videosRes.data?.map(item => ({
+        ...item,
+        type: 'video',
+        views: 0,
+        created_at: new Date(item.created_at).toISOString()
+      })) || [];
+
+      const audio = audioRes.data?.map(item => ({
+        ...item,
+        type: 'audio',
+        plays: 0,
+        created_at: new Date(item.created_at).toISOString()
+      })) || [];
+
+      const courses = coursesRes.data?.map(item => ({
+        ...item,
+        type: 'course',
+        enrollments: 0,
+        created_at: new Date(item.created_at).toISOString()
+      })) || [];
+
+      const videoIds = videos.map(v => v.id);
+      const audioIds = audio.map(a => a.id);
+      const courseIds = courses.map(c => c.id);
 
       const [
-        { data: videoStats },
-        { data: audioStats },
-        { data: courseStats }
+        videoStatsRes,
+        audioStatsRes,
+        courseStatsRes
       ] = await Promise.all([
-        supabase.rpc('get_video_view_counts').then(res => ({
-          data: res.data?.reduce((acc, curr) => {
-            acc[curr.video_content_id] = curr.view_count;
-            return acc;
-          }, {} as Record<string, number>)
-        })),
-        supabase.rpc('get_audio_play_counts').then(res => ({
-          data: res.data?.reduce((acc, curr) => {
-            acc[curr.track_id] = curr.play_count;
-            return acc;
-          }, {} as Record<string, number>)
-        })),
-        supabase.rpc('get_course_enrollment_counts').then(res => ({
-          data: res.data?.reduce((acc, curr) => {
-            acc[curr.learning_path_id] = curr.enrollment_count;
-            return acc;
-          }, {} as Record<string, number>)
-        }))
+        supabase.rpc('get_video_view_counts'),
+        supabase.rpc('get_audio_play_counts'),
+        supabase.rpc('get_course_enrollment_counts')
       ]);
-      
-      // Combine all content with stats
+
+      if (videoStatsRes.error) handleSupabaseError(videoStatsRes.error, 'video stats');
+      if (audioStatsRes.error) handleSupabaseError(audioStatsRes.error, 'audio stats');
+      if (courseStatsRes.error) handleSupabaseError(courseStatsRes.error, 'course stats');
+
+      const videoStats = videoStatsRes.data?.reduce((acc, curr) => {
+        acc[curr.video_content_id] = curr.view_count;
+        return acc;
+      }, {} as Record<string, number>) || {};
+
+      const audioStats = audioStatsRes.data?.reduce((acc, curr) => {
+        acc[curr.track_id] = curr.play_count;
+        return acc;
+      }, {} as Record<string, number>) || {};
+
+      const courseStats = courseStatsRes.data?.reduce((acc, curr) => {
+        acc[curr.learning_path_id] = curr.enrollment_count;
+        return acc;
+      }, {} as Record<string, number>) || {};
+
       const combinedContent = [
-        ...(videos?.map(video => ({
+        ...videos.map(video => ({
           ...video,
-          views: videoStats?.[video.id] || 0
-        })) || []),
-        ...(audio?.map(track => ({
+          views: videoStats[video.id] || 0
+        })),
+        ...audio.map(track => ({
           ...track,
-          plays: audioStats?.[track.id] || 0
-        })) || []),
-        ...(courses?.map(course => ({
+          plays: audioStats[track.id] || 0
+        })),
+        ...courses.map(course => ({
           ...course,
-          enrollments: courseStats?.[course.id] || 0
-        })) || [])
+          enrollments: courseStats[course.id] || 0
+        }))
       ];
 
-      // Sort by creation date
       combinedContent.sort((a, b) => 
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
@@ -648,10 +622,12 @@ const Admin = () => {
           .from('featured_items')
           .update(item)
           .eq('id', item.id);
-
-        if (error) throw error;
+          
+        if (error) {
+          handleSupabaseError(error, 'update featured item');
+          return;
+        }
       } else {
-        // Use direct insert with required columns
         const { data, error } = await supabase
           .from('featured_items')
           .insert([{
@@ -664,7 +640,10 @@ const Admin = () => {
           }])
           .select();
 
-        if (error) throw error;
+        if (error) {
+          handleSupabaseError(error, 'create featured item');
+          return;
+        }
         if (data) item.id = data[0].id;
       }
       
@@ -687,7 +666,10 @@ const Admin = () => {
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        handleSupabaseError(error, 'delete featured item');
+        return;
+      }
       
       refreshItems();
       toast({ title: "Featured item deleted!" });
@@ -715,7 +697,10 @@ const Admin = () => {
         .from('featured_items')
         .upsert(updatedItems);
       
-      if (error) throw error;
+      if (error) {
+        handleSupabaseError(error, 'reorder items');
+        return;
+      }
       
       refreshItems();
     } catch (error) {
@@ -751,7 +736,10 @@ const Admin = () => {
         .delete()
         .eq('id', userId);
 
-      if (error) throw error;
+      if (error) {
+        handleSupabaseError(error, 'delete user');
+        return;
+      }
       
       fetchUsers();
       toast({ title: "User deleted successfully!" });
@@ -789,9 +777,11 @@ const Admin = () => {
         .delete()
         .eq('id', contentId);
       
-      if (error) throw error;
+      if (error) {
+        handleSupabaseError(error, 'delete content');
+        return;
+      }
       
-      // Refresh content after deletion
       fetchContent();
       toast({ title: "Content deleted successfully!" });
     } catch (error) {
