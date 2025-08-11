@@ -107,6 +107,7 @@ const FeaturedItemForm = ({
 }) => {
   const [formData, setFormData] = useState<FeaturedItem>(item);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -117,6 +118,7 @@ const FeaturedItemForm = ({
     if (!imageFile) return;
     
     try {
+      setUploading(true);
       const fileExt = imageFile.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `featured/${fileName}`;
@@ -139,6 +141,8 @@ const FeaturedItemForm = ({
         description: error.message,
         variant: "destructive"
       });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -190,10 +194,10 @@ const FeaturedItemForm = ({
               <Button 
                 type="button" 
                 variant="secondary"
-                disabled={!imageFile}
+                disabled={!imageFile || uploading}
                 onClick={handleImageUpload}
               >
-                Upload
+                {uploading ? "Uploading..." : "Upload"}
               </Button>
             </div>
           </div>
@@ -282,7 +286,7 @@ const SortableRow = ({
           className="w-16 h-10 object-cover rounded"
         />
       </td>
-      <td className="p-3 text-sm">{item.link}</td>
+      <td className="p-3 text-sm max-w-xs truncate">{item.link}</td>
       <td className="p-3">
         <div className="flex gap-2">
           <Button 
@@ -304,24 +308,6 @@ const SortableRow = ({
       </td>
     </tr>
   );
-};
-
-// Helper function for safe RPC calls
-const safeRpcCall = async (fnName: string, params: object) => {
-  const { data, error, count } = await supabase.rpc(fnName, params);
-  
-  if (error) {
-    console.error(`Supabase RPC Error (${fnName}):`, {
-      message: error.message,
-      code: error.code,
-      details: error.details,
-      hint: error.hint
-    });
-    
-    throw new Error(`RPC call failed: ${error.message}`);
-  }
-  
-  return { data, count };
 };
 
 const Admin = () => {
@@ -410,29 +396,27 @@ const Admin = () => {
       const [
         { count: totalUsers },
         { count: activeSubscriptions },
-        { data: contentViewsData, error: viewsError },
-        { data: revenueData, error: revenueError }
+        { data: contentViewsData },
+        { data: revenueData }
       ] = await Promise.all([
         supabase.from('profiles').select('*', { count: 'exact', head: true }),
         supabase.from('subscriptions')
           .select('*', { count: 'exact', head: true })
           .eq('status', 'active')
           .gt('valid_until', new Date().toISOString()),
-        safeRpcCall('get_total_content_views', {}),
-        safeRpcCall('get_current_month_revenue', {})
+        supabase.rpc('get_total_content_views'),
+        supabase.rpc('get_current_month_revenue')
       ]);
 
       // Fetch recent users
-      const { data: usersData, error: usersError } = await supabase
+      const { data: usersData } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, email, role, created_at')
         .order('created_at', { ascending: false })
         .limit(4);
 
-      if (usersError) throw usersError;
-
       // Fetch recent content - corrected RPC call
-      const { data: contentData } = await safeRpcCall('get_recent_content', {
+      const { data: contentData } = await supabase.rpc('get_recent_content', {
         limit_count: 4
       });
 
@@ -489,8 +473,18 @@ const Admin = () => {
   const fetchContent = async () => {
     setContentLoading(true);
     try {
-      // Corrected RPC call with parameters in body
-      const { data } = await safeRpcCall('get_all_content_unified', {});
+      // Corrected RPC call
+      const { data, error } = await supabase.rpc('get_all_content');
+      
+      if (error) {
+        console.error("Supabase content error:", {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint
+        });
+        throw error;
+      }
       
       setAllContent(data || []);
     } catch (error) {
