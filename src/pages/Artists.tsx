@@ -3,27 +3,25 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, 
-  Filter, 
   User, 
   Music, 
   MapPin, 
   Users, 
-  Star, 
   Heart, 
   Play,
   Verified,
   TrendingUp,
-  Clock,
   Grid,
   List
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import MainLayout from '@/components/layout/MainLayout';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { supabase } from "@/integrations/supabase/client";
 
 interface Artist {
   id: string;
@@ -34,7 +32,6 @@ interface Artist {
   isVerified: boolean;
   profileImage: string;
   bio: string;
-  topTracks: number;
   monthlyListeners: number;
   isFollowing: boolean;
   socialLinks?: {
@@ -51,96 +48,48 @@ const Artists: React.FC = () => {
   const [sortBy, setSortBy] = useState('popularity');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [followedArtists, setFollowedArtists] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const isMobile = useIsMobile();
 
-  // Mock artists data
   useEffect(() => {
-    const mockArtists: Artist[] = [
-      {
-        id: '1',
-        name: "Saem's Tunes",
-        genre: ['Gospel', 'Christian Contemporary'],
-        location: 'Nairobi, Kenya',
-        followerCount: 15200,
-        isVerified: true,
-        profileImage: '/placeholder.svg',
-        bio: 'Making music that represents Christ and touches hearts worldwide.',
-        topTracks: 24,
-        monthlyListeners: 45600,
-        isFollowing: false,
-        socialLinks: {
-          instagram: 'https://instagram.com/saemstunes',
-          spotify: 'https://open.spotify.com/artist/6oMbcOwuuETAvO51LesbO8'
+    const fetchArtists = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('artists')
+          .select('*')
+          .order('follower_count', { ascending: false });
+
+        if (error) {
+          throw error;
         }
-      },
-      {
-        id: '2',
-        name: 'Grace Wanjiku',
-        genre: ['Worship', 'Swahili Gospel'],
-        location: 'Mombasa, Kenya',
-        followerCount: 8900,
-        isVerified: false,
-        profileImage: '/placeholder.svg',
-        bio: 'Worship leader passionate about African gospel music.',
-        topTracks: 18,
-        monthlyListeners: 23400,
-        isFollowing: false
-      },
-      {
-        id: '3',
-        name: 'David Mwangi',
-        genre: ['Contemporary Christian', 'Afrobeats Gospel'],
-        location: 'Kampala, Uganda',
-        followerCount: 12800,
-        isVerified: true,
-        profileImage: '/placeholder.svg',
-        bio: 'Blending modern sounds with timeless gospel messages.',
-        topTracks: 31,
-        monthlyListeners: 38200,
-        isFollowing: false
-      },
-      {
-        id: '4',
-        name: 'Praise Collective',
-        genre: ['Choir', 'Traditional Gospel'],
-        location: 'Lagos, Nigeria',  
-        followerCount: 21500,
-        isVerified: true,
-        profileImage: '/placeholder.svg',
-        bio: 'United voices lifting up the name of Jesus across Africa.',
-        topTracks: 15,
-        monthlyListeners: 67800,
-        isFollowing: false
-      },
-      {
-        id: '5',
-        name: 'Sarah Kimani',
-        genre: ['Christian Pop', 'Youth Ministry'],
-        location: 'Kigali, Rwanda',
-        followerCount: 6700,
-        isVerified: false,
-        profileImage: '/placeholder.svg',
-        bio: 'Creating music that speaks to the younger generation.',
-        topTracks: 12,
-        monthlyListeners: 18900,
-        isFollowing: false
-      },
-      {
-        id: '6',
-        name: 'Emmanuel Sounds',
-        genre: ['Hillsong Style', 'Modern Worship'],
-        location: 'Accra, Ghana',
-        followerCount: 9800,
-        isVerified: false,
-        profileImage: '/placeholder.svg',
-        bio: 'Contemporary worship with an African heartbeat.',
-        topTracks: 22,
-        monthlyListeners: 29600,
-        isFollowing: false
+
+        if (data) {
+          const mappedArtists = data.map(artist => ({
+            id: artist.id,
+            name: artist.name,
+            genre: artist.genre || [],
+            location: artist.location || '',
+            followerCount: artist.follower_count || 0,
+            isVerified: artist.verified_status || false,
+            profileImage: artist.profile_image_url || '/placeholder.svg',
+            bio: artist.bio || '',
+            monthlyListeners: artist.monthly_listeners || 0,
+            isFollowing: false,
+            socialLinks: artist.social_links || {}
+          }));
+          setArtists(mappedArtists);
+        }
+      } catch (err) {
+        setError('Failed to load artists');
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
-    ];
-    
-    setArtists(mockArtists);
+    };
+
+    fetchArtists();
   }, []);
 
   const genres = [
@@ -160,7 +109,6 @@ const Artists: React.FC = () => {
     { value: 'recent', label: 'Recently Added' }
   ];
 
-  // Filter and sort artists
   const filteredArtists = artists
     .filter(artist => {
       const matchesSearch = artist.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -176,8 +124,8 @@ const Artists: React.FC = () => {
         case 'followers':
           return b.followerCount - a.followerCount;
         case 'recent':
-          return Math.random() - 0.5; // Random for demo
-        default: // popularity
+          return Math.random() - 0.5;
+        default:
           return b.monthlyListeners - a.monthlyListeners;
       }
     });
@@ -239,7 +187,6 @@ const Artists: React.FC = () => {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               
-              {/* Artist Info Overlay */}
               <div className="absolute bottom-4 left-4 right-4">
                 <div className="flex items-center gap-2 mb-2">
                   <h3 className="font-bold text-white text-lg truncate">{artist.name}</h3>
@@ -253,7 +200,6 @@ const Artists: React.FC = () => {
                 </div>
               </div>
 
-              {/* Play Button */}
               <Button
                 size="icon"
                 className="absolute top-4 right-4 bg-gold hover:bg-gold-dark text-white h-10 w-10 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -263,7 +209,6 @@ const Artists: React.FC = () => {
             </div>
             
             <div className="p-4">
-              {/* Genres */}
               <div className="flex flex-wrap gap-1 mb-3">
                 {artist.genre.slice(0, 2).map((genre) => (
                   <Badge key={genre} variant="secondary" className="text-xs">
@@ -277,12 +222,10 @@ const Artists: React.FC = () => {
                 )}
               </div>
 
-              {/* Bio */}
               <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
                 {artist.bio}
               </p>
 
-              {/* Stats */}
               <div className="grid grid-cols-2 gap-4 mb-4 text-center">
                 <div>
                   <div className="font-bold text-sm">{formatNumber(artist.followerCount)}</div>
@@ -294,7 +237,6 @@ const Artists: React.FC = () => {
                 </div>
               </div>
 
-              {/* Action Buttons */}
               <div className="flex gap-2">
                 <Button
                   onClick={() => handleFollow(artist.id)}
@@ -336,7 +278,6 @@ const Artists: React.FC = () => {
         animate="visible"
       >
         <div className="container px-3 sm:px-6 lg:px-8 py-6 w-full max-w-full">
-          {/* Header */}
           <motion.div 
             className="text-center mb-8"
             variants={itemVariants}
@@ -349,7 +290,6 @@ const Artists: React.FC = () => {
             </p>
           </motion.div>
 
-          {/* Search and Filters */}
           <motion.div 
             className="mb-8 space-y-4"
             variants={itemVariants}
@@ -411,7 +351,6 @@ const Artists: React.FC = () => {
               </div>
             </div>
 
-            {/* Quick Stats */}
             <div className="flex items-center justify-between text-sm text-muted-foreground">
               <span>{filteredArtists.length} artists found</span>
               <div className="flex items-center gap-4">
@@ -427,47 +366,77 @@ const Artists: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* Artists Grid/List */}
-          <motion.div 
-            className={`grid gap-6 ${
-              viewMode === 'grid' 
-                ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-                : 'grid-cols-1'
-            }`}
-            variants={containerVariants}
-          >
-            <AnimatePresence>
-              {filteredArtists.map((artist) => (
-                <ArtistCard key={artist.id} artist={artist} />
-              ))}
-            </AnimatePresence>
-          </motion.div>
-
-          {/* Empty State */}
-          {filteredArtists.length === 0 && (
+          {loading && (
             <motion.div 
               className="text-center py-16"
               variants={itemVariants}
             >
-              <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-medium mb-2">No artists found</h3>
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold mx-auto mb-4"></div>
+              <p>Loading artists...</p>
+            </motion.div>
+          )}
+          
+          {error && !loading && (
+            <motion.div 
+              className="text-center py-16"
+              variants={itemVariants}
+            >
+              <User className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <h3 className="text-xl font-medium mb-2">Error loading artists</h3>
               <p className="text-muted-foreground mb-6">
-                Try adjusting your search or filter criteria
+                {error}
               </p>
               <Button 
-                onClick={() => {
-                  setSearchTerm('');
-                  setSelectedGenre('all');
-                }}
+                onClick={() => window.location.reload()}
                 className="bg-gold hover:bg-gold-dark text-white"
               >
-                Clear Filters
+                Try Again
               </Button>
             </motion.div>
           )}
+          
+          {!loading && !error && (
+            <>
+              <motion.div 
+                className={`grid gap-6 ${
+                  viewMode === 'grid' 
+                    ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+                    : 'grid-cols-1'
+                }`}
+                variants={containerVariants}
+              >
+                <AnimatePresence>
+                  {filteredArtists.map((artist) => (
+                    <ArtistCard key={artist.id} artist={artist} />
+                  ))}
+                </AnimatePresence>
+              </motion.div>
 
-          {/* Load More - Future Enhancement */}
-          {filteredArtists.length > 0 && (
+              {filteredArtists.length === 0 && (
+                <motion.div 
+                  className="text-center py-16"
+                  variants={itemVariants}
+                >
+                  <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-xl font-medium mb-2">No artists found</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Try adjusting your search or filter criteria
+                  </p>
+                  <Button 
+                    onClick={() => {
+                      setSearchTerm('');
+                      setSelectedGenre('all');
+                    }}
+                    className="bg-gold hover:bg-gold-dark text-white"
+                  >
+                    Clear Filters
+                  </Button>
+                </motion.div>
+              )}
+            </>
+          )}
+
+          {!loading && !error && filteredArtists.length > 0 && (
             <motion.div 
               className="text-center mt-12"
               variants={itemVariants}
