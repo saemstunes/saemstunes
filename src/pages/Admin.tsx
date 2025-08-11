@@ -1,4 +1,3 @@
-
 // src/pages/Admin.tsx
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -13,15 +12,43 @@ import {
   User,
   LogOut,
   Search,
-  Upload
+  Upload,
+  Star,
+  GripVertical
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import Logo from "@/components/branding/Logo";
 import AdminUpload from "@/components/admin/AdminUpload";
+import { useFeaturedItems } from "@/context/FeaturedItemsContext";
+import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/lib/supabaseClient";
+import {
+  DragDropContext,
+  Droppable,
+  Draggable
+} from '@dnd-kit/core';
+import {
+  DndContext, 
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 // Mock data for the dashboard
 const RECENT_USERS = [
@@ -47,6 +74,8 @@ const NAV_ITEMS = [
   { icon: Bell, label: "Notifications", value: "notifications" },
   { icon: FileText, label: "Reports", value: "reports" },
   { icon: Settings, label: "Settings", value: "settings" },
+  { icon: Star, label: "Featured", value: "featured" },
+  { icon: Upload, label: "Upload", value: "upload" },
 ];
 
 // Admin credentials - stored as constants for this implementation
@@ -55,12 +84,167 @@ const ADMIN_CREDENTIALS = {
   password: 'ilovetosing123'
 };
 
+interface FeaturedItem {
+  id: string;
+  title: string;
+  description: string;
+  image: string;
+  link: string;
+  is_external?: boolean;
+  order?: number;
+}
+
+const FeaturedItemForm = ({ 
+  item, 
+  onSave, 
+  onCancel 
+}: { 
+  item: FeaturedItem; 
+  onSave: (item: FeaturedItem) => void; 
+  onCancel: () => void;
+}) => {
+  const [formData, setFormData] = useState<FeaturedItem>(item);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageUpload = async () => {
+    if (!imageFile) return;
+    
+    try {
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `featured/${fileName}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('featured-images')
+        .upload(filePath, imageFile);
+      
+      if (uploadError) throw uploadError;
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('featured-images')
+        .getPublicUrl(filePath);
+      
+      setFormData(prev => ({ ...prev, image: publicUrl }));
+      toast({ title: "Image uploaded successfully!" });
+    } catch (error) {
+      toast({ 
+        title: "Image upload failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{item.id ? 'Edit Featured Item' : 'Create Featured Item'}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="title">Title *</Label>
+            <Input
+              id="title"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="description">Description *</Label>
+            <Textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              required
+              rows={3}
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="image">Image *</Label>
+            <div className="flex items-center gap-3">
+              {formData.image && (
+                <img 
+                  src={formData.image} 
+                  alt="Preview" 
+                  className="w-16 h-16 object-cover rounded-md border" 
+                />
+              )}
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+              />
+              <Button 
+                type="button" 
+                variant="secondary"
+                disabled={!imageFile}
+                onClick={handleImageUpload}
+              >
+                Upload
+              </Button>
+            </div>
+          </div>
+          
+          <div>
+            <Label htmlFor="link">Link *</Label>
+            <Input
+              id="link"
+              name="link"
+              value={formData.link}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="is_external"
+              name="is_external"
+              checked={formData.is_external || false}
+              onCheckedChange={(checked) => 
+                setFormData(prev => ({ ...prev, is_external: !!checked }))
+              }
+            />
+            <Label htmlFor="is_external">Open in new tab</Label>
+          </div>
+          
+          <div className="flex gap-2 pt-4">
+            <Button 
+              type="button" 
+              className="bg-gold hover:bg-gold/90 text-white"
+              onClick={() => onSave(formData)}
+            >
+              Save
+            </Button>
+            <Button variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 const Admin = () => {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [loginError, setLoginError] = useState('');
+  const [editingItem, setEditingItem] = useState<FeaturedItem | null>(null);
+  const { featuredItems, loading, refreshItems } = useFeaturedItems();
 
   // Check if user is authenticated on component mount
   useEffect(() => {
@@ -95,6 +279,104 @@ const Admin = () => {
       }
     } catch (error) {
       console.error("Logout failed:", error);
+    }
+  };
+
+  const handleSaveFeaturedItem = async (item: FeaturedItem) => {
+    try {
+      if (item.id) {
+        // Update existing
+        const { error } = await supabase
+          .from('featured_items')
+          .update(item)
+          .eq('id', item.id);
+
+        if (error) throw error;
+      } else {
+        // Create new
+        const { data, error } = await supabase
+          .from('featured_items')
+          .insert([{ ...item, order: featuredItems.length }])
+          .select();
+
+        if (error) throw error;
+        if (data) item.id = data[0].id;
+      }
+      
+      refreshItems();
+      setEditingItem(null);
+      toast({ title: "Featured item saved successfully!" });
+    } catch (error) {
+      toast({ 
+        title: "Failed to save featured item",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteFeaturedItem = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('featured_items')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      refreshItems();
+      toast({ title: "Featured item deleted!" });
+    } catch (error) {
+      toast({ 
+        title: "Failed to delete featured item",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleReorder = async (startIndex: number, endIndex: number) => {
+    const items = [...featuredItems];
+    const [removed] = items.splice(startIndex, 1);
+    items.splice(endIndex, 0, removed);
+    
+    // Update orders
+    const updatedItems = items.map((item, index) => ({
+      ...item,
+      order: index
+    }));
+
+    try {
+      const { error } = await supabase
+        .from('featured_items')
+        .upsert(updatedItems);
+      
+      if (error) throw error;
+      
+      refreshItems();
+    } catch (error) {
+      toast({ 
+        title: "Failed to reorder items",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    
+    if (active.id !== over.id) {
+      const oldIndex = featuredItems.findIndex(item => item.id === active.id);
+      const newIndex = featuredItems.findIndex(item => item.id === over.id);
+      handleReorder(oldIndex, newIndex);
     }
   };
 
@@ -193,7 +475,7 @@ const Admin = () => {
         {/* Sidebar */}
         <aside className="hidden md:block w-64 bg-background border-r p-4">
           <nav className="space-y-1">
-            {[...NAV_ITEMS, { icon: Upload, label: "Upload", value: "upload" }].map((item) => (
+            {NAV_ITEMS.map((item) => (
               <Button
                 key={item.value}
                 variant={activeTab === item.value ? "secondary" : "ghost"}
@@ -220,7 +502,7 @@ const Admin = () => {
         <div className="md:hidden w-full border-b bg-background">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="w-full overflow-x-auto justify-start py-1 h-auto">
-              {[...NAV_ITEMS, { icon: Upload, label: "Upload", value: "upload" }].map((item) => (
+              {NAV_ITEMS.map((item) => (
                 <TabsTrigger key={item.value} value={item.value} className="flex items-center gap-1">
                   <item.icon className="h-4 w-4" />
                   <span className="sr-only md:not-sr-only">{item.label}</span>
@@ -543,6 +825,136 @@ const Admin = () => {
                   </CardFooter>
                 </Card>
               </div>
+            </TabsContent>
+            
+            {/* Featured Items Tab */}
+            <TabsContent value="featured" className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-bold">Featured Items</h1>
+                <Button 
+                  onClick={() => setEditingItem({
+                    id: '',
+                    title: '',
+                    description: '',
+                    image: '',
+                    link: '',
+                    is_external: false
+                  })}
+                  className="bg-gold hover:bg-gold/90 text-white"
+                >
+                  Add New
+                </Button>
+              </div>
+
+              {editingItem ? (
+                <FeaturedItemForm 
+                  item={editingItem}
+                  onSave={handleSaveFeaturedItem}
+                  onCancel={() => setEditingItem(null)}
+                />
+              ) : loading ? (
+                <div className="flex items-center justify-center h-64">
+                  <p>Loading featured items...</p>
+                </div>
+              ) : featuredItems.length === 0 ? (
+                <Card>
+                  <CardContent className="py-12 text-center">
+                    <p className="text-muted-foreground">No featured items available</p>
+                    <Button 
+                      className="mt-4 bg-gold hover:bg-gold/90 text-white"
+                      onClick={() => setEditingItem({
+                        id: '',
+                        title: '',
+                        description: '',
+                        image: '',
+                        link: '',
+                        is_external: false
+                      })}
+                    >
+                      Create First Featured Item
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <Card>
+                    <CardContent className="p-0">
+                      <table className="w-full">
+                        <thead className="border-b">
+                          <tr className="text-xs text-muted-foreground font-medium">
+                            <th className="text-left p-3 w-8"></th>
+                            <th className="text-left p-3">Title</th>
+                            <th className="text-left p-3">Image</th>
+                            <th className="text-left p-3">Link</th>
+                            <th className="text-left p-3">Actions</th>
+                          </tr>
+                        </thead>
+                        <SortableContext 
+                          items={featuredItems.map(item => item.id)}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          <tbody>
+                            {featuredItems.map((item, index) => (
+                              <Draggable key={item.id} draggableId={item.id} index={index}>
+                                {({attributes, listeners, setNodeRef, transform, transition}) => (
+                                  <tr 
+                                    ref={setNodeRef}
+                                    className="border-b hover:bg-muted/50"
+                                    style={{
+                                      transform: CSS.Transform.toString(transform),
+                                      transition,
+                                    }}
+                                  >
+                                    <td 
+                                      className="p-3 cursor-move"
+                                      {...attributes}
+                                      {...listeners}
+                                    >
+                                      <GripVertical className="h-4 w-4 text-muted-foreground" />
+                                    </td>
+                                    <td className="p-3 font-medium">{item.title}</td>
+                                    <td className="p-3">
+                                      <img 
+                                        src={item.image} 
+                                        alt={item.title}
+                                        className="w-16 h-10 object-cover rounded"
+                                      />
+                                    </td>
+                                    <td className="p-3 text-sm">{item.link}</td>
+                                    <td className="p-3">
+                                      <div className="flex gap-2">
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm"
+                                          onClick={() => setEditingItem(item)}
+                                        >
+                                          Edit
+                                        </Button>
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm" 
+                                          className="text-destructive"
+                                          onClick={() => handleDeleteFeaturedItem(item.id)}
+                                        >
+                                          Delete
+                                        </Button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                )}
+                              </Draggable>
+                            ))}
+                          </tbody>
+                        </SortableContext>
+                      </table>
+                    </CardContent>
+                  </Card>
+                </DndContext>
+              )}
             </TabsContent>
             
             {/* Upload Tab */}
