@@ -88,8 +88,19 @@ const Logo: React.FC<LogoProps> = ({
     </div>
   );
 
+  // Apply the same alignment principles to the clickable wrapper
   return clickable ? (
-    <Link to="/" className="inline-block">{logoElement}</Link>
+    <Link 
+      to="/" 
+      className={cn(
+        "inline-block",
+        align === "center" && "mx-auto block",
+        align === "right" && "ml-auto block",
+        inMobileMenu && "block" // Ensure proper block behavior in mobile
+      )}
+    >
+      {logoElement}
+    </Link>
   ) : logoElement;
 };
 
