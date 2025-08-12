@@ -9,7 +9,7 @@ interface LogoProps {
   clickable?: boolean;
   inMobileMenu?: boolean;
   showText?: boolean;
-  align?: "left" | "center" | "right"; // Added "right" option
+  align?: "left" | "center" | "right";
 }
 
 const Logo: React.FC<LogoProps> = ({ 
@@ -29,25 +29,38 @@ const Logo: React.FC<LogoProps> = ({
     }
   };
 
-  const logoConfig = {
+  // Height-only sizing configuration - maintains natural aspect ratio
+  const heightClasses = {
     icon: {
-      sm: { src: "/lovable-uploads/logo-icon-sm.svg", width: "w-8", height: "h-8" },
-      md: { src: "/lovable-uploads/logo-icon-md.svg", width: "w-10", height: "h-10" },
-      lg: { src: "/lovable-uploads/logo-icon-lg.svg", width: "w-12", height: "h-12" }
+      sm: "h-8",
+      md: "h-10",
+      lg: "h-12"
     },
     full: {
-      sm: { src: "/lovable-uploads/logo-full-md.svg", width: "w-24", height: "h-8" },
-      md: { src: "/lovable-uploads/logo-full-md.svg", width: "w-32", height: "h-10" },
-      lg: { src: "/lovable-uploads/logo-full-lg.svg", width: "w-40", height: "h-12" }
+      sm: "h-8",   // Maintains natural width for full logo
+      md: "h-10",  // (will be wider than icon but proportional)
+      lg: "h-12"
     }
   };
 
-  const config = logoConfig[variant][size];
+  // Text sizing to match logo scale
+  const textSizeClasses = {
+    sm: "text-sm",
+    md: "text-base",
+    lg: "text-lg"
+  };
+
+  const heightClass = heightClasses[variant][size];
+  const textSizeClass = textSizeClasses[size];
+
+  // Use single SVG source for each variant - scales via height
+  const logoSrc = variant === "icon" 
+    ? "/lovable-uploads/logo-icon.svg" 
+    : "/lovable-uploads/logo-full.svg";
 
   const logoElement = (
     <div className={cn(
       "flex items-center gap-2",
-      // Apply flexbox justification based on alignment
       align === "center" && "justify-center",
       align === "left" && "justify-start",
       align === "right" && "justify-end",
@@ -56,22 +69,25 @@ const Logo: React.FC<LogoProps> = ({
     )}>
       <picture>
         <img
-          src={config.src}
+          src={logoSrc}
           alt="Saem's Tunes Logo"
-          className={cn(config.width, config.height, "object-contain")}
+          className={cn(heightClass, "object-contain")}
           fetchPriority="high"
         />
       </picture>
       {showText && (
         <div className={cn(
           "flex flex-col leading-tight",
-          // Apply text alignment to match container
           align === "center" && "text-center",
           align === "left" && "text-left",
           align === "right" && "text-right"
         )}> 
-          <span className="text-yellow-500 font-bold text-base font-nunito">Saem's</span> 
-          <span className="text-amber-800 font-bold text-base font-nunito">Tunes</span> 
+          <span className={cn("text-yellow-500 font-bold font-nunito", textSizeClass)}>
+            Saem's
+          </span> 
+          <span className={cn("text-amber-800 font-bold font-nunito", textSizeClass)}>
+            Tunes
+          </span> 
         </div>
       )}
     </div>
