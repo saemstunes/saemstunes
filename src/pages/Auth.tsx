@@ -130,13 +130,7 @@ const Auth = () => {
         <div className="max-w-md w-full">  
           <div className="flex flex-col items-start"> 
             {/* Logo with left alignment */}
-            <Logo 
-              variant="full" 
-              size="lg" 
-              showText 
-              align="left"  // Force left alignment
-              className="mb-8"
-            />
+            <Logo variant="full" size="lg" showText align="left" className="mb-8" />
             
             <motion.h1 
               className="text-3xl md:text-4xl font-serif text-white font-bold mb-4 text-left" 
