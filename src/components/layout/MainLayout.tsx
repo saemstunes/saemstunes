@@ -276,7 +276,12 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
   {/* Fixed Header */}
   <div className="flex items-center justify-between p-4 border-b border-border bg-background sticky top-0 z-10">
     <div className="flex items-center gap-3">
-      <Logo size="md" showText />
+      <Logo 
+        variant="full"
+        size="md" 
+        showText 
+        align="left"
+        />
     </div>
     <Button
       size="icon"
@@ -367,7 +372,12 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
 </SheetContent>
             </Sheet>
 
-            <Logo size="md" className="ml-4" />
+            <Logo 
+              variant="icon" 
+              size="md" 
+              align="left"
+              className="ml-4" 
+            />
           </div>
 
           <div className="flex items-center gap-1 md:gap-2">
@@ -467,8 +477,14 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
             <div 
               className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity" 
               onClick={handleLogoClick}
-            >
-              <Logo size="lg" />
+              >
+              <Logo 
+                variant="icon" 
+                size="lg" 
+                showText={false} 
+                align="left"
+                clickable={false} 
+              />
               <div className="flex flex-col leading-tight">
                 <span className="text-brown-dark dark:text-gold-light font-bold text-lg font-nunito tracking-tighter">Saem's</span>
                 <span className="text-gold-dark dark:text-brown-light font-bold text-lg font-nunito tracking-tighter">Tunes</span>
