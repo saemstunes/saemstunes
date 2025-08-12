@@ -127,8 +127,8 @@ const Auth = () => {
           </Button>
         </div>
 
-        <div className="max-w-md w-full"> {/* Changed to w-full */}
-          <div className="flex flex-col items-start"> {/* Added for left alignment */}
+        <div className="max-w-md w-full">  
+          <div className="flex flex-col items-start"> 
             {/* Logo with left alignment */}
             <Logo 
               variant="full" 
@@ -139,7 +139,7 @@ const Auth = () => {
             />
             
             <motion.h1 
-              className="text-3xl md:text-4xl font-serif text-white font-bold mb-4 text-left" {/* Added text-left */}
+              className="text-3xl md:text-4xl font-serif text-white font-bold mb-4 text-left" 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.5 }}
@@ -148,7 +148,7 @@ const Auth = () => {
             </motion.h1>
             
             <motion.p 
-              className="text-white/80 text-lg md:text-xl mb-6 text-left" {/* Added text-left */}
+              className="text-white/80 text-lg md:text-xl mb-6 text-left" 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.5 }}
@@ -157,7 +157,7 @@ const Auth = () => {
             </motion.p>
             
             <motion.div 
-              className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-6 text-left" {/* Added text-left */}
+              className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-6 text-left" 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.4, duration: 0.5 }}
