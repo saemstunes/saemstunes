@@ -9,6 +9,7 @@ interface LogoProps {
   className?: string;
   clickable?: boolean;
   inMobileMenu?: boolean;
+  showText?: boolean; // new prop
 }
 
 const Logo: React.FC<LogoProps> = ({ 
@@ -16,7 +17,8 @@ const Logo: React.FC<LogoProps> = ({
   size = "md", 
   className = "", 
   clickable = true,
-  inMobileMenu = false
+  inMobileMenu = false,
+  showText = false
 }) => {
   const navigate = useNavigate();
   
@@ -43,30 +45,29 @@ const Logo: React.FC<LogoProps> = ({
 
   const logoElement = (
     <div className={cn(
-      "flex items-center",
+      "flex items-center justify-start gap-2", // alignment fix
       clickable && "cursor-pointer",
       className
     )}>
       <picture>
         <img
-          src="/lovable-uploads/logo-icon-md.webp"
+          src={config.src}
           alt="Saem's Tunes Logo"
           className={cn(config.width, config.height, "object-contain")}
-          fetchPriority="high"
         />
       </picture>
+      {showText && (
+        <div className="flex flex-col leading-tight">
+          <span className="text-yellow-500 font-bold text-base font-nunito">Saem's</span>
+          <span className="text-amber-800 font-bold text-base font-nunito">Tunes</span>
+        </div>
+      )}
     </div>
   );
 
-  if (clickable) {
-    return (
-      <Link to="/" className="inline-block">
-        {logoElement}
-      </Link>
-    );
-  }
-
-  return logoElement;
+  return clickable ? (
+    <Link to="/" className="inline-block">{logoElement}</Link>
+  ) : logoElement;
 };
 
 export default Logo;
