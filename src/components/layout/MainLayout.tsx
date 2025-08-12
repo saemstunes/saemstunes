@@ -276,11 +276,7 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
   {/* Fixed Header */}
   <div className="flex items-center justify-between p-4 border-b border-border bg-background sticky top-0 z-10">
     <div className="flex items-center gap-3">
-      <Logo size="md" />
-      <div className="flex flex-col leading-tight">
-        <span className="text-yellow-500 font-bold text-base font-nunito">Saem's</span>
-        <span className="text-amber-800 font-bold text-base font-nunito">Tunes</span>
-      </div>
+      <Logo size="md" showText />
     </div>
     <Button
       size="icon"
