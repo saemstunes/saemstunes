@@ -9,7 +9,7 @@ interface LogoProps {
   clickable?: boolean;
   inMobileMenu?: boolean;
   showText?: boolean;
-  align?: "left" | "center"; // New alignment prop
+  align?: "left" | "center" | "right"; // Added "right" option
 }
 
 const Logo: React.FC<LogoProps> = ({ 
@@ -19,7 +19,7 @@ const Logo: React.FC<LogoProps> = ({
   clickable = true,
   inMobileMenu = false,
   showText = false,
-  align = "center" // Default to center
+  align = "center"
 }) => {
   const navigate = useNavigate();
   
@@ -47,8 +47,10 @@ const Logo: React.FC<LogoProps> = ({
   const logoElement = (
     <div className={cn(
       "flex items-center gap-2",
-      // Apply alignment classes based on prop
-      align === "left" ? "justify-start" : "justify-center",
+      // Apply flexbox justification based on alignment
+      align === "center" && "justify-center",
+      align === "left" && "justify-start",
+      align === "right" && "justify-end",
       clickable && "cursor-pointer",
       className
     )}>
@@ -61,9 +63,15 @@ const Logo: React.FC<LogoProps> = ({
         />
       </picture>
       {showText && (
-        <div className="flex flex-col leading-tight items-start"> 
-          <span className="text-yellow-500 font-bold text-base font-nunito text-left">Saem's</span> 
-          <span className="text-amber-800 font-bold text-base font-nunito text-left">Tunes</span> 
+        <div className={cn(
+          "flex flex-col leading-tight",
+          // Apply text alignment to match container
+          align === "center" && "text-center",
+          align === "left" && "text-left",
+          align === "right" && "text-right"
+        )}> 
+          <span className="text-yellow-500 font-bold text-base font-nunito">Saem's</span> 
+          <span className="text-amber-800 font-bold text-base font-nunito">Tunes</span> 
         </div>
       )}
     </div>
