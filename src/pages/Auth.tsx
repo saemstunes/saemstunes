@@ -129,7 +129,7 @@ const Auth = () => {
         </div>
 
         <div className="max-w-md mx-auto">
-          <Logo variant="full" size="lg" className="mb-8" />
+          <Logo variant="full" size="lg" showText className="mb-8" />
           <motion.h1 
             className="text-3xl md:text-4xl font-serif text-white font-bold mb-4"
             initial={{ opacity: 0, y: 20 }}
