@@ -9,7 +9,7 @@ interface LogoProps {
   clickable?: boolean;
   inMobileMenu?: boolean;
   showText?: boolean;
-  align?: "left" | "center" | "right"; // Added "right" option
+  align?: "left" | "center" | "right";
 }
 
 const Logo: React.FC<LogoProps> = ({ 
@@ -29,25 +29,33 @@ const Logo: React.FC<LogoProps> = ({
     }
   };
 
+  // Restored all original SVG versions with height-only sizing
   const logoConfig = {
     icon: {
-      sm: { src: "/lovable-uploads/logo-icon-sm.svg", width: "w-8", height: "h-8" },
-      md: { src: "/lovable-uploads/logo-icon-md.svg", width: "w-10", height: "h-10" },
-      lg: { src: "/lovable-uploads/logo-icon-lg.svg", width: "w-12", height: "h-12" }
+      sm: { src: "/lovable-uploads/logo-icon-sm.svg", height: "h-8" },
+      md: { src: "/lovable-uploads/logo-icon-md.svg", height: "h-10" },
+      lg: { src: "/lovable-uploads/logo-icon-lg.svg", height: "h-12" }
     },
     full: {
-      sm: { src: "/lovable-uploads/logo-full-md.svg", width: "w-24", height: "h-8" },
-      md: { src: "/lovable-uploads/logo-full-md.svg", width: "w-32", height: "h-10" },
-      lg: { src: "/lovable-uploads/logo-full-lg.svg", width: "w-40", height: "h-12" }
+      sm: { src: "/lovable-uploads/logo-full-md.svg", height: "h-8" },
+      md: { src: "/lovable-uploads/logo-full-md.svg", height: "h-10" },
+      lg: { src: "/lovable-uploads/logo-full-lg.svg", height: "h-12" }
     }
   };
 
+  // Text sizing to match logo scale
+  const textSizeClasses = {
+    sm: "text-sm",
+    md: "text-base",
+    lg: "text-lg"
+  };
+
   const config = logoConfig[variant][size];
+  const textSizeClass = textSizeClasses[size];
 
   const logoElement = (
     <div className={cn(
       "flex items-center gap-2",
-      // Apply flexbox justification based on alignment
       align === "center" && "justify-center",
       align === "left" && "justify-start",
       align === "right" && "justify-end",
@@ -58,20 +66,23 @@ const Logo: React.FC<LogoProps> = ({
         <img
           src={config.src}
           alt="Saem's Tunes Logo"
-          className={cn(config.width, config.height, "object-contain")}
+          className={cn(config.height, "object-contain")}
           fetchPriority="high"
         />
       </picture>
       {showText && (
         <div className={cn(
           "flex flex-col leading-tight",
-          // Apply text alignment to match container
           align === "center" && "text-center",
           align === "left" && "text-left",
           align === "right" && "text-right"
         )}> 
-          <span className="text-yellow-500 font-bold text-base font-nunito">Saem's</span> 
-          <span className="text-amber-800 font-bold text-base font-nunito">Tunes</span> 
+          <span className={cn("text-yellow-500 font-bold font-nunito", textSizeClass)}>
+            Saem's
+          </span> 
+          <span className={cn("text-amber-800 font-bold font-nunito", textSizeClass)}>
+            Tunes
+          </span> 
         </div>
       )}
     </div>
