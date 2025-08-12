@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import LoginForm from "@/components/auth/LoginForm";
 import SignupForm from "@/components/auth/SignupForm";
@@ -128,91 +127,103 @@ const Auth = () => {
           </Button>
         </div>
 
-        <div className="max-w-md mx-auto">
-          <Logo variant="full" size="lg" showText className="mb-8" />
-          <motion.h1 
-            className="text-3xl md:text-4xl font-serif text-white font-bold mb-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-          >
-            Welcome to Saem's Tunes
-          </motion.h1>
-          <motion.p 
-            className="text-white/80 text-lg md:text-xl mb-6 whitespace-nowrap overflow-x-auto"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-          >
-            Making music, representing Christ
-          </motion.p>
-          <motion.div 
-            className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-6"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4, duration: 0.5 }}
-          >
-            <h2 className="text-xl font-bold text-white mb-2">Why Join Us?</h2>
-            <ul className="space-y-3">
-              <li className="flex items-start">
-                <span className="bg-white/20 rounded-full p-1 mr-3 mt-1">
-                  <svg
-                    className="w-3 h-3 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="3"
-                      d="M5 13l4 4L19 7"
-                    ></path>
-                  </svg>
-                </span>
-                <span className="text-white/90">Expert music tutors and premium resources</span>
-              </li>
-              <li className="flex items-start">
-                <span className="bg-white/20 rounded-full p-1 mr-3 mt-1">
-                  <svg
-                    className="w-3 h-3 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="3"
-                      d="M5 13l4 4L19 7"
-                    ></path>
-                  </svg>
-                </span>
-                <span className="text-white/90">Personalized learning paths for your growth</span>
-              </li>
-              <li className="flex items-start">
-                <span className="bg-white/20 rounded-full p-1 mr-3 mt-1">
-                  <svg
-                    className="w-3 h-3 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="3"
-                      d="M5 13l4 4L19 7"
-                    ></path>
-                  </svg>
-                </span>
-                <span className="text-white/90">Supportive community of musicians and learners</span>
-              </li>
-            </ul>
-          </motion.div>
+        <div className="max-w-md w-full"> {/* Changed to w-full */}
+          <div className="flex flex-col items-start"> {/* Added for left alignment */}
+            {/* Logo with left alignment */}
+            <Logo 
+              variant="full" 
+              size="lg" 
+              showText 
+              align="left"  // Force left alignment
+              className="mb-8"
+            />
+            
+            <motion.h1 
+              className="text-3xl md:text-4xl font-serif text-white font-bold mb-4 text-left" {/* Added text-left */}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+            >
+              Welcome to Saem's Tunes
+            </motion.h1>
+            
+            <motion.p 
+              className="text-white/80 text-lg md:text-xl mb-6 text-left" {/* Added text-left */}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+            >
+              Making music, representing Christ
+            </motion.p>
+            
+            <motion.div 
+              className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-6 text-left" {/* Added text-left */}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+            >
+              <h2 className="text-xl font-bold text-white mb-2">Why Join Us?</h2>
+              <ul className="space-y-3">
+                <li className="flex items-start">
+                  <span className="bg-white/20 rounded-full p-1 mr-3 mt-1">
+                    <svg
+                      className="w-3 h-3 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="3"
+                        d="M5 13l4 4L19 7"
+                      ></path>
+                    </svg>
+                  </span>
+                  <span className="text-white/90">Expert music tutors and premium resources</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="bg-white/20 rounded-full p-1 mr-3 mt-1">
+                    <svg
+                      className="w-3 h-3 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="3"
+                        d="M5 13l4 4L19 7"
+                      ></path>
+                    </svg>
+                  </span>
+                  <span className="text-white/90">Personalized learning paths for your growth</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="bg-white/20 rounded-full p-1 mr-3 mt-1">
+                    <svg
+                      className="w-3 h-3 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="3"
+                        d="M5 13l4 4L19 7"
+                      ></path>
+                    </svg>
+                  </span>
+                  <span className="text-white/90">Supportive community of musicians and learners</span>
+                </li>
+              </ul>
+            </motion.div>
+          </div>
         </div>
       </div>
 
