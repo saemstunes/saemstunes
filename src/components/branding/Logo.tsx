@@ -61,9 +61,9 @@ const Logo: React.FC<LogoProps> = ({
         />
       </picture>
       {showText && (
-        <div className="flex flex-col leading-tight">
-          <span className="text-yellow-500 font-bold text-base font-nunito">Saem's</span>
-          <span className="text-amber-800 font-bold text-base font-nunito">Tunes</span>
+        <div className="flex flex-col leading-tight items-start"> 
+          <span className="text-yellow-500 font-bold text-base font-nunito text-left">Saem's</span> 
+          <span className="text-amber-800 font-bold text-base font-nunito text-left">Tunes</span> 
         </div>
       )}
     </div>
