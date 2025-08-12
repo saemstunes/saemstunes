@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -9,7 +8,8 @@ interface LogoProps {
   className?: string;
   clickable?: boolean;
   inMobileMenu?: boolean;
-  showText?: boolean; // new prop
+  showText?: boolean;
+  align?: "left" | "center"; // New alignment prop
 }
 
 const Logo: React.FC<LogoProps> = ({ 
@@ -18,7 +18,8 @@ const Logo: React.FC<LogoProps> = ({
   className = "", 
   clickable = true,
   inMobileMenu = false,
-  showText = false
+  showText = false,
+  align = "center" // Default to center
 }) => {
   const navigate = useNavigate();
   
@@ -45,7 +46,9 @@ const Logo: React.FC<LogoProps> = ({
 
   const logoElement = (
     <div className={cn(
-      "flex items-center justify-start gap-2", // alignment fix
+      "flex items-center gap-2",
+      // Apply alignment classes based on prop
+      align === "left" ? "justify-start" : "justify-center",
       clickable && "cursor-pointer",
       className
     )}>
@@ -54,6 +57,7 @@ const Logo: React.FC<LogoProps> = ({
           src={config.src}
           alt="Saem's Tunes Logo"
           className={cn(config.width, config.height, "object-contain")}
+          fetchPriority="high"
         />
       </picture>
       {showText && (
