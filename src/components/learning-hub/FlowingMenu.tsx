@@ -1,135 +1,95 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useRef } from "react";
 import { gsap } from "gsap";
 import "./FlowingMenu.css";
 
 interface MenuItem {
   label: string;
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   action: () => void;
   disabled?: boolean;
 }
 
 interface FlowingMenuProps {
   items: MenuItem[];
-  trigger?: "hover" | "click";
+  direction?: "horizontal" | "vertical";
   className?: string;
-  mobileBehavior?: "long-press" | "click";
 }
 
-const FlowingMenu = ({
-  items,
-  trigger = "hover",
-  className = "",
-  mobileBehavior = "long-press"
+const FlowingMenu = ({ 
+  items, 
+  direction = "vertical",
+  className = ""
 }: FlowingMenuProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-
-  useEffect(() => {
-    if (!menuRef.current) return;
+  const handleMouseEnter = (e: React.MouseEvent, item: MenuItem) => {
+    if (!menuRef.current || item.disabled) return;
     
-    if (isOpen) {
-      gsap.fromTo(menuRef.current, 
-        { opacity: 0, scale: 0.9 },
-        { 
-          opacity: 1, 
-          scale: 1,
-          duration: 0.3,
-          ease: "power2.out"
-        }
-      );
-    }
-  }, [isOpen]);
-
-  const handleOpen = () => {
-    if (isMobile && mobileBehavior === "long-press") {
-      longPressTimer.current = setTimeout(() => {
-        setIsOpen(true);
-      }, 500);
-    } else {
-      setIsOpen(true);
-    }
+    const menuItem = e.currentTarget;
+    const marquee = menuItem.querySelector('.marquee') as HTMLElement;
+    const rect = menuItem.getBoundingClientRect();
+    
+    const isTop = e.clientY < rect.top + rect.height / 2;
+    const initialY = isTop ? '-101%' : '101%';
+    
+    gsap.set(marquee, { y: initialY });
+    gsap.to(marquee, { 
+      y: '0%',
+      duration: 0.6,
+      ease: "expo.out"
+    });
   };
 
-  const handleClose = () => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-    }
-    setIsOpen(false);
+  const handleMouseLeave = (e: React.MouseEvent) => {
+    const menuItem = e.currentTarget;
+    const marquee = menuItem.querySelector('.marquee') as HTMLElement;
+    const rect = menuItem.getBoundingClientRect();
+    
+    const isTop = e.clientY < rect.top + rect.height / 2;
+    const exitY = isTop ? '-101%' : '101%';
+    
+    gsap.to(marquee, { 
+      y: exitY,
+      duration: 0.6,
+      ease: "expo.in"
+    });
   };
-
-  const handleItemClick = (action: () => void) => {
-    action();
-    handleClose();
-  };
-
-  // Close menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        buttonRef.current && 
-        !buttonRef.current.contains(event.target as Node) &&
-        menuRef.current && 
-        !menuRef.current.contains(event.target as Node)
-      ) {
-        handleClose();
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   return (
     <div 
-      className={`flowing-menu-container ${className}`}
-      onMouseEnter={!isMobile && trigger === "hover" ? handleOpen : undefined}
-      onMouseLeave={!isMobile && trigger === "hover" ? handleClose : undefined}
+      ref={menuRef}
+      className={`menu-wrap ${direction} ${className}`}
     >
-      <button 
-        ref={buttonRef}
-        className="flowing-menu-button"
-        onTouchStart={isMobile ? handleOpen : undefined}
-        onTouchEnd={isMobile ? () => clearTimeout(longPressTimer.current!) : undefined}
-        onClick={isMobile && mobileBehavior === "click" ? handleOpen : undefined}
-        aria-label="Course actions"
-        aria-expanded={isOpen}
-      >
-        <div className="w-1 h-1 rounded-full bg-gold-dark mx-0.5" />
-        <div className="w-1 h-1 rounded-full bg-gold-dark mx-0.5" />
-        <div className="w-1 h-1 rounded-full bg-gold-dark mx-0.5" />
-      </button>
-
-      {isOpen && (
-        <div 
-          ref={menuRef}
-          className="flowing-menu-items"
-          onMouseLeave={!isMobile ? handleClose : undefined}
-        >
-          {items.map((item, index) => (
-            <button
-              key={index}
-              className={`flowing-menu-item ${item.disabled ? 'opacity-60' : ''}`}
-              onClick={() => !item.disabled && handleItemClick(item.action)}
-              disabled={item.disabled}
-              aria-disabled={item.disabled}
-            >
-              <span className="mr-3 text-gold">{item.icon}</span>
-              {item.label}
-            </button>
-          ))}
-        </div>
-      )}
+      <nav className="menu">
+        {items.map((item, idx) => (
+          <div 
+            key={idx}
+            className={`menu__item ${item.disabled ? 'opacity-60' : ''}`}
+            onMouseEnter={(e) => handleMouseEnter(e, item)}
+            onMouseLeave={handleMouseLeave}
+            onClick={item.disabled ? undefined : item.action}
+            aria-disabled={item.disabled}
+          >
+            <div className="menu__item-content">
+              {item.icon && <span className="menu-icon">{item.icon}</span>}
+              <span>{item.label}</span>
+            </div>
+            
+            <div className="marquee">
+              <div className="marquee__inner">
+                {[...Array(4)].map((_, i) => (
+                  <React.Fragment key={i}>
+                    <span>{item.label}</span>
+                    <div className="marquee__icon">
+                      {item.icon}
+                    </div>
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </nav>
     </div>
   );
 };
