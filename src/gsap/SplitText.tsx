@@ -1,128 +1,97 @@
-import { useRef, useEffect } from "react";
+// src/gsap/SplitText.tsx
+import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText as GSAPSplitText } from "gsap/SplitText";
 
-gsap.registerPlugin(ScrollTrigger, GSAPSplitText);
+// Type definition for GSAP SplitText options
+type SplitTextOptions = {
+  type?: string;
+  charsClass?: string;
+  linesClass?: string;
+  wordsClass?: string;
+};
 
 interface SplitTextProps {
   text: string;
   className?: string;
-  delay?: number;
   duration?: number;
-  ease?: string;
-  splitType?: "chars" | "words" | "lines";
+  stagger?: number;
+  delay?: number;
   from?: gsap.TweenVars;
   to?: gsap.TweenVars;
-  threshold?: number;
-  rootMargin?: string;
-  textAlign?: "left" | "center" | "right";
-  onComplete?: () => void;
+  ease?: string;
+  splitOptions?: SplitTextOptions;
 }
 
 const SplitText = ({
   text,
   className = "",
-  delay = 100,
-  duration = 0.6,
-  ease = "power3.out",
-  splitType = "chars",
-  from = { opacity: 0, y: 40 },
+  duration = 0.8,
+  stagger = 0.03,
+  delay = 0,
+  from = { opacity: 0, y: 20 },
   to = { opacity: 1, y: 0 },
-  threshold = 0.1,
-  rootMargin = "-100px",
-  textAlign = "center",
-  onComplete
+  ease = "power3.out",
+  splitOptions = { type: "chars", charsClass: "char-anim" }
 }: SplitTextProps) => {
   const ref = useRef<HTMLParagraphElement>(null);
-  const animationCompleted = useRef(false);
-  const scrollTriggerInstance = useRef<ScrollTrigger | null>(null);
+  const animated = useRef(false);
+  const splitInstance = useRef<GSAPSplitText | null>(null);
 
   useEffect(() => {
-    if (!ref.current || !text) return;
+    if (!ref.current || animated.current) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     
-    const el = ref.current;
-    animationCompleted.current = false;
-
-    // Set position for lines splitType
-    if (splitType === "lines") {
-      el.style.position = "relative";
-    }
-
+    const element = ref.current;
+    
     // Create SplitText instance
-    const splitter = new GSAPSplitText(el, {
-      type: splitType,
-      linesClass: "split-line",
-    });
-
-    // Determine targets based on split type
-    let targets: HTMLElement[];
-    switch (splitType) {
-      case "lines": targets = splitter.lines; break;
-      case "words": targets = splitter.words; break;
-      case "chars": targets = splitter.chars; break;
-      default: targets = splitter.chars;
+    splitInstance.current = new GSAPSplitText(element, splitOptions);
+    
+    // Get targets based on split type
+    const targets = getSplitTargets(splitInstance.current, splitOptions.type || "chars");
+    
+    if (!targets || targets.length === 0) {
+      console.warn("No valid targets for SplitText animation");
+      return;
     }
 
-    if (!targets || targets.length === 0) return;
-
-    // Prepare elements for animation
-    targets.forEach(t => {
-      t.style.willChange = "transform, opacity";
-      gsap.set(t, { ...from, immediateRender: true });
-    });
-
-    // Calculate scroll trigger start position
-    const startPct = (1 - threshold) * 100;
-    const marginMatch = /^(-?\d+(?:\.\d+)?)(px|em|rem|%)?$/.exec(rootMargin);
-    const marginValue = marginMatch ? parseFloat(marginMatch[1]) : 0;
-    const marginUnit = marginMatch?.[2] || "px";
-    const sign = marginValue < 0 ? `-=${Math.abs(marginValue)}${marginUnit}` : `+=${marginValue}${marginUnit}`;
-    const start = `top ${startPct}%${sign}`;
-
-    // Create animation timeline
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: el,
-        start,
-        toggleActions: "play none none none",
-        once: true,
-        onToggle: self => { scrollTriggerInstance.current = self }
-      },
+    gsap.set(targets, from);
+    
+    const animation = gsap.to(targets, {
+      ...to,
+      duration,
+      ease,
+      stagger,
+      delay,
       onComplete: () => {
-        animationCompleted.current = true;
-        gsap.set(targets, { ...to, clearProps: "willChange" });
-        onComplete?.();
+        gsap.set(targets, { clearProps: "opacity,transform,willChange" });
       }
     });
 
-    tl.set(targets, { ...from, immediateRender: false })
-      .to(targets, {
-        ...to,
-        duration,
-        ease,
-        stagger: delay / 1000
-      });
+    animated.current = true;
 
     return () => {
-      tl.kill();
-      scrollTriggerInstance.current?.kill();
-      splitter.revert();
+      animation.kill();
+      if (splitInstance.current?.revert) {
+        splitInstance.current.revert();
+      }
     };
-  }, [text, delay, duration, ease, splitType, from, to, threshold, rootMargin, onComplete]);
+  }, [text, duration, stagger, delay, from, to, ease, splitOptions]);
+
+  // Helper function to get proper targets
+  const getSplitTargets = (split: GSAPSplitText, type: string) => {
+    switch (type) {
+      case "chars": return split.chars;
+      case "words": return split.words;
+      case "lines": return split.lines;
+      default: return split.chars;
+    }
+  };
 
   return (
-    <p
+    <p 
       ref={ref}
-      className={`split-parent font-serif ${className}`}
-      style={{
-        textAlign,
-        overflow: "hidden",
-        display: "inline-block",
-        whiteSpace: "normal",
-        wordWrap: "break-word",
-      }}
+      className={`split-text-wrapper ${className}`}
       aria-label={text}
     >
       {text}

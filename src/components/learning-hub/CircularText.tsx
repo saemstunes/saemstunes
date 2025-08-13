@@ -1,110 +1,74 @@
-import { useState, useEffect } from "react";
-import { motion, useAnimation } from "framer-motion";
+import React from "react";
+import { motion } from "framer-motion";
 import "./CircularText.css";
 
 interface CircularTextProps {
-  text: string;
-  spinDuration?: number;
-  onHover?: "speedUp" | "slowDown" | "pause" | "goBonkers" | "none";
+  value: number;
+  size: number;
+  strokeWidth?: number;
   className?: string;
-  size?: number;
+  showPercentage?: boolean;
+  textColor?: string;
+  trailColor?: string;
 }
 
 const CircularText = ({
-  text = "",
-  spinDuration = 20,
-  onHover = "speedUp",
+  value,
+  size,
+  strokeWidth = 4,
   className = "",
-  size = 200
+  showPercentage = false,
+  textColor = "#C69B36",
+  trailColor = "#F8F6F0"
 }: CircularTextProps) => {
-  const letters = Array.from(text);
-  const controls = useAnimation();
-  const [rotation, setRotation] = useState(0);
-
-  useEffect(() => {
-    const animate = async () => {
-      await controls.start({
-        rotate: rotation + 360,
-        transition: {
-          ease: "linear",
-          duration: spinDuration,
-          repeat: Infinity
-        }
-      });
-    };
-    animate();
-  }, [controls, rotation, spinDuration]);
-
-  const handleHoverStart = () => {
-    if (onHover === "none") return;
-    
-    let duration = spinDuration;
-    switch (onHover) {
-      case "speedUp": duration = spinDuration / 4; break;
-      case "slowDown": duration = spinDuration * 2; break;
-      case "goBonkers": duration = spinDuration / 20; break;
-    }
-
-    controls.stop();
-    controls.start({
-      rotate: rotation + 360,
-      transition: {
-        ease: "linear",
-        duration,
-        repeat: Infinity
-      }
-    });
-  };
-
-  const handleHoverEnd = () => {
-    if (onHover === "none") return;
-    
-    controls.stop();
-    setRotation(controls.getState().rotate);
-    controls.start({
-      rotate: rotation + 360,
-      transition: {
-        ease: "linear",
-        duration: spinDuration,
-        repeat: Infinity
-      }
-    });
-  };
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const offset = circumference - (value / 100) * circumference;
 
   return (
-    <motion.div
-      className={`circular-text ${className}`}
+    <div 
+      className={`circular-text-container ${className}`}
       style={{ width: size, height: size }}
-      animate={controls}
-      onMouseEnter={handleHoverStart}
-      onMouseLeave={handleHoverEnd}
-      onTouchStart={handleHoverStart}
-      onTouchEnd={handleHoverEnd}
-      aria-label={text}
+      aria-label={`Progress: ${value}%`}
     >
-      {letters.map((letter, i) => {
-        const angle = (360 / letters.length) * i;
-        const radian = (angle * Math.PI) / 180;
-        const radius = size / 2.5;
-        const x = Math.cos(radian) * radius;
-        const y = Math.sin(radian) * radius;
-
-        return (
-          <motion.span
-            key={i}
-            className="circular-letter"
-            style={{
-              position: "absolute",
-              transform: `translate(-50%, -50%) translate(${x}px, ${y}px) rotate(${angle}deg)`,
-              transformOrigin: "center center"
-            }}
-            whileHover={{ scale: 1.2 }}
-          >
-            {letter}
-          </motion.span>
-        );
-      })}
-    </motion.div>
+      <svg 
+        className="circular-text-svg" 
+        width={size} 
+        height={size} 
+        viewBox={`0 0 ${size} ${size}`}
+      >
+        <circle
+          stroke={trailColor}
+          strokeWidth={strokeWidth}
+          fill="transparent"
+          r={radius}
+          cx={size / 2}
+          cy={size / 2}
+        />
+        <motion.circle
+          className="progress-ring__circle"
+          stroke={textColor}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          fill="transparent"
+          r={radius}
+          cx={size / 2}
+          cy={size / 2}
+          initial={{ strokeDashoffset: circumference }}
+          animate={{ 
+            strokeDashoffset: offset,
+            transition: { duration: 1, ease: "easeInOut" }
+          }}
+          strokeDasharray={circumference}
+        />
+      </svg>
+      
+      {showPercentage && (
+        <div className="circular-text-percentage" style={{ color: textColor }}>
+          {value}%
+        </div>
+      )}
+    </div>
   );
 };
 
