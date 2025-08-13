@@ -1,6 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { X, Play, Star, Lock, ArrowUpRight } from "lucide-react";
+import "./PreviewModal.css";
 
 interface PreviewModalProps {
   content: any;
@@ -23,7 +24,7 @@ const PreviewModal = ({
     switch (content.preview.type) {
       case "video":
         return (
-          <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
+          <div className="preview-video-container">
             <video 
               src={content.preview.url}
               autoPlay
@@ -31,7 +32,7 @@ const PreviewModal = ({
               controls
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
+            <div className="preview-watermark">SAEM'S TUNES</div>
           </div>
         );
       
@@ -71,9 +72,9 @@ const PreviewModal = ({
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="p-4 border-b flex justify-between items-center">
+    <div className="preview-modal-container">
+      <div className="preview-modal">
+        <div className="preview-modal-header">
           <h2 className="text-xl font-bold text-brown">
             Preview: {content.title}
           </h2>
@@ -87,7 +88,7 @@ const PreviewModal = ({
           </Button>
         </div>
         
-        <div className="p-6 flex-1 overflow-y-auto">
+        <div className="preview-modal-content">
           <div className="mb-6">
             {getPreviewContent()}
           </div>
@@ -118,7 +119,7 @@ const PreviewModal = ({
           </div>
         </div>
         
-        <div className="p-6 bg-cream border-t">
+        <div className="preview-modal-footer">
           {accessStatus.status === "granted" ? (
             <Button 
               className="w-full bg-gold hover:bg-gold-dark text-white"
