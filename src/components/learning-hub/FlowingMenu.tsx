@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { gsap } from "gsap";
+import "./FlowingMenu.css";
 
 interface MenuItem {
   label: string;
@@ -24,22 +25,25 @@ const FlowingMenu = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    setIsMobile(window.innerWidth < 768);
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   useEffect(() => {
     if (!menuRef.current) return;
     
     if (isOpen) {
-      gsap.fromTo(menuRef.current.children, 
-        { opacity: 0, y: 10 },
+      gsap.fromTo(menuRef.current, 
+        { opacity: 0, scale: 0.9 },
         { 
           opacity: 1, 
-          y: 0, 
-          stagger: 0.1, 
+          scale: 1,
           duration: 0.3,
           ease: "power2.out"
         }
@@ -69,17 +73,35 @@ const FlowingMenu = ({
     handleClose();
   };
 
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        buttonRef.current && 
+        !buttonRef.current.contains(event.target as Node) &&
+        menuRef.current && 
+        !menuRef.current.contains(event.target as Node)
+      ) {
+        handleClose();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
     <div 
-      className={`relative ${className}`}
+      className={`flowing-menu-container ${className}`}
       onMouseEnter={!isMobile && trigger === "hover" ? handleOpen : undefined}
       onMouseLeave={!isMobile && trigger === "hover" ? handleClose : undefined}
-      onTouchStart={isMobile ? handleOpen : undefined}
-      onTouchEnd={isMobile ? () => clearTimeout(longPressTimer.current!) : undefined}
-      onClick={isMobile && mobileBehavior === "click" ? handleOpen : undefined}
     >
       <button 
-        className="w-8 h-8 rounded-full bg-gold/10 hover:bg-gold/20 flex items-center justify-center transition-colors"
+        ref={buttonRef}
+        className="flowing-menu-button"
+        onTouchStart={isMobile ? handleOpen : undefined}
+        onTouchEnd={isMobile ? () => clearTimeout(longPressTimer.current!) : undefined}
+        onClick={isMobile && mobileBehavior === "click" ? handleOpen : undefined}
         aria-label="Course actions"
         aria-expanded={isOpen}
       >
@@ -91,17 +113,13 @@ const FlowingMenu = ({
       {isOpen && (
         <div 
           ref={menuRef}
-          className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg z-50 overflow-hidden py-2"
+          className="flowing-menu-items"
           onMouseLeave={!isMobile ? handleClose : undefined}
         >
           {items.map((item, index) => (
             <button
               key={index}
-              className={`w-full px-4 py-3 text-left flex items-center text-sm transition-colors ${
-                item.disabled 
-                  ? "text-muted-foreground cursor-not-allowed" 
-                  : "hover:bg-cream text-brown"
-              }`}
+              className={`flowing-menu-item ${item.disabled ? 'opacity-60' : ''}`}
               onClick={() => !item.disabled && handleItemClick(item.action)}
               disabled={item.disabled}
               aria-disabled={item.disabled}
