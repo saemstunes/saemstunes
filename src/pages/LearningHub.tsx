@@ -20,6 +20,7 @@ import Folder from "@/components/learning-hub/Folder";
 import DarkVeil from "@/components/learning-hub/DarkVeil";
 import PillNav from "@/components/learning-hub/PillNav";
 import PreviewModal from "@/components/learning-hub/PreviewModal";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const LearningHub = () => {
   const navigate = useNavigate();
