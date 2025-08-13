@@ -1,5 +1,6 @@
+import React from "react";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import "./CircularText.css";
 
 interface CircularTextProps {
   value: number;
@@ -20,23 +21,22 @@ const CircularText = ({
   textColor = "#C69B36",
   trailColor = "#F8F6F0"
 }: CircularTextProps) => {
-  const [progress, setProgress] = useState(0);
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
-  const offset = circumference - (progress / 100) * circumference;
-
-  useEffect(() => {
-    const timer = setTimeout(() => setProgress(value), 100);
-    return () => clearTimeout(timer);
-  }, [value]);
+  const offset = circumference - (value / 100) * circumference;
 
   return (
     <div 
-      className={`relative ${className}`}
+      className={`circular-text-container ${className}`}
       style={{ width: size, height: size }}
       aria-label={`Progress: ${value}%`}
     >
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <svg 
+        className="circular-text-svg" 
+        width={size} 
+        height={size} 
+        viewBox={`0 0 ${size} ${size}`}
+      >
         <circle
           stroke={trailColor}
           strokeWidth={strokeWidth}
@@ -46,6 +46,7 @@ const CircularText = ({
           cy={size / 2}
         />
         <motion.circle
+          className="progress-ring__circle"
           stroke={textColor}
           strokeWidth={strokeWidth}
           strokeLinecap="round"
@@ -59,21 +60,12 @@ const CircularText = ({
             transition: { duration: 1, ease: "easeInOut" }
           }}
           strokeDasharray={circumference}
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
         />
       </svg>
       
       {showPercentage && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span 
-            className="font-medium"
-            style={{ 
-              fontSize: size * 0.25, 
-              color: textColor 
-            }}
-          >
-            {value}%
-          </span>
+        <div className="circular-text-percentage" style={{ color: textColor }}>
+          {value}%
         </div>
       )}
     </div>
