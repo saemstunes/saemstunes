@@ -1,12 +1,15 @@
 // src/gsap/SplitText.tsx
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
-import { SplitText as GSAPSplitText } from "gsap/all";
+import { SplitText as GSAPSplitText } from "gsap/SplitText";
 
-// Register plugin globally
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(GSAPSplitText);
-}
+// Type definition for GSAP SplitText options
+type SplitTextOptions = {
+  type?: string;
+  charsClass?: string;
+  linesClass?: string;
+  wordsClass?: string;
+};
 
 interface SplitTextProps {
   text: string;
@@ -17,6 +20,7 @@ interface SplitTextProps {
   from?: gsap.TweenVars;
   to?: gsap.TweenVars;
   ease?: string;
+  splitOptions?: SplitTextOptions;
 }
 
 const SplitText = ({
@@ -27,45 +31,67 @@ const SplitText = ({
   delay = 0,
   from = { opacity: 0, y: 20 },
   to = { opacity: 1, y: 0 },
-  ease = "power3.out"
+  ease = "power3.out",
+  splitOptions = { type: "chars", charsClass: "char-anim" }
 }: SplitTextProps) => {
   const ref = useRef<HTMLParagraphElement>(null);
   const animated = useRef(false);
+  const splitInstance = useRef<GSAPSplitText | null>(null);
 
   useEffect(() => {
     if (!ref.current || animated.current) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     
     const element = ref.current;
-    const split = new GSAPSplitText(element, { 
-      type: "chars", 
-      charsClass: "char-anim" 
-    });
-
-    gsap.set(split.chars, from);
     
-    gsap.to(split.chars, {
+    // Create SplitText instance
+    splitInstance.current = new GSAPSplitText(element, splitOptions);
+    
+    // Get targets based on split type
+    const targets = getSplitTargets(splitInstance.current, splitOptions.type || "chars");
+    
+    if (!targets || targets.length === 0) {
+      console.warn("No valid targets for SplitText animation");
+      return;
+    }
+
+    gsap.set(targets, from);
+    
+    const animation = gsap.to(targets, {
       ...to,
       duration,
       ease,
       stagger,
       delay,
       onComplete: () => {
-        gsap.set(split.chars, { clearProps: "opacity,transform" });
+        gsap.set(targets, { clearProps: "opacity,transform,willChange" });
       }
     });
 
     animated.current = true;
 
     return () => {
-      if (split.revert) split.revert();
+      animation.kill();
+      if (splitInstance.current?.revert) {
+        splitInstance.current.revert();
+      }
     };
-  }, [text, duration, stagger, delay, from, to, ease]);
+  }, [text, duration, stagger, delay, from, to, ease, splitOptions]);
+
+  // Helper function to get proper targets
+  const getSplitTargets = (split: GSAPSplitText, type: string) => {
+    switch (type) {
+      case "chars": return split.chars;
+      case "words": return split.words;
+      case "lines": return split.lines;
+      default: return split.chars;
+    }
+  };
 
   return (
     <p 
       ref={ref}
-      className={`font-serif font-bold text-gold ${className}`}
+      className={`split-text-wrapper ${className}`}
       aria-label={text}
     >
       {text}
@@ -73,5 +99,4 @@ const SplitText = ({
   );
 };
 
-// Export as default
 export default SplitText;
