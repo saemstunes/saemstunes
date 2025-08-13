@@ -1,7 +1,7 @@
 // src/gsap/SplitText.tsx
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
-import { SplitText as GSAPSplitText } from "gsap/SplitText";
+import { SplitText as GSAPSplitText } from "gsap/all";
 
 // Register plugin globally
 if (typeof window !== "undefined") {
