@@ -1,61 +1,94 @@
-.flowing-menu-container {
-  position: relative;
-  z-index: 10;
+.menu-wrap {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
-.flowing-menu-button {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background-color: rgba(198, 155, 54, 0.1);
+.menu-wrap.horizontal {
+  height: auto;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.menu-wrap.horizontal .menu {
+  flex-direction: row;
+}
+
+.menu__item {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s;
+  cursor: pointer;
 }
 
-.flowing-menu-button:hover {
-  background-color: rgba(198, 155, 54, 0.2);
+.menu__item-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  color: #3B2F2F;
+  font-weight: 600;
+  font-size: 1.2rem;
+  transition: color 0.3s ease;
 }
 
-.flowing-menu-button:focus {
-  outline: 2px solid rgba(198, 155, 54, 0.5);
+.menu-icon {
+  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
 }
 
-.flowing-menu-items {
+.marquee {
   position: absolute;
-  right: 0;
-  top: 100%;
-  margin-top: 8px;
-  min-width: 200px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  z-index: 100;
-  overflow: hidden;
-  transform-origin: top right;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: #C69B36;
+  transform: translate3d(0, 101%, 0);
+  z-index: 1;
 }
 
-.flowing-menu-item {
+.marquee__inner {
   display: flex;
   align-items: center;
-  width: 100%;
-  padding: 12px 16px;
-  text-align: left;
-  font-size: 14px;
+  height: 100%;
+  width: 400%;
+  will-change: transform;
+  animation: marquee 15s linear infinite;
+}
+
+.marquee span {
   color: #3B2F2F;
-  transition: background-color 0.2s;
+  white-space: nowrap;
+  font-weight: 600;
+  padding: 0 1rem;
 }
 
-.flowing-menu-item:hover {
-  background-color: #F8F6F0;
+.marquee__icon {
+  padding: 0 1rem;
+  font-size: 1.5rem;
 }
 
-.flowing-menu-item:disabled {
-  opacity: 0.5;
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* Disabled state */
+.opacity-60 {
+  opacity: 0.6;
   cursor: not-allowed;
-}
-
-.flowing-menu-item:disabled:hover {
-  background-color: transparent;
 }
