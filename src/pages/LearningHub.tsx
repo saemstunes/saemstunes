@@ -338,7 +338,7 @@ const LearningHub = () => {
         <header className="col-span-full pt-6 px-4">
           <animated.div style={titleAnimation} className="mb-4">
             <SplitText 
-              text="Learning Hub" 
+              text="Let's Learn!" 
               className="text-4xl font-serif font-bold text-gold" 
               duration={0.8}
               stagger={0.03}
