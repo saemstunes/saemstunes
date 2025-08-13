@@ -1,8 +1,12 @@
+// src/gsap/SplitText.tsx
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
-import { SplitText as GSAPSplitText } from "@/gsap/SplitText";
+import { SplitText as GSAPSplitText } from "gsap/SplitText";
 
-gsap.registerPlugin(GSAPSplitText);
+// Register plugin globally
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(GSAPSplitText);
+}
 
 interface SplitTextProps {
   text: string;
@@ -69,4 +73,5 @@ const SplitText = ({
   );
 };
 
+// Export as default
 export default SplitText;
