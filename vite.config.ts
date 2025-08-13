@@ -1,4 +1,3 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -19,6 +18,7 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "gsap/SplitText": resolve(__dirname, "node_modules/gsap/SplitText") // Added GSAP alias
     },
   },
   build: {
@@ -29,15 +29,15 @@ export default defineConfig(({ mode }) => ({
           router: ['react-router-dom'],
           ui: ['@radix-ui/react-accordion', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
           supabase: ['@supabase/supabase-js'],
-          utils: ['clsx', 'tailwind-merge', 'framer-motion']
+          utils: ['clsx', 'tailwind-merge', 'framer-motion'],
+          gsap: ['gsap'] // Added GSAP to vendor chunk
         }
       }
     },
     target: 'esnext',
-    minify: 'esbuild', // Changed from 'terser' to 'esbuild'
-    // Removed terserOptions since we're not using terser anymore
+    minify: 'esbuild',
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom']
+    include: ['react', 'react-dom', 'react-router-dom', 'gsap'] // Added GSAP to deps
   }
 }));
