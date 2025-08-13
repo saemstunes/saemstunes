@@ -1,0 +1,28 @@
+.folder-container {
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.folder-container:hover {
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.folder-container button:focus {
+  outline: 2px solid rgba(198, 155, 54, 0.5);
+  outline-offset: 2px;
+}
+
+.folder-content {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: 
+    max-height 0.5s cubic-bezier(0.22, 0.61, 0.36, 1),
+    opacity 0.3s ease;
+}
+
+.folder-content.expanded {
+  max-height: 2000px;
+  opacity: 1;
+}
