@@ -1,6 +1,6 @@
-import { useRef, useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
-import { SplitText as GSAPSplitText } from "gsap/SplitText";
+import { SplitText as GSAPSplitText } from "@/gsap/SplitText";
 
 gsap.registerPlugin(GSAPSplitText);
 
@@ -54,14 +54,14 @@ const SplitText = ({
     animated.current = true;
 
     return () => {
-      split.revert();
+      if (split.revert) split.revert();
     };
   }, [text, duration, stagger, delay, from, to, ease]);
 
   return (
     <p 
       ref={ref}
-      className={`split-parent font-serif font-bold text-gold ${className}`}
+      className={`font-serif font-bold text-gold ${className}`}
       aria-label={text}
     >
       {text}
