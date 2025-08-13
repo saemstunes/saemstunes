@@ -1,20 +1,30 @@
-.circular-text-container {
+.circular-text {
   position: relative;
-  display: inline-block;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  font-weight: 700;
+  cursor: pointer;
+  transform-origin: center;
 }
 
-.circular-text-svg {
-  transform: rotate(-90deg);
-}
-
-.circular-text-svg circle {
-  transition: stroke-dashoffset 1s ease-in-out;
-}
-
-.circular-text-percentage {
+.circular-letter {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-weight: 500;
+  font-size: 1.5rem;
+  color: #C69B36;
+  transition: transform 0.3s ease;
+  will-change: transform;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .circular-text {
+    width: 150px !important;
+    height: 150px !important;
+  }
+  
+  .circular-letter {
+    font-size: 1.2rem;
+  }
 }
