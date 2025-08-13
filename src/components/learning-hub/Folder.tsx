@@ -1,6 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useRef, useEffect } from "react";
 import { gsap } from "gsap";
 import { FolderOpen, Folder as FolderIcon } from "lucide-react";
+import "@/components/learning-hub/Folder.css";
 
 interface FolderProps {
   title: string;
@@ -23,17 +24,16 @@ const Folder = ({
   onToggle,
   children
 }: FolderProps) => {
-  const contentRef = useRef<HTMLDivElement>(null);
   const folderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!folderRef.current) return;
-    
-    gsap.to(folderRef.current, {
-      y: isExpanded ? -10 : 0,
-      duration: 0.3,
-      ease: "power2.out"
-    });
+    if (folderRef.current) {
+      gsap.to(folderRef.current, {
+        y: isExpanded ? -10 : 0,
+        duration: 0.3,
+        ease: "power2.out"
+      });
+    }
   }, [isExpanded]);
 
   return (
@@ -73,12 +73,10 @@ const Folder = ({
       
       <div
         id={`folder-content-${title.replace(/\s+/g, '-')}`}
-        className={`overflow-hidden transition-all duration-500 ease-in-out ${
-          isExpanded ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
-        }`}
+        className={`folder-content ${isExpanded ? 'expanded' : ''}`}
         aria-hidden={!isExpanded}
       >
-        <div className="p-4 pt-0" ref={contentRef}>
+        <div className="p-4 pt-0">
           {children}
         </div>
       </div>
