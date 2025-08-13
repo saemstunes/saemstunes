@@ -1,19 +1,16 @@
 .darkveil {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   z-index: 40;
-  background: radial-gradient(
-    circle at 70% 30%, 
-    hsla(120, 70%, 20%, 0.8) 0%, 
-    hsla(150, 90%, 5%, 0.9) 100%
-  );
-  backdrop-filter: blur(5px);
-  display: none;
+  pointer-events: none;
   opacity: 0;
   transition: opacity 0.4s ease;
 }
 
 .darkveil.visible {
-  display: block;
   opacity: 1;
+  pointer-events: auto;
 }
