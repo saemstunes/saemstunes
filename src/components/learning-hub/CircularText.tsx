@@ -11,7 +11,7 @@ interface CircularTextProps {
 }
 
 const CircularText = ({
-  text,
+  text = "",
   spinDuration = 20,
   onHover = "speedUp",
   className = "",
