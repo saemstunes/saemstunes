@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { 
   Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle 
@@ -21,25 +21,95 @@ import DarkVeil from "@/components/learning-hub/DarkVeil";
 import PillNav from "@/components/learning-hub/PillNav";
 import PreviewModal from "@/components/learning-hub/PreviewModal";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { motion, AnimatePresence } from "framer-motion";
+
+// Access Policy Constants
+const ACCESS_LEVELS = {
+  free: { level: 0, label: 'Free', color: 'bg-green-500' },
+  subscriber: { level: 1, label: 'Subscriber', color: 'bg-blue-500' },
+  pro: { level: 2, label: 'Pro', color: 'bg-purple-500' },
+  master: { level: 3, label: 'Master', color: 'bg-gold' },
+  admin: { level: 4, label: 'Admin', color: 'bg-red-500' }
+};
+
+const PREVIEW_STRATEGIES = {
+  video: { duration: 90, quality: '720p', watermark: true },
+  audio: { duration: 60, bitrate: '64kbps', fadeOut: true },
+  text: { paragraphs: 2, showOutline: true },
+  interactive: { demoMode: true, limitedFeatures: true }
+};
+
+// Utility Functions
+const calculateSavings = (currentLevel: string, targetLevel: string) => {
+  const savings = {
+    'free->subscriber': { monthly: 15, yearly: 180 },
+    'free->pro': { monthly: 25, yearly: 300 },
+    'subscriber->pro': { monthly: 10, yearly: 120 }
+  };
+  const key = `${currentLevel}->${targetLevel}` as keyof typeof savings;
+  return savings[key] || { monthly: 20, yearly: 240 };
+};
+
+const getUpgradeBonuses = (targetLevel: string) => {
+  const bonuses: Record<string, string[]> = {
+    subscriber: ['Unlimited course access', 'Mobile app', 'Progress tracking'],
+    pro: ['1:1 instructor sessions', 'Performance feedback', 'Certificate of completion', 'Advanced exercises'],
+    master: ['Personal learning coach', 'Industry networking', 'Performance opportunities', 'Masterclass access']
+  };
+  return bonuses[targetLevel] || [];
+};
+
+const generateTestimonials = (category = "music") => [
+  {
+    name: 'Sarah M.',
+    location: 'Nairobi, Kenya',
+    message: `This ${category} course transformed my understanding completely!`,
+    avatar: '/testimonials/sarah-m.jpg',
+    verified: true
+  },
+  {
+    name: 'David K.',
+    location: 'Lagos, Nigeria', 
+    message: 'I went from beginner to performing in just 3 months.',
+    avatar: '/testimonials/david-k.jpg',
+    verified: true
+  }
+];
+
+const getPersonalizedGreeting = (user: any) => {
+  return user?.name ? `Hi ${user.name.split(' ')[0]}! Ready to learn?` : "Welcome to Saem's Tunes!";
+};
+
+const getMotivationalMessage = (progress: number | Record<string, number>) => {
+  if (typeof progress === 'number') {
+    if (progress <= 5) return "Small steps every day - you've got this!";
+    if (progress < 50) return `You're ${progress}% through - keep going!`;
+    return `Amazing progress - ${progress}% complete!`;
+  }
+  return "Your musical journey starts today. Let's begin!";
+};
 
 const LearningHub = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("my-path");
-  const [previewData, setPreviewData] = useState(null);
+  const [previewData, setPreviewData] = useState<any>(null);
   const [showPreview, setShowPreview] = useState(false);
-  const [expandedFolder, setExpandedFolder] = useState(null);
+  const [expandedFolder, setExpandedFolder] = useState<string | null>(null);
   const [mobileDockOpen, setMobileDockOpen] = useState(false);
-  const dockRef = useRef(null);
-  const folderRefs = useRef([]);
-
-  // Animated title with session-based animation
+  const dockRef = useRef<HTMLDivElement>(null);
+  const folderRefs = useRef<(HTMLDivElement | null)[]>([]);
+  
+  // Animation states
   const [titleAnimated, setTitleAnimated] = useState(false);
+  const prefersReducedMotion = typeof window !== 'undefined' && 
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  
   const titleAnimation = useSpring({
     from: { opacity: 0, transform: "translateY(20px)" },
     to: { opacity: 1, transform: "translateY(0)" },
     config: { duration: 800 },
-    immediate: !titleAnimated || window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    immediate: !titleAnimated || prefersReducedMotion
   });
 
   useEffect(() => {
@@ -50,7 +120,7 @@ const LearningHub = () => {
     }
     
     // Folder stagger animation
-    gsap.from(folderRefs.current, {
+    gsap.from(folderRefs.current.filter(Boolean), {
       y: 20,
       opacity: 0,
       stagger: 0.1,
@@ -60,14 +130,155 @@ const LearningHub = () => {
     });
   }, []);
 
-  // Enhanced data model with musical categories
+  // Enhanced Access Control System
+  const getEnhancedAccessStatus = useCallback((course: any) => {
+    const requiredLevel = course?.accessLevel || 'free';
+    const userLevel = user?.accessLevel || 'free';
+    const hasAccess = ACCESS_LEVELS[userLevel].level >= ACCESS_LEVELS[requiredLevel].level;
+    
+    if (!user) {
+      return {
+        status: 'locked',
+        action: 'signup',
+        messaging: {
+          primary: 'Unlock Your Musical Journey',
+          secondary: `Join thousands of musicians learning ${course?.category || 'music'}`,
+          cta: 'Start Free Trial',
+          urgencyText: `${course?.enrollmentCount || Math.floor(Math.random() * 500) + 100} learners enrolled this month`
+        },
+        preview: {
+          available: true,
+          strategy: PREVIEW_STRATEGIES[course?.preview?.type || 'video'],
+          teasers: [
+            `Learn ${course?.skillsCount || '5+'} essential techniques`,
+            `Master ${course?.title || 'this course'} in ${course?.estimatedTime || '2-4 weeks'}`,
+            `Get personalized feedback from ${course?.instructor?.name || 'the instructor'}`
+          ]
+        },
+        conversion: {
+          redirect: `/auth?next=${encodeURIComponent(`/learning-hub/${course?.id}`)}`,
+          incentive: 'first_month_free',
+          social_proof: true
+        }
+      };
+    }
+    
+    if (!hasAccess) {
+      return {
+        status: 'upgrade_required',
+        action: 'upgrade',
+        messaging: {
+          primary: `Upgrade to ${ACCESS_LEVELS[requiredLevel].label} Access`,
+          secondary: `Unlock ${course?.title || 'advanced content'} + many more courses`,
+          cta: `Upgrade to ${ACCESS_LEVELS[requiredLevel].label}`,
+          savings: calculateSavings(userLevel, requiredLevel)
+        },
+        preview: {
+          available: true,
+          strategy: PREVIEW_STRATEGIES[course?.preview?.type || 'video'],
+          exclusive_glimpse: true
+        },
+        conversion: {
+          redirect: `/pricing?upgrade=${requiredLevel}&from=${userLevel}`,
+          trial: '7_day_free_trial',
+          bonuses: getUpgradeBonuses(requiredLevel)
+        }
+      };
+    }
+    
+    return {
+      status: 'granted',
+      action: course.progress > 0 ? 'continue' : 'start',
+      messaging: {
+        primary: course.progress > 0 ? 'Continue Your Journey' : 'Start Learning',
+        secondary: course.progress > 0 ? 
+          `You're ${course.progress}% through this course` : 
+          'Begin your musical transformation today'
+      }
+    };
+  }, [user]);
+
+  const createPreviewExperience = useCallback((course: any) => {
+    const accessStatus = getEnhancedAccessStatus(course);
+    const mediaUrl = course?.preview?.url || null;
+    const mediaType = course?.preview?.type || 'video';
+    const duration = accessStatus?.preview?.strategy?.duration || course?.preview?.duration || 60;
+    
+    return {
+      id: course.id,
+      title: course.title,
+      instructor: course.instructor,
+      preview: {
+        mediaUrl,
+        mediaType,
+        duration,
+        poster: course.previewImage || null,
+        chapters: course.preview?.chapters || [],
+        transcript: course.preview?.transcript ? 
+          course.preview.transcript.slice(0, 200) + '...' : null
+      },
+      valueProps: [
+        `Master ${course.skillsCount || '7+'} core techniques`,
+        `Join ${course.communitySize || '2,500+'} active learners`,
+        `Get ${course.instructor?.responseTime || '24-hour'} instructor support`
+      ],
+      socialProof: {
+        studentCount: course.enrollmentCount || Math.floor(Math.random() * 1000) + 500,
+        rating: course.averageRating || 4.8,
+        testimonials: course.featured_testimonials || generateTestimonials(course.title)
+      },
+      conversion: accessStatus.conversion || {},
+      urgency: {
+        type: 'enrollment_deadline',
+        message: 'Limited spots available this month',
+        countdown: null
+      },
+      accessStatus
+    };
+  }, [getEnhancedAccessStatus]);
+
+  // Content Interaction Handler
+  const handleContentInteraction = useCallback((
+    course: any, 
+    interactionType: 'preview' | 'enroll'
+  ) => {
+    const accessStatus = getEnhancedAccessStatus(course);
+    
+    // Track event
+    console.log('Tracking: content_interaction', {
+      courseId: course.id,
+      accessStatus: accessStatus.status,
+      interactionType,
+      userLevel: user?.accessLevel || 'anonymous'
+    });
+    
+    switch (accessStatus.status) {
+      case 'locked':
+      case 'upgrade_required':
+        setPreviewData(createPreviewExperience(course));
+        setShowPreview(true);
+        break;
+        
+      case 'granted':
+        if (interactionType === 'preview') {
+          setPreviewData(createPreviewExperience(course));
+          setShowPreview(true);
+        } else {
+          navigate(`/learning-hub/${course.id}`);
+        }
+        break;
+    }
+  }, [getEnhancedAccessStatus, createPreviewExperience, navigate, user]);
+
+  // Enhanced Data Model
   const learningCategories = [
     {
       id: "vocal-techniques",
-      title: "Vocal Techniques",
-      description: "Master breathing, pitch, and tone control",
+      title: "Vocal Mastery Studio",
+      description: "From breath control to stage presence - master the art of voice",
       icon: <Music className="h-6 w-6" />,
-      color: "bg-blue-500",
+      color: "bg-gradient-to-br from-blue-500 to-indigo-600",
+      estimatedTime: "3-6 months",
       courses: [
         {
           id: "breathing-techniques",
@@ -81,13 +292,22 @@ const LearningHub = () => {
           instructor: { 
             id: "sarah-k", 
             name: "Sarah K.", 
-            avatar: "/instructors/sarah.jpg" 
+            avatar: "/instructors/sarah.jpg",
+            responseTime: "within 6 hours",
+            rating: 4.9
           },
           preview: {
             type: "video",
             url: "/previews/vocal-breathing.mp4",
-            duration: 90
-          }
+            duration: 90,
+            chapters: [
+              { time: 0, title: "Introduction" },
+              { time: 30, title: "Basic Exercises" }
+            ]
+          },
+          enrollmentCount: 1247,
+          averageRating: 4.8,
+          skillsCount: 5
         },
         {
           id: "vocal-range",
@@ -101,22 +321,27 @@ const LearningHub = () => {
           instructor: { 
             id: "mike-t", 
             name: "Mike T.", 
-            avatar: "/instructors/mike.jpg" 
+            avatar: "/instructors/mike.jpg",
+            responseTime: "within 12 hours",
+            rating: 4.7
           },
           preview: {
             type: "audio",
             url: "/previews/vocal-range.mp3",
             duration: 60
-          }
+          },
+          enrollmentCount: 892,
+          averageRating: 4.6,
+          skillsCount: 7
         }
       ]
     },
     {
       id: "music-theory",
-      title: "Music Theory",
+      title: "Music Theory Laboratory",
       description: "Understand notation, harmony, and composition",
       icon: <BookOpen className="h-6 w-6" />,
-      color: "bg-purple-500",
+      color: "bg-gradient-to-br from-purple-500 to-pink-600",
       courses: [
         {
           id: "chord-progressions",
@@ -130,46 +355,24 @@ const LearningHub = () => {
           instructor: { 
             id: "david-m", 
             name: "David M.", 
-            avatar: "/instructors/david.jpg" 
+            avatar: "/instructors/david.jpg",
+            responseTime: "within 24 hours",
+            rating: 4.5
           },
           preview: {
             type: "text",
-            content: "Chord progressions form the backbone of musical harmony..."
-          }
-        }
-      ]
-    },
-    {
-      id: "performance",
-      title: "Stage Performance",
-      description: "Command the stage with confidence",
-      icon: <Play className="h-6 w-6" />,
-      color: "bg-amber-500",
-      courses: [
-        {
-          id: "stage-presence",
-          title: "Stage Presence",
-          description: "Connect with your audience authentically",
-          progress: user ? 0 : 0,
-          lessons: 7,
-          duration: 52,
-          level: "advanced",
-          accessLevel: "pro",
-          instructor: { 
-            id: "lisa-g", 
-            name: "Lisa G.", 
-            avatar: "/instructors/lisa.jpg" 
+            content: "Chord progressions form the backbone of musical harmony...",
+            duration: 120
           },
-          preview: {
-            type: "video",
-            url: "/previews/stage-presence.mp4",
-            duration: 90
-          }
+          enrollmentCount: 567,
+          averageRating: 4.4,
+          skillsCount: 6
         }
       ]
     }
   ];
 
+  // Additional data structures
   const pinnedCourses = [
     {
       id: "performance-skills",
@@ -215,47 +418,38 @@ const LearningHub = () => {
     { id: "new-releases", label: "New Releases" }
   ];
 
-  const handlePreview = (course) => {
-    setPreviewData(course);
-    setShowPreview(true);
+  // Folder toggle animation
+  const handleFolderToggle = useCallback((folderId: string) => {
+    setExpandedFolder(prev => prev === folderId ? null : folderId);
+    const folderContent = document.getElementById(`folder-content-${folderId}`);
     
-    // Analytics event
-    trackEvent("preview_opened", { 
-      courseId: course.id, 
-      accessLevel: course.accessLevel 
-    });
-  };
-
-  const handleEnroll = (course) => {
-    if (!user) {
-      navigate(`/auth?next=/learning-hub/${course.id}`);
-      return;
+    if (folderContent) {
+      gsap.to(folderContent, {
+        height: "auto",
+        opacity: 1,
+        duration: 0.5,
+        ease: "power2.inOut",
+        onStart: () => {
+          if (folderContent.style.height === "0px") {
+            folderContent.style.overflow = "hidden";
+          }
+        },
+        onComplete: () => {
+          folderContent.style.overflow = "visible";
+        }
+      });
     }
-    
-    if (course.accessLevel === "pro" && user.accessLevel !== "pro") {
-      handlePreview(course);
-      return;
-    }
-    
-    navigate(`/learning-hub/${course.id}`);
-  };
+  }, []);
 
-  const getAccessStatus = (course) => {
-    if (!user) return { status: "locked", action: "signup" };
-    if (course.accessLevel === "pro" && user.accessLevel !== "pro") {
-      return { status: "upgrade_required", action: "upgrade" };
-    }
-    return { status: "granted" };
-  };
-
-  const flowingMenuItems = (course) => {
-    const access = getAccessStatus(course);
+  // Flowing menu items
+  const flowingMenuItems = useCallback((course: any) => {
+    const access = getEnhancedAccessStatus(course);
     
     return [
       {
         label: "Preview",
         icon: <Video className="h-4 w-4" />,
-        action: () => handlePreview(course),
+        action: () => handleContentInteraction(course, 'preview'),
         disabled: false
       },
       {
@@ -272,49 +466,31 @@ const LearningHub = () => {
           ? (course.progress > 0 ? <Play className="h-4 w-4" /> : <Star className="h-4 w-4" />) 
           : <CheckCircle className="h-4 w-4" />,
         action: () => access.status === "granted" 
-          ? handleEnroll(course) 
-          : handlePreview(course),
+          ? handleContentInteraction(course, 'enroll')
+          : handleContentInteraction(course, 'preview'),
         disabled: access.status !== "granted"
       },
       {
         label: "Share",
         icon: <Share2 className="h-4 w-4" />,
-        action: () => navigator.share?.({
-          title: course.title,
-          text: `Check out this music course on Saem's Tunes: ${course.description}`,
-          url: window.location.href
-        }) || navigator.clipboard.writeText(window.location.href),
+        action: () => {
+          if (typeof navigator !== 'undefined' && navigator.share) {
+            navigator.share({
+              title: course.title,
+              text: `Check out this music course on Saem's Tunes: ${course.description}`,
+              url: window.location.href
+            }).catch(console.error);
+          } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+            navigator.clipboard.writeText(window.location.href);
+          }
+        },
         disabled: false
       }
     ];
-  };
-
-  const trackEvent = (eventName, properties = {}) => {
-    console.log(`Tracking: ${eventName}`, {
-      userId: user?.id,
-      timestamp: new Date().toISOString(),
-      ...properties
-    });
-  };
-
-  const handleFolderToggle = (folderId) => {
-    setExpandedFolder(prev => prev === folderId ? null : folderId);
-    
-    // Animation for folder content
-    const folderContent = document.getElementById(`folder-content-${folderId}`);
-    if (folderContent) {
-      gsap.to(folderContent, {
-        height: expandedFolder === folderId ? 0 : "auto",
-        opacity: expandedFolder === folderId ? 0 : 1,
-        duration: 0.5,
-        ease: "power2.inOut"
-      });
-    }
-  };
+  }, [getEnhancedAccessStatus, handleContentInteraction, navigate, user]);
 
   return (
     <MainLayout>
-      {/* DarkVeil for modals */}
       <DarkVeil 
         isVisible={showPreview} 
         onClick={() => setShowPreview(false)}
@@ -323,11 +499,9 @@ const LearningHub = () => {
         speed={0.3}
       />
       
-      {/* Preview Modal */}
       {showPreview && previewData && (
         <PreviewModal 
           content={previewData} 
-          accessStatus={getAccessStatus(previewData)}
           onClose={() => setShowPreview(false)}
           onSignup={() => navigate(`/auth?next=/learning-hub/${previewData.id}`)}
           onUpgrade={() => navigate("/pricing")}
@@ -335,7 +509,6 @@ const LearningHub = () => {
       )}
 
       <div className="hub-shell grid grid-cols-1 lg:grid-cols-[240px_1fr_300px] gap-6 min-h-screen">
-        {/* Header Hero */}
         <header className="col-span-full pt-6 px-4">
           <animated.div style={titleAnimation} className="mb-4">
             <SplitText 
@@ -356,7 +529,6 @@ const LearningHub = () => {
           />
         </header>
 
-        {/* Left Dock */}
         <aside 
           ref={dockRef}
           className={`left-dock bg-cream/90 backdrop-blur-sm rounded-xl p-4 transition-all duration-300 ${
@@ -379,7 +551,10 @@ const LearningHub = () => {
           )}
           
           <div className="dock-content space-y-6">
-            <section>
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
               <h3 className="flex items-center font-medium mb-3 text-gold-dark">
                 <Play className="h-4 w-4 mr-2 text-gold" />
                 Continue Learning
@@ -412,16 +587,20 @@ const LearningHub = () => {
                         variant="ghost"
                         size="sm"
                         className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => handleEnroll(course)}
+                        onClick={() => handleContentInteraction(course, 'enroll')}
                       >
                         <ChevronRight className="h-4 w-4" />
                       </Button>
                     </Card>
                   ))}
               </div>
-            </section>
+            </motion.section>
 
-            <section>
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
               <h3 className="flex items-center font-medium mb-3 text-gold-dark">
                 <Pin className="h-4 w-4 mr-2 text-gold" />
                 Pinned Courses
@@ -451,9 +630,13 @@ const LearningHub = () => {
                   </Card>
                 ))}
               </div>
-            </section>
+            </motion.section>
 
-            <section>
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
               <h3 className="flex items-center font-medium mb-3 text-gold-dark">
                 <History className="h-4 w-4 mr-2 text-gold" />
                 Recent Activity
@@ -472,9 +655,13 @@ const LearningHub = () => {
                   <p className="text-xs text-muted-foreground mt-1">1 week ago</p>
                 </div>
               </div>
-            </section>
+            </motion.section>
 
-            <section>
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
               <h3 className="flex items-center font-medium mb-3 text-gold-dark">
                 <Settings className="h-4 w-4 mr-2 text-gold" />
                 Quick Actions
@@ -493,11 +680,10 @@ const LearningHub = () => {
                   Help Center
                 </Button>
               </div>
-            </section>
+            </motion.section>
           </div>
         </aside>
 
-        {/* Center Studio */}
         <main className="center-studio px-4 pb-6">
           <div className="folder-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {learningCategories.map((category, index) => (
@@ -519,7 +705,7 @@ const LearningHub = () => {
                     className="course-grid grid grid-cols-1 gap-4 mt-4"
                   >
                     {category.courses.map(course => {
-                      const access = getAccessStatus(course);
+                      const access = getEnhancedAccessStatus(course);
                       
                       return (
                         <Card 
@@ -541,7 +727,7 @@ const LearningHub = () => {
                                   <Button 
                                     variant="gold"
                                     size="sm"
-                                    onClick={() => handlePreview(course)}
+                                    onClick={() => handleContentInteraction(course, 'preview')}
                                   >
                                     {access.status === "locked" 
                                       ? "Unlock Preview" 
@@ -597,8 +783,8 @@ const LearningHub = () => {
                               variant={access.status === "granted" ? "default" : "outline"}
                               onClick={() => 
                                 access.status === "granted" 
-                                  ? handleEnroll(course) 
-                                  : handlePreview(course)
+                                  ? handleContentInteraction(course, 'enroll')
+                                  : handleContentInteraction(course, 'preview')
                               }
                             >
                               {access.status === "granted"
@@ -616,7 +802,6 @@ const LearningHub = () => {
           </div>
         </main>
 
-        {/* Right Panel */}
         <aside className="right-panel bg-cream/90 backdrop-blur-sm rounded-xl p-4 hidden lg:block">
           <section className="mb-8">
             <h3 className="font-medium mb-4 flex items-center text-gold-dark">
@@ -691,7 +876,6 @@ const LearningHub = () => {
         </aside>
       </div>
 
-      {/* Mobile Dock Toggle */}
       <div className="fixed bottom-4 left-4 lg:hidden z-40">
         <Button 
           variant="gold"
@@ -703,7 +887,6 @@ const LearningHub = () => {
         </Button>
       </div>
 
-      {/* Mobile Achievements */}
       <div className="lg:hidden px-4 pb-6">
         <Tabs defaultValue="courses" className="w-full">
           <TabsList className="grid grid-cols-2">
