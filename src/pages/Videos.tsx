@@ -1,5 +1,7 @@
+
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import MainLayout from "@/components/layout/MainLayout";
 import VideoCard from "@/components/videos/VideoCard";
 import { mockVideos } from "@/data/mockData";
 import { Input } from "@/components/ui/input";
@@ -12,7 +14,6 @@ import {
 } from "@/components/ui/select";
 import { Search } from "lucide-react";
 import { canAccessContent } from "@/lib/contentAccess";
-import { motion } from "framer-motion";
 
 const Videos = () => {
   const { user } = useAuth();
@@ -20,16 +21,23 @@ const Videos = () => {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [levelFilter, setLevelFilter] = useState("all");
 
+  // Get unique categories from videos
   const categories = ["all", ...new Set(mockVideos.map((video) => video.category))];
+
+  // Get unique levels from videos
   const levels = ["all", ...new Set(mockVideos.map((video) => video.level))];
 
+  // Filter videos based on search term, category, level, and access control
   const filteredVideos = mockVideos.filter((video) => {
     const matchesSearch = video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       video.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       video.instructor.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesCategory = categoryFilter === "all" || video.category === categoryFilter;
+    
     const matchesLevel = levelFilter === "all" || video.level === levelFilter;
+
+    // Use the new access control system
     const userSubscriptionTier = user?.subscriptionTier || 'free';
     const hasAccess = canAccessContent(video.accessLevel, user, userSubscriptionTier);
     
@@ -37,16 +45,12 @@ const Videos = () => {
   });
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="w-full"
-    >
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <h2 className="text-2xl font-serif font-bold text-gold-dark">Video Lessons</h2>
+    <MainLayout>
+      <div>
+        <h1 className="text-3xl font-serif font-bold mb-6">Video Lessons</h1>
         
-        <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+        {/* Search and Filter */}
+        <div className="flex flex-col md:flex-row gap-4 mb-8">
           <div className="relative flex-grow">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
@@ -57,11 +61,10 @@ const Videos = () => {
               className="pl-10"
             />
           </div>
-          
           <div className="flex gap-4">
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Category" />
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select Category" />
               </SelectTrigger>
               <SelectContent>
                 {categories.map((category) => (
@@ -73,8 +76,8 @@ const Videos = () => {
             </Select>
             
             <Select value={levelFilter} onValueChange={setLevelFilter}>
-              <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="Level" />
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select Level" />
               </SelectTrigger>
               <SelectContent>
                 {levels.map((level) => (
@@ -86,38 +89,27 @@ const Videos = () => {
             </Select>
           </div>
         </div>
+        
+        {filteredVideos.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredVideos.map((video) => (
+              <VideoCard 
+                key={video.id} 
+                video={video} 
+                isPremium={video.accessLevel !== 'free'} 
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <h3 className="text-lg font-medium">No videos found</h3>
+            <p className="text-muted-foreground text-sm mt-2">
+              Try adjusting your search or filter criteria, or sign in to access more content.
+            </p>
+          </div>
+        )}
       </div>
-      
-      {filteredVideos.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredVideos.map((video) => (
-            <VideoCard 
-              key={video.id} 
-              video={video} 
-              isPremium={video.accessLevel !== 'free'} 
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-12 bg-cream/50 rounded-xl">
-          <h3 className="text-lg font-medium text-gold-dark">No videos found</h3>
-          <p className="text-muted-foreground text-sm mt-2">
-            Try adjusting your search or filter criteria
-          </p>
-          <Button 
-            variant="gold" 
-            className="mt-4"
-            onClick={() => {
-              setSearchTerm("");
-              setCategoryFilter("all");
-              setLevelFilter("all");
-            }}
-          >
-            Clear Filters
-          </Button>
-        </div>
-      )}
-    </motion.div>
+    </MainLayout>
   );
 };
 
