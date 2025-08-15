@@ -56,8 +56,12 @@ import Artists from "./pages/Artists";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import MusicShowcase from "./pages/MusicShowcase";
-import Profile from "./pages/Profile";  // ADDED PROFILE IMPORT
+import Profile from "./pages/Profile";
 import { FeaturedItemsProvider } from '@/context/FeaturedItemsContext';
+import LearningHubCourses from "./pages/LearningHubCourses";
+import LearningHubVideos from "./pages/LearningHubVideos";
+import LearningHubClasses from "./pages/LearningHubClasses";
+import LearningHubNew from "./pages/LearningHubNew";
 
 const queryClient = new QueryClient();
 
@@ -97,8 +101,11 @@ const App = () => {
                   <Route path="/privacy" element={<Privacy />} />
                   <Route path="/unauthorized" element={<Unauthorized />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
-                  <Route path="/videos" element={<Videos />} />
-                  <Route path="/videos/:id" element={<VideoDetail />} />
+                  
+                  {/* Redirect old videos path to new learning-hub location */}
+                  <Route path="/videos" element={<Navigate to="/learning-hub/videos" replace />} />
+                  <Route path="/videos/:id" element={<Navigate to="/learning-hub/videos/:id" replace />} />
+                  
                   <Route path="/resources" element={<Resources />} />
                   <Route path="/resources/:id" element={<ResourceDetail />} />
                   <Route path="/search" element={<Search />} />
@@ -108,32 +115,32 @@ const App = () => {
                   <Route path="/tracks" element={<Tracks />} />
                   <Route path="/music-showcase" element={<Navigate to="/tracks" replace />} />
                   <Route path="/player" element={<Player />} />
-                  <Route path="/learning-hub" element={<LearningHub />} />
-                  <Route path="/learning-hub/:id" element={<LearningModulePage />} />
-                  <Route path="/learning-module/:id" element={<LearningModulePage />} />
+                  <Route path="/learning-hub" element={<LearningHub />}>
+                    <Route index element={null} />
+                    <Route path="courses" element={<LearningHubCourses />} />
+                    <Route path="videos" element={<Videos />} />
+                    <Route path="videos/:id" element={<VideoDetail />} />
+                    <Route path="classes" element={<LearningHubClasses />} />
+                    <Route path="new" element={<LearningHubNew />} />
+                    <Route path=":moduleId" element={<LearningModulePage />} />
+                  </Route>
                   <Route path="/artist/:slug" element={<ArtistProfile />} />
                   <Route path="/notifications" element={<Notifications />} />
                   <Route path="/follow-us" element={<FollowUs />} />
                   <Route path="/contact-us" element={<ContactUs />} />
                   <Route path="/support-us" element={<SupportUs />} />
                   <Route path="/settings" element={<Settings />} />
-                  
-                  {/* ADDED PROFILE ROUTE */}
                   <Route path="/profile" element={
                     <ProtectedRoute>
                       <Profile />
                     </ProtectedRoute>
                   } />
-                  
                   <Route path="/services" element={<Services />} />
                   <Route path="/payment" element={<Payment />} />
                   <Route path="/payment-success" element={<PaymentSuccess />} />
                   <Route path="/subscriptions" element={<Subscriptions />} />
                   <Route path="/music-tools" element={<MusicTools />} />
                   <Route path="/artists" element={<Artists />} />
-                  <Route path="/learning-hub/:moduleId" element={<LearningModulePage />} />
-                  
-                  {/* Protected Routes */}
                   <Route path="/bookings" element={
                     <ProtectedRoute requiredRoles={["student", "adult", "parent"]}>
                       <Bookings />
@@ -159,7 +166,6 @@ const App = () => {
                       <UserDetails />
                     </ProtectedRoute>
                   } />
-                  
                   <Route path="/coming-soon" element={<ComingSoon />} />
                   <Route path="/tracks/:slug" element={<AudioPlayer />} />
                   <Route path="/audio-player/:id" element={<Navigate to="/tracks" replace />} />
