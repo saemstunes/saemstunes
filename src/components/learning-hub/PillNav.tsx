@@ -1,10 +1,16 @@
 import React from "react";
 import { motion } from "framer-motion";
 
+interface PillNavItem {
+  id: string;
+  label: string;
+  path: string;
+}
+
 interface PillNavProps {
-  items: { id: string; label: string }[];
+  items: PillNavItem[];
   activeId: string;
-  onSelect: (id: string) => void;
+  onSelect: (path: string) => void;
   className?: string;
 }
 
@@ -19,7 +25,7 @@ const PillNav = ({ items, activeId, onSelect, className = "" }: PillNavProps) =>
               ? "text-white"
               : "text-muted-foreground hover:text-brown"
           }`}
-          onClick={() => onSelect(item.id)}
+          onClick={() => onSelect(item.path)}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
