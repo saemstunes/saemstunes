@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { 
   Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle 
@@ -9,7 +9,7 @@ import {
   BookOpen, Play, Trophy, CheckCircle, ChevronRight, Music, 
   Pin, History, Settings, Video, Users, Star, Download, Share2, Menu
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { gsap } from "gsap";
 import { useSpring, animated } from "@react-spring/web";
@@ -23,7 +23,6 @@ import PreviewModal from "@/components/learning-hub/PreviewModal";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Access Policy Constants
 const ACCESS_LEVELS = {
   free: { level: 0, label: 'Free', color: 'bg-green-500' },
   subscriber: { level: 1, label: 'Subscriber', color: 'bg-blue-500' },
@@ -39,7 +38,6 @@ const PREVIEW_STRATEGIES = {
   interactive: { demoMode: true, limitedFeatures: true }
 };
 
-// Utility Functions
 const calculateSavings = (currentLevel: string, targetLevel: string) => {
   const savings = {
     'free->subscriber': { monthly: 15, yearly: 180 },
@@ -90,6 +88,7 @@ const getMotivationalMessage = (progress: number | Record<string, number>) => {
 };
 
 const LearningHub = () => {
+  const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("my-path");
@@ -100,7 +99,6 @@ const LearningHub = () => {
   const dockRef = useRef<HTMLDivElement>(null);
   const folderRefs = useRef<(HTMLDivElement | null)[]>([]);
   
-  // Animation states
   const [titleAnimated, setTitleAnimated] = useState(false);
   const prefersReducedMotion = typeof window !== 'undefined' && 
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -112,14 +110,27 @@ const LearningHub = () => {
     immediate: !titleAnimated || prefersReducedMotion
   });
 
+  const pillNavItems = useMemo(() => [
+    { id: "my-path", label: "My Path", path: "/learning-hub" },
+    { id: "courses", label: "All Courses", path: "/learning-hub/courses" },
+    { id: "videos", label: "Videos", path: "/learning-hub/videos" },
+    { id: "classes", label: "Live Classes", path: "/learning-hub/classes" },
+    { id: "new", label: "New Releases", path: "/learning-hub/new" }
+  ], []);
+
   useEffect(() => {
+    const currentPath = location.pathname;
+    const activeItem = pillNavItems.find(item => 
+      currentPath.startsWith(item.path)
+    );
+    setActiveTab(activeItem?.id || "my-path");
+    
     const hasAnimated = sessionStorage.getItem("titleAnimated");
     if (!hasAnimated) {
       setTitleAnimated(true);
       sessionStorage.setItem("titleAnimated", "true");
     }
     
-    // Folder stagger animation
     gsap.from(folderRefs.current.filter(Boolean), {
       y: 20,
       opacity: 0,
@@ -128,9 +139,8 @@ const LearningHub = () => {
       ease: "power2.out",
       delay: 0.3
     });
-  }, []);
+  }, [location.pathname, pillNavItems]);
 
-  // Enhanced Access Control System
   const getEnhancedAccessStatus = useCallback((course: any) => {
     const requiredLevel = course?.accessLevel || 'free';
     const userLevel = user?.accessLevel || 'free';
@@ -237,14 +247,12 @@ const LearningHub = () => {
     };
   }, [getEnhancedAccessStatus]);
 
-  // Content Interaction Handler
   const handleContentInteraction = useCallback((
     course: any, 
     interactionType: 'preview' | 'enroll'
   ) => {
     const accessStatus = getEnhancedAccessStatus(course);
     
-    // Track event
     console.log('Tracking: content_interaction', {
       courseId: course.id,
       accessStatus: accessStatus.status,
@@ -270,7 +278,6 @@ const LearningHub = () => {
     }
   }, [getEnhancedAccessStatus, createPreviewExperience, navigate, user]);
 
-  // Enhanced Data Model
   const learningCategories = [
     {
       id: "vocal-techniques",
@@ -372,7 +379,6 @@ const LearningHub = () => {
     }
   ];
 
-  // Additional data structures
   const pinnedCourses = [
     {
       id: "performance-skills",
@@ -410,15 +416,6 @@ const LearningHub = () => {
     }
   ];
 
-  const pillNavItems = [
-    { id: "my-path", label: "My Path" },
-    { id: "all-courses", label: "All Courses" },
-    { id: "free-content", label: "Free Content" },
-    { id: "live-classes", label: "Live Classes" },
-    { id: "new-releases", label: "New Releases" }
-  ];
-
-  // Folder toggle animation
   const handleFolderToggle = useCallback((folderId: string) => {
     setExpandedFolder(prev => prev === folderId ? null : folderId);
     const folderContent = document.getElementById(`folder-content-${folderId}`);
@@ -441,7 +438,6 @@ const LearningHub = () => {
     }
   }, []);
 
-  // Flowing menu items
   const flowingMenuItems = useCallback((course: any) => {
     const access = getEnhancedAccessStatus(course);
     
@@ -524,7 +520,7 @@ const LearningHub = () => {
           <PillNav 
             items={pillNavItems} 
             activeId={activeTab}
-            onSelect={setActiveTab}
+            onSelect={(path) => navigate(path)}
             className="mb-6"
           />
         </header>
@@ -685,121 +681,125 @@ const LearningHub = () => {
         </aside>
 
         <main className="center-studio px-4 pb-6">
-          <div className="folder-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {learningCategories.map((category, index) => (
-              <div 
-                key={category.id} 
-                ref={el => folderRefs.current[index] = el}
-              >
-                <Folder
-                  title={category.title}
-                  description={category.description}
-                  icon={category.icon}
-                  color={category.color}
-                  itemCount={category.courses.length}
-                  isExpanded={expandedFolder === category.id}
-                  onToggle={() => handleFolderToggle(category.id)}
+          {activeTab === "my-path" ? (
+            <div className="folder-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {learningCategories.map((category, index) => (
+                <div 
+                  key={category.id} 
+                  ref={el => folderRefs.current[index] = el}
                 >
-                  <div 
-                    id={`folder-content-${category.id}`}
-                    className="course-grid grid grid-cols-1 gap-4 mt-4"
+                  <Folder
+                    title={category.title}
+                    description={category.description}
+                    icon={category.icon}
+                    color={category.color}
+                    itemCount={category.courses.length}
+                    isExpanded={expandedFolder === category.id}
+                    onToggle={() => handleFolderToggle(category.id)}
                   >
-                    {category.courses.map(course => {
-                      const access = getEnhancedAccessStatus(course);
-                      
-                      return (
-                        <Card 
-                          key={course.id} 
-                          className="course-card relative overflow-hidden group transition-all hover:shadow-lg"
-                        >
-                          <FlowingMenu 
-                            items={flowingMenuItems(course)}
-                            trigger="hover"
-                            className="absolute top-3 right-3 z-10"
-                            mobileBehavior="long-press"
-                          />
-                          
-                          <CardHeader className="pb-3">
-                            <div className="aspect-video bg-muted rounded-md relative overflow-hidden">
-                              <div className="bg-gray-200 border-2 border-dashed rounded-xl w-full h-full" />
-                              {access.status !== "granted" && (
-                                <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
-                                  <Button 
-                                    variant="gold"
-                                    size="sm"
-                                    onClick={() => handleContentInteraction(course, 'preview')}
-                                  >
-                                    {access.status === "locked" 
-                                      ? "Unlock Preview" 
-                                      : "Upgrade to Access"}
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                            <CardTitle className="flex items-center justify-between">
-                              <span className="truncate max-w-[70%]">{course.title}</span>
-                              {course.accessLevel !== "free" && (
-                                <span className="text-xs bg-gold/20 text-gold-dark px-2 py-1 rounded-full flex-shrink-0">
-                                  {course.accessLevel === "pro" ? "PRO" : "PREMIUM"}
-                                </span>
-                              )}
-                            </CardTitle>
-                            <CardDescription className="truncate">{course.description}</CardDescription>
-                          </CardHeader>
-                          
-                          <CardContent>
-                            <div className="flex justify-between items-center">
-                              <div className="flex items-center space-x-2">
-                                <CircularText 
-                                  value={course.progress}
-                                  size={32}
-                                  strokeWidth={3}
-                                  showPercentage
-                                  textColor={course.progress === 100 ? "#C69B36" : "#3B82F6"}
-                                  trailColor="#F8F6F0"
-                                />
-                                <div className="min-w-0">
-                                  <p className="text-xs text-muted-foreground truncate">
-                                    {course.lessons} lessons • {course.duration} min
-                                  </p>
-                                  <p className="text-xs font-medium truncate">
-                                    {course.instructor.name}
-                                  </p>
-                                </div>
+                    <div 
+                      id={`folder-content-${category.id}`}
+                      className="course-grid grid grid-cols-1 gap-4 mt-4"
+                    >
+                      {category.courses.map(course => {
+                        const access = getEnhancedAccessStatus(course);
+                        
+                        return (
+                          <Card 
+                            key={course.id} 
+                            className="course-card relative overflow-hidden group transition-all hover:shadow-lg"
+                          >
+                            <FlowingMenu 
+                              items={flowingMenuItems(course)}
+                              trigger="hover"
+                              className="absolute top-3 right-3 z-10"
+                              mobileBehavior="long-press"
+                            />
+                            
+                            <CardHeader className="pb-3">
+                              <div className="aspect-video bg-muted rounded-md relative overflow-hidden">
+                                <div className="bg-gray-200 border-2 border-dashed rounded-xl w-full h-full" />
+                                {access.status !== "granted" && (
+                                  <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+                                    <Button 
+                                      variant="gold"
+                                      size="sm"
+                                      onClick={() => handleContentInteraction(course, 'preview')}
+                                    >
+                                      {access.status === "locked" 
+                                        ? "Unlock Preview" 
+                                        : "Upgrade to Access"}
+                                    </Button>
+                                  </div>
+                                )}
                               </div>
-                              <span className="text-xs px-2 py-1 bg-muted rounded-full whitespace-nowrap">
-                                {course.level}
-                              </span>
-                            </div>
-                          </CardContent>
-                          
-                          <CardFooter>
-                            <Button 
-                              className={`w-full transition-all ${
-                                access.status === "granted" 
-                                  ? "bg-gold hover:bg-gold-dark text-white hover:shadow-gold/30" 
-                                  : "hover:bg-muted"
-                              }`}
-                              variant={access.status === "granted" ? "default" : "outline"}
-                              onClick={() => 
-                                access.status === "granted" 
-                                  ? handleContentInteraction(course, 'enroll')
-                                  : handleContentInteraction(course, 'preview')
-                              }
-                            >
-                              {access.status === "granted"
-                                ? course.progress > 0 ? "Continue" : "Start Learning"
-                                : access.status === "locked" ? "Preview Course" : "Upgrade Required"}
-                            </Button>
-                          </CardFooter>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                </Folder>
-              </div>
-            ))}
-          </div>
+                              <CardTitle className="flex items-center justify-between">
+                                <span className="truncate max-w-[70%]">{course.title}</span>
+                                {course.accessLevel !== "free" && (
+                                  <span className="text-xs bg-gold/20 text-gold-dark px-2 py-1 rounded-full flex-shrink-0">
+                                    {course.accessLevel === "pro" ? "PRO" : "PREMIUM"}
+                                  </span>
+                                )}
+                              </CardTitle>
+                              <CardDescription className="truncate">{course.description}</CardDescription>
+                            </CardHeader>
+                            
+                            <CardContent>
+                              <div className="flex justify-between items-center">
+                                <div className="flex items-center space-x-2">
+                                  <CircularText 
+                                    value={course.progress}
+                                    size={32}
+                                    strokeWidth={3}
+                                    showPercentage
+                                    textColor={course.progress === 100 ? "#C69B36" : "#3B82F6"}
+                                    trailColor="#F8F6F0"
+                                  />
+                                  <div className="min-w-0">
+                                    <p className="text-xs text-muted-foreground truncate">
+                                      {course.lessons} lessons • {course.duration} min
+                                    </p>
+                                    <p className="text-xs font-medium truncate">
+                                      {course.instructor.name}
+                                    </p>
+                                  </div>
+                                </div>
+                                <span className="text-xs px-2 py-1 bg-muted rounded-full whitespace-nowrap">
+                                  {course.level}
+                                </span>
+                              </div>
+                            </CardContent>
+                            
+                            <CardFooter>
+                              <Button 
+                                className={`w-full transition-all ${
+                                  access.status === "granted" 
+                                    ? "bg-gold hover:bg-gold-dark text-white hover:shadow-gold/30" 
+                                    : "hover:bg-muted"
+                                }`}
+                                variant={access.status === "granted" ? "default" : "outline"}
+                                onClick={() => 
+                                  access.status === "granted" 
+                                    ? handleContentInteraction(course, 'enroll')
+                                    : handleContentInteraction(course, 'preview')
+                                }
+                              >
+                                {access.status === "granted"
+                                  ? course.progress > 0 ? "Continue" : "Start Learning"
+                                  : access.status === "locked" ? "Preview Course" : "Upgrade Required"}
+                              </Button>
+                            </CardFooter>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  </Folder>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Outlet />
+          )}
         </main>
 
         <aside className="right-panel bg-cream/90 backdrop-blur-sm rounded-xl p-4 hidden lg:block">
