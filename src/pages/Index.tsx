@@ -225,61 +225,39 @@ const Index = () => {
   const { state } = useAudioPlayer();
   const navigate = useNavigate();
   
-  // State for InstrumentSelector visibility
+  // Unified orientation state
   const [showInstrumentSelector, setShowInstrumentSelector] = useState(false);
 
-  // Track handling
+  // Fix: Use currentTrack from audio player context with null checking
   const currentTrack = state?.currentTrack || null;
+  
+  // IMPROVED TRACK FETCHING
   const featuredTracks = useShuffledTracks(4, 30000);
 
+  // Unified orientation detection
   useEffect(() => {
-    // Unified detection logic
-    const shouldShowSelector = () => {
-      const width = window.innerWidth;
-      const isMobile = width < 768;
-      
-      // Always show in landscape mode regardless of width
-      const isLandscape = 
-        window.matchMedia("(orientation: landscape)").matches || 
-        window.innerWidth > window.innerHeight;
-      
-      return isLandscape || isMobile;
+    // Calculate once on mount
+    const calculateOrientation = () => {
+      const isMobile = window.innerWidth < 768;
+      const isLandscape = window.innerWidth > window.innerHeight;
+      return isMobile && isLandscape;
     };
 
-    // Update function with visual transition
-    const updateSelector = () => {
-      const shouldShow = shouldShowSelector();
-      if (shouldShow && !showInstrumentSelector) {
-        // Trigger visual transition before showing
-        document.documentElement.style.setProperty(
-          '--transition-speed', 
-          '0.4s'
-        );
-        setTimeout(() => setShowInstrumentSelector(true), 50);
-      } else {
-        setShowInstrumentSelector(shouldShow);
-      }
-    };
+    // Initial calculation
+    setShowInstrumentSelector(calculateOrientation());
 
-    // Initial check
-    updateSelector();
-
-    // Create optimized handler
-    let frameId: number;
+    // Unified resize/orientation handler
     const handleOrientationChange = () => {
-      cancelAnimationFrame(frameId);
-      frameId = requestAnimationFrame(updateSelector);
+      setShowInstrumentSelector(calculateOrientation());
     };
 
-    // Add event listeners
+    // Listen to both events
     window.addEventListener('resize', handleOrientationChange);
     window.addEventListener('orientationchange', handleOrientationChange);
     
-    // Cleanup
     return () => {
       window.removeEventListener('resize', handleOrientationChange);
       window.removeEventListener('orientationchange', handleOrientationChange);
-      cancelAnimationFrame(frameId);
     };
   }, []);
 
