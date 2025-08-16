@@ -224,37 +224,42 @@ const Index = () => {
   const { user } = useAuth();
   const { state } = useAudioPlayer();
   const navigate = useNavigate();
-  const { isMobile, isLandscape } = useWindowOrientation();
   
-  // Initialize with correct orientation state
-  const [showInstrumentSelector, setShowInstrumentSelector] = useState(
-    isMobile && isLandscape
-  );
-  
+  // Unified orientation state
+  const [showInstrumentSelector, setShowInstrumentSelector] = useState(false);
+
   // Fix: Use currentTrack from audio player context with null checking
   const currentTrack = state?.currentTrack || null;
   
   // IMPROVED TRACK FETCHING
   const featuredTracks = useShuffledTracks(4, 30000);
 
-  // BACKUP ORIENTATION CHANGE LISTENER
+  // Unified orientation detection
   useEffect(() => {
-    const handleOrientationChange = () => {
-      const isMobileNow = window.innerWidth < 768;
-      const isLandscapeNow = window.matchMedia("(orientation: landscape)").matches;
-      setShowInstrumentSelector(isMobileNow && isLandscapeNow);
+    // Calculate once on mount
+    const calculateOrientation = () => {
+      const isMobile = window.innerWidth < 768;
+      const isLandscape = window.innerWidth > window.innerHeight;
+      return isMobile && isLandscape;
     };
 
+    // Initial calculation
+    setShowInstrumentSelector(calculateOrientation());
+
+    // Unified resize/orientation handler
+    const handleOrientationChange = () => {
+      setShowInstrumentSelector(calculateOrientation());
+    };
+
+    // Listen to both events
+    window.addEventListener('resize', handleOrientationChange);
     window.addEventListener('orientationchange', handleOrientationChange);
+    
     return () => {
+      window.removeEventListener('resize', handleOrientationChange);
       window.removeEventListener('orientationchange', handleOrientationChange);
     };
   }, []);
-
-  // SYNC WITH ORIENTATION HOOK
-  useEffect(() => {
-    setShowInstrumentSelector(isMobile && isLandscape);
-  }, [isMobile, isLandscape]);
 
   const handleInstrumentSelect = (instrument: string) => {
     navigate(`/music-tools?tool=${instrument}`);
