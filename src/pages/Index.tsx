@@ -225,39 +225,43 @@ const Index = () => {
   const { state } = useAudioPlayer();
   const navigate = useNavigate();
   
-  // Unified orientation state
+  // State for InstrumentSelector visibility
   const [showInstrumentSelector, setShowInstrumentSelector] = useState(false);
 
-  // Fix: Use currentTrack from audio player context with null checking
+  // Track handling
   const currentTrack = state?.currentTrack || null;
-  
-  // IMPROVED TRACK FETCHING
   const featuredTracks = useShuffledTracks(4, 30000);
 
-  // Unified orientation detection
+  // Fixed orientation detection
   useEffect(() => {
-    // Calculate once on mount
-    const calculateOrientation = () => {
-      const isMobile = window.innerWidth < 768;
-      const isLandscape = window.innerWidth > window.innerHeight;
-      return isMobile && isLandscape;
+    // Direct calculation function
+    const shouldShowSelector = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      return width < 768 && width > height;
     };
 
-    // Initial calculation
-    setShowInstrumentSelector(calculateOrientation());
+    // Initial check
+    setShowInstrumentSelector(shouldShowSelector());
 
-    // Unified resize/orientation handler
+    // Event handler with requestAnimationFrame for accuracy
+    let frameId: number;
     const handleOrientationChange = () => {
-      setShowInstrumentSelector(calculateOrientation());
+      cancelAnimationFrame(frameId);
+      frameId = requestAnimationFrame(() => {
+        setShowInstrumentSelector(shouldShowSelector());
+      });
     };
 
-    // Listen to both events
+    // Add event listeners
     window.addEventListener('resize', handleOrientationChange);
     window.addEventListener('orientationchange', handleOrientationChange);
     
+    // Cleanup
     return () => {
       window.removeEventListener('resize', handleOrientationChange);
       window.removeEventListener('orientationchange', handleOrientationChange);
+      cancelAnimationFrame(frameId);
     };
   }, []);
 
