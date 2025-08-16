@@ -250,20 +250,6 @@ const Index = () => {
     };
   }, []);
 
-  // Add this effect to enforce landscape-only display
-  useEffect(() => {
-    if (showInstrumentSelector) {
-      // Ensure we're actually in landscape mode
-      const isLandscape = window.innerWidth > window.innerHeight;
-      
-      if (!isLandscape) {
-        // Show alert to rotate device if needed
-        alert("Please rotate your device to landscape mode to use this feature");
-        setShowInstrumentSelector(false);
-      }
-    }
-  }, [showInstrumentSelector]);
-
   const handleInstrumentSelect = (instrument: string) => {
     navigate(`/music-tools?tool=${instrument}`);
     setShowInstrumentSelector(false);
