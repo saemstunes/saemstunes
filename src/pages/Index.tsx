@@ -232,28 +232,27 @@ const Index = () => {
   const currentTrack = state?.currentTrack || null;
   const featuredTracks = useShuffledTracks(4, 30000);
 
-  // Fixed orientation detection
   useEffect(() => {
-    // Direct calculation function
-    const shouldShowSelector = () => {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      return width < 768 && width > height;
+    // SIMPLE, RELIABLE DETECTION
+    const checkOrientation = () => {
+      // Force mobile detection for ALL widths below 768px
+      const isMobile = window.innerWidth < 768;
+      
+      // Landscape = width > height
+      const isLandscape = window.innerWidth > window.innerHeight;
+      
+      return isMobile && isLandscape;
     };
 
-    // Initial check
-    setShowInstrumentSelector(shouldShowSelector());
+    // Update state immediately
+    setShowInstrumentSelector(checkOrientation());
 
-    // Event handler with requestAnimationFrame for accuracy
-    let frameId: number;
+    // Create optimized handler
     const handleOrientationChange = () => {
-      cancelAnimationFrame(frameId);
-      frameId = requestAnimationFrame(() => {
-        setShowInstrumentSelector(shouldShowSelector());
-      });
+      setShowInstrumentSelector(checkOrientation());
     };
 
-    // Add event listeners
+    // Add event listeners directly to window
     window.addEventListener('resize', handleOrientationChange);
     window.addEventListener('orientationchange', handleOrientationChange);
     
@@ -261,7 +260,6 @@ const Index = () => {
     return () => {
       window.removeEventListener('resize', handleOrientationChange);
       window.removeEventListener('orientationchange', handleOrientationChange);
-      cancelAnimationFrame(frameId);
     };
   }, []);
 
