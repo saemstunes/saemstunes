@@ -234,44 +234,30 @@ const Index = () => {
   // IMPROVED TRACK FETCHING
   const featuredTracks = useShuffledTracks(4, 30000);
 
- useEffect(() => {
-    // Unified detection logic
-    const shouldShowSelector = () => {
-      const width = window.innerWidth;
-      const isMobile = width < 768;
-      
-      // Always show in landscape mode regardless of width
-      const isLandscape = 
-        window.matchMedia("(orientation: landscape)").matches || 
-        window.innerWidth > window.innerHeight;
-      
-      return isLandscape || isMobile;
+  // Unified orientation detection
+  useEffect(() => {
+    // Calculate once on mount
+    const calculateOrientation = () => {
+      const isMobile = window.innerWidth < 768;
+      const isLandscape = window.innerWidth > window.innerHeight;
+      return isMobile && isLandscape;
     };
 
-    // Update function
-    const updateSelector = () => {
-      setShowInstrumentSelector(shouldShowSelector());
-    };
+    // Initial calculation
+    setShowInstrumentSelector(calculateOrientation());
 
-    // Initial check
-    updateSelector();
-
-    // Create optimized handler with requestAnimationFrame
-    let frameId: number;
+    // Unified resize/orientation handler
     const handleOrientationChange = () => {
-      cancelAnimationFrame(frameId);
-      frameId = requestAnimationFrame(updateSelector);
+      setShowInstrumentSelector(calculateOrientation());
     };
 
-    // Add event listeners
+    // Listen to both events
     window.addEventListener('resize', handleOrientationChange);
     window.addEventListener('orientationchange', handleOrientationChange);
     
-    // Cleanup
     return () => {
       window.removeEventListener('resize', handleOrientationChange);
       window.removeEventListener('orientationchange', handleOrientationChange);
-      if (frameId) cancelAnimationFrame(frameId);
     };
   }, []);
 
