@@ -247,9 +247,9 @@ const Index = () => {
     setShowInstrumentSelector(calculateOrientation());
 
     // Unified resize/orientation handler
-    const handleOrientationChange = debounce(() => {
+    const handleOrientationChange = () => {
       setShowInstrumentSelector(calculateOrientation());
-    }, 100);
+    };
 
     // Listen to both events
     window.addEventListener('resize', handleOrientationChange);
