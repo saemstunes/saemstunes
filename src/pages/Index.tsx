@@ -233,26 +233,45 @@ const Index = () => {
   const featuredTracks = useShuffledTracks(4, 30000);
 
   useEffect(() => {
-    // SIMPLE, RELIABLE DETECTION
-    const checkOrientation = () => {
-      // Force mobile detection for ALL widths below 768px
-      const isMobile = window.innerWidth < 768;
+    // Unified detection logic
+    const shouldShowSelector = () => {
+      const width = window.innerWidth;
+      const isMobile = width < 768;
       
-      // Landscape = width > height
-      const isLandscape = window.innerWidth > window.innerHeight;
+      // Always show in landscape mode regardless of width
+      const isLandscape = 
+        window.matchMedia("(orientation: landscape)").matches || 
+        window.innerWidth > window.innerHeight;
       
-      return isMobile && isLandscape;
+      return isLandscape || isMobile;
     };
 
-    // Update state immediately
-    setShowInstrumentSelector(checkOrientation());
+    // Update function with visual transition
+    const updateSelector = () => {
+      const shouldShow = shouldShowSelector();
+      if (shouldShow && !showInstrumentSelector) {
+        // Trigger visual transition before showing
+        document.documentElement.style.setProperty(
+          '--transition-speed', 
+          '0.4s'
+        );
+        setTimeout(() => setShowInstrumentSelector(true), 50);
+      } else {
+        setShowInstrumentSelector(shouldShow);
+      }
+    };
+
+    // Initial check
+    updateSelector();
 
     // Create optimized handler
+    let frameId: number;
     const handleOrientationChange = () => {
-      setShowInstrumentSelector(checkOrientation());
+      cancelAnimationFrame(frameId);
+      frameId = requestAnimationFrame(updateSelector);
     };
 
-    // Add event listeners directly to window
+    // Add event listeners
     window.addEventListener('resize', handleOrientationChange);
     window.addEventListener('orientationchange', handleOrientationChange);
     
@@ -260,6 +279,7 @@ const Index = () => {
     return () => {
       window.removeEventListener('resize', handleOrientationChange);
       window.removeEventListener('orientationchange', handleOrientationChange);
+      cancelAnimationFrame(frameId);
     };
   }, []);
 
