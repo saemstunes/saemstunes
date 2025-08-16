@@ -225,41 +225,44 @@ const Index = () => {
   const { state } = useAudioPlayer();
   const navigate = useNavigate();
   
-  // Unified orientation state
   const [showInstrumentSelector, setShowInstrumentSelector] = useState(false);
 
-  // Fix: Use currentTrack from audio player context with null checking
   const currentTrack = state?.currentTrack || null;
-  
-  // IMPROVED TRACK FETCHING
   const featuredTracks = useShuffledTracks(4, 30000);
 
-  // Unified orientation detection
   useEffect(() => {
-    // Calculate once on mount
-    const calculateOrientation = () => {
-      const isMobile = window.innerWidth < 768;
-      const isLandscape = window.innerWidth > window.innerHeight;
-      return isMobile && isLandscape;
-    };
+    // Simplified detection: Only check width for mobile
+    const isMobile = window.innerWidth < 768;
+    setShowInstrumentSelector(isMobile);
 
-    // Initial calculation
-    setShowInstrumentSelector(calculateOrientation());
-
-    // Unified resize/orientation handler
     const handleOrientationChange = () => {
-      setShowInstrumentSelector(calculateOrientation());
+      const isMobile = window.innerWidth < 768;
+      setShowInstrumentSelector(isMobile);
     };
 
-    // Listen to both events
-    window.addEventListener('resize', handleOrientationChange);
-    window.addEventListener('orientationchange', handleOrientationChange);
-    
+    // Only listen to orientation changes on mobile
+    if (isMobile) {
+      window.addEventListener('orientationchange', handleOrientationChange);
+    }
+
     return () => {
-      window.removeEventListener('resize', handleOrientationChange);
       window.removeEventListener('orientationchange', handleOrientationChange);
     };
   }, []);
+
+  // Add this effect to enforce landscape-only display
+  useEffect(() => {
+    if (showInstrumentSelector) {
+      // Ensure we're actually in landscape mode
+      const isLandscape = window.innerWidth > window.innerHeight;
+      
+      if (!isLandscape) {
+        // Show alert to rotate device if needed
+        alert("Please rotate your device to landscape mode to use this feature");
+        setShowInstrumentSelector(false);
+      }
+    }
+  }, [showInstrumentSelector]);
 
   const handleInstrumentSelect = (instrument: string) => {
     navigate(`/music-tools?tool=${instrument}`);
