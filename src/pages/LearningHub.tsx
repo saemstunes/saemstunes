@@ -22,6 +22,7 @@ import PillNav from "@/components/learning-hub/PillNav";
 import PreviewModal from "@/components/learning-hub/PreviewModal";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/lib/supabase";
 
 // Access Policy Constants
 const ACCESS_LEVELS = {
@@ -97,6 +98,11 @@ const LearningHub = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [expandedFolder, setExpandedFolder] = useState<string | null>(null);
   const [mobileDockOpen, setMobileDockOpen] = useState(false);
+  const [learningCategories, setLearningCategories] = useState<any[]>([]);
+  const [pinnedCourses, setPinnedCourses] = useState<any[]>([]);
+  const [achievements, setAchievements] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const dockRef = useRef<HTMLDivElement>(null);
   const folderRefs = useRef<(HTMLDivElement | null)[]>([]);
   
@@ -129,6 +135,65 @@ const LearningHub = () => {
       delay: 0.3
     });
   }, []);
+
+  useEffect(() => {
+    const fetchLearningHubData = async () => {
+      if (!user) return;
+
+      try {
+        setLoading(true);
+        // Fetch learning categories and courses
+        const { data: categories, error: categoriesError } = await supabase
+          .from('learning_categories')
+          .select(`
+            *,
+            courses (*)
+          `)
+          .order('order_index', { ascending: true });
+
+        if (categoriesError) throw categoriesError;
+
+        // Fetch pinned courses
+        const { data: pinned, error: pinnedError } = await supabase
+          .from('user_pinned_courses')
+          .select(`
+            course_id,
+            courses (*)
+          `)
+          .eq('user_id', user.id);
+
+        if (pinnedError) throw pinnedError;
+
+        // Fetch achievements
+        const { data: userAchievements, error: achievementsError } = await supabase
+          .from('user_achievements')
+          .select(`
+            achievement_id,
+            achievements (*),
+            progress
+          `)
+          .eq('user_id', user.id);
+
+        if (achievementsError) throw achievementsError;
+
+        setLearningCategories(categories || []);
+        setPinnedCourses(pinned?.map((item: any) => ({ ...item.courses, progress: item.progress })) || []);
+        setAchievements(userAchievements?.map((item: any) => ({ 
+          ...item.achievements, 
+          progress: item.progress,
+          unlocked: item.unlocked 
+        })) || []);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchLearningHubData();
+    }
+  }, [user]);
 
   // Enhanced Access Control System
   const getEnhancedAccessStatus = useCallback((course: any) => {
@@ -270,146 +335,6 @@ const LearningHub = () => {
     }
   }, [getEnhancedAccessStatus, createPreviewExperience, navigate, user]);
 
-  // Enhanced Data Model
-  const learningCategories = [
-    {
-      id: "vocal-techniques",
-      title: "Vocal Mastery Studio",
-      description: "From breath control to stage presence - master the art of voice",
-      icon: <Music className="h-6 w-6" />,
-      color: "bg-gradient-to-br from-blue-500 to-indigo-600",
-      estimatedTime: "3-6 months",
-      courses: [
-        {
-          id: "breathing-techniques",
-          title: "Diaphragmatic Breathing",
-          description: "Proper breathing for powerful vocals",
-          progress: user ? 100 : 0,
-          lessons: 4,
-          duration: 32,
-          level: "beginner",
-          accessLevel: "free",
-          instructor: { 
-            id: "sarah-k", 
-            name: "Sarah K.", 
-            avatar: "/instructors/sarah.jpg",
-            responseTime: "within 6 hours",
-            rating: 4.9
-          },
-          preview: {
-            type: "video",
-            url: "/previews/vocal-breathing.mp4",
-            duration: 90,
-            chapters: [
-              { time: 0, title: "Introduction" },
-              { time: 30, title: "Basic Exercises" }
-            ]
-          },
-          enrollmentCount: 1247,
-          averageRating: 4.8,
-          skillsCount: 5
-        },
-        {
-          id: "vocal-range",
-          title: "Range Extension",
-          description: "Safely expand your vocal range",
-          progress: user ? 75 : 0,
-          lessons: 6,
-          duration: 45,
-          level: "intermediate",
-          accessLevel: "pro",
-          instructor: { 
-            id: "mike-t", 
-            name: "Mike T.", 
-            avatar: "/instructors/mike.jpg",
-            responseTime: "within 12 hours",
-            rating: 4.7
-          },
-          preview: {
-            type: "audio",
-            url: "/previews/vocal-range.mp3",
-            duration: 60
-          },
-          enrollmentCount: 892,
-          averageRating: 4.6,
-          skillsCount: 7
-        }
-      ]
-    },
-    {
-      id: "music-theory",
-      title: "Music Theory Laboratory",
-      description: "Understand notation, harmony, and composition",
-      icon: <BookOpen className="h-6 w-6" />,
-      color: "bg-gradient-to-br from-purple-500 to-pink-600",
-      courses: [
-        {
-          id: "chord-progressions",
-          title: "Chord Progressions",
-          description: "Create emotional movement in your music",
-          progress: user ? 30 : 0,
-          lessons: 5,
-          duration: 38,
-          level: "intermediate",
-          accessLevel: "subscriber",
-          instructor: { 
-            id: "david-m", 
-            name: "David M.", 
-            avatar: "/instructors/david.jpg",
-            responseTime: "within 24 hours",
-            rating: 4.5
-          },
-          preview: {
-            type: "text",
-            content: "Chord progressions form the backbone of musical harmony...",
-            duration: 120
-          },
-          enrollmentCount: 567,
-          averageRating: 4.4,
-          skillsCount: 6
-        }
-      ]
-    }
-  ];
-
-  // Additional data structures
-  const pinnedCourses = [
-    {
-      id: "performance-skills",
-      title: "Stage Presence",
-      description: "Command the stage with confidence",
-      progress: 40,
-      instructor: { name: "Lisa G." }
-    }
-  ];
-
-  const achievements = [
-    {
-      id: "first-lesson",
-      title: "First Lesson",
-      description: "Completed your first lesson",
-      icon: <Play className="h-5 w-5" />,
-      unlocked: true,
-      progress: 100
-    },
-    {
-      id: "module-master",
-      title: "Module Master",
-      description: "Completed a full learning module",
-      icon: <BookOpen className="h-5 w-5" />,
-      unlocked: true,
-      progress: 100
-    },
-    {
-      id: "practice-streak",
-      title: "Practice Streak",
-      description: "Practiced 7 days in a row",
-      icon: <Music className="h-5 w-5" />,
-      unlocked: false,
-      progress: 85
-    }
-  ];
-
   const pillNavItems = [
     { id: "my-path", label: "My Path" },
     { id: "all-courses", label: "All Courses" },
@@ -488,6 +413,14 @@ const LearningHub = () => {
       }
     ];
   }, [getEnhancedAccessStatus, handleContentInteraction, navigate, user]);
+
+  if (loading) {
+    return <MainLayout><div className="flex justify-center items-center min-h-screen">Loading...</div></MainLayout>;
+  }
+
+  if (error) {
+    return <MainLayout><div className="flex justify-center items-center min-h-screen">Error: {error}</div></MainLayout>;
+  }
 
   return (
     <MainLayout>
