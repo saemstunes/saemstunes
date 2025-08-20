@@ -57,25 +57,6 @@ vec4 cppn_fn(vec2 coordinate,float in0,float in1,float in2){
     return vec4(buf[0].x,buf[0].y,buf[0].z,1.);
 }
 
-// Gold and brown color transformation
-vec3 applySaemsTunesPalette(vec3 color) {
-    // Convert to grayscale first
-    float gray = dot(color, vec3(0.299, 0.587, 0.114));
-    
-    // Map grayscale to gold/brown palette
-    vec3 darkBrown = vec3(0.231, 0.184, 0.184); // #3B2F2F
-    vec3 gold = vec3(0.651, 0.486, 0.0);        // #A67C00
-    vec3 lightGold = vec3(0.831, 0.663, 0.212); // #D4A936
-    
-    if (gray < 0.3) {
-        return mix(darkBrown, vec3(0.149, 0.086, 0.086), gray * 3.0); // Darker browns
-    } else if (gray < 0.6) {
-        return mix(darkBrown, gold, (gray - 0.3) * 3.0);
-    } else {
-        return mix(gold, lightGold, (gray - 0.6) * 2.5);
-    }
-}
-
 void mainImage(out vec4 fragColor,in vec2 fragCoord){
     vec2 uv=fragCoord/uResolution.xy*2.-1.;
     uv.y*=-1.;
@@ -85,10 +66,6 @@ void mainImage(out vec4 fragColor,in vec2 fragCoord){
 
 void main(){
     vec4 col;mainImage(col,gl_FragCoord.xy);
-    
-    // Apply Saem's Tunes color palette
-    col.rgb = applySaemsTunesPalette(col.rgb);
-    
     col.rgb=hueShiftRGB(col.rgb,uHueShift);
     float scanline_val=sin(gl_FragCoord.y*uScanFreq)*0.5+0.5;
     col.rgb*=1.-(scanline_val*scanline_val)*uScan;
@@ -112,12 +89,12 @@ interface DarkVeilProps {
 const DarkVeil = ({
   isVisible,
   onClick,
-  hueShift = 43, // Default to gold hue
-  noiseIntensity = 0.03,
-  scanlineIntensity = 0.15,
-  speed = 0.4,
-  scanlineFrequency = 1.2,
-  warpAmount = 0.08,
+  hueShift = 0,
+  noiseIntensity = 0,
+  scanlineIntensity = 0,
+  speed = 0.5,
+  scanlineFrequency = 0,
+  warpAmount = 0,
   resolutionScale = 1,
 }: DarkVeilProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
