@@ -26,7 +26,7 @@ import { motion } from "framer-motion";
 import { useWindowSize } from "@uidotdev/usehooks";
 import { AudioStorageManager } from "@/utils/audioStorageManager";
 import { getAudioUrl, convertTrackToAudioTrack, generateTrackUrl } from "@/lib/audioUtils";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/integrations/supabase/client.ts";
 
 // Constants - PRESERVE ORIGINAL STRUCTURE
 const STATS = [
