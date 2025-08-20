@@ -59,15 +59,15 @@ const ContentTabs: React.FC<ContentTabsProps> = ({ activeTab, setActiveTab }) =>
       <TabsList className="grid grid-cols-3">
         <TabsTrigger value="music">
           <Music className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">Classes</span>
+          <span className="hidden sm:inline">General Lessons</span>
         </TabsTrigger>
         <TabsTrigger value="artists">
           <User className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">Artists</span>
+          <span className="hidden sm:inline">Cool Artists</span>
         </TabsTrigger>
         <TabsTrigger value="courses">
           <Mic className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">External Courses</span>
+          <span className="hidden sm:inline">More On Music</span>
         </TabsTrigger>
       </TabsList>
       
