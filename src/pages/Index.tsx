@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -25,6 +26,7 @@ import { motion } from "framer-motion";
 import { useWindowSize } from "@uidotdev/usehooks";
 import { AudioStorageManager } from "@/utils/audioStorageManager";
 import { getAudioUrl, convertTrackToAudioTrack, generateTrackUrl } from "@/lib/audioUtils";
+import { supabase } from "@/lib/supabaseClient";
 
 // Constants - PRESERVE ORIGINAL STRUCTURE
 const STATS = [
@@ -81,6 +83,82 @@ const isUuid = (id: string) => {
   return uuidRegex.test(id);
 };
 
+// User Preferences Service
+class UserPreferencesService {
+  static async getInstrumentSelectorStatus(userId: string): Promise<{
+    shouldShow: boolean;
+    viewCount: number;
+    lastShown: string | null;
+  }> {
+    try {
+      let { data: prefs, error } = await supabase
+        .from('user_ui_preferences')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error && error.code === 'PGRST116') {
+        const { data: newPrefs, error: createError } = await supabase
+          .from('user_ui_preferences')
+          .insert({ user_id: userId })
+          .select()
+          .single();
+
+        if (createError) throw createError;
+        prefs = newPrefs;
+      } else if (error) {
+        throw error;
+      }
+
+      const shouldShow = this.shouldShowInstrumentSelector(prefs);
+
+      return {
+        shouldShow,
+        viewCount: prefs.instrument_selector_views,
+        lastShown: prefs.last_instrument_selector_shown
+      };
+    } catch (error) {
+      console.error('Error getting instrument selector status:', error);
+      throw error;
+    }
+  }
+
+  static async markInstrumentSelectorShown(userId: string): Promise<void> {
+    try {
+      const { data: prefs, error: fetchError } = await supabase
+        .from('user_ui_preferences')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const { error } = await supabase
+        .from('user_ui_preferences')
+        .upsert({
+          user_id: userId,
+          instrument_selector_views: (prefs?.instrument_selector_views || 0) + 1,
+          last_instrument_selector_shown: new Date().toISOString()
+        });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error marking instrument selector as shown:', error);
+      throw error;
+    }
+  }
+
+  private static shouldShowInstrumentSelector(prefs: any): boolean {
+    if (!prefs.last_instrument_selector_shown) return true;
+    
+    const lastShown = new Date(prefs.last_instrument_selector_shown);
+    const now = new Date();
+    const hoursSinceLastShown = (now.getTime() - lastShown.getTime()) / (1000 * 60 * 60);
+    
+    return hoursSinceLastShown >= 24;
+  }
+}
+
 // IMPROVED ORIENTATION HOOK
 const useWindowOrientation = () => {
   const windowSize = useWindowSize();
@@ -112,7 +190,6 @@ const useShuffledTracks = (count: number, interval: number) => {
         setShuffledTracks(tracks);
       } catch (error) {
         console.error('Error fetching shuffled tracks:', error);
-        // Fallback to static tracks if needed
         const shuffled = FEATURED_TRACKS.sort(() => 0.5 - Math.random());
         setShuffledTracks(shuffled.slice(0, count));
       }
@@ -127,49 +204,89 @@ const useShuffledTracks = (count: number, interval: number) => {
   return shuffledTracks;
 };
 
-// AUTH-BASED INSTRUMENT SELECTOR HOOK
+// AUTH-BASED INSTRUMENT SELECTOR HOOK WITH DATABASE INTEGRATION
 const useInstrumentSelectorLogic = (user: any) => {
   const [showInstrumentSelector, setShowInstrumentSelector] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    // Only show for authenticated users
     if (!user) {
       setShowInstrumentSelector(false);
+      setIsLoading(false);
       return;
     }
 
-    // Create session key tied to user ID to handle logout/login properly
-    const sessionKey = `instrumentSelector_shown_${user.id}`;
-    const hasSeenThisSession = sessionStorage.getItem(sessionKey);
-    
-    if (!hasSeenThisSession) {
-      // Check orientation conditions (preserve existing logic)
-      const shouldShowBasedOnOrientation = () => {
-        const width = window.innerWidth;
-        const isMobile = width < 768;
-        const isLandscape = 
-          window.matchMedia("(orientation: landscape)").matches || 
-          window.innerWidth > window.innerHeight;
+    const checkInstrumentSelectorStatus = async () => {
+      try {
+        // First try to get status from database
+        const status = await UserPreferencesService.getInstrumentSelectorStatus(user.id);
         
-        return isLandscape || isMobile;
-      };
+        // Check orientation conditions
+        const shouldShowBasedOnOrientation = () => {
+          const width = window.innerWidth;
+          const isMobile = width < 768;
+          const isLandscape = 
+            window.matchMedia("(orientation: landscape)").matches || 
+            window.innerWidth > window.innerHeight;
+          return isLandscape || isMobile;
+        };
 
-      // Show immediately on first visit if conditions are met
-      if (shouldShowBasedOnOrientation()) {
-        setShowInstrumentSelector(true);
-        // Mark as shown for this session
-        sessionStorage.setItem(sessionKey, 'true');
+        const finalShouldShow = status.shouldShow && shouldShowBasedOnOrientation();
+        setShowInstrumentSelector(finalShouldShow);
+        
+        // Sync with sessionStorage for performance
+        const sessionKey = `instrument_selector_shown_${user.id}`;
+        sessionStorage.setItem(sessionKey, status.shouldShow ? 'false' : 'true');
+        sessionStorage.setItem(`instrument_selector_count_${user.id}`, status.viewCount.toString());
+      } catch (error) {
+        console.error('Database check failed, falling back to sessionStorage:', error);
+        // Fallback to sessionStorage
+        const sessionKey = `instrument_selector_shown_${user.id}`;
+        const hasSeenThisSession = sessionStorage.getItem(sessionKey);
+        
+        if (!hasSeenThisSession) {
+          // Check orientation conditions
+          const width = window.innerWidth;
+          const isMobile = width < 768;
+          const isLandscape = 
+            window.matchMedia("(orientation: landscape)").matches || 
+            window.innerWidth > window.innerHeight;
+          
+          setShowInstrumentSelector(isLandscape || isMobile);
+        } else {
+          setShowInstrumentSelector(false);
+        }
+      } finally {
+        setIsLoading(false);
       }
-    }
+    };
+
+    checkInstrumentSelectorStatus();
   }, [user]);
+
+  const markInstrumentSelectorAsShown = async () => {
+    if (!user) return;
+
+    try {
+      // Update database
+      await UserPreferencesService.markInstrumentSelectorShown(user.id);
+    } catch (error) {
+      console.error('Failed to mark as shown in database, using sessionStorage only:', error);
+      // Continue with sessionStorage even if API fails
+    }
+
+    // Update sessionStorage regardless of API result
+    const sessionKey = `instrument_selector_shown_${user.id}`;
+    sessionStorage.setItem(sessionKey, 'true');
+    setShowInstrumentSelector(false);
+  };
 
   // Cleanup session data on user change (handles logout)
   useEffect(() => {
     const cleanup = () => {
-      // Clear any previous user's session data when user changes
       const keys = Object.keys(sessionStorage);
       keys.forEach(key => {
-        if (key.startsWith('instrumentSelector_shown_') && (!user || !key.includes(user.id))) {
+        if (key.startsWith('instrument_selector_') && (!user || !key.includes(user.id))) {
           sessionStorage.removeItem(key);
         }
       });
@@ -180,7 +297,8 @@ const useInstrumentSelectorLogic = (user: any) => {
 
   return {
     showInstrumentSelector,
-    setShowInstrumentSelector
+    isLoading,
+    markInstrumentSelectorAsShown
   };
 };
 
@@ -282,8 +400,8 @@ const Index = () => {
   const { state } = useAudioPlayer();
   const navigate = useNavigate();
   
-  // Use the new auth-based instrument selector logic
-  const { showInstrumentSelector, setShowInstrumentSelector } = useInstrumentSelectorLogic(user);
+  // Use the new auth-based instrument selector logic with database integration
+  const { showInstrumentSelector, isLoading, markInstrumentSelectorAsShown } = useInstrumentSelectorLogic(user);
 
   // Fix: Use currentTrack from audio player context with null checking
   const currentTrack = state?.currentTrack || null;
@@ -291,9 +409,13 @@ const Index = () => {
   // IMPROVED TRACK FETCHING
   const featuredTracks = useShuffledTracks(4, 30000);
 
-  const handleInstrumentSelect = (instrument: string) => {
+  const handleInstrumentSelect = async (instrument: string) => {
+    await markInstrumentSelectorAsShown();
     navigate(`/music-tools?tool=${instrument}`);
-    setShowInstrumentSelector(false);
+  };
+
+  const handleBackToHome = async () => {
+    await markInstrumentSelectorAsShown();
   };
 
   const handlePlayTrack = async (track: any) => {
@@ -331,11 +453,21 @@ const Index = () => {
     }
   };
     
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </MainLayout>
+    );
+  }
+
   if (showInstrumentSelector) {
     return (
       <InstrumentSelector
         onInstrumentSelect={handleInstrumentSelect}
-        onBackToHome={() => setShowInstrumentSelector(false)}
+        onBackToHome={handleBackToHome}
       />
     );
   }
