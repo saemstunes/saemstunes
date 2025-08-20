@@ -66,6 +66,15 @@ void mainImage(out vec4 fragColor,in vec2 fragCoord){
 
 void main(){
     vec4 col;mainImage(col,gl_FragCoord.xy);
+    
+    // Apply gold/brown color theme
+    vec3 gold = vec3(0.651, 0.494, 0.125); // #A67C00 in RGB
+    vec3 brown = vec3(0.231, 0.188, 0.188); // #3B2F2F in RGB
+    
+    // Mix between gold and brown based on intensity
+    float intensity = (col.r + col.g + col.b) / 3.0;
+    col.rgb = mix(brown, gold, intensity * 1.5);
+    
     col.rgb=hueShiftRGB(col.rgb,uHueShift);
     float scanline_val=sin(gl_FragCoord.y*uScanFreq)*0.5+0.5;
     col.rgb*=1.-(scanline_val*scanline_val)*uScan;
@@ -89,12 +98,12 @@ interface DarkVeilProps {
 const DarkVeil = ({
   isVisible,
   onClick,
-  hueShift = 0,
-  noiseIntensity = 0,
-  scanlineIntensity = 0,
+  hueShift = 43, // Default to gold hue
+  noiseIntensity = 0.05,
+  scanlineIntensity = 0.1,
   speed = 0.5,
-  scanlineFrequency = 0,
-  warpAmount = 0,
+  scanlineFrequency = 0.5,
+  warpAmount = 0.1,
   resolutionScale = 1,
 }: DarkVeilProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
