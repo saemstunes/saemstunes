@@ -127,6 +127,63 @@ const useShuffledTracks = (count: number, interval: number) => {
   return shuffledTracks;
 };
 
+// AUTH-BASED INSTRUMENT SELECTOR HOOK
+const useInstrumentSelectorLogic = (user: any) => {
+  const [showInstrumentSelector, setShowInstrumentSelector] = useState(false);
+  
+  useEffect(() => {
+    // Only show for authenticated users
+    if (!user) {
+      setShowInstrumentSelector(false);
+      return;
+    }
+
+    // Create session key tied to user ID to handle logout/login properly
+    const sessionKey = `instrumentSelector_shown_${user.id}`;
+    const hasSeenThisSession = sessionStorage.getItem(sessionKey);
+    
+    if (!hasSeenThisSession) {
+      // Check orientation conditions (preserve existing logic)
+      const shouldShowBasedOnOrientation = () => {
+        const width = window.innerWidth;
+        const isMobile = width < 768;
+        const isLandscape = 
+          window.matchMedia("(orientation: landscape)").matches || 
+          window.innerWidth > window.innerHeight;
+        
+        return isLandscape || isMobile;
+      };
+
+      // Show immediately on first visit if conditions are met
+      if (shouldShowBasedOnOrientation()) {
+        setShowInstrumentSelector(true);
+        // Mark as shown for this session
+        sessionStorage.setItem(sessionKey, 'true');
+      }
+    }
+  }, [user]);
+
+  // Cleanup session data on user change (handles logout)
+  useEffect(() => {
+    const cleanup = () => {
+      // Clear any previous user's session data when user changes
+      const keys = Object.keys(sessionStorage);
+      keys.forEach(key => {
+        if (key.startsWith('instrumentSelector_shown_') && (!user || !key.includes(user.id))) {
+          sessionStorage.removeItem(key);
+        }
+      });
+    };
+
+    cleanup();
+  }, [user?.id]);
+
+  return {
+    showInstrumentSelector,
+    setShowInstrumentSelector
+  };
+};
+
 // IMPROVED HERO BUTTON TEXT
 const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void; onTryTools: () => void }) => (
   <motion.section 
@@ -225,50 +282,14 @@ const Index = () => {
   const { state } = useAudioPlayer();
   const navigate = useNavigate();
   
-  // Unified orientation state
-  const [showInstrumentSelector, setShowInstrumentSelector] = useState(false);
+  // Use the new auth-based instrument selector logic
+  const { showInstrumentSelector, setShowInstrumentSelector } = useInstrumentSelectorLogic(user);
 
   // Fix: Use currentTrack from audio player context with null checking
   const currentTrack = state?.currentTrack || null;
   
   // IMPROVED TRACK FETCHING
   const featuredTracks = useShuffledTracks(4, 30000);
-
-  // Updated orientation detection
-  useEffect(() => {
-    const shouldShowSelector = () => {
-      const width = window.innerWidth;
-      const isMobile = width < 768;
-      const isLandscape = 
-        window.matchMedia("(orientation: landscape)").matches || 
-        window.innerWidth > window.innerHeight;
-      
-      return isLandscape || isMobile;
-    };
-
-    // Initial calculation
-    setShowInstrumentSelector(shouldShowSelector());
-
-    // Create optimized handler
-    let frameId: number;
-    const handleOrientationChange = () => {
-      cancelAnimationFrame(frameId);
-      frameId = requestAnimationFrame(() => {
-        setShowInstrumentSelector(shouldShowSelector());
-      });
-    };
-
-    // Add event listeners
-    window.addEventListener('resize', handleOrientationChange);
-    window.addEventListener('orientationchange', handleOrientationChange);
-    
-    // Cleanup
-    return () => {
-      window.removeEventListener('resize', handleOrientationChange);
-      window.removeEventListener('orientationchange', handleOrientationChange);
-      if (frameId) cancelAnimationFrame(frameId);
-    };
-  }, []);
 
   const handleInstrumentSelect = (instrument: string) => {
     navigate(`/music-tools?tool=${instrument}`);
