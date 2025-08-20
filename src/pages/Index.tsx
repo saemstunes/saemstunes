@@ -1,13 +1,17 @@
+
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useAudioPlayer } from "@/context/AudioPlayerContext";
 import MainLayout from "@/components/layout/MainLayout";
 import DashboardStats from "@/components/dashboard/DashboardStats";
 import RecommendedContent from "@/components/dashboard/RecommendedContent";
 import UpcomingBookings from "@/components/dashboard/UpcomingBookings";
+import SocialMediaContainer from "@/components/social/SocialMediaContainer";
 import FourPointerSection from "@/components/homepage/FourPointerSection";
 import InstrumentSelector from "@/components/ui/InstrumentSelector";
+import MusicToolsCarousel from "@/components/ui/MusicToolsCarousel";
+import { FeatureTriggerCounter } from "@/components/ui/FeatureTriggerCounter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +28,7 @@ import { motion } from "framer-motion";
 import { useWindowSize } from "@uidotdev/usehooks";
 import { AudioStorageManager } from "@/utils/audioStorageManager";
 import { getAudioUrl, convertTrackToAudioTrack, generateTrackUrl } from "@/lib/audioUtils";
+import { supabase } from "@/lib/supabase";
 import { useFeatureTrigger } from "@/hooks/useFeatureTrigger";
 
 const STATS = [
@@ -232,6 +237,7 @@ const Index = () => {
   const [orientationChecked, setOrientationChecked] = useState(false);
 
   const currentTrack = state?.currentTrack || null;
+  
   const featuredTracks = useShuffledTracks(4, 30000);
 
   useEffect(() => {
@@ -376,6 +382,16 @@ const Index = () => {
       <MainLayout>
         <div className="min-h-screen bg-background">
           <OrientationHint />
+
+          {user && (
+            <div className="fixed top-4 right-4 z-50">
+              <FeatureTriggerCounter
+                currentCount={instrumentTriggerCount}
+                maxCount={7}
+                featureName="Instrument Selector"
+              />
+            </div>
+          )}
 
           <div className="w-full max-w-full overflow-x-hidden space-y-6 sm:space-y-8 px-4 sm:px-6">
             <HomeHero 
