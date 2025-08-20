@@ -1,5 +1,5 @@
 // services/userPreferencesService.ts
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface UserUIPreferences {
   id: string;
