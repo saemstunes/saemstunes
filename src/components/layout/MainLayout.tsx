@@ -146,13 +146,13 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
   }, [location.pathname]);
 
   const navigation = [
- {
+    {
       name: "Home",
       href: "/",
       icon: Home,
       roles: ["student", "adult", "parent", "teacher", "admin"],
     },
-  {/*  {
+    {
       name: "Discover",
       href: "/discover",
       icon: Video,
@@ -169,7 +169,7 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
       href: "/community",
       icon: Video,
       roles: ["student", "adult", "parent", "teacher", "admin"],
-    }, */}
+    },
     {
       name: "Music Tools",
       href: "/music-tools",
@@ -188,12 +188,12 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
       icon: User,
       roles: ["student", "adult", "parent", "teacher", "admin"],
     },
-  {/*{
+    {
       name: "Settings",
       href: "/settings",
       icon: Settings,
       roles: ["student", "adult", "parent", "teacher", "admin"],
-    }, */}
+    },
   ];
 
   const socialLinks = [
