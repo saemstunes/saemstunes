@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -11,16 +10,14 @@ import SocialMediaContainer from "@/components/social/SocialMediaContainer";
 import FourPointerSection from "@/components/homepage/FourPointerSection";
 import InstrumentSelector from "@/components/ui/InstrumentSelector";
 import MusicToolsCarousel from "@/components/ui/MusicToolsCarousel";
-import { FeatureTriggerCounter } from "@/components/ui/FeatureTriggerCounter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Helmet } from "react-helmet";
 import { 
   Music, PlayCircle, Star, BookOpen, Calendar, 
   Headphones, Heart, Play, Share, RotateCw, 
-  Users, TrendingUp, Zap, X, Gift, ArrowRight, AlertCircle
+  Users, TrendingUp, Zap, X, Gift, ArrowRight
 } from "lucide-react";
 import { ResponsiveImage } from "@/components/ui/responsive-image";
 import CountUp from "@/components/tracks/CountUp";
@@ -28,8 +25,6 @@ import { motion } from "framer-motion";
 import { useWindowSize } from "@uidotdev/usehooks";
 import { AudioStorageManager } from "@/utils/audioStorageManager";
 import { getAudioUrl, convertTrackToAudioTrack, generateTrackUrl } from "@/lib/audioUtils";
-import { supabase } from "@/lib/supabase";
-import { useFeatureTrigger } from "@/hooks/useFeatureTrigger";
 
 // Constants - PRESERVE ORIGINAL STRUCTURE
 const STATS = [
@@ -117,6 +112,7 @@ const useShuffledTracks = (count: number, interval: number) => {
         setShuffledTracks(tracks);
       } catch (error) {
         console.error('Error fetching shuffled tracks:', error);
+        // Fallback to static tracks if needed
         const shuffled = FEATURED_TRACKS.sort(() => 0.5 - Math.random());
         setShuffledTracks(shuffled.slice(0, count));
       }
@@ -228,19 +224,9 @@ const Index = () => {
   const { user } = useAuth();
   const { state } = useAudioPlayer();
   const navigate = useNavigate();
-  const { isMobile, isLandscape } = useWindowOrientation();
   
-  // Feature trigger for instrument selector
-  const { 
-    canShow: canShowInstrumentSelector, 
-    currentCount: instrumentTriggerCount,
-    isLoading: isTriggerLoading,
-    error: triggerError,
-    incrementTrigger: incrementInstrumentTrigger 
-  } = useFeatureTrigger('instrument_selector', 7);
-
+  // Unified orientation state
   const [showInstrumentSelector, setShowInstrumentSelector] = useState(false);
-  const [orientationChecked, setOrientationChecked] = useState(false);
 
   // Fix: Use currentTrack from audio player context with null checking
   const currentTrack = state?.currentTrack || null;
@@ -248,14 +234,8 @@ const Index = () => {
   // IMPROVED TRACK FETCHING
   const featuredTracks = useShuffledTracks(4, 30000);
 
-  // Updated orientation detection - only for logged-in users who can access the feature
+  // Updated orientation detection
   useEffect(() => {
-    if (!user || !canShowInstrumentSelector || isTriggerLoading) {
-      setShowInstrumentSelector(false);
-      setOrientationChecked(true);
-      return;
-    }
-
     const shouldShowSelector = () => {
       const width = window.innerWidth;
       const isMobile = width < 768;
@@ -268,7 +248,6 @@ const Index = () => {
 
     // Initial calculation
     setShowInstrumentSelector(shouldShowSelector());
-    setOrientationChecked(true);
 
     // Create optimized handler
     let frameId: number;
@@ -289,25 +268,10 @@ const Index = () => {
       window.removeEventListener('orientationchange', handleOrientationChange);
       if (frameId) cancelAnimationFrame(frameId);
     };
-  }, [user, canShowInstrumentSelector, isTriggerLoading]);
+  }, []);
 
-  const handleInstrumentSelect = async (instrument: string) => {
-    try {
-      // Increment the trigger count when user selects an instrument
-      await incrementInstrumentTrigger();
-      
-      // Navigate to the tool
-      navigate(`/music-tools?tool=${instrument}`);
-      setShowInstrumentSelector(false);
-    } catch (error) {
-      console.error('Failed to record instrument selection:', error);
-      // Still navigate even if tracking fails
-      navigate(`/music-tools?tool=${instrument}`);
-      setShowInstrumentSelector(false);
-    }
-  };
-
-  const handleBackToHome = () => {
+  const handleInstrumentSelect = (instrument: string) => {
+    navigate(`/music-tools?tool=${instrument}`);
     setShowInstrumentSelector(false);
   };
 
@@ -345,52 +309,12 @@ const Index = () => {
       console.error('Error sharing:', error);
     }
   };
-
-  // Show loading state while checking permissions
-  if (isTriggerLoading && user) {
-    return (
-      <MainLayout>
-        <div className="min-h-screen bg-background flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-muted-foreground">Checking your access...</p>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
-
-  // Show error state if something went wrong
-  if (triggerError && user) {
-    return (
-      <MainLayout>
-        <div className="min-h-screen bg-background flex items-center justify-center">
-          <div className="text-center max-w-md mx-auto">
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>
-                {triggerError}. Please refresh the page or try again later.
-              </AlertDescription>
-            </Alert>
-            <Button 
-              onClick={() => window.location.reload()} 
-              className="mt-4"
-            >
-              Refresh Page
-            </Button>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
-
-  // Show instrument selector if conditions are met
-  if (showInstrumentSelector && orientationChecked && user && canShowInstrumentSelector) {
+    
+  if (showInstrumentSelector) {
     return (
       <InstrumentSelector
         onInstrumentSelect={handleInstrumentSelect}
-        onBackToHome={handleBackToHome}
+        onBackToHome={() => setShowInstrumentSelector(false)}
       />
     );
   }
@@ -405,17 +329,6 @@ const Index = () => {
       <MainLayout>
         <div className="min-h-screen bg-background">
           <OrientationHint />
-
-          {/* Show trigger count for logged-in users */}
-          {user && (
-            <div className="fixed top-4 right-4 z-50">
-              <FeatureTriggerCounter
-                currentCount={instrumentTriggerCount}
-                maxCount={7}
-                featureName="Instrument Selector"
-              />
-            </div>
-          )}
 
           {/* REMOVED FIXED WIDTH CONTAINER - RESPONSIVE MOBILE FIX */}
           <div className="w-full max-w-full overflow-x-hidden space-y-6 sm:space-y-8 px-4 sm:px-6">
@@ -436,16 +349,16 @@ const Index = () => {
             
             <FourPointerSection />
             
-            <section>
+            {/* <section>
               <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">
                 Try Our Music Tools
               </h2>
               <div className="overflow-x-hidden py-2">
                 <MusicToolsCarousel />
               </div>
-            </section>
+            </section> 
             
-            <SocialMediaContainer />
+            {/* <SocialMediaContainer /> */}
             
             {user && (
               <div className="overflow-x-auto">
