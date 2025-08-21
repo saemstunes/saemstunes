@@ -103,20 +103,28 @@ const VisionSection = () => {
           </AnimatePresence>
           
           {/* Navigation Arrows */}
-          <button 
+          <motion.button 
             onClick={prevStatement}
-            className="absolute -left-8 top-1/2 transform -translate-y-1/2 p-2 rounded-full hover:bg-muted/50 transition-colors"
+            className="absolute -left-8 top-1/2 transform -translate-y-1/2 p-2 rounded-full bg-white/60 hover:bg-white/80 shadow-sm"
             aria-label="Previous statement"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-          <button 
+            whileHover={{ scale: 1.15, x: -4 }}   // zoom + nudge left
+            whileTap={{ scale: 0.9 }}             // slight press feedback
+            transition={{ type: "spring", stiffness: 300 }}
+            >
+            <ChevronLeft className="h-5 w-5 text-gray-700" />
+          </motion.button>
+
+          <motion.button 
             onClick={nextStatement}
-            className="absolute -right-8 top-1/2 transform -translate-y-1/2 p-2 rounded-full hover:bg-muted/50 transition-colors"
+            className="absolute -right-8 top-1/2 transform -translate-y-1/2 p-2 rounded-full bg-white/60 hover:bg-white/80 shadow-sm"
             aria-label="Next statement"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
+            whileHover={{ scale: 1.15, x: 4 }}    // zoom + nudge right
+            whileTap={{ scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 300 }}
+            >
+            <ChevronRight className="h-5 w-5 text-gray-700" />
+          </motion.button>
+          
           
           {/* Indicator Dots */}
           <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2">
