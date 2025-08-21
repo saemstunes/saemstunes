@@ -22,7 +22,7 @@ export const LoaderOne = () => {
           y: [0, 10, 0],
         }}
         transition={transition(0)}
-        className="h-4 w-4 rounded-full border border-neutral-300 bg-gradient-to-b from-neutral-400 to-neutral-300"
+        className="h-4 w-4 rounded-full border border-brown-dark bg-gradient-to-b from-brown-light to-brown-dark dark:border-gold dark:bg-gradient-to-b dark:from-gold-light dark:to-gold"
       />
       <motion.div
         initial={{
@@ -32,7 +32,7 @@ export const LoaderOne = () => {
           y: [0, 10, 0],
         }}
         transition={transition(1)}
-        className="h-4 w-4 rounded-full border border-neutral-300 bg-gradient-to-b from-neutral-400 to-neutral-300"
+        className="h-4 w-4 rounded-full border border-brown-dark bg-gradient-to-b from-brown-light to-brown-dark dark:border-gold dark:bg-gradient-to-b dark:from-gold-light dark:to-gold"
       />
       <motion.div
         initial={{
@@ -42,7 +42,7 @@ export const LoaderOne = () => {
           y: [0, 10, 0],
         }}
         transition={transition(2)}
-        className="h-4 w-4 rounded-full border border-neutral-300 bg-gradient-to-b from-neutral-400 to-neutral-300"
+        className="h-4 w-4 rounded-full border border-brown-dark bg-gradient-to-b from-brown-light to-brown-dark dark:border-gold dark:bg-gradient-to-b dark:from-gold-light dark:to-gold"
       />
     </div>
   );
@@ -68,7 +68,7 @@ export const LoaderTwo = () => {
         animate={{
           x: [0, 20, 0],
         }}
-        className="h-4 w-4 rounded-full bg-neutral-200 shadow-md dark:bg-neutral-500"
+        className="h-4 w-4 rounded-full bg-brown-dark shadow-md dark:bg-gold"
       />
       <motion.div
         initial={{
@@ -78,7 +78,7 @@ export const LoaderTwo = () => {
           x: [0, 20, 0],
         }}
         transition={transition(0.4)}
-        className="h-4 w-4 -translate-x-2 rounded-full bg-neutral-200 shadow-md dark:bg-neutral-500"
+        className="h-4 w-4 -translate-x-2 rounded-full bg-brown-dark shadow-md dark:bg-gold"
       />
       <motion.div
         initial={{
@@ -88,7 +88,7 @@ export const LoaderTwo = () => {
           x: [0, 20, 0],
         }}
         transition={transition(0.8)}
-        className="h-4 w-4 -translate-x-4 rounded-full bg-neutral-200 shadow-md dark:bg-neutral-500"
+        className="h-4 w-4 -translate-x-4 rounded-full bg-brown-dark shadow-md dark:bg-gold"
       />
     </div>
   );
@@ -106,7 +106,7 @@ export const LoaderThree = () => {
       strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="h-20 w-20 stroke-neutral-500 [--fill-final:var(--color-yellow-300)] [--fill-initial:var(--color-neutral-50)] dark:stroke-neutral-100 dark:[--fill-final:var(--color-yellow-500)] dark:[--fill-initial:var(--color-neutral-800)]"
+      className="h-20 w-20 stroke-brown-dark [--fill-final:theme(colors.gold.DEFAULT)] [--fill-initial:theme(colors.brown.light)] dark:stroke-gold-light dark:[--fill-final:theme(colors.gold.dark)] dark:[--fill-initial:theme(colors.brown.dark)]"
     >
       {/* Base invisible reset */}
       <motion.path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -176,7 +176,7 @@ export const LoaderFour = ({ text = "Loading..." }: { text?: string }) => {
         {text}
       </motion.span>
       <motion.span
-        className="absolute inset-0 text-[#00e571]/50 blur-[0.5px] dark:text-[#00e571]"
+        className="absolute inset-0 text-brown-light/50 blur-[0.5px] dark:text-gold-light"
         animate={{
           x: [-2, 4, -3, 1.5, -2],
           y: [-2, 4, -3, 1.5, -2],
@@ -193,7 +193,7 @@ export const LoaderFour = ({ text = "Loading..." }: { text?: string }) => {
         {text}
       </motion.span>
       <motion.span
-        className="absolute inset-0 text-[#8b00ff]/50 dark:text-[#8b00ff]"
+        className="absolute inset-0 text-brown-dark/50 dark:text-gold"
         animate={{
           x: [0, 1, -1.5, 1.5, -1, 0],
           y: [0, -1, 1.5, -0.5, 0],
@@ -215,7 +215,7 @@ export const LoaderFour = ({ text = "Loading..." }: { text?: string }) => {
 
 export const LoaderFive = ({ text }: { text: string }) => {
   return (
-    <div className="font-sans font-bold [--shadow-color:var(--color-neutral-500)] dark:[--shadow-color:var(--color-neutral-100)]">
+    <div className="font-sans font-bold [--shadow-color:theme(colors.brown.DEFAULT)] dark:[--shadow-color:theme(colors.gold.light)]">
       {text.split("").map((char, i) => (
         <motion.span
           key={i}
