@@ -92,7 +92,7 @@ export function WorldMap({
   
   const projectPoint = (lat: number, lng: number) => {
     const x = (lng + 180) * (800 / 360);
-    const y = (90 - (lat - 5.73)) * (400 / 180);
+    const y = (90 - (lat - 8)) * (400 / 180);
     return { x, y };
   };
   
