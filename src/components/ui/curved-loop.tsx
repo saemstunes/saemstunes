@@ -28,7 +28,7 @@ export const CurvedLoop = ({
   direction = "left",
   interactive = true,
   friction = 0.95,     // lower = more resistance
-  tiltFactor = 0.2,    // adjust for stronger/weaker tilt
+  tiltFactor = 0.002,    // adjust for stronger/weaker tilt
 }: CurvedLoopProps) => {
   const text = useMemo(() => {
     const hasTrailing = /\s|\u00A0$/.test(marqueeText);
