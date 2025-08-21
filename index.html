@@ -66,90 +66,82 @@
     <!-- ✅ Nunito Font -->
     <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet" />
 
-    <!-- ✅ Comprehensive Structured Data -->
+    <!-- Comprehensive Structured Data -->
     <script type="application/ld+json">
-    {
+        {
         "@context": "https://schema.org",
-        "@type": "Organization",
-        "name": "Saem's Tunes",
-        "alternateName": "Saem's Tunes App",
-        "url": "https://www.saemstunes.com",
-        "logo": {
-            "@type": "ImageObject",
-            "url": "https://i.imgur.com/ltEen5M.png"
-        },
-        "description": "Comprehensive Christian music education platform offering online lessons, interactive tools, community features, and ministry resources for musicians of all ages.",
-        "foundingDate": "2024",
-        "contactPoint": {
-            "@type": "ContactPoint",
-            "contactType": "Customer Service",
-            "email": "contact@saemstunes.com",
-            "availableLanguage": "English"
-        },
-        "sameAs": [
-            "https://www.instagram.com/saemstunes",
-            "https://www.tiktok.com/@saemstunes"
-        ],
-        "knowsAbout": [
-            "Music Education",
-            "Christian Music",
-            "Online Learning",
-            "Music Ministry",
-            "Worship Leadership"
-        ]
-    }
-    </script>
-
-    <script type="application/ld+json">
+  "@graph": [
     {
-        "@context": "https://schema.org",
-        "@type": "WebApplication",
-        "name": "Saem's Tunes Music Education Platform",
-        "description": "Comprehensive online platform for Christian music education featuring interactive tools, lessons, and community",
-        "applicationCategory": "EducationalApplication",
-        "operatingSystem": "Web Browser, iOS, Android",
-        "url": "https://www.saemstunes.com",
-        "offers": [
-            {
-                "@type": "Offer",
-                "category": "Free Tools",
-                "price": "0",
-                "priceCurrency": "USD"
-            },
-            {
-                "@type": "Offer",
-                "category": "Premium Lessons",
-                "priceRange": "$10-50",
-                "priceCurrency": "USD"
-            }
-        ],
-        "featureList": [
-            "Interactive Piano",
-            "Guitar Tools",
-            "Metronome",
-            "Pitch Finder",
-            "Music Lessons",
-            "Community Features",
-            "Tutor Booking",
-            "Progress Tracking"
-        ]
-    }
-    </script>
-
-    <script type="application/ld+json">
-{
-    "@context": "https://schema.org",
-    "@type": "Course",
-    "name": "Christian Music Education Courses",
-    "description": "Comprehensive music education covering piano, guitar, vocals, music theory, and worship leadership",
-    "provider": {
+      "@type": "Organization",
+      "name": "Saem's Tunes",
+      "alternateName": "Saem's Tunes App",
+      "url": "https://www.saemstunes.com",
+      "logo": "https://i.imgur.com/ltEen5M.png",
+      "description": "Comprehensive Christian music education platform offering online lessons, interactive tools, community features, and ministry resources for musicians of all ages.",
+      "foundingDate": "2024",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "Customer Service",
+        "email": "contact@saemstunes.com",
+        "availableLanguage": "English"
+      },
+      "sameAs": [
+        "https://www.instagram.com/saemstunes",
+        "https://www.tiktok.com/@saemstunes"
+      ],
+      "knowsAbout": [
+        "Music Education",
+        "Christian Music",
+        "Online Learning",
+        "Music Ministry",
+        "Worship Leadership"
+      ]
+    },
+    {
+      "@type": "WebApplication",
+      "name": "Saem's Tunes Music Education Platform",
+      "description": "Comprehensive online platform for Christian music education featuring interactive tools, lessons, and community.",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Web Browser, iOS, Android",
+      "url": "https://www.saemstunes.com",
+      "offers": [
+        {
+          "@type": "Offer",
+          "name": "Free Tools",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        {
+          "@type": "Offer",
+          "name": "Premium Lessons",
+          "price": "10.00",
+          "priceCurrency": "USD",
+          "url": "https://www.saemstunes.com/premium-lessons"
+        }
+      ],
+      "featureList": [
+        "Interactive Piano",
+        "Guitar Tools",
+        "Metronome",
+        "Pitch Finder",
+        "Music Lessons",
+        "Community Features",
+        "Tutor Booking",
+        "Progress Tracking"
+      ]
+    },
+    {
+      "@type": "Course",
+      "name": "Christian Music Education Courses",
+      "description": "Comprehensive music education covering piano, guitar, vocals, music theory, and worship leadership",
+      "provider": {
         "@type": "Organization",
         "name": "Saem's Tunes",
         "url": "https://www.saemstunes.com"
-    },
-    "courseMode": "online",
-    "educationalLevel": "Beginner to Advanced",
-    "teaches": [
+      },
+      "courseMode": "online",
+      "educationalLevel": "Beginner to Advanced",
+      "teaches": [
         "Piano Playing",
         "Guitar Techniques",
         "Vocal Training",
@@ -157,46 +149,43 @@
         "Worship Leadership",
         "Songwriting",
         "Music Ministry"
-    ],
-    "offers": {
+      ],
+      "offers": {
         "@type": "Offer",
-        "category": "Music Education",
         "url": "https://www.saemstunes.com/courses/christian-music-education",
         "price": "0.00",
         "priceCurrency": "USD",
         "availability": "https://schema.org/InStock",
         "priceValidUntil": "2026-12-31"
-    },
-    "hasCourseInstance": {
+      },
+      "hasCourseInstance": {
         "@type": "CourseInstance",
         "courseMode": "online",
         "courseWorkload": "PT40H",
         "courseSchedule": {
-            "@type": "Schedule",
-            "repeatFrequency": "Monthly",
-            "repeatCount": 0
+          "@type": "Schedule",
+          "repeatFrequency": "Monthly",
+          "repeatCount": 0
         },
         "location": {
-            "@type": "VirtualLocation",
-            "url": "https://www.saemstunes.com/courses/christian-music-education"
+          "@type": "VirtualLocation",
+          "url": "https://www.saemstunes.com/courses/christian-music-education"
         }
-    }
-}
-    </script>
-
-    <script type="application/ld+json">
+      }
+    },
     {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "Saem's Tunes",
-        "url": "https://www.saemstunes.com",
-        "potentialAction": {
-            "@type": "SearchAction",
-            "target": "https://www.saemstunes.com/search?q={search_term_string}",
-            "query-input": "required name=search_term_string"
-        }
+      "@type": "WebSite",
+      "name": "Saem's Tunes",
+      "url": "https://www.saemstunes.com",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://www.saemstunes.com/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
     }
-    </script>
+  ]
+}
+</script>
 </head>
 
 <body>
