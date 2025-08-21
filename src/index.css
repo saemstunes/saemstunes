@@ -344,3 +344,56 @@
     contain: layout;
   }
 }
+
+/* Logo scale animation */
+.scale-animation {
+  animation: scaleUp 0.4s ease;
+}
+
+@keyframes scaleUp {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Glimmer effect */
+.glimmer-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.glimmer-effect::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(30deg);
+  animation: glimmer 3s infinite;
+  opacity: 0;
+}
+
+@keyframes glimmer {
+  0% { 
+    opacity: 0;
+    left: -100%;
+  }
+  20% { 
+    opacity: 0.5;
+  }
+  40% { 
+    opacity: 0;
+    left: 200%;
+  }
+  100% { 
+    opacity: 0;
+    left: 200%;
+  }
+}
