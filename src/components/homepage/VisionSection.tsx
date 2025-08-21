@@ -63,8 +63,7 @@ const VisionSection = () => {
         </div>
         
         <p className="text-sm md:text-lg text-muted-foreground max-w-2xl mx-auto py-4 leading-relaxed">
-          Connecting musicians across continents. Where African rhythms meet global melodies, 
-          and every student finds their voice in our worldwide community.
+          From the Behringer's of Nairobi to the Shure's of Morioka, from the Senheisser of Stavenger to the Neumann of Sydney - we provide a hub for the voices of the world where every note matters, every voice belongs, every rhythm tells His story through our own 
         </p>
       </div>
       
