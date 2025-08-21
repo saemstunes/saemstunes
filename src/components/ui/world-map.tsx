@@ -14,10 +14,11 @@ interface MapProps {
 
 export function WorldMap({
   dots = [],
-  lineColor = "#d4af37", // Your gold color
+  lineColor = "#A67C00", // Using your primary gold color
 }: MapProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [isDark, setIsDark] = useState(false);
+  const [svgMap, setSvgMap] = useState<string>("");
   
   // Simple dark mode detection for React
   useEffect(() => {
@@ -46,14 +47,22 @@ export function WorldMap({
     };
   }, []);
   
-  const map = new DottedMap({ height: 100, grid: "diagonal" });
-  
-  const svgMap = map.getSVG({
-    radius: 0.22,
-    color: isDark ? "#FFFFFF40" : "#00000040",
-    shape: "circle",
-    backgroundColor: isDark ? "black" : "white",
-  });
+  // Generate map with proper theme colors
+  useEffect(() => {
+    const map = new DottedMap({ height: 100, grid: "diagonal" });
+    
+    // Use your exact theme colors
+    const backgroundColor = isDark ? "#1e1917" : "#f8f5f0"; // Dark brown / Light cream
+    const dotColor = isDark ? "#A6A6A640" : "#66593F40"; // Muted colors from your theme
+    
+    const generatedSvgMap = map.getSVG({
+      radius: 0.22,
+      color: dotColor,
+      shape: "circle",
+      backgroundColor: backgroundColor,
+    });
+    setSvgMap(generatedSvgMap);
+  }, [isDark]);
   
   const projectPoint = (lat: number, lng: number) => {
     const x = (lng + 180) * (800 / 360);
@@ -71,15 +80,17 @@ export function WorldMap({
   };
   
   return (
-    <div className="w-full aspect-[2/1] dark:bg-black bg-white rounded-lg relative font-sans">
-      <img
-        src={`data:image/svg+xml;utf8,${encodeURIComponent(svgMap)}`}
-        className="h-full w-full [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)] pointer-events-none select-none"
-        alt="world map"
-        height="495"
-        width="1056"
-        draggable={false}
-      />
+    <div className="w-full aspect-[2/1] bg-background rounded-lg relative font-sans">
+      {svgMap && (
+        <img
+          src={`data:image/svg+xml;utf8,${encodeURIComponent(svgMap)}`}
+          className="h-full w-full [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)] pointer-events-none select-none"
+          alt="world map"
+          height="495"
+          width="1056"
+          draggable={false}
+        />
+      )}
       <svg
         ref={svgRef}
         viewBox="0 0 800 400"
