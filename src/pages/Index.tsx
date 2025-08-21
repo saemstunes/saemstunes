@@ -508,9 +508,6 @@ const Index = () => {
             
             <section className="py-20 bg-background">
               <div className="container mx-auto px-4">
-                <h2 className="text-3xl font-bold text-center mb-8 text-foreground font-serif">
-                  Curved Text Marquee
-                </h2>
                 <CurvedLoop 
                   marqueeText="Introducing Aceternity UI Pro - 70+ premium component packs and templates to build amazing websites."
                   speed={2}
