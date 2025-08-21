@@ -1,7 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { WorldMap } from '@/components/ui/world-map';
-import { Globe } from 'lucide-react';
 
 const VisionSection = () => {
   const musicConnections = [
@@ -58,7 +57,6 @@ const VisionSection = () => {
     >
       <div className="max-w-7xl mx-auto text-center px-4">
         <div className="flex items-center justify-center mb-4">
-          <Globe className="h-8 w-8 text-primary mr-3" />
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
             The <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Vision</span>
           </h2>
