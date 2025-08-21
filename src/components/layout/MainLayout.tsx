@@ -648,18 +648,6 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <style>{`
-        .scale-animation {
-          animation: scaleUp 0.4s ease;
-        }
-        
-        @keyframes scaleUp {
-          0% { transform: scale(1); }
-          50% { transform: scale(1.1); }
-          100% { transform: scale(1); }
-        }
-      `}</style>
     </div>
   );
 };
