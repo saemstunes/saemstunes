@@ -8,6 +8,7 @@ import DashboardStats from "@/components/dashboard/DashboardStats";
 import RecommendedContent from "@/components/dashboard/RecommendedContent";
 import UpcomingBookings from "@/components/dashboard/UpcomingBookings";
 import SocialMediaContainer from "@/components/social/SocialMediaContainer";
+import { CurvedLoop } from "@/components/ui/curved-loop";
 import FourPointerSection from "@/components/homepage/FourPointerSection";
 import LazyVisionSection from '@/components/LazyVisionSection';
 import InstrumentSelector from "@/components/ui/InstrumentSelector";
@@ -501,8 +502,22 @@ const Index = () => {
             
             <QuickActionsSection />
             
-            <FourPointerSection />
+            {/* <FourPointerSection /> */}
 
+            <section className="py-20 bg-black dark:bg-white text-white dark:text-black">
+              <div className="container mx-auto px-4">
+                <h2 className="text-3xl font-bold text-center mb-8">Curved Text Marquee</h2>
+                <CurvedLoop 
+                  marqueeText="Introducing Aceternity UI Pro - 70+ premium component packs and templates to build amazing websites."
+                  speed={3}
+                  curveAmount={500}
+                  direction="right"
+                  interactive={true}
+                  className="text-white dark:text-black"
+                  />
+              </div>
+            </section>
+            
             <LazyVisionSection />
             
             {/* <section>
