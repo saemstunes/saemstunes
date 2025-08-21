@@ -1,4 +1,5 @@
-import React, { ReactNode, useState, useEffect } from "react";
+
+import React, { ReactNode, useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -52,7 +53,6 @@ import {
 } from "@/components/ui/dialog";
 import { Library } from "lucide-react";
 
-
 // Custom TikTok icon as it's not available in lucide-react
 const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -87,14 +87,18 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
   const [backButtonPressCount, setBackButtonPressCount] = useState(0);
   const { toast } = useToast();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const handleLogoClick = () => { 
-    navigate('/'); 
-  };
+  const [isAtTop, setIsAtTop] = useState(true);
+  const [animateLogo, setAnimateLogo] = useState(false);
+  const [cooldown, setCooldown] = useState(false);
+  const logoRef = useRef<HTMLDivElement>(null);
+  const desktopLogoRef = useRef<HTMLDivElement>(null);
 
-  // Handle scroll effect for navbar
+  // Handle scroll effect for navbar and top detection
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+      const scrollY = window.scrollY;
+      setIsScrolled(scrollY > 10);
+      setIsAtTop(scrollY === 0);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -173,7 +177,7 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
     {
       name: "Music Tools",
       href: "/music-tools",
-      icon: Music,
+      icon: Heart,
       roles: ["student", "adult", "parent", "teacher", "admin"],
     },
     {
@@ -230,6 +234,34 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
     setIsMobileMenuOpen(false);
   };
 
+  // Enhanced logo click handler
+  const handleLogoClick = (logoType: 'mobile' | 'desktop') => {
+    if (location.pathname !== '/') {
+      navigate('/');
+    } else {
+      if (!isAtTop) {
+        // Scroll to top if not at top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        // Already at top - trigger animation if not in cooldown
+        if (!cooldown) {
+          setAnimateLogo(true);
+          setCooldown(true);
+          
+          // Reset animation after 400ms
+          setTimeout(() => {
+            setAnimateLogo(false);
+          }, 400);
+          
+          // Set cooldown for 2 seconds
+          setTimeout(() => {
+            setCooldown(false);
+          }, 2000);
+        }
+      }
+    }
+  };
+
   // Sample track data for the MiniPlayer
   const trackData = {
     isPlaying: false,
@@ -273,103 +305,108 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-[280px] sm:w-[350px] flex flex-col p-0">
-  {/* Fixed Header */}
-  <div className="flex items-center justify-between p-4 border-b border-border bg-background sticky top-0 z-10">
-    <div className="flex items-center gap-3">
-      <Logo 
-        variant="full"
-        size="md" 
-        showText 
-        align="left"
-        />
-    </div>
-    <Button
-      size="icon"
-      variant="ghost"
-      onClick={() => setIsMobileMenuOpen(false)}
-    >
-      <X className="h-5 w-5" />
-      <span className="sr-only">Close</span>
-    </Button>
-  </div>
+                {/* Fixed Header */}
+                <div className="flex items-center justify-between p-4 border-b border-border bg-background sticky top-0 z-10">
+                  <div 
+                    ref={logoRef}
+                    className="flex items-center gap-3 cursor-pointer"
+                    onClick={() => handleLogoClick('mobile')}
+                  >
+                    <Logo 
+                      variant="full"
+                      size="md" 
+                      showText 
+                      align="left"
+                      className={animateLogo ? 'scale-animation' : ''}
+                    />
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <X className="h-5 w-5" />
+                    <span className="sr-only">Close</span>
+                  </Button>
+                </div>
 
-  {/* Scrollable Content */}
-  <div className="flex-1 overflow-y-auto">
-    <nav className="flex flex-col gap-6 p-4">
-      {user && (
-        <>
-          <div className="flex items-center gap-4 mb-4">
-            <Avatar>
-              <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="font-medium">{user.name}</p>
-              <p className="text-sm text-muted-foreground capitalize">{user.role}</p>
-            </div>
-          </div>
-          <Separator className="mb-4" />
-        </>
-      )}
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-y-auto">
+                  <nav className="flex flex-col gap-6 p-4">
+                    {user && (
+                      <>
+                        <div className="flex items-center gap-4 mb-4">
+                          <Avatar>
+                            <AvatarImage src={user.avatar} alt={user.name} />
+                            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">{user.name}</p>
+                            <p className="text-sm text-muted-foreground capitalize">{user.role}</p>
+                          </div>
+                        </div>
+                        <Separator className="mb-4" />
+                      </>
+                    )}
 
-      {filteredNavigation.map((item) => (
-        <Button
-          key={item.name}
-          variant="ghost"
-          className={cn(
-            "justify-start gap-4",
-            isActive(item.href) &&
-              "bg-muted font-medium text-foreground"
-          )}
-          onClick={() => handleNavigation(item.href)}
-        >
-          <item.icon className="h-5 w-5" />
-          {item.name}
-        </Button>
-      ))}
+                    {filteredNavigation.map((item) => (
+                      <Button
+                        key={item.name}
+                        variant="ghost"
+                        className={cn(
+                          "justify-start gap-4",
+                          isActive(item.href) &&
+                            "bg-muted font-medium text-foreground"
+                        )}
+                        onClick={() => handleNavigation(item.href)}
+                      >
+                        <item.icon className="h-5 w-5" />
+                        {item.name}
+                      </Button>
+                    ))}
 
-      {user && (
-        <Button
-          variant="ghost"
-          className="justify-start gap-4 text-destructive hover:text-destructive"
-          onClick={() => {
-            logout();
-            setIsMobileMenuOpen(false);
-            navigate("/");
-          }}
-        >
-          <LogOut className="h-5 w-5" />
-          Logout
-        </Button>
-      )}
+                    {user && (
+                      <Button
+                        variant="ghost"
+                        className="justify-start gap-4 text-destructive hover:text-destructive"
+                        onClick={() => {
+                          logout();
+                          setIsMobileMenuOpen(false);
+                          navigate("/");
+                        }}
+                      >
+                        <LogOut className="h-5 w-5" />
+                        Logout
+                      </Button>
+                    )}
 
-      <Separator className="my-4" />
-      
-      <div className="flex flex-col gap-3">
-        {socialLinks.map((item) => (
-          <Button
-            key={item.name}
-            variant="ghost"
-            size="sm"
-            className="justify-start gap-3 text-muted-foreground hover:text-gold"
-            onClick={() => handleNavigation(item.href)}
-            aria-label={item.ariaLabel}
-          >
-            <item.icon className="h-4 w-4" />
-            {item.name}
-          </Button>
-        ))}
-      </div>
+                    <Separator className="my-4" />
+                    
+                    <div className="flex flex-col gap-3">
+                      {socialLinks.map((item) => (
+                        <Button
+                          key={item.name}
+                          variant="ghost"
+                          size="sm"
+                          className="justify-start gap-3 text-muted-foreground hover:text-gold"
+                          onClick={() => handleNavigation(item.href)}
+                          aria-label={item.ariaLabel}
+                        >
+                          <item.icon className="h-4 w-4" />
+                          {item.name}
+                        </Button>
+                      ))}
+                    </div>
 
-      {/* Footer content - now scrollable and with bottom padding to clear mobile nav */}
-      <Separator className="my-4" />
-      <div className="flex items-center justify-between pb-12">
-        <ThemeToggle />
-        <span className="text-xs text-muted-foreground">v8.1.0</span>
-      </div>
-    </nav>
-  </div>
-</SheetContent>
+                    {/* Footer content - now scrollable and with bottom padding to clear mobile nav */}
+                    <Separator className="my-4" />
+                    <div className="flex items-center justify-between pb-12">
+                      <ThemeToggle />
+                      <span className="text-xs text-muted-foreground">v8.1.0</span>
+                    </div>
+                  </nav>
+                </div>
+              </SheetContent>
             </Sheet>
 
             <Logo 
@@ -475,15 +512,17 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
             : "bg-transparent"
           )}>
             <div 
+              ref={desktopLogoRef}
               className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity" 
-              onClick={handleLogoClick}
-              >
+              onClick={() => handleLogoClick('desktop')}
+            >
               <Logo 
                 variant="icon" 
                 size="lg" 
                 showText={false} 
                 align="left"
                 clickable={false} 
+                className={animateLogo ? 'scale-animation' : ''}
               />
               <div className="flex flex-col leading-tight">
                 <span className="text-brown-dark dark:text-gold-light font-bold text-lg font-nunito tracking-tighter">Saem's</span>
@@ -577,10 +616,10 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
         </aside>
 
         {/* Main Content */}
-     <main className="flex-1">
-       <div className="container mx-auto px-4 sm:px-6 py-6 min-h-[calc(100vh-6rem)] pb-24 lg:pb-6">
-    {children}
-  </div>
+        <main className="flex-1">
+          <div className="container mx-auto px-4 sm:px-6 py-6 min-h-[calc(100vh-6rem)] pb-24 lg:pb-6">
+            {children}
+          </div>
           
           {/* Fixed Position Elements */}
           <FloatingBackButton />
@@ -589,26 +628,38 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
         </main>
       </div>
       <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle>Logout Confirmation</DialogTitle>
-      <DialogDescription>
-        Are you sure you want to log out from Saem's Tunes?
-      </DialogDescription>
-    </DialogHeader>
-    <DialogFooter>
-      <Button variant="outline" onClick={() => setShowLogoutConfirm(false)}>
-        Cancel
-      </Button>
-      <Button 
-        variant="destructive" 
-        onClick={confirmLogout}
-      >
-        <LogOut className="h-4 w-4 mr-2" /> Logout
-      </Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Logout Confirmation</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to log out from Saem's Tunes?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowLogoutConfirm(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={confirmLogout}
+            >
+              <LogOut className="h-4 w-4 mr-2" /> Logout
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <style>{`
+        .scale-animation {
+          animation: scaleUp 0.4s ease;
+        }
+        
+        @keyframes scaleUp {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.1); }
+          100% { transform: scale(1); }
+        }
+      `}</style>
     </div>
   );
 };
