@@ -3,12 +3,12 @@ import { InfiniteMovingCards } from "../ui/infinite-moving-cards";
 
 export function InfiniteMovingCardsSection() {
   return (
-    <section className="py-8 md:py-16 bg-background w-full overflow-hidden">
+    <section className="py-8 md:py-16 bg-background w-full overflow-x-hidden">
       <div className="w-full max-w-7xl mx-auto px-3 sm:px-4">
         <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-foreground text-center mb-6 md:mb-10">
           What Our Community Says
         </h2>
-        <div className="rounded-md flex flex-col antialiased bg-background items-center justify-center relative overflow-hidden w-full">
+        <div className="w-full overflow-x-hidden">
           <InfiniteMovingCards
             items={testimonials}
             direction="right"
