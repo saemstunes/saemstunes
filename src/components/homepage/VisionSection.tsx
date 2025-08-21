@@ -59,7 +59,7 @@ const VisionSection = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % statements.length);
-    }, 5000);
+    }, 7500);
     
     return () => clearInterval(interval);
   }, [statements.length]);
@@ -92,9 +92,9 @@ const VisionSection = () => {
           <AnimatePresence mode="wait">
             <motion.p
               key={currentIndex}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
+              initial={{ opacity: 0, x: 200 }}   // enter from right
+              animate={{ opacity: 1, x: 0 }}     // center
+              exit={{ opacity: 0, x: -200 }}     // leave left
               transition={{ duration: 0.8 }}
               className="text-sm md:text-lg text-muted-foreground leading-relaxed absolute px-2 text-center"
             >
@@ -105,14 +105,14 @@ const VisionSection = () => {
           {/* Navigation Arrows */}
           <button 
             onClick={prevStatement}
-            className="absolute left-0 top-1/2 transform -translate-y-1/2 p-2 rounded-full hover:bg-muted/50 transition-colors"
+            className="absolute -left-8 top-1/2 transform -translate-y-1/2 p-2 rounded-full hover:bg-muted/50 transition-colors"
             aria-label="Previous statement"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
           <button 
             onClick={nextStatement}
-            className="absolute right-0 top-1/2 transform -translate-y-1/2 p-2 rounded-full hover:bg-muted/50 transition-colors"
+            className="absolute -right-8 top-1/2 transform -translate-y-1/2 p-2 rounded-full hover:bg-muted/50 transition-colors"
             aria-label="Next statement"
           >
             <ChevronRight className="h-5 w-5" />
