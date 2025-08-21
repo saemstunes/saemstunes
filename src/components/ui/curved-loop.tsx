@@ -27,8 +27,8 @@ export const CurvedLoop = ({
   curveAmount = 400,
   direction = "left",
   interactive = true,
-  friction = 0.95,     // lower = more resistance
-  tiltFactor = 0.002,    // adjust for stronger/weaker tilt
+  friction = 0.95,    // lower = more resistance
+  tiltFactor = 0.002, // adjust for stronger/weaker tilt
 }: CurvedLoopProps) => {
   const text = useMemo(() => {
     const hasTrailing = /\s|\u00A0$/.test(marqueeText);
@@ -81,18 +81,11 @@ export const CurvedLoop = ({
           textPathRef.current.getAttribute("startOffset") || "0"
         );
 
-        if (dragging.current) {
-          // while dragging, offset updates in pointer move
-        } else {
-          // apply velocity (natural movement + inertia)
-          if (Math.abs(vel.current) > 0.01) {
-            currentOffset += vel.current;
-            vel.current *= friction; // slow down gradually
-          } else {
-            // fallback to base speed when fully stopped
-            const baseDelta = direction === "right" ? speed : -speed;
-            currentOffset += baseDelta;
-          }
+        if (!dragging.current) {
+          // base speed + decaying user velocity
+          const baseDelta = direction === "right" ? speed : -speed;
+          currentOffset += baseDelta + vel.current;
+          vel.current *= friction; // decay user imparted momentum
 
           const wrapPoint = spacing;
           if (currentOffset <= -wrapPoint) currentOffset += wrapPoint;
@@ -103,11 +96,11 @@ export const CurvedLoop = ({
             currentOffset + "px"
           );
           setOffset(currentOffset);
-        }
 
-        // update tilt based on velocity
-        const targetTilt = vel.current * tiltFactor;
-        setTilt((prev) => prev * 0.85 + targetTilt * 0.15); // smooth easing
+          // tilt reflects velocity
+          const targetTilt = (vel.current + baseDelta) * tiltFactor;
+          setTilt((prev) => prev * 0.85 + targetTilt * 0.15);
+        }
       }
       frame = requestAnimationFrame(step);
     };
@@ -173,7 +166,7 @@ export const CurvedLoop = ({
         style={{
           aspectRatio: "100/12",
           fontSize: "6rem",
-          transform: `rotate(${tilt}deg)`, // apply tilt
+          transform: `rotate(${tilt}deg)`,
           transition: dragging.current ? "none" : "transform 0.2s ease-out",
         }}
       >
