@@ -9,7 +9,6 @@ import RecommendedContent from "@/components/dashboard/RecommendedContent";
 import UpcomingBookings from "@/components/dashboard/UpcomingBookings";
 import SocialMediaContainer from "@/components/social/SocialMediaContainer";
 import FourPointerSection from "@/components/homepage/FourPointerSection";
-import { AppleCardsCarouselSection } from "@/components/homepage/AppleCardsCarouselSection";
 import LazyVisionSection from '@/components/LazyVisionSection';
 import InstrumentSelector from "@/components/ui/InstrumentSelector";
 import MusicToolsCarousel from "@/components/ui/MusicToolsCarousel";
@@ -502,9 +501,7 @@ const Index = () => {
             
             <QuickActionsSection />
             
-            {/* <FourPointerSection /> */}
-
-            <AppleCardsCarouselSection />
+            <FourPointerSection />
 
             <LazyVisionSection />
             
