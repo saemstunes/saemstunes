@@ -517,6 +517,7 @@ const Index = () => {
                   curveAmount={-330}
                   direction="left"
                   interactive={true}
+                  className="fill-brown-dark dark:fill-gold hover:fill-brown dark:hover:fill-gold-light transition-colors duration-300"
                   />
               </div>
             </section>
