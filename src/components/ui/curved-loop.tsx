@@ -45,7 +45,7 @@ export const CurvedLoop = ({
   const [tilt, setTilt] = useState(0); // rotation state
   const uid = useId();
   const pathId = `curve-${uid.replace(/:/g, "")}`;
-  const pathD = `M-100,40 Q500,${40 + curveAmount} 1540,40`;
+  const pathD = `M-300,40 Q500,${40 + curveAmount} 1740,40`; // Extended path
 
   const dragging = useRef(false);
   const lastX = useRef(0);
@@ -53,7 +53,7 @@ export const CurvedLoop = ({
 
   const textLength = spacing;
   const totalText = textLength
-    ? Array(Math.ceil(1800 / textLength) + 2).fill(text).join("")
+    ? Array(Math.ceil(2400 / textLength) + 3).fill(text).join("") // Increased coverage
     : text;
   const ready = spacing > 0;
 
@@ -162,7 +162,7 @@ export const CurvedLoop = ({
     >
       <svg
         className="w-full overflow-visible block select-none font-bold uppercase leading-none text-foreground"
-        viewBox="-200 0 1840 120" // Extended viewport only
+        viewBox="-200 0 1840 120" // Extended viewport
         style={{
           aspectRatio: "100/12",
           fontSize: "6rem",
