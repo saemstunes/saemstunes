@@ -509,7 +509,7 @@ const Index = () => {
             <section className="py-16 bg-background">
               <div className="container mx-auto px-4">
                 <CurvedLoop 
-                  marqueeText="Introducing Aceternity UI Pro - 70+ premium component packs and templates to build amazing websites."
+                  marqueeText="I love to sing ✦ It makes me happy, so "
                   speed={2}
                   curveAmount={-330}
                   direction="left"
