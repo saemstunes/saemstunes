@@ -35,6 +35,8 @@ export default function ThemeToggle() {
   const toggleTheme = () => {
     // Only animate when user explicitly toggles
     setIsAnimating(true);
+     // Dispatch a custom event for other components to listen to
+    window.dispatchEvent(new CustomEvent("themeChange"));
     const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
     localStorage.setItem("theme", newTheme);
