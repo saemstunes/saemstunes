@@ -105,14 +105,14 @@ const VisionSection = () => {
           {/* Navigation Arrows */}
           <button 
             onClick={prevStatement}
-            className="absolute -left-8 top-1/2 transform -translate-y-1/2 p-2 rounded-full hover:bg-muted/50 transition-colors"
+            className="absolute -left-12 top-1/2 transform -translate-y-1/2 p-2 rounded-full hover:bg-muted/50 transition-colors"
             aria-label="Previous statement"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
           <button 
             onClick={nextStatement}
-            className="absolute -right-8 top-1/2 transform -translate-y-1/2 p-2 rounded-full hover:bg-muted/50 transition-colors"
+            className="absolute -right-12 top-1/2 transform -translate-y-1/2 p-2 rounded-full hover:bg-muted/50 transition-colors"
             aria-label="Next statement"
           >
             <ChevronRight className="h-5 w-5" />
