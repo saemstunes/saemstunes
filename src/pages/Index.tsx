@@ -504,16 +504,19 @@ const Index = () => {
             
             {/* <FourPointerSection /> */}
 
-            <section className="py-20 bg-black dark:bg-white text-white dark:text-black">
+            
+            
+            <section className="py-20 bg-background">
               <div className="container mx-auto px-4">
-                <h2 className="text-3xl font-bold text-center mb-8">Curved Text Marquee</h2>
+                <h2 className="text-3xl font-bold text-center mb-8 text-foreground font-serif">
+                  Curved Text Marquee
+                </h2>
                 <CurvedLoop 
                   marqueeText="Introducing Aceternity UI Pro - 70+ premium component packs and templates to build amazing websites."
-                  speed={3}
-                  curveAmount={500}
-                  direction="right"
+                  speed={2}
+                  curveAmount={-330}
+                  direction="left"
                   interactive={true}
-                  className="text-white dark:text-black"
                   />
               </div>
             </section>
