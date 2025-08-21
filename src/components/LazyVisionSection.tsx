@@ -5,7 +5,7 @@ import { LoaderFive } from '@/components/ui/loader';
 
 // Lazy load VisionSection with error boundary
 const VisionSection = lazy(() => 
-  import('./VisionSection')
+  import('@/components/homepage/VisionSection')
     .then(module => ({ default: module.default || module.VisionSection }))
     .catch(error => {
       console.error('Failed to load VisionSection:', error);
