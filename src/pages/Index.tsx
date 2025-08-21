@@ -508,11 +508,14 @@ const Index = () => {
             
             <section className="py-20 bg-background">
               <div className="container mx-auto px-4">
-                <h2 className="text-3xl font-bold text-center mb-8 text-foreground font-serif">
-                  Curved Text Marquee
-                </h2>
-                <CurvedLoop 
-                  marqueeText="Introducing Aceternity UI Pro - 70+ premium component packs and templates to build amazing websites."
+                <CurvedLoop
+                  marqueeText={
+                    <span className="font-poppins text-lg sm:text-xl md:text-2xl font-medium text-foreground dark:text-foreground tracking-wide leading-relaxed">
+                      I love to sing 
+                      <span className="text-gold-light dark:text-gold px-2">✦</span> 
+                      It makes me happy, so
+                    </span>
+                  }
                   speed={2}
                   curveAmount={-330}
                   direction="left"
@@ -520,6 +523,7 @@ const Index = () => {
                   />
               </div>
             </section>
+            
             
             <LazyVisionSection />
             
