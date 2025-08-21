@@ -20,30 +20,56 @@ export function WorldMap({
   const [isDark, setIsDark] = useState(false);
   const [svgMap, setSvgMap] = useState<string>("");
   
-  // Simple dark mode detection for React
+  // Listen for theme changes using the same logic as your ThemeToggle
   useEffect(() => {
-    const checkDarkMode = () => {
-      const isDarkMode = 
-        document.documentElement.classList.contains('dark') ||
-        window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setIsDark(isDarkMode);
+    const checkTheme = () => {
+      const savedTheme = localStorage.getItem("theme");
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      
+      if (savedTheme) {
+        setIsDark(savedTheme === "dark");
+      } else {
+        setIsDark(prefersDark);
+      }
     };
     
-    checkDarkMode();
+    // Check theme initially
+    checkTheme();
     
-    // Listen for theme changes
-    const observer = new MutationObserver(checkDarkMode);
+    // Listen for storage events (when theme changes in other components)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "theme") {
+        checkTheme();
+      }
+    };
+    
+    // Listen for custom theme change events if your ThemeToggle dispatches them
+    const handleThemeChange = () => {
+      checkTheme();
+    };
+    
+    // Set up event listeners
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("themeChange", handleThemeChange as EventListener);
+    
+    // Also check for class changes on documentElement as a fallback
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === "class") {
+          checkTheme();
+        }
+      });
+    });
+    
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['class']
     });
     
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    mediaQuery.addEventListener('change', checkDarkMode);
-    
     return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("themeChange", handleThemeChange as EventListener);
       observer.disconnect();
-      mediaQuery.removeEventListener('change', checkDarkMode);
     };
   }, []);
   
