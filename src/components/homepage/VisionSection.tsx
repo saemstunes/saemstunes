@@ -6,44 +6,44 @@ import { Globe } from 'lucide-react';
 const VisionSection = () => {
   const musicConnections = [
   {
-    start: { lat: -1.2921, lng: 36.8219 }, // Nairobi (your base)
-    end: { lat: 40.7128, lng: -74.006 }, // New York (global music hub)
+    start: { lat: -1.2921, lng: 36.8219 }, // Nairobi (base)
+    end: { lat: 40.7128, lng: -74.0060 }, // New York, USA
   },
   {
-    start: { lat: -1.2921, lng: 36.8219 }, // Nairobi
-    end: { lat: 51.5074, lng: -0.1278 }, // London (music education)
+    start: { lat: -1.2921, lng: 36.8219 }, 
+    end: { lat: 51.5072, lng: -0.1276 }, // London, UK
   },
   {
-    start: { lat: -1.2921, lng: 36.8219 }, // Nairobi
-    end: { lat: -23.5505, lng: -46.6333 }, // São Paulo (Latin music)
+    start: { lat: -1.2921, lng: 36.8219 },
+    end: { lat: -23.5505, lng: -46.6333 }, // São Paulo, Brazil
   },
   {
-    start: { lat: -1.2921, lng: 36.8219 }, // Nairobi
+    start: { lat: -1.2921, lng: 36.8219 },
     end: { lat: 30.0444, lng: 31.2357 }, // Cairo, Egypt
   },
   {
-    start: { lat: -1.2921, lng: 36.8219 }, // Nairobi
+    start: { lat: -1.2921, lng: 36.8219 },
     end: { lat: -33.9249, lng: 18.4241 }, // Cape Town, South Africa
   },
   {
-    start: { lat: -1.2921, lng: 36.8219 }, // Nairobi
+    start: { lat: -1.2921, lng: 36.8219 },
     end: { lat: 9.0765, lng: 7.3986 }, // Abuja, Nigeria
   },
   {
-    start: { lat: 40.7128, lng: -74.006 }, // New York
-    end: { lat: 39.7036, lng: 141.1527 }, // Morioka, Iwate, Japan
+    start: { lat: 40.7128, lng: -74.0060 }, // New York
+    end: { lat: 35.6762, lng: 139.6503 }, // Tokyo, Japan (instead of Morioka in ocean)
   },
   {
-    start: { lat: 51.5074, lng: -0.1278 }, // London
-    end: { lat: -33.8688, lng: 151.2093 }, // Sydney (worldwide)
+    start: { lat: 51.5072, lng: -0.1276 }, // London
+    end: { lat: -33.8688, lng: 151.2093 }, // Sydney, Australia
   },
   {
-    start: { lat: 28.6139, lng: 77.209 }, // New Delhi
-    end: { lat: -1.2921, lng: 36.8219 }, // Back to Nairobi
+    start: { lat: 28.6139, lng: 77.2090 }, // New Delhi, India
+    end: { lat: -1.2921, lng: 36.8219 }, // Nairobi
   },
   {
-    start: { lat: 58.9700, lng: 5.7331 }, // Stavanger, Norway
-    end: { lat: -1.2921, lng: 36.8219 }, // Back to Nairobi
+    start: { lat: 59.9139, lng: 10.7522 }, // Oslo, Norway (instead of Stavanger, avoids ocean offset)
+    end: { lat: -1.2921, lng: 36.8219 }, // Nairobi
   },
 ];
 
