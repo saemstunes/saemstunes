@@ -126,7 +126,7 @@ export const CurvedLoop = ({
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center w-full"
+      className="flex items-center justify-center w-full py-12"
       style={{ visibility: ready ? "visible" : "hidden", cursor: cursorStyle }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
@@ -134,7 +134,7 @@ export const CurvedLoop = ({
       onPointerLeave={endDrag}
     >
       <svg 
-        className="w-full overflow-visible block select-none font-bold uppercase leading-none text-brown-default dark:text-beige-light"
+        className="w-full overflow-visible block select-none font-bold uppercase leading-none text-foreground"
         viewBox="0 0 1440 120"
         style={{ aspectRatio: '100/12', fontSize: '6rem' }}
       >
