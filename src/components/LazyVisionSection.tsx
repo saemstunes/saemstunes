@@ -32,7 +32,11 @@ const LazyVisionSection: React.FC = () => {
         <Suspense
           fallback={
             <div className="min-h-[400px] flex flex-col items-center justify-center py-12 space-y-4">
-              <LoaderFive text="Loading our vision..." />
+              <LoaderFive 
+                text="Loading our vision..." 
+                textColor="text-primary" // Your gold color
+                shimmerColor="bg-gradient-to-r from-primary/20 via-primary/40 to-primary/20"
+                />
             </div>
           }
         >
