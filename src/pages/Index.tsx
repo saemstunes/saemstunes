@@ -544,7 +544,7 @@ const Index = () => {
             )}
             
             <section className="py-12 rounded-xl bg-gradient-to-r 
-              from-gold-default/10 via-gold-light/10 to-gold-default/10
+              from-gold-default/20 via-gold-light/20 to-gold-default/20
               dark:from-gold-dark/10 dark:via-gold-default/10 dark:to-gold-dark/10">
               <div className="max-w-3xl mx-auto text-center px-4">
                 <h2 className="text-2xl sm:text-3xl font-bold mb-4">
