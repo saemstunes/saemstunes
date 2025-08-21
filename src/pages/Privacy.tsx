@@ -108,7 +108,7 @@ const Privacy = () => {
     {
       id: "contact",
       title: "Contact Us",
-      content: `If you have questions or concerns about this Privacy Policy, please contact us at privacy@saemstunes.com.`,
+      content: `If you have questions or concerns about this Privacy Policy, please contact us at contact@saemstunes.com.`,
       category: "basics"
     }
   ];
