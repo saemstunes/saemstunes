@@ -5,45 +5,45 @@ import { Globe } from 'lucide-react';
 
 const VisionSection = () => {
   const musicConnections = [
-  {
-    start: { lat: -1.2921, lng: 36.8219 }, // Nairobi (base)
-    end: { lat: 40.7128, lng: -74.0060 }, // New York, USA
+  { // Nairobi -> New York
+    start: { lat: -1.2864, lng: 36.8172 },
+    end:   { lat: 40.7128, lng: -74.0060 },
   },
-  {
-    start: { lat: -1.2921, lng: 36.8219 }, 
-    end: { lat: 51.5072, lng: -0.1276 }, // London, UK
+  { // Nairobi -> London
+    start: { lat: -1.2864, lng: 36.8172 },
+    end:   { lat: 51.5074, lng: -0.1278 },
   },
-  {
-    start: { lat: -1.2921, lng: 36.8219 },
-    end: { lat: -23.5505, lng: -46.6333 }, // São Paulo, Brazil
+  { // Nairobi -> Vitória (Brazil)  ⟵ matches the east-coast dot (not São Paulo)
+    start: { lat: -1.2864, lng: 36.8172 },
+    end:   { lat: -20.2976, lng: -40.2958 },
   },
-  {
-    start: { lat: -1.2921, lng: 36.8219 },
-    end: { lat: 30.0444, lng: 31.2357 }, // Cairo, Egypt
+  { // Nairobi -> Cairo
+    start: { lat: -1.2864, lng: 36.8172 },
+    end:   { lat: 30.0444, lng: 31.2357 },
   },
-  {
-    start: { lat: -1.2921, lng: 36.8219 },
-    end: { lat: -33.9249, lng: 18.4241 }, // Cape Town, South Africa
+  { // Nairobi -> Johannesburg  ⟵ inland SA dot (not Cape Town)
+    start: { lat: -1.2864, lng: 36.8172 },
+    end:   { lat: -26.2041, lng: 28.0473 },
   },
-  {
-    start: { lat: -1.2921, lng: 36.8219 },
-    end: { lat: 9.0765, lng: 7.3986 }, // Abuja, Nigeria
+  { // Nairobi -> Abuja
+    start: { lat: -1.2864, lng: 36.8172 },
+    end:   { lat: 9.0765, lng: 7.3986 },
   },
-  {
-    start: { lat: 40.7128, lng: -74.0060 }, // New York
-    end: { lat: 35.6762, lng: 139.6503 }, // Tokyo, Japan (instead of Morioka in ocean)
+  { // New York -> Morioka (Japan)  ⟵ north Honshu dot
+    start: { lat: 40.7128, lng: -74.0060 },
+    end:   { lat: 39.7036, lng: 141.1527 },
   },
-  {
-    start: { lat: 51.5072, lng: -0.1276 }, // London
-    end: { lat: -33.8688, lng: 151.2093 }, // Sydney, Australia
+  { // London -> Sydney
+    start: { lat: 51.5074, lng: -0.1278 },
+    end:   { lat: -33.8688, lng: 151.2093 },
   },
-  {
-    start: { lat: 28.6139, lng: 77.2090 }, // New Delhi, India
-    end: { lat: -1.2921, lng: 36.8219 }, // Nairobi
+  { // New Delhi -> Nairobi
+    start: { lat: 28.6139, lng: 77.2090 },
+    end:   { lat: -1.2864, lng: 36.8172 },
   },
-  {
-    start: { lat: 59.9139, lng: 10.7522 }, // Oslo, Norway (instead of Stavanger, avoids ocean offset)
-    end: { lat: -1.2921, lng: 36.8219 }, // Nairobi
+  { // Stavanger -> Nairobi  ⟵ west-coast Norway dot
+    start: { lat: 58.9700, lng: 5.7331 },
+    end:   { lat: -1.2864, lng: 36.8172 },
   },
 ];
 
