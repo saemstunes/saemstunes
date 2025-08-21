@@ -506,8 +506,8 @@ const Index = () => {
 
             
             
-            <section className="py-16 bg-background">
-              <div className="container mx-auto px-4">
+            <section className="py-8 bg-background flex items-center justify-center">
+              <div className="container mx-auto px-4 max-w-3xl">
                 <CurvedLoop 
                   marqueeText="I love to sing ✦ It makes me happy, so "
                   speed={2}
@@ -518,6 +518,7 @@ const Index = () => {
                   />
               </div>
             </section>
+
             
             <LazyVisionSection />
             
