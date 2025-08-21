@@ -9,6 +9,7 @@ import RecommendedContent from "@/components/dashboard/RecommendedContent";
 import UpcomingBookings from "@/components/dashboard/UpcomingBookings";
 import SocialMediaContainer from "@/components/social/SocialMediaContainer";
 import FourPointerSection from "@/components/homepage/FourPointerSection";
+import VisionSection from "@/components/homepage/VisionSection";
 import InstrumentSelector from "@/components/ui/InstrumentSelector";
 import MusicToolsCarousel from "@/components/ui/MusicToolsCarousel";
 import { Button } from "@/components/ui/button";
@@ -501,6 +502,8 @@ const Index = () => {
             <QuickActionsSection />
             
             <FourPointerSection />
+
+            <VisionSection />
             
             {/* <section>
               <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">
