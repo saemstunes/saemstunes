@@ -121,14 +121,17 @@ const VisionSection = () => {
           {/* Indicator Dots */}
           <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2">
             {statements.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentIndex(index)}
-                className={`h-2 w-2 rounded-full transition-all ${
-                  index === currentIndex ? 'bg-primary' : 'bg-muted'
-                }`}
-                aria-label={`Go to statement ${index + 1}`}
-              />
+               <motion.button
+                 key={index}
+                 onClick={() => setCurrentIndex(index)}
+                 className="h-2 w-2 rounded-full"
+                 aria-label={`Go to statement ${index + 1}`}
+                 animate={{
+                   scale: index === currentIndex ? 1.4 : 1,     // enlarge active dot
+                   backgroundColor: index === currentIndex ? "#d4af37" : "#d1d5db" // gold vs muted
+                     }}
+                 transition={{ type: "spring", stiffness: 300, damping: 20, duration: 0.8 }}
+                 />
             ))}
           </div>
         </div>
