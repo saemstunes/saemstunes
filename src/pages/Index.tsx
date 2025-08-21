@@ -8,7 +8,6 @@ import DashboardStats from "@/components/dashboard/DashboardStats";
 import RecommendedContent from "@/components/dashboard/RecommendedContent";
 import UpcomingBookings from "@/components/dashboard/UpcomingBookings";
 import SocialMediaContainer from "@/components/social/SocialMediaContainer";
-import { CurvedLoop } from "@/components/ui/curved-loop";
 import FourPointerSection from "@/components/homepage/FourPointerSection";
 import LazyVisionSection from '@/components/LazyVisionSection';
 import InstrumentSelector from "@/components/ui/InstrumentSelector";
@@ -502,29 +501,8 @@ const Index = () => {
             
             <QuickActionsSection />
             
-            {/* <FourPointerSection /> */}
+            <FourPointerSection />
 
-            
-            
-            <section className="py-20 bg-background">
-              <div className="container mx-auto px-4">
-                <CurvedLoop
-                  marqueeText={
-                    <span className="font-poppins text-lg sm:text-xl md:text-2xl font-medium text-foreground dark:text-foreground tracking-wide leading-relaxed">
-                      I love to sing 
-                      <span className="text-gold-light dark:text-gold px-2">✦</span> 
-                      It makes me happy, so
-                    </span>
-                  }
-                  speed={2}
-                  curveAmount={-330}
-                  direction="left"
-                  interactive={true}
-                  />
-              </div>
-            </section>
-            
-            
             <LazyVisionSection />
             
             {/* <section>
