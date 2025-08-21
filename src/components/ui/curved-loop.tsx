@@ -162,7 +162,7 @@ export const CurvedLoop = ({
     >
       <svg
         className="w-full overflow-visible block select-none font-bold uppercase leading-none text-foreground"
-        viewBox="0 0 1440 120"
+        viewBox="-200 0 1840 120" // Extended viewport only
         style={{
           aspectRatio: "100/12",
           fontSize: "6rem",
