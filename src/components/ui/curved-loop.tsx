@@ -45,7 +45,7 @@ export const CurvedLoop = ({
   const [tilt, setTilt] = useState(0); // rotation state
   const uid = useId();
   const pathId = `curve-${uid.replace(/:/g, "")}`;
-  const pathD = `M-300,40 Q500,${40 + curveAmount} 1740,40`; // Extended path
+  const pathD = `M-100,40 Q500,${40 + curveAmount} 1540,40`;
 
   const dragging = useRef(false);
   const lastX = useRef(0);
@@ -53,7 +53,7 @@ export const CurvedLoop = ({
 
   const textLength = spacing;
   const totalText = textLength
-    ? Array(Math.ceil(2400 / textLength) + 3).fill(text).join("") // Increased coverage
+    ? Array(Math.ceil(1800 / textLength) + 2).fill(text).join("")
     : text;
   const ready = spacing > 0;
 
@@ -162,7 +162,7 @@ export const CurvedLoop = ({
     >
       <svg
         className="w-full overflow-visible block select-none font-bold uppercase leading-none text-foreground"
-        viewBox="-200 0 1840 120" // Extended viewport
+        viewBox="0 0 1440 120"
         style={{
           aspectRatio: "100/12",
           fontSize: "6rem",
@@ -185,31 +185,9 @@ export const CurvedLoop = ({
             fill="none"
             stroke="transparent"
           />
-          {/* Gradient for smooth edge fading */}
-          <linearGradient id={`fade-${uid}`} x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopOpacity="0" />
-            <stop offset="15%" stopOpacity="1" />
-            <stop offset="85%" stopOpacity="1" />
-            <stop offset="100%" stopOpacity="0" />
-          </linearGradient>
-          {/* Mask applying the gradient */}
-          <mask id={`mask-${uid}`}>
-            <rect 
-              x="-200" 
-              y="0" 
-              width="1840" 
-              height="120" 
-              fill={`url(#fade-${uid})`} 
-            />
-          </mask>
         </defs>
         {ready && (
-          <text 
-            fontWeight="bold" 
-            xmlSpace="preserve" 
-            className={className}
-            mask={`url(#mask-${uid})`} // Apply fade mask
-          >
+          <text fontWeight="bold" xmlSpace="preserve" className={className}>
             <textPath
               ref={textPathRef}
               href={`#${pathId}`}
