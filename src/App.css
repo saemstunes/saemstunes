@@ -2,22 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  /* Add the scroll animation for infinite moving cards */
-  @keyframes scroll {
-    to {
-      transform: translate(calc(-50% - 0.5rem));
-    }
-  }
-
-  .animate-scroll {
-    animation: scroll var(--animation-duration, 40s) var(--animation-direction, forwards) linear infinite;
-  }
-}
-
 body {
   @apply font-nunito;
 }
+
 
 #root {
   max-width: 1280px;
