@@ -1,51 +1,76 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { WorldMap } from '@/components/ui/world-map';
+import { ChevronLeft, ChevronRight } from 'lucide-react'; // Import icons for navigation
 
 const VisionSection = () => {
   const musicConnections = [
-  { // Nairobi -> New York
-    start: { lat: -3.8649, lng: 36.8172 },
-    end:   { lat: 38.1343, lng: -74.0060 },
-  },
-  { // Nairobi -> London
-    start: { lat: -3.8649, lng: 36.8172 },
-    end:   { lat: 48.9289, lng: -0.1278 },
-  },
-  { // Nairobi -> Vitória (Brazil)
-    start: { lat: -3.8649, lng: 36.8172 },
-    end:   { lat: -22.8761, lng: -40.2958 },
-  },
-  { // Nairobi -> Cairo
-    start: { lat: -3.8649, lng: 36.8172 },
-    end:   { lat: 27.4659, lng: 31.2357 },
-  },
-  { // Nairobi -> Johannesburg
-    start: { lat: -3.8649, lng: 36.8172 },
-    end:   { lat: -28.7826, lng: 28.0473 },
-  },
-  { // Nairobi -> Abuja
-    start: { lat: -3.8649, lng: 36.8172 },
-    end:   { lat: 6.4980, lng: 7.3986 },
-  },
-  { // New York -> Morioka (Japan)
-    start: { lat: 38.1343, lng: -74.0060 },
-    end:   { lat: 37.1251, lng: 141.1527 },
-  },
-  { // London -> Sydney
-    start: { lat: 48.9289, lng: -0.1278 },
-    end:   { lat: -36.4473, lng: 151.2093 },
-  },
-  { // New Delhi -> Nairobi
-    start: { lat: 26.0354, lng: 77.2090 },
-    end:   { lat: -3.8649, lng: 36.8172 },
-  },
-  { // Stavanger -> Nairobi
-    start: { lat: 56.3915, lng: 5.7331 },
-    end:   { lat: -3.8649, lng: 36.8172 },
-  },
-];
+    { // Nairobi -> New York
+      start: { lat: -3.8649, lng: 36.8172 },
+      end:   { lat: 38.1343, lng: -74.0060 },
+    },
+    { // Nairobi -> London
+      start: { lat: -3.8649, lng: 36.8172 },
+      end:   { lat: 48.9289, lng: -0.1278 },
+    },
+    { // Nairobi -> Vitória (Brazil)
+      start: { lat: -3.8649, lng: 36.8172 },
+      end:   { lat: -22.8761, lng: -40.2958 },
+    },
+    { // Nairobi -> Cairo
+      start: { lat: -3.8649, lng: 36.8172 },
+      end:   { lat: 27.4659, lng: 31.2357 },
+    },
+    { // Nairobi -> Johannesburg
+      start: { lat: -3.8649, lng: 36.8172 },
+      end:   { lat: -28.7826, lng: 28.0473 },
+    },
+    { // Nairobi -> Abuja
+      start: { lat: -3.8649, lng: 36.8172 },
+      end:   { lat: 6.4980, lng: 7.3986 },
+    },
+    { // New York -> Morioka (Japan)
+      start: { lat: 38.1343, lng: -74.0060 },
+      end:   { lat: 37.1251, lng: 141.1527 },
+    },
+    { // London -> Sydney
+      start: { lat: 48.9289, lng: -0.1278 },
+      end:   { lat: -36.4473, lng: 151.2093 },
+    },
+    { // New Delhi -> Nairobi
+      start: { lat: 26.0354, lng: 77.2090 },
+      end:   { lat: -3.8649, lng: 36.8172 },
+    },
+    { // Stavanger -> Nairobi
+      start: { lat: 56.3915, lng: 5.7331 },
+      end:   { lat: -3.8649, lng: 36.8172 },
+    },
+  ];
 
+  const statements = [
+    "Rooted in humble beginnings, we equip learners everywhere to grow in music, serve their communities and give back - all to the glory of God.",
+    "From simple beginnings to a global vision, Saem's Tunes equips learners to grow, serve and give back through music and ministry.",
+    "Saem's Tunes is a global home for learners - pushing what's possible in music, shaping lives, serving communities and lifting every voice to God."
+  ];
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Auto-rotate statements
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % statements.length);
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, [statements.length]);
+
+  const nextStatement = () => {
+    setCurrentIndex((prev) => (prev + 1) % statements.length);
+  };
+
+  const prevStatement = () => {
+    setCurrentIndex((prev) => (prev - 1 + statements.length) % statements.length);
+  };
 
   return (
     <motion.section 
@@ -62,9 +87,51 @@ const VisionSection = () => {
           </h2>
         </div>
         
-        <p className="text-sm md:text-lg text-muted-foreground max-w-2xl mx-auto py-4 leading-relaxed">
-          From the Behringer's of Nairobi to the Shure's of Morioka, from the Senheisser of Stavenger to the Neumann of Sydney - we provide a hub for the voices of the world where every note matters, every voice belongs, every rhythm tells His story through our own 
-        </p>
+        {/* Statement Carousel */}
+        <div className="relative max-w-2xl mx-auto py-4 min-h-[120px] flex items-center justify-center">
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={currentIndex}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.8 }}
+              className="text-sm md:text-lg text-muted-foreground leading-relaxed absolute px-2 text-center"
+            >
+              {statements[currentIndex]}
+            </motion.p>
+          </AnimatePresence>
+          
+          {/* Navigation Arrows */}
+          <button 
+            onClick={prevStatement}
+            className="absolute left-0 top-1/2 transform -translate-y-1/2 p-2 rounded-full hover:bg-muted/50 transition-colors"
+            aria-label="Previous statement"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button 
+            onClick={nextStatement}
+            className="absolute right-0 top-1/2 transform -translate-y-1/2 p-2 rounded-full hover:bg-muted/50 transition-colors"
+            aria-label="Next statement"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+          
+          {/* Indicator Dots */}
+          <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2">
+            {statements.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentIndex(index)}
+                className={`h-2 w-2 rounded-full transition-all ${
+                  index === currentIndex ? 'bg-primary' : 'bg-muted'
+                }`}
+                aria-label={`Go to statement ${index + 1}`}
+              />
+            ))}
+          </div>
+        </div>
       </div>
       
       <div className="max-w-6xl mx-auto">
