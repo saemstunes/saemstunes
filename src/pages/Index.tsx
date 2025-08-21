@@ -574,6 +574,20 @@ const Index = () => {
                 </div>
               </div>
             </section>
+
+            <section className="py-8 bg-background flex items-center justify-center">
+              <div className="container mx-auto px-4 max-w-3xl">
+                <CurvedLoop 
+                  marqueeText="I love to sing ✦ It makes me happy, so "
+                  speed={2}
+                  curveAmount={300}
+                  direction="right"
+                  interactive={true}
+                  className="fill-brown-dark dark:fill-gold hover:fill-brown dark:hover:fill-gold-light transition-colors duration-300"
+                  />
+              </div>
+            </section>
+            
           </div>
         </div>
       </MainLayout>
