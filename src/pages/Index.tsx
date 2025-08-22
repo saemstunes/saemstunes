@@ -332,6 +332,7 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
             darkBaseColor="#3a2e2e"
             darkActiveColor="#A67C00"
             proximity={80}
+            speedTrigger={80},
             shockRadius={120}
             shockStrength={2.5}
             resistance={800}
