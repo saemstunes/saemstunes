@@ -3,7 +3,7 @@
 import { useRef, useEffect, useCallback, useMemo, useContext } from "react";
 import { gsap } from "gsap";
 import { ThemeContext } from "@/context/ThemeContext";
-import "./MusicIconGrid.css";
+import "./DotGrid.css";
 
 const throttle = (func: Function, limit: number) => {
   let lastCall = 0;
@@ -16,7 +16,7 @@ const throttle = (func: Function, limit: number) => {
   };
 };
 
-interface MusicIconGridProps {
+interface DotGridProps {
   iconSize?: number;
   gap?: number;
   lightBaseColor?: string;
@@ -65,7 +65,7 @@ const SmileIcon = ({ color, size }: { color: string, size: number }) => (
   </svg>
 );
 
-const MusicIconGrid = ({
+const DotGrid = ({
   iconSize = 24,
   gap = 40,
   lightBaseColor = "#A67C00", // Gold default
@@ -81,7 +81,7 @@ const MusicIconGrid = ({
   returnDuration = 1.5,
   className = "",
   style,
-}: MusicIconGridProps) => {
+}: DotGridProps) => {
   const { theme } = useContext(ThemeContext);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -317,11 +317,11 @@ const MusicIconGrid = ({
 
   return (
     <section className={`music-icon-grid ${className}`} style={style}>
-      <div ref={wrapperRef} className="music-icon-grid__wrap">
-        <div ref={containerRef} className="music-icon-grid__container" />
+      <div ref={wrapperRef} className="dot-grid__wrap">
+        <div ref={containerRef} className="dot-grid__container" />
       </div>
     </section>
   );
 };
 
-export default MusicIconGrid;
+export default DotGrid;
