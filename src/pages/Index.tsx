@@ -334,7 +334,7 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
             proximity={80}
             shockRadius={80}
             shockStrength={2.5}
-            resistance={700}
+            resistance={1200}
             returnDuration={1.5}
             className="w-full h-full"
           />
