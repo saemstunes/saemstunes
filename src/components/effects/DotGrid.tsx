@@ -1,8 +1,8 @@
 // components/effects/DotGrid.tsx
 'use client';
-import { useRef, useEffect, useCallback, useMemo, useContext } from "react";
+import { useRef, useEffect, useCallback, useMemo } from "react";
 import { gsap } from "gsap";
-import { ThemeContext } from "@/context/ThemeContext"; // Adjust the path to your theme context
+import { useTheme } from "@/context/ThemeContext"; // Import the useTheme hook
 import "./DotGrid.css";
 
 const throttle = (func: Function, limit: number) => {
@@ -49,7 +49,7 @@ const DotGrid = ({
   gap = 32,
   lightBaseColor = "#f5f2e6", // Light mode muted color
   lightActiveColor = "#A67C00", // Gold default
-  darkBaseColor = "#3a2e2e", // Dark mode muted color (hsl(20 14% 20%))
+  darkBaseColor = "#3a2e2e", // Dark mode muted color
   darkActiveColor = "#A67C00", // Gold default (same in both modes)
   proximity = 150,
   speedTrigger = 100,
@@ -61,7 +61,7 @@ const DotGrid = ({
   className = "",
   style,
 }: DotGridProps) => {
-  const { theme } = useContext(ThemeContext); // Use your theme context
+  const { theme } = useTheme(); // Use the useTheme hook
   const wrapperRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dotsRef = useRef<any[]>([]);
