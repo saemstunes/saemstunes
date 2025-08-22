@@ -305,21 +305,24 @@ const useInstrumentSelectorLogic = (user: any) => {
 };
 
 // IMPROVED HERO BUTTON TEXT
-const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void; onTryTools: () => void }) => (
-  <motion.section 
-    className="text-center space-y-4 py-8 sm:py-12"
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.6 }}
-  >
-
-    {/* DotGrid Background */}
+// Update your HomeHero component
+const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void; onTryTools: () => void }) => {
+  return (
+    <motion.section 
+      className="relative text-center space-y-4 py-8 sm:py-12 h-screen flex items-center justify-center"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+    >
+      {/* DotGrid Background */}
       <div className="absolute inset-0 z-0">
         <DotGrid
           dotSize={2}
           gap={20}
-          baseColor="#6B7280"
-          activeColor="#3B82F6"
+          lightBaseColor="#f5f2e6" // Light mode muted color
+          lightActiveColor="#A67C00" // Gold default
+          darkBaseColor="#3a2e2e" // Dark mode muted color
+          darkActiveColor="#A67C00" // Gold default (same in both modes)
           proximity={100}
           shockRadius={150}
           shockStrength={3}
@@ -330,39 +333,40 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
       </div>
       
       {/* Content */}
-    <div className="max-w-4xl mx-auto px-4">
-      <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 sm:mb-6">
-        Welcome to{" "}
-        <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-          Saem's Tunes
-        </span>
-      </h1>
-      <p className="text-lg sm:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed">
-        Your musical journey starts here. Discover amazing tracks, learn instruments, 
-        and join our vibrant community of music lovers.
-      </p>
-      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-        <Button 
-          size="lg" 
-          onClick={onExploreTracks}
-          className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 group"
-        >
-          <Music className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
-          Discover Music
-        </Button>
-        <Button 
-          size="lg" 
-          variant="outline"
-          onClick={onTryTools}
-          className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-6 sm:px-8 group"
-        >
-          <PlayCircle className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
-          Try Music Tools
-        </Button>
+      <div className="relative z-10 max-w-4xl mx-auto px-4">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 sm:mb-6">
+          Welcome to{" "}
+          <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            Saem's Tunes
+          </span>
+        </h1>
+        <p className="text-lg sm:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed">
+          Your musical journey starts here. Discover amazing tracks, learn instruments, 
+          and join our vibrant community of music lovers.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+          <Button 
+            size="lg" 
+            onClick={onExploreTracks}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 group"
+          >
+            <Music className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
+            Discover Music
+          </Button>
+          <Button 
+            size="lg" 
+            variant="outline"
+            onClick={onTryTools}
+            className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-6 sm:px-8 group"
+          >
+            <PlayCircle className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
+            Try Music Tools
+          </Button>
+        </div>
       </div>
-    </div>
-  </motion.section>
-);
+    </motion.section>
+  );
+};
 
 // IMPROVED TRACK CARD WITH ANALYTICS SUPPORT
 const TrackCard = ({ track, onPlay, onShare }: { track: any; onPlay: (track: any) => void; onShare: (track: any) => void }) => (
