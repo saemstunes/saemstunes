@@ -336,6 +336,7 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
             shockStrength={2.5}
             resistance={1200}
             returnDuration={1.5}
+            velocityMultiplier={0.001}
             className="w-full h-full"
           />
         </div>
