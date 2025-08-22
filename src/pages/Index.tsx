@@ -315,34 +315,26 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
     >
-      {/* DotGrid Background with feathering effect */}
-      <div className="absolute top-0 left-0 w-screen h-full z-0 pointer-events-none">
-        <div className="w-full h-full 
-            [mask-image:radial-gradient(ellipse_at_center,black_50%,transparent_100%)]
-            [-webkit-mask-image:radial-gradient(ellipse_at_center,black_50%,transparent_100%)]
-            [mask-size:100%_100%]
-            [-webkit-mask-size:100%_100%]
-            [mask-repeat:no-repeat]
-            [-webkit-mask-repeat:no-repeat]">
-          <DotGrid
-            dotSize={5}
-            gap={25}
-            lightBaseColor="#f5f2e6"
-            lightActiveColor="#A67C00"
-            darkBaseColor="#3a2e2e"
-            darkActiveColor="#A67C00"
-            proximity={80}
-            shockRadius={120}
-            shockStrength={2.5}
-            resistance={800}
-            returnDuration={2.1}
-            className="w-full h-full"
-          />
-        </div>
+      {/* DotGrid Background with Music Icons */}
+      <div className="absolute inset-0 z-0">
+        <DotGrid
+          iconSize={24}
+          gap={50}
+          lightBaseColor="#A67C00" // Gold default
+          lightActiveColor="#3B82F6" // Blue accent
+          darkBaseColor="#A67C00" // Gold default
+          darkActiveColor="#3B82F6" // Blue accent
+          proximity={120}
+          shockRadius={180}
+          shockStrength={4}
+          resistance={800}
+          returnDuration={2}
+          className="w-full h-full"
+        />
       </div>
       
       {/* Content */}
-      <div className="relative z-10 max-w-4xl mx-auto px-4">
+      <div className="relative z-10 max-w-4xl mx-auto px-4 bg-background/80 backdrop-blur-sm rounded-lg py-8">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 sm:mb-6">
           Welcome to{" "}
           <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
