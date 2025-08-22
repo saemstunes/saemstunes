@@ -26,4 +26,9 @@
 .dot-grid__icon {
   transition: transform 0.3s ease-out, color 0.3s ease;
   will-change: transform, color;
+  opacity: 0.7; /* Make icons more subtle */
+}
+
+.dot-grid__icon:hover {
+  opacity: 1; /* Slightly increase opacity on hover */
 }
