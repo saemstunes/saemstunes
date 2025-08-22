@@ -9,6 +9,8 @@ import { WalletProvider } from "@/context/WalletContext";
 import { AudioPlayerProvider } from "@/context/AudioPlayerContext";
 import { MediaStateProvider } from '@/components/idle-state/mediaStateContext';
 import { PlaylistProvider } from '@/context/PlaylistContext';
+import { FeaturedItemsProvider } from '@/context/FeaturedItemsContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import SplashScreen from "@/components/ui/splash-screen";
 import GlobalMiniPlayer from "@/components/player/GlobalMiniPlayer";
@@ -57,7 +59,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import MusicShowcase from "./pages/MusicShowcase";
 import Profile from "./pages/Profile";  // ADDED PROFILE IMPORT
-import { FeaturedItemsProvider } from '@/context/FeaturedItemsContext';
+
 
 const queryClient = new QueryClient();
 
@@ -74,6 +76,7 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
       <AuthProvider>
         <WalletProvider>
           <MediaStateProvider>
@@ -174,6 +177,7 @@ const App = () => {
           </MediaStateProvider>
         </WalletProvider>
       </AuthProvider>
+     </ThemeProvider>   
     </QueryClientProvider>
   );
 };
