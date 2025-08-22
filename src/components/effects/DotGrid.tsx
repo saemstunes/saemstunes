@@ -45,18 +45,18 @@ interface DotGridProps {
 }
 
 const DotGrid = ({
-  dotSize = 16,
-  gap = 32,
+  dotSize = 5,
+  gap = 22.5,
   lightBaseColor = "#f5f2e6", // Light mode muted color
   lightActiveColor = "#A67C00", // Gold default
   darkBaseColor = "#3a2e2e", // Dark mode muted color
   darkActiveColor = "#A67C00", // Gold default (same in both modes)
-  proximity = 120,
+  proximity = 80,
   speedTrigger = 80,
   shockRadius = 250,
   shockStrength = 2.5,
   maxSpeed = 5000,
-  resistance = 800,
+  resistance = 1200,
   returnDuration = 2.1,
   className = "",
   style,
