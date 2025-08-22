@@ -15,12 +15,11 @@ import InstrumentSelector from "@/components/ui/InstrumentSelector";
 import MusicToolsCarousel from "@/components/ui/MusicToolsCarousel";
 import DotGrid from "@/components/effects/DotGrid";
 import { Button } from "@/components/ui/button";
-import { AnimatedPlayButton } from "@/components/ui/AnimatedPlayButton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Helmet } from "react-helmet";
 import { 
-  Music, Star, BookOpen, Calendar, 
+  Music, PlayCircle, Star, BookOpen, Calendar, 
   Headphones, Heart, Play, Share, RotateCw, 
   Users, TrendingUp, Zap, X, Gift, ArrowRight
 } from "lucide-react";
@@ -370,7 +369,7 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
             onClick={onTryTools}
             className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-6 sm:px-8 group"
           >
-            <AnimatedPlayButton />
+            <PlayCircle className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
             Try Music Tools
           </Button>
         </div>
