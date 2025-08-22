@@ -3,6 +3,12 @@
 import { useRef, useEffect, useCallback, useMemo, useState } from "react";
 import { gsap } from "gsap";
 import { useTheme } from "@/context/ThemeContext";
+import { 
+  Music2, 
+  PlayCircle, 
+  BookOpen, 
+  Smile 
+} from "lucide-react";
 import "./DotGrid.css";
 
 const throttle = (func: Function, limit: number) => {
@@ -26,37 +32,6 @@ function hexToRgb(hex: string) {
   };
 }
 
-// SVG Icon Components
-const MusicIcon = ({ size, color }: { size: number; color: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M9 18V5L21 3V16" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <circle cx="6" cy="18" r="3" fill={color}/>
-    <circle cx="18" cy="16" r="3" fill={color}/>
-  </svg>
-);
-
-const PlayIcon = ({ size, color }: { size: number; color: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M5 3L19 12L5 21V3Z" fill={color} stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const BookIcon = ({ size, color }: { size: number; color: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M4 19.5C4 18.837 4.26339 18.2011 4.73223 17.7322C5.20107 17.2634 5.83696 17 6.5 17H20" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M6.5 2H20V22H6.5C5.83696 22 5.20107 21.7366 4.73223 21.2678C4.26339 20.7989 4 20.163 4 19.5V4.5C4 3.83696 4.26339 3.20107 4.73223 2.73223C5.20107 2.26339 5.83696 2 6.5 2V2Z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const SmileIcon = ({ size, color }: { size: number; color: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="10" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M8 14C8 14 9.5 16 12 16C14.5 16 16 14 16 14" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <circle cx="9" cy="9" r="1" fill={color}/>
-    <circle cx="15" cy="9" r="1" fill={color}/>
-  </svg>
-);
-
 interface DotGridProps {
   dotSize?: number;
   gap?: number;
@@ -76,8 +51,8 @@ interface DotGridProps {
 }
 
 const DotGrid = ({
-  dotSize = 6, // Increased to accommodate icons
-  gap = 15,
+  dotSize = 16,
+  gap = 32,
   lightBaseColor = "#f5f2e6",
   lightActiveColor = "#A67C00",
   darkBaseColor = "#3a2e2e",
@@ -115,13 +90,13 @@ const DotGrid = ({
   const baseRgb = useMemo(() => hexToRgb(baseColor), [baseColor]);
   const activeRgb = useMemo(() => hexToRgb(activeColor), [activeColor]);
 
-  // Array of icon components
+  // Array of Lucide icon components
   const iconComponents = useMemo(() => [
-    (color: string) => <MusicIcon size={dotSize} color={color} key="music" />,
-    (color: string) => <PlayIcon size={dotSize} color={color} key="play" />,
-    (color: string) => <BookIcon size={dotSize} color={color} key="book" />,
-    (color: string) => <SmileIcon size={dotSize} color={color} key="smile" />,
-  ], [dotSize]);
+    (color: string, size: number) => <Music2 key="music" color={color} size={size} />,
+    (color: string, size: number) => <PlayCircle key="play" color={color} size={size} />,
+    (color: string, size: number) => <BookOpen key="book" color={color} size={size} />,
+    (color: string, size: number) => <Smile key="smile" color={color} size={size} />,
+  ], []);
 
   const buildGrid = useCallback(() => {
     const wrap = wrapperRef.current;
@@ -183,9 +158,12 @@ const DotGrid = ({
               transition: 'color 0.3s ease',
               color: baseColor,
               zIndex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            {IconComponent(baseColor)}
+            {IconComponent(baseColor, dotSize * 0.7)}
           </div>
         );
         
