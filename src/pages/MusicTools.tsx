@@ -14,7 +14,7 @@ import Metronome from "@/components/music-tools/Metronome";
 import PitchFinder from "@/components/music-tools/PitchFinder";
 import ToolSuggestionForm from "@/components/music-tools/ToolSuggestionForm";
 import { 
-  Music, 
+  Lightbulb, 
   Piano, 
   Guitar, 
   Timer, 
@@ -86,13 +86,13 @@ const MUSIC_TOOLS = [
   {
     id: 'suggest-tool',
     name: 'Suggest a Tool',
-    icon: Music,
+    icon: Lightbulb,
     description: 'Have an idea for a new tool? Let us know!',
     component: ToolSuggestionForm, // Fixed: Removed function wrapper
     category: 'feedback',
     minWidth: 300,
     recommendedOrientation: 'any',
-    props: { adminEmail: "admin@saemstunes.com" } // Added props for the component
+    props: { adminEmail: "contact@saemstunes.com" } // Added props for the component
   }
 ];
 
