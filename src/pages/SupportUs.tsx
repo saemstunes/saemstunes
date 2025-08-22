@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import { Heart, Gift, Star, Users, Music, Headphones, Share2, Award } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +7,18 @@ import { Separator } from '@/components/ui/separator';
 import { motion } from 'framer-motion';
 
 const SupportUs = () => {
+  const [customAmounts, setCustomAmounts] = useState({
+    "One-time Donation": "",
+    "Monthly Support": ""
+  });
+
+  const handleOptionClick = (optionTitle: string, amount: string) => {
+    setCustomAmounts(prev => ({
+      ...prev,
+      [optionTitle]: amount
+    }));
+  };
+
   const supportOptions = [
     {
       title: "One-time Donation",
@@ -79,7 +91,6 @@ const SupportUs = () => {
           <p className="text-muted-foreground">Help us continue our mission of making music education accessible and enjoyable for everyone.</p>
         </motion.div>
         
-        {/* Founder's Message */}
         <motion.div
           initial="hidden"
           animate="visible"
@@ -130,7 +141,6 @@ const SupportUs = () => {
           </Card>
         </motion.div>
         
-        {/* Support Options */}
         <motion.div 
           className="grid grid-cols-1 md:grid-cols-2 gap-6"
           initial="hidden"
@@ -138,7 +148,7 @@ const SupportUs = () => {
           variants={fadeIn}
           custom={2}
         >
-          {supportOptions.map((option, index) => (
+          {supportOptions.map((option) => (
             <Card key={option.title} className="h-full">
               <CardHeader>
                 <div className="flex items-start gap-2">
@@ -157,6 +167,7 @@ const SupportUs = () => {
                     <div 
                       key={item.label}
                       className="border rounded-lg p-3 text-center hover:border-gold hover:bg-gold/5 cursor-pointer transition-all"
+                      onClick={() => handleOptionClick(option.title, item.amount)}
                     >
                       <div className="text-xl font-semibold">${item.amount}</div>
                       <div className="text-sm text-muted-foreground">{item.label}</div>
@@ -174,14 +185,19 @@ const SupportUs = () => {
                       className="flex-1 px-3 py-2 border rounded-r-md focus:outline-none focus:ring-2 focus:ring-gold/50 
                       bg-background text-foreground dark:bg-background dark:text-foreground"
                       placeholder="Enter amount"
-                      />
+                      value={customAmounts[option.title] || ''}
+                      onChange={(e) => setCustomAmounts(prev => ({
+                        ...prev,
+                        [option.title]: e.target.value
+                      }))}
+                    />
                   </div>
                 </div>
               </CardContent>
               <CardFooter>
                 <Button 
                   className="w-full bg-gold hover:bg-gold-dark"
-                  onClick={() => window.open(option.url, '_blank')}
+                  onClick={() => window.open(`${option.url}?amount=${customAmounts[option.title] || ''}`, '_blank')}
                 >
                   Donate {option.title === 'One-time Donation' ? 'Now' : 'Monthly'}
                 </Button>
@@ -190,7 +206,6 @@ const SupportUs = () => {
           ))}
         </motion.div>
         
-        {/* Other Ways to Help */}
         <motion.div
           initial="hidden"
           animate="visible"
@@ -271,7 +286,6 @@ const SupportUs = () => {
           </div>
         </motion.div>
         
-        {/* Impact Section */}
         <motion.div 
           className="bg-muted p-6 rounded-lg mt-8"
           initial="hidden"
