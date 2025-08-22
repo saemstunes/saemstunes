@@ -325,8 +325,8 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
             [mask-repeat:no-repeat]
             [-webkit-mask-repeat:no-repeat]">
           <DotGrid
-            dotSize={3.5}
-            gap={20}
+            dotSize={5}
+            gap={25}
             lightBaseColor="#f5f2e6"
             lightActiveColor="#A67C00"
             darkBaseColor="#3a2e2e"
@@ -335,7 +335,7 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
             shockRadius={120}
             shockStrength={2.5}
             resistance={800}
-            returnDuration={2}
+            returnDuration={2.1}
             className="w-full h-full"
           />
         </div>
