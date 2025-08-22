@@ -312,6 +312,24 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.6 }}
   >
+
+    {/* DotGrid Background */}
+      <div className="absolute inset-0 z-0">
+        <DotGrid
+          dotSize={2}
+          gap={20}
+          baseColor="#6B7280"
+          activeColor="#3B82F6"
+          proximity={100}
+          shockRadius={150}
+          shockStrength={3}
+          resistance={800}
+          returnDuration={2}
+          className="w-full h-full"
+        />
+      </div>
+      
+      {/* Content */}
     <div className="max-w-4xl mx-auto px-4">
       <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 sm:mb-6">
         Welcome to{" "}
