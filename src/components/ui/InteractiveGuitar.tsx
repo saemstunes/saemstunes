@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, Volume2, VolumeX, Settings, Info, RotateCcw, Star, Metronome, BookOpen, Zap, X } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Settings, Info, RotateCcw, Star, Timer, BookOpen, Zap, X } from 'lucide-react';
 import { useSwipeable } from 'react-swipeable';
 
 // Chord theory definitions
@@ -1584,7 +1584,7 @@ const InteractiveGuitar: React.FC = () => {
             metronomeActive ? 'bg-green-500/20 text-green-300' : ''
           }`}
         >
-          <Metronome className="h-5 w-5" />
+          <Timer className="h-5 w-5" />
         </button>
 
         <button
@@ -1652,7 +1652,7 @@ const InteractiveGuitar: React.FC = () => {
           className="text-center mt-4"
         >
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-sm rounded-full px-4 py-2 text-white text-sm border border-green-500/30">
-            <Metronome className="h-4 w-4" />
+            <Timer className="h-4 w-4" />
             <span>Metronome: {timeSignature.beats}/{timeSignature.noteValue} • {tempo} BPM</span>
           </div>
         </motion.div>
