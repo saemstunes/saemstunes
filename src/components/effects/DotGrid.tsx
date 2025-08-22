@@ -1,8 +1,9 @@
 // components/effects/DotGrid.tsx
 'use client';
-import { useRef, useEffect, useCallback, useMemo } from "react";
+import { useRef, useEffect, useCallback, useMemo, useContext } from "react";
 import { gsap } from "gsap";
-import { useTheme } from "@/context/ThemeContext"; // Import the useTheme hook
+import { createRoot } from "react-dom/client";
+import { ThemeContext } from "@/context/ThemeContext";
 import "./DotGrid.css";
 
 const throttle = (func: Function, limit: number) => {
@@ -16,18 +17,8 @@ const throttle = (func: Function, limit: number) => {
   };
 };
 
-function hexToRgb(hex: string) {
-  const m = hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
-  if (!m) return { r: 0, g: 0, b: 0 };
-  return {
-    r: parseInt(m[1], 16),
-    g: parseInt(m[2], 16),
-    b: parseInt(m[3], 16),
-  };
-}
-
 interface DotGridProps {
-  dotSize?: number;
+  iconSize?: number;
   gap?: number;
   lightBaseColor?: string;
   lightActiveColor?: string;
@@ -44,27 +35,59 @@ interface DotGridProps {
   style?: React.CSSProperties;
 }
 
+// SVG Icons using currentColor
+const MusicIcon = ({ size }: { size: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-current">
+    <path d="M9 18V5L21 3V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <circle cx="6" cy="18" r="3" fill="currentColor"/>
+    <circle cx="18" cy="16" r="3" fill="currentColor"/>
+  </svg>
+);
+
+const PlayIcon = ({ size }: { size: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-current">
+    <path d="M5 3L19 12L5 21V3Z" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const BookIcon = ({ size }: { size: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-current">
+    <path d="M4 19.5C4 18.837 4.26339 18.2011 4.73223 17.7322C5.20107 17.2634 5.83696 17 6.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M6.5 2H20V22H6.5C5.83696 22 5.20107 21.7366 4.73223 21.2678C4.26339 20.7989 4 20.163 4 19.5V4.5C4 3.83696 4.26339 3.20107 4.73223 2.73223C5.20107 2.26339 5.83696 2 6.5 2V2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const SmileIcon = ({ size }: { size: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-current">
+    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M8 14C8 14 9.5 16 12 16C14.5 16 16 14 16 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <circle cx="9" cy="9" r="1" fill="currentColor"/>
+    <circle cx="15" cy="9" r="1" fill="currentColor"/>
+  </svg>
+);
+
 const DotGrid = ({
-  dotSize = 16,
-  gap = 32,
-  lightBaseColor = "#f5f2e6", // Light mode muted color
-  lightActiveColor = "#A67C00", // Gold default
-  darkBaseColor = "#3a2e2e", // Dark mode muted color
-  darkActiveColor = "#A67C00", // Gold default (same in both modes)
-  proximity = 120,
-  speedTrigger = 80,
+  iconSize = 24,
+  gap = 40,
+  lightBaseColor = "#A67C00", // Gold default
+  lightActiveColor = "#3B82F6", // Blue accent
+  darkBaseColor = "#A67C00", // Gold default
+  darkActiveColor = "#3B82F6", // Blue accent
+  proximity = 150,
+  speedTrigger = 100,
   shockRadius = 250,
-  shockStrength = 2.5,
+  shockStrength = 5,
   maxSpeed = 5000,
-  resistance = 800,
-  returnDuration = 2.1,
+  resistance = 750,
+  returnDuration = 1.5,
   className = "",
   style,
 }: DotGridProps) => {
-  const { theme } = useTheme(); // Use the useTheme hook
+  const { theme } = useContext(ThemeContext);
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const dotsRef = useRef<any[]>([]);
+  const rootsRef = useRef<any[]>([]);
   const pointerRef = useRef({
     x: 0,
     y: 0,
@@ -80,35 +103,31 @@ const DotGrid = ({
   const baseColor = theme === "dark" ? darkBaseColor : lightBaseColor;
   const activeColor = theme === "dark" ? darkActiveColor : lightActiveColor;
 
-  const baseRgb = useMemo(() => hexToRgb(baseColor), [baseColor]);
-  const activeRgb = useMemo(() => hexToRgb(activeColor), [activeColor]);
-
-  const circlePath = useMemo(() => {
-    if (typeof window === "undefined" || !window.Path2D) return null;
-
-    const p = new Path2D();
-    p.arc(0, 0, dotSize / 2, 0, Math.PI * 2);
-    return p;
-  }, [dotSize]);
+  // Array of icon components
+  const iconComponents = useMemo(() => [
+    (props: any) => <MusicIcon {...props} />,
+    (props: any) => <PlayIcon {...props} />,
+    (props: any) => <BookIcon {...props} />,
+    (props: any) => <SmileIcon {...props} />,
+  ], []);
 
   const buildGrid = useCallback(() => {
     const wrap = wrapperRef.current;
-    const canvas = canvasRef.current;
-    if (!wrap || !canvas) return;
+    const container = containerRef.current;
+    if (!wrap || !container) return;
 
+    // Clean up previous roots
+    rootsRef.current.forEach(root => root.unmount());
+    rootsRef.current = [];
+    
     const { width, height } = wrap.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
-    canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
-    const ctx = canvas.getContext("2d");
-    if (ctx) ctx.scale(dpr, dpr);
-
-    const cols = Math.floor((width + gap) / (dotSize + gap));
-    const rows = Math.floor((height + gap) / (dotSize + gap));
-    const cell = dotSize + gap;
+    
+    // Clear previous dots
+    container.innerHTML = '';
+    
+    const cols = Math.floor((width + gap) / (iconSize + gap));
+    const rows = Math.floor((height + gap) / (iconSize + gap));
+    const cell = iconSize + gap;
 
     const gridW = cell * cols - gap;
     const gridH = cell * rows - gap;
@@ -116,65 +135,49 @@ const DotGrid = ({
     const extraX = width - gridW;
     const extraY = height - gridH;
 
-    const startX = extraX / 2 + dotSize / 2;
-    const startY = extraY / 2 + dotSize / 2;
+    const startX = extraX / 2 + iconSize / 2;
+    const startY = extraY / 2 + iconSize / 2;
 
     const dots = [];
     for (let y = 0; y < rows; y++) {
       for (let x = 0; x < cols; x++) {
         const cx = startX + x * cell;
         const cy = startY + y * cell;
-        dots.push({ cx, cy, xOffset: 0, yOffset: 0, _inertiaApplied: false });
+        
+        // Create dot element
+        const dotDiv = document.createElement('div');
+        dotDiv.className = 'dot-grid__dot';
+        dotDiv.style.position = 'absolute';
+        dotDiv.style.left = `${cx - iconSize/2}px`;
+        dotDiv.style.top = `${cy - iconSize/2}px`;
+        dotDiv.style.width = `${iconSize}px`;
+        dotDiv.style.height = `${iconSize}px`;
+        dotDiv.style.color = baseColor;
+        
+        // Randomly select an icon
+        const IconComponent = iconComponents[Math.floor(Math.random() * iconComponents.length)];
+        
+        // Mount React SVG into this div using createRoot
+        const root = createRoot(dotDiv);
+        root.render(<IconComponent size={iconSize} />);
+        rootsRef.current.push(root);
+        
+        container.appendChild(dotDiv);
+        
+        dots.push({ 
+          element: dotDiv, 
+          cx, 
+          cy, 
+          xOffset: 0, 
+          yOffset: 0, 
+          _inertiaApplied: false,
+          baseColor,
+          activeColor
+        });
       }
     }
     dotsRef.current = dots;
-  }, [dotSize, gap]);
-
-  useEffect(() => {
-    if (!circlePath) return;
-
-    let rafId: number;
-    const proxSq = proximity * proximity;
-
-    const draw = () => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      const { x: px, y: py } = pointerRef.current;
-
-      for (const dot of dotsRef.current) {
-        const ox = dot.cx + dot.xOffset;
-        const oy = dot.cy + dot.yOffset;
-        const dx = dot.cx - px;
-        const dy = dot.cy - py;
-        const dsq = dx * dx + dy * dy;
-
-        let color = baseColor;
-        if (dsq <= proxSq) {
-          const dist = Math.sqrt(dsq);
-          const t = 1 - dist / proximity;
-          const r = Math.round(baseRgb.r + (activeRgb.r - baseRgb.r) * t);
-          const g = Math.round(baseRgb.g + (activeRgb.g - baseRgb.g) * t);
-          const b = Math.round(baseRgb.b + (activeRgb.b - baseRgb.b) * t);
-          color = `rgb(${r},${g},${b})`;
-        }
-
-        ctx.save();
-        ctx.translate(ox, oy);
-        ctx.fillStyle = color;
-        ctx.fill(circlePath);
-        ctx.restore();
-      }
-
-      rafId = requestAnimationFrame(draw);
-    };
-
-    draw();
-    return () => cancelAnimationFrame(rafId);
-  }, [proximity, baseColor, activeRgb, baseRgb, circlePath]);
+  }, [iconSize, gap, baseColor, iconComponents]);
 
   useEffect(() => {
     buildGrid();
@@ -188,6 +191,9 @@ const DotGrid = ({
     return () => {
       if (ro) ro.disconnect();
       else window.removeEventListener("resize", buildGrid);
+      
+      // Clean up all roots on unmount
+      rootsRef.current.forEach(root => root.unmount());
     };
   }, [buildGrid]);
 
@@ -214,7 +220,7 @@ const DotGrid = ({
       pr.vy = vy;
       pr.speed = speed;
 
-      const rect = canvasRef.current?.getBoundingClientRect();
+      const rect = wrapperRef.current?.getBoundingClientRect();
       if (!rect) return;
       
       pr.x = e.clientX - rect.left;
@@ -222,6 +228,16 @@ const DotGrid = ({
 
       for (const dot of dotsRef.current) {
         const dist = Math.hypot(dot.cx - pr.x, dot.cy - pr.y);
+        
+        // Change color based on proximity
+        if (dist < proximity) {
+          const t = 1 - dist / proximity;
+          // Use color-mix for smooth color transition
+          dot.element.style.color = `color-mix(in srgb, ${dot.baseColor} ${(1-t)*100}%, ${dot.activeColor} ${t*100}%)`;
+        } else {
+          dot.element.style.color = dot.baseColor;
+        }
+        
         if (speed > speedTrigger && dist < proximity && !dot._inertiaApplied) {
           dot._inertiaApplied = true;
           gsap.killTweensOf(dot);
@@ -232,14 +248,22 @@ const DotGrid = ({
             yOffset: pushY,
             duration: 0.5,
             ease: "power2.out",
+            onUpdate: () => {
+              dot.element.style.transform = `translate(${dot.xOffset}px, ${dot.yOffset}px)`;
+            },
             onComplete: () => {
               gsap.to(dot, {
                 xOffset: 0,
                 yOffset: 0,
                 duration: returnDuration,
                 ease: "elastic.out(1,0.75)",
+                onUpdate: () => {
+                  dot.element.style.transform = `translate(${dot.xOffset}px, ${dot.yOffset}px)`;
+                },
+                onComplete: () => {
+                  dot._inertiaApplied = false;
+                }
               });
-              dot._inertiaApplied = false;
             },
           });
         }
@@ -247,7 +271,7 @@ const DotGrid = ({
     };
 
     const onClick = (e: MouseEvent) => {
-      const rect = canvasRef.current?.getBoundingClientRect();
+      const rect = wrapperRef.current?.getBoundingClientRect();
       if (!rect) return;
       
       const cx = e.clientX - rect.left;
@@ -265,14 +289,22 @@ const DotGrid = ({
             yOffset: pushY,
             duration: 0.5,
             ease: "power2.out",
+            onUpdate: () => {
+              dot.element.style.transform = `translate(${dot.xOffset}px, ${dot.yOffset}px)`;
+            },
             onComplete: () => {
               gsap.to(dot, {
                 xOffset: 0,
                 yOffset: 0,
                 duration: returnDuration,
                 ease: "elastic.out(1,0.75)",
+                onUpdate: () => {
+                  dot.element.style.transform = `translate(${dot.xOffset}px, ${dot.yOffset}px)`;
+                },
+                onComplete: () => {
+                  dot._inertiaApplied = false;
+                }
               });
-              dot._inertiaApplied = false;
             },
           });
         }
@@ -292,7 +324,7 @@ const DotGrid = ({
   return (
     <section className={`dot-grid ${className}`} style={style}>
       <div ref={wrapperRef} className="dot-grid__wrap">
-        <canvas ref={canvasRef} className="dot-grid__canvas" />
+        <div ref={containerRef} className="dot-grid__container" />
       </div>
     </section>
   );
