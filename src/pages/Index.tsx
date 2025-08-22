@@ -318,17 +318,17 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
       {/* DotGrid Background */}
       <div className="absolute inset-0 z-0">
         <DotGrid
-          dotSize={2}
-          gap={20}
+          dotSize={9}
+          gap={15}
           lightBaseColor="#f5f2e6" // Light mode muted color
           lightActiveColor="#A67C00" // Gold default
           darkBaseColor="#3a2e2e" // Dark mode muted color
           darkActiveColor="#A67C00" // Gold default (same in both modes)
-          proximity={100}
-          shockRadius={150}
-          shockStrength={3}
-          resistance={800}
-          returnDuration={2}
+          proximity={120}
+          shockRadius={250}
+          shockStrength={5}
+          resistance={750}
+          returnDuration={1.5}
           className="w-full h-full"
         />
       </div>
