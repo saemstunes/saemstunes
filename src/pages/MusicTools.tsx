@@ -1,6 +1,7 @@
 
+
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { Helmet } from "react-helmet";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +12,7 @@ import InteractiveGuitar from "@/components/ui/InteractiveGuitar";
 import InteractivePiano from "@/components/ui/InteractivePiano";
 import Metronome from "@/components/music-tools/Metronome";
 import PitchFinder from "@/components/music-tools/PitchFinder";
+import ToolSuggestionForm from "@/components/music-tools/ToolSuggestionForm";
 import { 
   Music, 
   Piano, 
@@ -80,6 +82,17 @@ const MUSIC_TOOLS = [
     category: 'utilities',
     minWidth: 350,
     recommendedOrientation: 'portrait'
+  }, // Fixed: Added missing comma here
+  {
+    id: 'suggest-tool',
+    name: 'Suggest a Tool',
+    icon: Music,
+    description: 'Have an idea for a new tool? Let us know!',
+    component: ToolSuggestionForm, // Fixed: Removed function wrapper
+    category: 'feedback',
+    minWidth: 300,
+    recommendedOrientation: 'any',
+    props: { adminEmail: "admin@saemstunes.com" } // Added props for the component
   }
 ];
 
@@ -159,11 +172,20 @@ const ToolCard = ({ tool, isActive, onClick, isOptimal }) => (
 
 const MusicTools = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const { isMobile, isTablet, isLandscape, windowSize } = useResponsiveLayout();
   const [activeTool, setActiveTool] = useState(searchParams.get('tool') || 'piano');
   const [showOrientationGuide, setShowOrientationGuide] = useState(true);
   const [resetKey, setResetKey] = useState(0);
 
+  useEffect(() => {
+    // Check if we need to open the suggest-a-tool tab
+    if (location.state?.openSuggestTool) {
+      setActiveTool("suggest-tool");
+      setSearchParams({ tool: "suggest-tool" });
+    }
+  }, [location.state]);
+  
   // Get current tool
   const currentTool = MUSIC_TOOLS.find(tool => tool.id === activeTool);
   const CurrentComponent = currentTool?.component;
@@ -206,7 +228,8 @@ const MusicTools = () => {
 
   const groupedTools = {
     instruments: MUSIC_TOOLS.filter(tool => tool.category === 'instruments'),
-    utilities: MUSIC_TOOLS.filter(tool => tool.category === 'utilities')
+    utilities: MUSIC_TOOLS.filter(tool => tool.category === 'utilities'),
+    feedback: MUSIC_TOOLS.filter(tool => tool.category === 'feedback') // Added feedback category
   };
 
   return (
@@ -298,16 +321,16 @@ const MusicTools = () => {
                 </div>
               </div>
 
-              {/* Mobile Tool Selection */}
-              <TabsList className="grid grid-cols-2 w-full mb-6 md:hidden">
-                {MUSIC_TOOLS.slice(0, 4).map((tool) => (
+              {/* Mobile Tool Selection - Updated for 5 items */}
+              <TabsList className="grid grid-cols-3 w-full mb-6 md:hidden">
+                {MUSIC_TOOLS.map((tool) => (
                   <TabsTrigger 
                     key={tool.id} 
                     value={tool.id}
-                    className="flex items-center gap-2 text-xs"
+                    className="flex items-center gap-2 text-xs p-2"
                   >
                     <tool.icon className="h-4 w-4" />
-                    <span className="hidden sm:inline">{tool.name}</span>
+                    <span className="hidden xs:inline truncate">{tool.name}</span>
                   </TabsTrigger>
                 ))}
               </TabsList>
@@ -319,7 +342,12 @@ const MusicTools = () => {
                     <div className="w-full overflow-hidden rounded-lg">
                       {CurrentComponent && (
                         <div key={resetKey} className="w-full max-w-none">
-                          <CurrentComponent />
+                          {/* Pass props if they exist */}
+                          {tool.props ? (
+                            <CurrentComponent {...tool.props} />
+                          ) : (
+                            <CurrentComponent />
+                          )}
                         </div>
                       )}
                     </div>
