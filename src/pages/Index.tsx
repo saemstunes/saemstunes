@@ -327,7 +327,7 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
           <DotGrid
             dotSize={7} // Adjusted for icons
             gap={28}
-            lightBaseColor="#f5f2e6"
+            lightBaseColor="#c9be91"
             lightActiveColor="#A67C00"
             darkBaseColor="#3a2e2e"
             darkActiveColor="#A67C00"
