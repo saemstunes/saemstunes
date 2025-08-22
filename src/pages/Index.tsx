@@ -325,8 +325,8 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
             [mask-repeat:no-repeat]
             [-webkit-mask-repeat:no-repeat]">
           <DotGrid
-            dotSize={20} // Adjusted for icons
-            gap={30}
+            dotSize={7} // Adjusted for icons
+            gap={28}
             lightBaseColor="#f5f2e6"
             lightActiveColor="#A67C00"
             darkBaseColor="#3a2e2e"
