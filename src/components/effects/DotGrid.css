@@ -23,13 +23,7 @@
   pointer-events: none;
 }
 
-.dot-grid__dot {
-  pointer-events: none;
-  transition: transform 0.3s ease, color 0.3s ease;
+.dot-grid__icon {
+  transition: transform 0.3s ease-out, color 0.3s ease;
   will-change: transform, color;
-}
-
-.dot-grid__dot svg {
-  width: 100%;
-  height: 100%;
 }
