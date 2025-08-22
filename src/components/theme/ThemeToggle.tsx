@@ -1,27 +1,17 @@
+// components/ThemeToggle.tsx
 import { Moon, Sun } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { DURATIONS, EASINGS } from "@/lib/animation-utils";
+import { useTheme } from "@/context/ThemeContext"; // Import the useTheme hook
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const { theme, toggleTheme } = useTheme(); // Use the context
   const [isAnimating, setIsAnimating] = useState(false);
-  const hasAnimatedRef = useRef(false); // Track if animation has run in this session
+  const hasAnimatedRef = useRef(false);
 
   useEffect(() => {
-    // Check if user has a theme preference in localStorage
-    const savedTheme = localStorage.getItem("theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    
-    if (savedTheme) {
-      setTheme(savedTheme as "light" | "dark");
-      document.documentElement.classList.toggle("dark", savedTheme === "dark");
-    } else if (prefersDark) {
-      setTheme("dark");
-      document.documentElement.classList.add("dark");
-    }
-    
     // Run initial animation only once per session
     if (!hasAnimatedRef.current) {
       setIsAnimating(true);
@@ -32,15 +22,10 @@ export default function ThemeToggle() {
     }
   }, []);
 
-  const toggleTheme = () => {
+  const handleToggle = () => {
     // Only animate when user explicitly toggles
     setIsAnimating(true);
-     // Dispatch a custom event for other components to listen to
-    window.dispatchEvent(new CustomEvent("themeChange"));
-    const newTheme = theme === "light" ? "dark" : "light";
-    setTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
-    document.documentElement.classList.toggle("dark", newTheme === "dark");
+    toggleTheme(); // Use the context toggle function
     
     // Reset animation state after animation completes
     setTimeout(() => {
@@ -52,7 +37,7 @@ export default function ThemeToggle() {
     <Button 
       variant="outline" 
       size="icon" 
-      onClick={toggleTheme} 
+      onClick={handleToggle} 
       disabled={isAnimating}
       className="overflow-hidden"
     >
