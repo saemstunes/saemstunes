@@ -1,14 +1,8 @@
 // components/effects/DotGrid.tsx
 'use client';
-import { useRef, useEffect, useCallback, useMemo, useState } from "react";
+import { useRef, useEffect, useCallback, useMemo } from "react";
 import { gsap } from "gsap";
-import { useTheme } from "@/context/ThemeContext";
-import { 
-  Music2, 
-  PlayCircle, 
-  BookOpen, 
-  Smile 
-} from "lucide-react";
+import { useTheme } from "@/context/ThemeContext"; // Import the useTheme hook
 import "./DotGrid.css";
 
 const throttle = (func: Function, limit: number) => {
@@ -53,10 +47,10 @@ interface DotGridProps {
 const DotGrid = ({
   dotSize = 16,
   gap = 32,
-  lightBaseColor = "#f5f2e6",
-  lightActiveColor = "#A67C00",
-  darkBaseColor = "#3a2e2e",
-  darkActiveColor = "#A67C00",
+  lightBaseColor = "#f5f2e6", // Light mode muted color
+  lightActiveColor = "#A67C00", // Gold default
+  darkBaseColor = "#3a2e2e", // Dark mode muted color
+  darkActiveColor = "#A67C00", // Gold default (same in both modes)
   proximity = 120,
   speedTrigger = 80,
   shockRadius = 250,
@@ -67,9 +61,9 @@ const DotGrid = ({
   className = "",
   style,
 }: DotGridProps) => {
-  const { theme } = useTheme();
+  const { theme } = useTheme(); // Use the useTheme hook
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const dotsRef = useRef<any[]>([]);
   const pointerRef = useRef({
     x: 0,
@@ -81,7 +75,6 @@ const DotGrid = ({
     lastX: 0,
     lastY: 0,
   });
-  const [icons, setIcons] = useState<JSX.Element[]>([]);
 
   // Determine colors based on current theme
   const baseColor = theme === "dark" ? darkBaseColor : lightBaseColor;
@@ -90,25 +83,28 @@ const DotGrid = ({
   const baseRgb = useMemo(() => hexToRgb(baseColor), [baseColor]);
   const activeRgb = useMemo(() => hexToRgb(activeColor), [activeColor]);
 
-  // Array of Lucide icon components
-  const iconComponents = useMemo(() => [
-    (color: string, size: number) => <Music2 key="music" color={color} size={size} />,
-    (color: string, size: number) => <PlayCircle key="play" color={color} size={size} />,
-    (color: string, size: number) => <BookOpen key="book" color={color} size={size} />,
-    (color: string, size: number) => <Smile key="smile" color={color} size={size} />,
-  ], []);
+  const circlePath = useMemo(() => {
+    if (typeof window === "undefined" || !window.Path2D) return null;
+
+    const p = new Path2D();
+    p.arc(0, 0, dotSize / 2, 0, Math.PI * 2);
+    return p;
+  }, [dotSize]);
 
   const buildGrid = useCallback(() => {
     const wrap = wrapperRef.current;
-    const container = containerRef.current;
-    if (!wrap || !container) return;
+    const canvas = canvasRef.current;
+    if (!wrap || !canvas) return;
 
     const { width, height } = wrap.getBoundingClientRect();
-    
-    // Clear previous icons
-    while (container.firstChild) {
-      container.removeChild(container.firstChild);
-    }
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    const ctx = canvas.getContext("2d");
+    if (ctx) ctx.scale(dpr, dpr);
 
     const cols = Math.floor((width + gap) / (dotSize + gap));
     const rows = Math.floor((height + gap) / (dotSize + gap));
@@ -120,60 +116,65 @@ const DotGrid = ({
     const extraX = width - gridW;
     const extraY = height - gridH;
 
-    const startX = extraX / 2;
-    const startY = extraY / 2;
+    const startX = extraX / 2 + dotSize / 2;
+    const startY = extraY / 2 + dotSize / 2;
 
     const dots = [];
-    const newIcons: JSX.Element[] = [];
-    
     for (let y = 0; y < rows; y++) {
       for (let x = 0; x < cols; x++) {
         const cx = startX + x * cell;
         const cy = startY + y * cell;
-        
-        // Randomly select an icon
-        const IconComponent = iconComponents[Math.floor(Math.random() * iconComponents.length)];
-        
-        dots.push({ 
-          cx, 
-          cy, 
-          xOffset: 0, 
-          yOffset: 0, 
-          _inertiaApplied: false,
-          element: null
-        });
-        
-        // Create the icon element
-        const iconElement = (
-          <div
-            key={`${x}-${y}`}
-            className="dot-grid__icon"
-            style={{
-              position: 'absolute',
-              left: `${cx}px`,
-              top: `${cy}px`,
-              width: `${dotSize}px`,
-              height: `${dotSize}px`,
-              transform: 'translate(-50%, -50%)',
-              transition: 'color 0.3s ease',
-              color: baseColor,
-              zIndex: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {IconComponent(baseColor, dotSize * 0.7)}
-          </div>
-        );
-        
-        newIcons.push(iconElement);
+        dots.push({ cx, cy, xOffset: 0, yOffset: 0, _inertiaApplied: false });
       }
     }
-    
     dotsRef.current = dots;
-    setIcons(newIcons);
-  }, [dotSize, gap, baseColor, iconComponents]);
+  }, [dotSize, gap]);
+
+  useEffect(() => {
+    if (!circlePath) return;
+
+    let rafId: number;
+    const proxSq = proximity * proximity;
+
+    const draw = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const { x: px, y: py } = pointerRef.current;
+
+      for (const dot of dotsRef.current) {
+        const ox = dot.cx + dot.xOffset;
+        const oy = dot.cy + dot.yOffset;
+        const dx = dot.cx - px;
+        const dy = dot.cy - py;
+        const dsq = dx * dx + dy * dy;
+
+        let color = baseColor;
+        if (dsq <= proxSq) {
+          const dist = Math.sqrt(dsq);
+          const t = 1 - dist / proximity;
+          const r = Math.round(baseRgb.r + (activeRgb.r - baseRgb.r) * t);
+          const g = Math.round(baseRgb.g + (activeRgb.g - baseRgb.g) * t);
+          const b = Math.round(baseRgb.b + (activeRgb.b - baseRgb.b) * t);
+          color = `rgb(${r},${g},${b})`;
+        }
+
+        ctx.save();
+        ctx.translate(ox, oy);
+        ctx.fillStyle = color;
+        ctx.fill(circlePath);
+        ctx.restore();
+      }
+
+      rafId = requestAnimationFrame(draw);
+    };
+
+    draw();
+    return () => cancelAnimationFrame(rafId);
+  }, [proximity, baseColor, activeRgb, baseRgb, circlePath]);
 
   useEffect(() => {
     buildGrid();
@@ -189,42 +190,6 @@ const DotGrid = ({
       else window.removeEventListener("resize", buildGrid);
     };
   }, [buildGrid]);
-
-  // Update icon colors based on proximity
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    const icons = containerRef.current.querySelectorAll('.dot-grid__icon');
-    if (icons.length === 0) return;
-
-    const { x: px, y: py } = pointerRef.current;
-    const proxSq = proximity * proximity;
-
-    icons.forEach((iconEl, index) => {
-      const dot = dotsRef.current[index];
-      if (!dot) return;
-
-      const dx = dot.cx - px;
-      const dy = dot.cy - py;
-      const dsq = dx * dx + dy * dy;
-
-      if (dsq <= proxSq) {
-        const dist = Math.sqrt(dsq);
-        const t = 1 - dist / proximity;
-        const r = Math.round(baseRgb.r + (activeRgb.r - baseRgb.r) * t);
-        const g = Math.round(baseRgb.g + (activeRgb.g - baseRgb.g) * t);
-        const b = Math.round(baseRgb.b + (activeRgb.b - baseRgb.b) * t);
-        const color = `rgb(${r},${g},${b})`;
-        
-        (iconEl as HTMLElement).style.color = color;
-      } else {
-        (iconEl as HTMLElement).style.color = baseColor;
-      }
-
-      // Apply position offsets for animation
-      (iconEl as HTMLElement).style.transform = `translate(-50%, -50%) translate(${dot.xOffset}px, ${dot.yOffset}px)`;
-    });
-  }, [proximity, baseColor, activeRgb, baseRgb]);
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
@@ -249,7 +214,7 @@ const DotGrid = ({
       pr.vy = vy;
       pr.speed = speed;
 
-      const rect = wrapperRef.current?.getBoundingClientRect();
+      const rect = canvasRef.current?.getBoundingClientRect();
       if (!rect) return;
       
       pr.x = e.clientX - rect.left;
@@ -282,7 +247,7 @@ const DotGrid = ({
     };
 
     const onClick = (e: MouseEvent) => {
-      const rect = wrapperRef.current?.getBoundingClientRect();
+      const rect = canvasRef.current?.getBoundingClientRect();
       if (!rect) return;
       
       const cx = e.clientX - rect.left;
@@ -327,9 +292,7 @@ const DotGrid = ({
   return (
     <section className={`dot-grid ${className}`} style={style}>
       <div ref={wrapperRef} className="dot-grid__wrap">
-        <div ref={containerRef} className="dot-grid__container">
-          {icons}
-        </div>
+        <canvas ref={canvasRef} className="dot-grid__canvas" />
       </div>
     </section>
   );
