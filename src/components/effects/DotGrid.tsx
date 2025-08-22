@@ -41,6 +41,7 @@ interface DotGridProps {
   resistance?: number;
   returnDuration?: number;
   className?: string;
+  velocityMultiplier?: number;
   style?: React.CSSProperties;
 }
 
@@ -58,6 +59,7 @@ const DotGrid = ({
   maxSpeed = 5000,
   resistance = 1200,
   returnDuration = 2.1,
+  velocityMultiplier = 0.005,
   className = "",
   style,
 }: DotGridProps) => {
@@ -225,8 +227,8 @@ const DotGrid = ({
         if (speed > speedTrigger && dist < proximity && !dot._inertiaApplied) {
           dot._inertiaApplied = true;
           gsap.killTweensOf(dot);
-          const pushX = dot.cx - pr.x + vx * 0.005;
-          const pushY = dot.cy - pr.y + vy * 0.005;
+          const pushX = dot.cx - pr.x + vx * velocityMultiplier;
+          const pushY = dot.cy - pr.y + vy * velocityMultiplier;
           gsap.to(dot, {
             xOffset: pushX,
             yOffset: pushY,
