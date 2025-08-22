@@ -1,9 +1,8 @@
 // components/effects/DotGrid.tsx
 'use client';
-import { useRef, useEffect, useCallback, useMemo, useContext } from "react";
+import { useRef, useEffect, useCallback, useMemo, useState } from "react";
 import { gsap } from "gsap";
-import { createRoot } from "react-dom/client";
-import { ThemeContext } from "@/context/ThemeContext";
+import { useTheme } from "@/context/ThemeContext";
 import "./DotGrid.css";
 
 const throttle = (func: Function, limit: number) => {
@@ -17,8 +16,49 @@ const throttle = (func: Function, limit: number) => {
   };
 };
 
+function hexToRgb(hex: string) {
+  const m = hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
+  if (!m) return { r: 0, g: 0, b: 0 };
+  return {
+    r: parseInt(m[1], 16),
+    g: parseInt(m[2], 16),
+    b: parseInt(m[3], 16),
+  };
+}
+
+// SVG Icon Components
+const MusicIcon = ({ size, color }: { size: number; color: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M9 18V5L21 3V16" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <circle cx="6" cy="18" r="3" fill={color}/>
+    <circle cx="18" cy="16" r="3" fill={color}/>
+  </svg>
+);
+
+const PlayIcon = ({ size, color }: { size: number; color: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M5 3L19 12L5 21V3Z" fill={color} stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const BookIcon = ({ size, color }: { size: number; color: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M4 19.5C4 18.837 4.26339 18.2011 4.73223 17.7322C5.20107 17.2634 5.83696 17 6.5 17H20" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M6.5 2H20V22H6.5C5.83696 22 5.20107 21.7366 4.73223 21.2678C4.26339 20.7989 4 20.163 4 19.5V4.5C4 3.83696 4.26339 3.20107 4.73223 2.73223C5.20107 2.26339 5.83696 2 6.5 2V2Z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const SmileIcon = ({ size, color }: { size: number; color: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="10" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M8 14C8 14 9.5 16 12 16C14.5 16 16 14 16 14" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <circle cx="9" cy="9" r="1" fill={color}/>
+    <circle cx="15" cy="9" r="1" fill={color}/>
+  </svg>
+);
+
 interface DotGridProps {
-  iconSize?: number;
+  dotSize?: number;
   gap?: number;
   lightBaseColor?: string;
   lightActiveColor?: string;
@@ -35,59 +75,27 @@ interface DotGridProps {
   style?: React.CSSProperties;
 }
 
-// SVG Icons using currentColor
-const MusicIcon = ({ size }: { size: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-current">
-    <path d="M9 18V5L21 3V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <circle cx="6" cy="18" r="3" fill="currentColor"/>
-    <circle cx="18" cy="16" r="3" fill="currentColor"/>
-  </svg>
-);
-
-const PlayIcon = ({ size }: { size: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-current">
-    <path d="M5 3L19 12L5 21V3Z" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const BookIcon = ({ size }: { size: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-current">
-    <path d="M4 19.5C4 18.837 4.26339 18.2011 4.73223 17.7322C5.20107 17.2634 5.83696 17 6.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M6.5 2H20V22H6.5C5.83696 22 5.20107 21.7366 4.73223 21.2678C4.26339 20.7989 4 20.163 4 19.5V4.5C4 3.83696 4.26339 3.20107 4.73223 2.73223C5.20107 2.26339 5.83696 2 6.5 2V2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const SmileIcon = ({ size }: { size: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-current">
-    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M8 14C8 14 9.5 16 12 16C14.5 16 16 14 16 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <circle cx="9" cy="9" r="1" fill="currentColor"/>
-    <circle cx="15" cy="9" r="1" fill="currentColor"/>
-  </svg>
-);
-
 const DotGrid = ({
-  iconSize = 24,
-  gap = 40,
-  lightBaseColor = "#A67C00", // Gold default
-  lightActiveColor = "#3B82F6", // Blue accent
-  darkBaseColor = "#A67C00", // Gold default
-  darkActiveColor = "#3B82F6", // Blue accent
-  proximity = 150,
-  speedTrigger = 100,
+  dotSize = 6, // Increased to accommodate icons
+  gap = 15,
+  lightBaseColor = "#f5f2e6",
+  lightActiveColor = "#A67C00",
+  darkBaseColor = "#3a2e2e",
+  darkActiveColor = "#A67C00",
+  proximity = 120,
+  speedTrigger = 80,
   shockRadius = 250,
-  shockStrength = 5,
+  shockStrength = 2.5,
   maxSpeed = 5000,
-  resistance = 750,
-  returnDuration = 1.5,
+  resistance = 800,
+  returnDuration = 2.1,
   className = "",
   style,
 }: DotGridProps) => {
-  const { theme } = useContext(ThemeContext);
+  const { theme } = useTheme();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const dotsRef = useRef<any[]>([]);
-  const rootsRef = useRef<any[]>([]);
   const pointerRef = useRef({
     x: 0,
     y: 0,
@@ -98,36 +106,38 @@ const DotGrid = ({
     lastX: 0,
     lastY: 0,
   });
+  const [icons, setIcons] = useState<JSX.Element[]>([]);
 
   // Determine colors based on current theme
   const baseColor = theme === "dark" ? darkBaseColor : lightBaseColor;
   const activeColor = theme === "dark" ? darkActiveColor : lightActiveColor;
 
+  const baseRgb = useMemo(() => hexToRgb(baseColor), [baseColor]);
+  const activeRgb = useMemo(() => hexToRgb(activeColor), [activeColor]);
+
   // Array of icon components
   const iconComponents = useMemo(() => [
-    (props: any) => <MusicIcon {...props} />,
-    (props: any) => <PlayIcon {...props} />,
-    (props: any) => <BookIcon {...props} />,
-    (props: any) => <SmileIcon {...props} />,
-  ], []);
+    (color: string) => <MusicIcon size={dotSize} color={color} key="music" />,
+    (color: string) => <PlayIcon size={dotSize} color={color} key="play" />,
+    (color: string) => <BookIcon size={dotSize} color={color} key="book" />,
+    (color: string) => <SmileIcon size={dotSize} color={color} key="smile" />,
+  ], [dotSize]);
 
   const buildGrid = useCallback(() => {
     const wrap = wrapperRef.current;
     const container = containerRef.current;
     if (!wrap || !container) return;
 
-    // Clean up previous roots
-    rootsRef.current.forEach(root => root.unmount());
-    rootsRef.current = [];
-    
     const { width, height } = wrap.getBoundingClientRect();
     
-    // Clear previous dots
-    container.innerHTML = '';
-    
-    const cols = Math.floor((width + gap) / (iconSize + gap));
-    const rows = Math.floor((height + gap) / (iconSize + gap));
-    const cell = iconSize + gap;
+    // Clear previous icons
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
+
+    const cols = Math.floor((width + gap) / (dotSize + gap));
+    const rows = Math.floor((height + gap) / (dotSize + gap));
+    const cell = dotSize + gap;
 
     const gridW = cell * cols - gap;
     const gridH = cell * rows - gap;
@@ -135,49 +145,57 @@ const DotGrid = ({
     const extraX = width - gridW;
     const extraY = height - gridH;
 
-    const startX = extraX / 2 + iconSize / 2;
-    const startY = extraY / 2 + iconSize / 2;
+    const startX = extraX / 2;
+    const startY = extraY / 2;
 
     const dots = [];
+    const newIcons: JSX.Element[] = [];
+    
     for (let y = 0; y < rows; y++) {
       for (let x = 0; x < cols; x++) {
         const cx = startX + x * cell;
         const cy = startY + y * cell;
         
-        // Create dot element
-        const dotDiv = document.createElement('div');
-        dotDiv.className = 'dot-grid__dot';
-        dotDiv.style.position = 'absolute';
-        dotDiv.style.left = `${cx - iconSize/2}px`;
-        dotDiv.style.top = `${cy - iconSize/2}px`;
-        dotDiv.style.width = `${iconSize}px`;
-        dotDiv.style.height = `${iconSize}px`;
-        dotDiv.style.color = baseColor;
-        
         // Randomly select an icon
         const IconComponent = iconComponents[Math.floor(Math.random() * iconComponents.length)];
         
-        // Mount React SVG into this div using createRoot
-        const root = createRoot(dotDiv);
-        root.render(<IconComponent size={iconSize} />);
-        rootsRef.current.push(root);
-        
-        container.appendChild(dotDiv);
-        
         dots.push({ 
-          element: dotDiv, 
           cx, 
           cy, 
           xOffset: 0, 
           yOffset: 0, 
           _inertiaApplied: false,
-          baseColor,
-          activeColor
+          element: null
         });
+        
+        // Create the icon element
+        const iconElement = (
+          <div
+            key={`${x}-${y}`}
+            className="dot-grid__icon"
+            style={{
+              position: 'absolute',
+              left: `${cx}px`,
+              top: `${cy}px`,
+              width: `${dotSize}px`,
+              height: `${dotSize}px`,
+              transform: 'translate(-50%, -50%)',
+              transition: 'color 0.3s ease',
+              color: baseColor,
+              zIndex: 1,
+            }}
+          >
+            {IconComponent(baseColor)}
+          </div>
+        );
+        
+        newIcons.push(iconElement);
       }
     }
+    
     dotsRef.current = dots;
-  }, [iconSize, gap, baseColor, iconComponents]);
+    setIcons(newIcons);
+  }, [dotSize, gap, baseColor, iconComponents]);
 
   useEffect(() => {
     buildGrid();
@@ -191,11 +209,44 @@ const DotGrid = ({
     return () => {
       if (ro) ro.disconnect();
       else window.removeEventListener("resize", buildGrid);
-      
-      // Clean up all roots on unmount
-      rootsRef.current.forEach(root => root.unmount());
     };
   }, [buildGrid]);
+
+  // Update icon colors based on proximity
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const icons = containerRef.current.querySelectorAll('.dot-grid__icon');
+    if (icons.length === 0) return;
+
+    const { x: px, y: py } = pointerRef.current;
+    const proxSq = proximity * proximity;
+
+    icons.forEach((iconEl, index) => {
+      const dot = dotsRef.current[index];
+      if (!dot) return;
+
+      const dx = dot.cx - px;
+      const dy = dot.cy - py;
+      const dsq = dx * dx + dy * dy;
+
+      if (dsq <= proxSq) {
+        const dist = Math.sqrt(dsq);
+        const t = 1 - dist / proximity;
+        const r = Math.round(baseRgb.r + (activeRgb.r - baseRgb.r) * t);
+        const g = Math.round(baseRgb.g + (activeRgb.g - baseRgb.g) * t);
+        const b = Math.round(baseRgb.b + (activeRgb.b - baseRgb.b) * t);
+        const color = `rgb(${r},${g},${b})`;
+        
+        (iconEl as HTMLElement).style.color = color;
+      } else {
+        (iconEl as HTMLElement).style.color = baseColor;
+      }
+
+      // Apply position offsets for animation
+      (iconEl as HTMLElement).style.transform = `translate(-50%, -50%) translate(${dot.xOffset}px, ${dot.yOffset}px)`;
+    });
+  }, [proximity, baseColor, activeRgb, baseRgb]);
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
@@ -228,16 +279,6 @@ const DotGrid = ({
 
       for (const dot of dotsRef.current) {
         const dist = Math.hypot(dot.cx - pr.x, dot.cy - pr.y);
-        
-        // Change color based on proximity
-        if (dist < proximity) {
-          const t = 1 - dist / proximity;
-          // Use color-mix for smooth color transition
-          dot.element.style.color = `color-mix(in srgb, ${dot.baseColor} ${(1-t)*100}%, ${dot.activeColor} ${t*100}%)`;
-        } else {
-          dot.element.style.color = dot.baseColor;
-        }
-        
         if (speed > speedTrigger && dist < proximity && !dot._inertiaApplied) {
           dot._inertiaApplied = true;
           gsap.killTweensOf(dot);
@@ -248,22 +289,14 @@ const DotGrid = ({
             yOffset: pushY,
             duration: 0.5,
             ease: "power2.out",
-            onUpdate: () => {
-              dot.element.style.transform = `translate(${dot.xOffset}px, ${dot.yOffset}px)`;
-            },
             onComplete: () => {
               gsap.to(dot, {
                 xOffset: 0,
                 yOffset: 0,
                 duration: returnDuration,
                 ease: "elastic.out(1,0.75)",
-                onUpdate: () => {
-                  dot.element.style.transform = `translate(${dot.xOffset}px, ${dot.yOffset}px)`;
-                },
-                onComplete: () => {
-                  dot._inertiaApplied = false;
-                }
               });
+              dot._inertiaApplied = false;
             },
           });
         }
@@ -289,22 +322,14 @@ const DotGrid = ({
             yOffset: pushY,
             duration: 0.5,
             ease: "power2.out",
-            onUpdate: () => {
-              dot.element.style.transform = `translate(${dot.xOffset}px, ${dot.yOffset}px)`;
-            },
             onComplete: () => {
               gsap.to(dot, {
                 xOffset: 0,
                 yOffset: 0,
                 duration: returnDuration,
                 ease: "elastic.out(1,0.75)",
-                onUpdate: () => {
-                  dot.element.style.transform = `translate(${dot.xOffset}px, ${dot.yOffset}px)`;
-                },
-                onComplete: () => {
-                  dot._inertiaApplied = false;
-                }
               });
+              dot._inertiaApplied = false;
             },
           });
         }
@@ -324,7 +349,9 @@ const DotGrid = ({
   return (
     <section className={`dot-grid ${className}`} style={style}>
       <div ref={wrapperRef} className="dot-grid__wrap">
-        <div ref={containerRef} className="dot-grid__container" />
+        <div ref={containerRef} className="dot-grid__container">
+          {icons}
+        </div>
       </div>
     </section>
   );
