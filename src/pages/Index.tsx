@@ -315,22 +315,30 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
     >
-      {/* DotGrid Background */}
-      <div className="absolute inset-0 z-0">
-        <DotGrid
-          dotSize={3.5}
-          gap={20}
-          lightBaseColor="#f5f2e6" // Light mode muted color
-          lightActiveColor="#A67C00" // Gold default
-          darkBaseColor="#3a2e2e" // Dark mode muted color
-          darkActiveColor="#A67C00" // Gold default (same in both modes)
-          proximity={80}
-          shockRadius={120}
-          shockStrength={2.5}
-          resistance={800}
-          returnDuration={2}
-          className="w-full h-full"
-        />
+      {/* DotGrid Background with feathering effect */}
+      <div className="absolute top-0 left-0 w-screen h-full z-0 pointer-events-none">
+        <div className="w-full h-full 
+            [mask-image:radial-gradient(ellipse_at_center,black_50%,transparent_100%)]
+            [-webkit-mask-image:radial-gradient(ellipse_at_center,black_50%,transparent_100%)]
+            [mask-size:100%_100%]
+            [-webkit-mask-size:100%_100%]
+            [mask-repeat:no-repeat]
+            [-webkit-mask-repeat:no-repeat]">
+          <DotGrid
+            dotSize={3.5}
+            gap={20}
+            lightBaseColor="#f5f2e6"
+            lightActiveColor="#A67C00"
+            darkBaseColor="#3a2e2e"
+            darkActiveColor="#A67C00"
+            proximity={80}
+            shockRadius={120}
+            shockStrength={2.5}
+            resistance={800}
+            returnDuration={2}
+            className="w-full h-full"
+          />
+        </div>
       </div>
       
       {/* Content */}
