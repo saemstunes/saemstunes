@@ -317,13 +317,22 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
     >
       {/* DotGrid Background with feathering effect */}
       <div className="absolute top-0 left-0 w-screen h-full z-0 pointer-events-none">
-        <div className="w-full h-full 
-            [mask-image:radial-gradient(ellipse_at_center,black_50%,transparent_100%)]
-            [-webkit-mask-image:radial-gradient(ellipse_at_center,black_50%,transparent_100%)]
-            [mask-size:100%_100%]
-            [-webkit-mask-size:100%_100%]
-            [mask-repeat:no-repeat]
-            [-webkit-mask-repeat:no-repeat]">
+        <div
+          className="
+          w-full h-full
+          [mask-image:radial-gradient(ellipse 60% 45% at center,
+          rgba(0,0,0,1) 70%,
+          rgba(0,0,0,0.6) 85%,
+          rgba(0,0,0,0) 100%)]
+          [-webkit-mask-image:radial-gradient(ellipse 60% 45% at center,
+          rgba(0,0,0,1) 70%,
+          rgba(0,0,0,0.6) 85%,
+          rgba(0,0,0,0) 100%)]
+          [mask-repeat:no-repeat] [-webkit-mask-repeat:no-repeat]
+          [mask-position:center] [-webkit-mask-position:center]
+          [mask-size:cover] [-webkit-mask-size:cover]
+          "
+          >
           <DotGrid
             dotSize={5.5}
             gap={12}
