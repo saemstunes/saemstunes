@@ -1,40 +1,32 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, Volume2, VolumeX, Settings, Info, RotateCcw } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Settings, Info, RotateCcw, Star, Metronome, BookOpen, Zap, X } from 'lucide-react';
 import { useSwipeable } from 'react-swipeable';
 
 // Chord theory definitions
 interface ChordDefinition {
   name: string;
-  intervals: number[]; // Semitone intervals from root
+  intervals: number[];
   symbol: string;
+  category: string;
 }
 
 const CHORD_THEORY: ChordDefinition[] = [
-  // Triads
-  { name: "Major", intervals: [0, 4, 7], symbol: "" },
-  { name: "Minor", intervals: [0, 3, 7], symbol: "m" },
-  { name: "Diminished", intervals: [0, 3, 6], symbol: "°" },
-  { name: "Augmented", intervals: [0, 4, 8], symbol: "+" },
-  
-  // Seventh chords
-  { name: "Major 7th", intervals: [0, 4, 7, 11], symbol: "maj7" },
-  { name: "Dominant 7th", intervals: [0, 4, 7, 10], symbol: "7" },
-  { name: "Minor 7th", intervals: [0, 3, 7, 10], symbol: "m7" },
-  { name: "Minor 7th Flat 5", intervals: [0, 3, 6, 10], symbol: "m7b5" },
-  { name: "Diminished 7th", intervals: [0, 3, 6, 9], symbol: "°7" },
-  
-  // Suspended chords
-  { name: "Suspended 2nd", intervals: [0, 2, 7], symbol: "sus2" },
-  { name: "Suspended 4th", intervals: [0, 5, 7], symbol: "sus4" },
-  
-  // Extended chords
-  { name: "Dominant 9th", intervals: [0, 4, 7, 10, 14], symbol: "9" },
-  { name: "Major 9th", intervals: [0, 4, 7, 11, 14], symbol: "maj9" },
-  { name: "Minor 9th", intervals: [0, 3, 7, 10, 14], symbol: "m9" },
-  
-  // Add chords
-  { name: "Add 9", intervals: [0, 4, 7, 14], symbol: "add9" },
+  { name: "Major", intervals: [0, 4, 7], symbol: "", category: "Basic" },
+  { name: "Minor", intervals: [0, 3, 7], symbol: "m", category: "Basic" },
+  { name: "Diminished", intervals: [0, 3, 6], symbol: "°", category: "Basic" },
+  { name: "Augmented", intervals: [0, 4, 8], symbol: "+", category: "Basic" },
+  { name: "Major 7th", intervals: [0, 4, 7, 11], symbol: "maj7", category: "Seventh" },
+  { name: "Dominant 7th", intervals: [0, 4, 7, 10], symbol: "7", category: "Seventh" },
+  { name: "Minor 7th", intervals: [0, 3, 7, 10], symbol: "m7", category: "Seventh" },
+  { name: "Minor 7th Flat 5", intervals: [0, 3, 6, 10], symbol: "m7b5", category: "Seventh" },
+  { name: "Diminished 7th", intervals: [0, 3, 6, 9], symbol: "°7", category: "Seventh" },
+  { name: "Suspended 2nd", intervals: [0, 2, 7], symbol: "sus2", category: "Suspended" },
+  { name: "Suspended 4th", intervals: [0, 5, 7], symbol: "sus4", category: "Suspended" },
+  { name: "Dominant 9th", intervals: [0, 4, 7, 10, 14], symbol: "9", category: "Extended" },
+  { name: "Major 9th", intervals: [0, 4, 7, 11, 14], symbol: "maj9", category: "Extended" },
+  { name: "Minor 9th", intervals: [0, 3, 7, 10, 14], symbol: "m9", category: "Extended" },
+  { name: "Add 9", intervals: [0, 4, 7, 14], symbol: "add9", category: "Extended" },
 ];
 
 // Helper to convert semitone to note name
@@ -43,38 +35,40 @@ const getNoteName = (semitone: number): string => {
   return notes[semitone % 12];
 };
 
+// Helper to get interval names
+const getIntervalName = (interval: number): string => {
+  const intervals = ['Root', 'Minor 2nd', 'Major 2nd', 'Minor 3rd', 'Major 3rd', 'Perfect 4th', 
+                     'Tritone', 'Perfect 5th', 'Minor 6th', 'Major 6th', 'Minor 7th', 'Major 7th'];
+  return intervals[interval % 12] || `+${Math.floor(interval/12)} Octave`;
+};
+
 // Chord detection function
-const detectChord = (frequencies: number[]): string => {
-  if (frequencies.length < 3) return "Not a chord";
+const detectChord = (frequencies: number[]): { name: string; notes: string[]; intervals: string[] } => {
+  if (frequencies.length < 3) return { name: "Not a chord", notes: [], intervals: [] };
   
-  // Convert frequencies to semitones from A4 (440Hz)
-  const semitones = frequencies.map(freq => {
-    return Math.round(12 * Math.log2(freq / 440) + 69);
-  });
-  
-  // Normalize to C octave
+  const semitones = frequencies.map(freq => Math.round(12 * Math.log2(freq / 440) + 69));
   const normalized = semitones.map(s => s % 12).sort((a, b) => a - b);
-  
-  // Remove duplicates
   const uniqueNotes = [...new Set(normalized)];
   
-  // Check against chord definitions
   for (const chord of CHORD_THEORY) {
     for (let i = 0; i < uniqueNotes.length; i++) {
       const root = uniqueNotes[i];
       const chordNotes = chord.intervals.map(interval => (root + interval) % 12).sort();
       
-      // Check if current notes match chord intervals
       const isMatch = chordNotes.every(note => uniqueNotes.includes(note));
       
       if (isMatch) {
         const rootNote = getNoteName(root);
-        return `${rootNote}${chord.symbol}`;
+        return {
+          name: `${rootNote}${chord.symbol}`,
+          notes: chordNotes.map(n => getNoteName(n)),
+          intervals: chord.intervals.map(i => getIntervalName(i))
+        };
       }
     }
   }
   
-  return "Unknown chord";
+  return { name: "Unknown chord", notes: [], intervals: [] };
 };
 
 interface GuitarString {
@@ -93,6 +87,23 @@ interface AudioState {
   gainNode: GainNode | null;
   compressor: DynamicsCompressorNode | null;
   reverb: ConvolverNode | null;
+  reverbGain: GainNode | null;
+}
+
+interface PracticeExercise {
+  id: string;
+  title: string;
+  description: string;
+  type: 'chords' | 'scales' | 'strumming';
+  target: any;
+  instructions: string[];
+}
+
+interface TutorialStep {
+  title: string;
+  instruction: string;
+  target: any;
+  hints: string[];
 }
 
 const InteractiveGuitar: React.FC = () => {
@@ -106,90 +117,172 @@ const InteractiveGuitar: React.FC = () => {
   const [showPick, setShowPick] = useState(false);
   const [pickPosition, setPickPosition] = useState(0);
   const [heldChord, setHeldChord] = useState<number | null>(null);
-  const [currentChordName, setCurrentChordName] = useState("");
+  const [currentChord, setCurrentChord] = useState({ name: "", notes: [], intervals: [] });
   const [isTouch, setIsTouch] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [showDemoTip, setShowDemoTip] = useState(true);
   const [currentChordIndex, setCurrentChordIndex] = useState(-1);
   const [tempo, setTempo] = useState(80);
   const [waveform, setWaveform] = useState<OscillatorType>('sawtooth');
+  const [reverbLevel, setReverbLevel] = useState(0.3);
+  const [delayEffect, setDelayEffect] = useState(0);
+  const [distortion, setDistortion] = useState(0);
+  const [eqSettings, setEqSettings] = useState({ low: 0, mid: 0, high: 0 });
+  const [practiceMode, setPracticeMode] = useState(false);
+  const [currentExercise, setCurrentExercise] = useState<PracticeExercise | null>(null);
+  const [exerciseProgress, setExerciseProgress] = useState(0);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordedPerformance, setRecordedPerformance] = useState<any[]>([]);
+  const [recordingStartTime, setRecordingStartTime] = useState(0);
+  const [metronomeActive, setMetronomeActive] = useState(false);
+  const [timeSignature, setTimeSignature] = useState({ beats: 4, noteValue: 4 });
+  const [activeTutorial, setActiveTutorial] = useState<TutorialStep | null>(null);
+  const [tutorialStep, setTutorialStep] = useState(0);
+  const [favoriteChords, setFavoriteChords] = useState<string[]>([]);
+  const [highlightedNotes, setHighlightedNotes] = useState<string[]>([]);
+  const [panelPosition, setPanelPosition] = useState<'left' | 'right' | null>(null);
   
   const audioState = useRef<AudioState>({
     context: null,
     gainNode: null,
     compressor: null,
-    reverb: null
+    reverb: null,
+    reverbGain: null
   });
   
   const oscillators = useRef<Map<string, OscillatorNode>>(new Map());
   const demoTimeouts = useRef<NodeJS.Timeout[]>([]);
   const activeNoteKeysByString = useRef<Map<number, string>>(new Map());
   const guitarRef = useRef<HTMLDivElement>(null);
+  const metronomeInterval = useRef<NodeJS.Timeout | null>(null);
+  const recordingStartTimeRef = useRef(0);
+  const touchActiveRef = useRef(false);
 
-  // Chord definitions - Fixed to match string order (E=0, A=1, D=2, G=3, B=4, E=5)
+  // Chord definitions
   const chords: Chord[] = [
     {
       name: "G",
       positions: [
-        { string: 0, fret: 3 }, // Low E, 3rd fret
-        { string: 1, fret: 2 }, // A, 2nd fret  
-        { string: 5, fret: 3 }  // High E, 3rd fret
+        { string: 0, fret: 3 },
+        { string: 1, fret: 2 },
+        { string: 5, fret: 3 }
       ]
     },
     {
-      name: "C", 
+      name: "C",
       positions: [
-        { string: 1, fret: 3 }, // A, 3rd fret
-        { string: 2, fret: 2 }, // D, 2nd fret
-        { string: 4, fret: 1 }  // B, 1st fret
+        { string: 1, fret: 3 },
+        { string: 2, fret: 2 },
+        { string: 4, fret: 1 }
       ]
     },
     {
       name: "D",
       positions: [
-        { string: 1, fret: 2 }, // A, 2nd fret
-        { string: 2, fret: 2 }, // D, 2nd fret 
-        { string: 3, fret: 3 }, // G, 3rd fret
-        { string: 4, fret: 3 }  // B, 3rd fret
+        { string: 1, fret: 2 },
+        { string: 2, fret: 2 },
+        { string: 3, fret: 3 },
+        { string: 4, fret: 3 }
       ]
     },
     {
       name: "Em",
       positions: [
-        { string: 1, fret: 2 }, // A, 2nd fret
-        { string: 2, fret: 2 }  // D, 2nd fret
+        { string: 1, fret: 2 },
+        { string: 2, fret: 2 }
       ]
     },
     {
       name: "Am",
       positions: [
-        { string: 1, fret: 2 }, // A, 2nd fret
-        { string: 2, fret: 2 }, // D, 2nd fret
-        { string: 3, fret: 2 }  // G, 2nd fret
+        { string: 1, fret: 2 },
+        { string: 2, fret: 2 },
+        { string: 3, fret: 2 }
       ]
     },
     {
       name: "F",
       positions: [
-        { string: 0, fret: 1 }, // Low E, 1st fret (barre)
-        { string: 1, fret: 1 }, // A, 1st fret
-        { string: 2, fret: 3 }, // D, 3rd fret
-        { string: 3, fret: 3 }, // G, 3rd fret
-        { string: 4, fret: 2 }, // B, 2nd fret
-        { string: 5, fret: 1 }  // High E, 1st fret
+        { string: 0, fret: 1 },
+        { string: 1, fret: 1 },
+        { string: 2, fret: 3 },
+        { string: 3, fret: 3 },
+        { string: 4, fret: 2 },
+        { string: 5, fret: 1 }
       ]
     }
   ];
 
-  // Calculate accurate fret positions using logarithmic scale (25.4" scale length)
+  // Practice exercises
+  const practiceExercises: PracticeExercise[] = [
+    {
+      id: "beginner-chords",
+      title: "Basic Chord Changes",
+      description: "Practice transitioning between G, C, and D chords",
+      type: 'chords',
+      target: ["G", "C", "D"],
+      instructions: [
+        "Place your fingers for a G chord",
+        "Strum the chord clearly",
+        "Transition to a C chord smoothly",
+        "Strum the C chord",
+        "Transition to a D chord",
+        "Strum the D chord",
+        "Return to G chord"
+      ]
+    },
+    {
+      id: "minor-chords",
+      title: "Minor Chord Practice",
+      description: "Practice Em and Am chords",
+      type: 'chords',
+      target: ["Em", "Am"],
+      instructions: [
+        "Place your fingers for an Em chord",
+        "Strum the chord clearly",
+        "Transition to an Am chord smoothly",
+        "Strum the Am chord",
+        "Return to Em chord"
+      ]
+    }
+  ];
+
+  // Tutorial steps
+  const tutorialSteps: TutorialStep[] = [
+    {
+      title: "Welcome to Interactive Guitar",
+      instruction: "This tutorial will guide you through the basics of playing guitar with this interactive tool.",
+      target: null,
+      hints: ["Click 'Next' to continue"]
+    },
+    {
+      title: "Playing Notes",
+      instruction: "Click on any fret to play a note. Try clicking on different frets and strings.",
+      target: { action: "play-note", count: 3 },
+      hints: ["Click on the frets to play notes", "Each string produces a different sound"]
+    },
+    {
+      title: "Strumming",
+      instruction: "Swipe vertically across the strings to strum. Try swiping downward and upward.",
+      target: { action: "strum", count: 2 },
+      hints: ["Swipe down across the strings for a downstroke", "Swipe up for an upstroke"]
+    },
+    {
+      title: "Playing Chords",
+      instruction: "Click on a chord button to place your fingers in the correct position, then strum to play the chord.",
+      target: { action: "play-chord", chord: "G" },
+      hints: ["Select the G chord from the chord buttons", "Swipe to strum the chord"]
+    }
+  ];
+
+  // Calculate accurate fret positions
   const calculateFretPositions = (numFrets: number = 20) => {
-    const scaleLength = 25.4; // Standard scale length in inches
+    const scaleLength = 25.4;
     const positions: number[] = [0];
     
     for (let i = 1; i <= numFrets; i++) {
-      // Formula: distance from nut = scaleLength - (scaleLength / (2^(fret/12)))
       const distance = scaleLength - (scaleLength / Math.pow(2, i / 12));
-      positions.push(distance / scaleLength); // Normalize to 0-1 range
+      positions.push(distance / scaleLength);
     }
     return positions;
   };
@@ -203,39 +296,27 @@ const InteractiveGuitar: React.FC = () => {
       const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
       let noteIndex;
       
-      // Calculate correct note based on string and fret
-      if (baseFreq === 82.41) noteIndex = (4 + i) % 12; // Low E
-      else if (baseFreq === 110.00) noteIndex = (9 + i) % 12; // A
-      else if (baseFreq === 146.83) noteIndex = (2 + i) % 12; // D
-      else if (baseFreq === 196.00) noteIndex = (7 + i) % 12; // G
-      else if (baseFreq === 246.94) noteIndex = (11 + i) % 12; // B
-      else if (baseFreq === 329.63) noteIndex = (4 + i) % 12; // High E
+      if (baseFreq === 82.41) noteIndex = (4 + i) % 12;
+      else if (baseFreq === 110.00) noteIndex = (9 + i) % 12;
+      else if (baseFreq === 146.83) noteIndex = (2 + i) % 12;
+      else if (baseFreq === 196.00) noteIndex = (7 + i) % 12;
+      else if (baseFreq === 246.94) noteIndex = (11 + i) % 12;
+      else if (baseFreq === 329.63) noteIndex = (4 + i) % 12;
       else noteIndex = 0;
       
       return { note: notes[noteIndex], frequency: freq };
     });
   };
 
-  // Guitar strings with standard tuning (thickest to thinnest)
+  // Guitar strings with standard tuning
   const strings: GuitarString[] = [
-    { note: 'E', openFreq: 82.41, frets: generateFrets(82.41) },   // Low E (6th string) - THICKEST
-    { note: 'A', openFreq: 110.00, frets: generateFrets(110.00) }, // A (5th string)
-    { note: 'D', openFreq: 146.83, frets: generateFrets(146.83) }, // D (4th string)
-    { note: 'G', openFreq: 196.00, frets: generateFrets(196.00) }, // G (3rd string)
-    { note: 'B', openFreq: 246.94, frets: generateFrets(246.94) }, // B (2nd string)
-    { note: 'E', openFreq: 329.63, frets: generateFrets(329.63) }  // High E (1st string) - THINNEST
+    { note: 'E', openFreq: 82.41, frets: generateFrets(82.41) },
+    { note: 'A', openFreq: 110.00, frets: generateFrets(110.00) },
+    { note: 'D', openFreq: 146.83, frets: generateFrets(146.83) },
+    { note: 'G', openFreq: 196.00, frets: generateFrets(196.00) },
+    { note: 'B', openFreq: 246.94, frets: generateFrets(246.94) },
+    { note: 'E', openFreq: 329.63, frets: generateFrets(329.63) }
   ];
-
-  // Swipe handlers for strumming - both vertical and horizontal
-  const swipeHandlers = useSwipeable({
-    onSwipedDown: (eventData) => handleStrum('down', eventData),
-    onSwipedUp: (eventData) => handleStrum('up', eventData),
-    onSwipedLeft: (eventData) => handleStrum('down', eventData),
-    onSwipedRight: (eventData) => handleStrum('up', eventData),
-    delta: 20,
-    trackTouch: true,
-    trackMouse: true,
-  });
 
   // Enhanced audio initialization
   useEffect(() => {
@@ -265,9 +346,9 @@ const InteractiveGuitar: React.FC = () => {
         compressor.connect(context.destination);
         
         gainNode.gain.setValueAtTime(volume, context.currentTime);
-        reverbGain.gain.setValueAtTime(0.3, context.currentTime);
+        reverbGain.gain.setValueAtTime(reverbLevel, context.currentTime);
         
-        audioState.current = { context, gainNode, compressor, reverb };
+        audioState.current = { context, gainNode, compressor, reverb, reverbGain };
         
         const resumeAudio = async () => {
           if (context.state === 'suspended') {
@@ -290,6 +371,9 @@ const InteractiveGuitar: React.FC = () => {
         audioState.current.context.close();
       }
       demoTimeouts.current.forEach(timeout => clearTimeout(timeout));
+      if (metronomeInterval.current) {
+        clearInterval(metronomeInterval.current);
+      }
     };
   }, []);
 
@@ -299,6 +383,53 @@ const InteractiveGuitar: React.FC = () => {
       audioState.current.gainNode.gain.value = isMuted ? 0 : volume;
     }
   }, [volume, isMuted]);
+
+  // Reverb level handling
+  useEffect(() => {
+    if (audioState.current.reverbGain) {
+      audioState.current.reverbGain.gain.setValueAtTime(reverbLevel, audioState.current.context.currentTime);
+    }
+  }, [reverbLevel]);
+
+  // Metronome effect
+  useEffect(() => {
+    if (metronomeActive) {
+      const intervalMs = (60000 / tempo) * (4 / timeSignature.noteValue);
+      metronomeInterval.current = setInterval(() => {
+        playMetronomeClick();
+      }, intervalMs);
+    } else if (metronomeInterval.current) {
+      clearInterval(metronomeInterval.current);
+    }
+    
+    return () => {
+      if (metronomeInterval.current) {
+        clearInterval(metronomeInterval.current);
+      }
+    };
+  }, [metronomeActive, tempo, timeSignature]);
+
+  const playMetronomeClick = () => {
+    if (!audioState.current.context || isMuted) return;
+    
+    const { context } = audioState.current;
+    const oscillator = context.createOscillator();
+    const gainNode = context.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(context.destination);
+    
+    oscillator.frequency.setValueAtTime(1000, context.currentTime);
+    oscillator.type = 'sine';
+    
+    const now = context.currentTime;
+    gainNode.gain.setValueAtTime(0, now);
+    gainNode.gain.linearRampToValueAtTime(0.3, now + 0.001);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+    
+    oscillator.start(now);
+    oscillator.stop(now + 0.1);
+  };
 
   // Stop all notes
   const stopAllNotes = useCallback(() => {
@@ -313,23 +444,8 @@ const InteractiveGuitar: React.FC = () => {
     setActiveNotes(new Set());
     activeNoteKeysByString.current.clear();
     setHeldChord(null);
-    setCurrentChordName("");
+    setCurrentChord({ name: "", notes: [], intervals: [] });
   }, []);
-
-  // Reset handler for guitar
-  useEffect(() => {
-    const resetHandler = () => {
-      stopAllNotes();
-      setIsPlayingDemo(false);
-      setActiveNotes(new Set());
-      setCurrentChordIndex(-1);
-    };
-    
-    window.addEventListener('reset-guitar', resetHandler);
-    return () => {
-      window.removeEventListener('reset-guitar', resetHandler);
-    };
-  }, [stopAllNotes]);
 
   // Detect chord when active notes change
   useEffect(() => {
@@ -343,20 +459,48 @@ const InteractiveGuitar: React.FC = () => {
     
     if (activeFrequencies.length > 0) {
       const chord = detectChord(activeFrequencies);
-      setCurrentChordName(chord);
+      setCurrentChord(chord);
     } else {
-      setCurrentChordName("");
+      setCurrentChord({ name: "", notes: [], intervals: [] });
     }
   }, [activeNotes]);
+
+  // Swipe handlers for strumming
+  const swipeHandlers = useSwipeable({
+    onSwipedDown: (eventData) => handleStrum('down', eventData),
+    onSwipedUp: (eventData) => handleStrum('up', eventData),
+    onSwipedLeft: (eventData) => handleStrum('down', eventData),
+    onSwipedRight: (eventData) => handleStrum('up', eventData),
+    onSwiping: (eventData) => {
+      if (guitarRef.current) {
+        const rect = guitarRef.current.getBoundingClientRect();
+        const relativeY = eventData.event.touches ? 
+          eventData.event.touches[0].clientY - rect.top :
+          eventData.event.clientY - rect.top;
+        setPickPosition(relativeY / rect.height);
+        setShowPick(true);
+      }
+    },
+    delta: 20,
+    trackTouch: true,
+    trackMouse: true,
+  });
 
   // Enhanced strum function
   const handleStrum = async (direction: 'up' | 'down', eventData?: any) => {
     if (!audioState.current.context || !audioState.current.gainNode || isMuted) return;
 
+    if (isRecording) {
+      setRecordedPerformance(prev => [...prev, {
+        time: Date.now() - recordingStartTimeRef.current,
+        type: 'strum',
+        data: { direction }
+      }]);
+    }
+
     setStrumDirection(direction);
     setShowPick(true);
     
-    // Calculate pick position based on swipe
     if (eventData && guitarRef.current) {
       const rect = guitarRef.current.getBoundingClientRect();
       const relativeY = eventData.event.touches ? 
@@ -365,14 +509,12 @@ const InteractiveGuitar: React.FC = () => {
       setPickPosition(relativeY / rect.height);
     }
 
-    // Get currently held frets
     const heldFrets = new Map<number, number>();
     activeNoteKeysByString.current.forEach((noteKey, stringIndex) => {
       const fretIndex = parseInt(noteKey.split('-')[1]);
       heldFrets.set(stringIndex, fretIndex);
     });
 
-    // Strum timing - slight delay between strings for realism
     const strumDelay = direction === 'down' ? 30 : 25;
     const stringOrder = direction === 'down' ? [0, 1, 2, 3, 4, 5] : [5, 4, 3, 2, 1, 0];
 
@@ -384,12 +526,10 @@ const InteractiveGuitar: React.FC = () => {
       }, i * strumDelay);
     });
 
-    // Add haptic feedback for mobile
     if (navigator.vibrate && isTouch) {
       navigator.vibrate(direction === 'down' ? 50 : 30);
     }
 
-    // Hide pick animation after strum
     setTimeout(() => {
       setShowPick(false);
       setStrumDirection(null);
@@ -415,13 +555,11 @@ const InteractiveGuitar: React.FC = () => {
       oscillator.type = waveform;
       oscillator.frequency.setValueAtTime(frequency, context.currentTime);
       
-      // Different filter characteristics for up vs down strokes
       filter.type = 'lowpass';
       const baseFreq = direction === 'down' ? 2500 : 3000;
       filter.frequency.setValueAtTime(baseFreq + (frequency * 1.5), context.currentTime);
       filter.frequency.exponentialRampToValueAtTime(400 + frequency, context.currentTime + 1.2);
       
-      // Strum-specific envelope
       const now = context.currentTime;
       const attackTime = direction === 'down' ? 0.003 : 0.002;
       const decayTime = 0.8;
@@ -438,7 +576,6 @@ const InteractiveGuitar: React.FC = () => {
       oscillator.start(now);
       oscillator.stop(now + attackTime + decayTime + releaseTime);
       
-      // Visual feedback
       setActiveNotes(prev => new Set(prev).add(noteKey));
       
       setTimeout(() => {
@@ -454,9 +591,17 @@ const InteractiveGuitar: React.FC = () => {
     }
   };
 
-  // Individual note playing (for fret tapping)
+  // Individual note playing
   const playNote = useCallback(async (frequency: number, stringIndex: number, fretIndex: number) => {
     if (!audioState.current.context || !audioState.current.gainNode || isMuted) return;
+
+    if (isRecording) {
+      setRecordedPerformance(prev => [...prev, {
+        time: Date.now() - recordingStartTimeRef.current,
+        type: 'note',
+        data: { frequency, stringIndex, fretIndex }
+      }]);
+    }
 
     try {
       if (audioState.current.context.state === 'suspended') {
@@ -529,9 +674,9 @@ const InteractiveGuitar: React.FC = () => {
     } catch (error) {
       console.error('Note playback failed:', error);
     }
-  }, [volume, isMuted, waveform]);
+  }, [volume, isMuted, waveform, isRecording]);
 
-  // Play chord progressions with cancellation support
+  // Play chord progressions
   const playDemo = useCallback(async () => {
     if (isPlayingDemo) {
       setIsPlayingDemo(false);
@@ -553,10 +698,8 @@ const InteractiveGuitar: React.FC = () => {
       const chord = chords[chordIndex];
       setCurrentChordIndex(chordIndex);
       
-      // Apply chord positions
       applyChord(chordIndex);
 
-      // Strum the chord
       demoTimeouts.current.push(setTimeout(() => {
         if (!isPlayingDemo) return;
         handleStrum('down');
@@ -568,19 +711,17 @@ const InteractiveGuitar: React.FC = () => {
     };
 
     playChord(0);
-  }, [isPlayingDemo, stopAllNotes, strings, tempo, handleStrum]);
+  }, [isPlayingDemo, stopAllNotes, tempo, handleStrum]);
 
-  // Apply chord to the guitar - FIXED FUNCTIONALITY
+  // Apply chord to the guitar
   const applyChord = useCallback((chordIndex: number) => {
     stopAllNotes();
     setHeldChord(chordIndex);
     
     const chord = chords[chordIndex];
     
-    // Clear existing chord positions
     activeNoteKeysByString.current.clear();
     
-    // Apply new chord positions
     chord.positions.forEach(({ string, fret }) => {
       const noteKey = `${string}-${fret}`;
       activeNoteKeysByString.current.set(string, noteKey);
@@ -603,6 +744,72 @@ const InteractiveGuitar: React.FC = () => {
     }
   };
 
+  // Start/stop recording
+  const toggleRecording = () => {
+    if (isRecording) {
+      setIsRecording(false);
+    } else {
+      setIsRecording(true);
+      setRecordedPerformance([]);
+      recordingStartTimeRef.current = Date.now();
+    }
+  };
+
+  // Play recorded performance
+  const playRecording = () => {
+    recordedPerformance.forEach((event) => {
+      setTimeout(() => {
+        if (event.type === 'note') {
+          playNote(event.data.frequency, event.data.stringIndex, event.data.fretIndex);
+        } else if (event.type === 'strum') {
+          handleStrum(event.data.direction);
+        }
+      }, event.time);
+    });
+  };
+
+  // Start practice mode
+  const startPractice = (exercise: PracticeExercise) => {
+    setPracticeMode(true);
+    setCurrentExercise(exercise);
+    setExerciseProgress(0);
+  };
+
+  // Start tutorial
+  const startTutorial = () => {
+    setActiveTutorial(tutorialSteps[0]);
+    setTutorialStep(0);
+  };
+
+  // Toggle favorite chord
+  const toggleFavoriteChord = (chordName: string) => {
+    if (favoriteChords.includes(chordName)) {
+      setFavoriteChords(favoriteChords.filter(name => name !== chordName));
+    } else {
+      setFavoriteChords([...favoriteChords, chordName]);
+    }
+  };
+
+  // Highlight scale notes
+  const highlightScale = (rootNote: string, scaleType: string) => {
+    // Simplified scale highlighting
+    const scaleNotes = [
+      rootNote, 
+      getNoteName((getNoteIndex(rootNote) + 2) % 12),
+      getNoteName((getNoteIndex(rootNote) + 4) % 12),
+      getNoteName((getNoteIndex(rootNote) + 5) % 12),
+      getNoteName((getNoteIndex(rootNote) + 7) % 12),
+      getNoteName((getNoteIndex(rootNote) + 9) % 12),
+      getNoteName((getNoteIndex(rootNote) + 11) % 12)
+    ];
+    setHighlightedNotes(scaleNotes);
+  };
+
+  const getNoteIndex = (note: string): number => {
+    const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    return notes.indexOf(note);
+  };
+
   return (
     <motion.div
       className="relative bg-gradient-to-br from-amber-900 via-amber-800 to-amber-900 rounded-2xl shadow-2xl overflow-hidden w-full max-w-6xl mx-auto p-4 sm:p-6"
@@ -623,19 +830,327 @@ const InteractiveGuitar: React.FC = () => {
              )`
            }} />
       
+      {/* Side Panel Buttons */}
+      <div className="absolute inset-y-0 left-0 flex items-center z-30">
+        <button
+          onClick={() => setPanelPosition(panelPosition === 'left' ? null : 'left')}
+          className="ml-[-16px] sm:ml-[-20px] w-8 h-16 sm:w-10 sm:h-20 bg-gradient-to-r from-amber-800 to-amber-900 hover:from-amber-700 hover:to-amber-800 rounded-r-lg shadow-lg flex items-center justify-center transition-all group"
+        >
+          <Settings className="h-4 w-4 sm:h-5 sm:w-5 text-white group-hover:scale-110 transition-transform" />
+        </button>
+      </div>
+      
+      <div className="absolute inset-y-0 right-0 flex items-center z-30">
+        <button
+          onClick={() => setPanelPosition(panelPosition === 'right' ? null : 'right')}
+          className="mr-[-16px] sm:mr-[-20px] w-8 h-16 sm:w-10 sm:h-20 bg-gradient-to-r from-amber-900 to-amber-800 hover:from-amber-800 hover:to-amber-700 rounded-l-lg shadow-lg flex items-center justify-center transition-all group"
+        >
+          <Info className="h-4 w-4 sm:h-5 sm:w-5 text-white group-hover:scale-110 transition-transform" />
+        </button>
+      </div>
+      
+      {/* Left Settings Panel */}
+      <AnimatePresence>
+        {panelPosition === 'left' && (
+          <motion.div
+            initial={{ x: '-100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '-100%' }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className="absolute top-0 left-0 h-full w-[280px] sm:w-80 bg-gradient-to-b from-amber-900 to-amber-800 border-r border-amber-700 shadow-2xl z-20 flex flex-col"
+          >
+            <div className="flex items-center justify-between p-6">
+              <h3 className="text-white font-semibold text-lg flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                Guitar Settings
+              </h3>
+              <button
+                onClick={() => setPanelPosition(null)}
+                className="text-white/60 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            
+            <div className="flex-grow overflow-y-auto px-6 pb-6">
+              <div className="grid grid-cols-1 gap-6">
+                <div className="space-y-4">
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="text-white font-medium flex items-center gap-2">
+                        <Volume2 className="h-4 w-4" />
+                        Volume
+                      </label>
+                      <span className="text-amber-400 font-mono text-sm">
+                        {Math.round(volume * 100)}%
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={volume}
+                      onChange={(e) => setVolume(parseFloat(e.target.value))}
+                      className="w-full accent-amber-500 bg-white/10 rounded-lg"
+                    />
+                  </div>
+                  
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="text-white font-medium">Tempo</label>
+                      <span className="text-purple-400 font-mono text-sm">
+                        {tempo} BPM
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="60"
+                      max="180"
+                      step="10"
+                      value={tempo}
+                      onChange={(e) => setTempo(parseInt(e.target.value))}
+                      className="w-full accent-purple-500 bg-white/10 rounded-lg"
+                    />
+                  </div>
+
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="text-white font-medium">Reverb</label>
+                      <span className="text-blue-400 font-mono text-sm">
+                        {Math.round(reverbLevel * 100)}%
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={reverbLevel}
+                      onChange={(e) => setReverbLevel(parseFloat(e.target.value))}
+                      className="w-full accent-blue-500 bg-white/10 rounded-lg"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <label className="text-white font-medium block mb-3">Waveform</label>
+                    <select
+                      value={waveform}
+                      onChange={(e) => setWaveform(e.target.value as OscillatorType)}
+                      className="w-full bg-black/50 text-white rounded-lg px-3 py-2 border border-white/20 focus:border-blue-400 focus:outline-none"
+                    >
+                      <option value="sawtooth">Sawtooth (Guitar-like)</option>
+                      <option value="sine">Sine</option>
+                      <option value="square">Square</option>
+                      <option value="triangle">Triangle</option>
+                    </select>
+                  </div>
+                  
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <label className="text-white font-medium block mb-3">Tuning</label>
+                    <div className="bg-black/50 text-white rounded-lg px-3 py-2 border border-white/20">
+                      <span className="text-amber-400">Standard: E-A-D-G-B-E</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <label className="text-white font-medium">Metronome</label>
+                      <button
+                        onClick={() => setMetronomeActive(!metronomeActive)}
+                        className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${
+                          metronomeActive ? 'bg-green-500' : 'bg-white/20'
+                        }`}
+                      >
+                        <div className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform duration-300 ${
+                          metronomeActive ? 'translate-x-7' : 'translate-x-0'
+                        }`} />
+                      </button>
+                    </div>
+                    {metronomeActive && (
+                      <div className="mt-3">
+                        <label className="text-white/70 text-sm">Time Signature</label>
+                        <select
+                          value={`${timeSignature.beats}/${timeSignature.noteValue}`}
+                          onChange={(e) => {
+                            const [beats, noteValue] = e.target.value.split('/').map(Number);
+                            setTimeSignature({ beats, noteValue });
+                          }}
+                          className="w-full bg-black/50 text-white rounded-lg px-3 py-2 border border-white/20 mt-1"
+                        >
+                          <option value="4/4">4/4</option>
+                          <option value="3/4">3/4</option>
+                          <option value="6/8">6/8</option>
+                          <option value="2/4">2/4</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      {/* Right Info Panel */}
+      <AnimatePresence>
+        {panelPosition === 'right' && (
+          <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className="absolute top-0 right-0 h-full w-[280px] sm:w-80 bg-gradient-to-b from-amber-900 to-amber-800 border-l border-amber-700 shadow-2xl z-20 flex flex-col"
+          >
+            <div className="flex items-center justify-between p-6">
+              <h3 className="text-white font-semibold text-lg flex items-center gap-2">
+                <Info className="h-5 w-5" />
+                Guitar Guide
+              </h3>
+              <button
+                onClick={() => setPanelPosition(null)}
+                className="text-white/60 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            
+            <div className="flex-grow overflow-y-auto px-6 pb-6">
+              <div className="space-y-6">
+                <div className="bg-white/5 rounded-lg p-4">
+                  <h4 className="text-amber-400 font-medium mb-2">Playing Guide</h4>
+                  <div className="space-y-1 text-white/80 text-sm">
+                    <div>• Click on frets to play notes</div>
+                    <div>• Swipe vertically to strum strings</div>
+                    <div>• Hold multiple frets to form chords</div>
+                    <div>• Use chord buttons to apply common chords</div>
+                  </div>
+                </div>
+                
+                <div className="bg-white/5 rounded-lg p-4">
+                  <h4 className="text-purple-400 font-medium mb-2">Chord Recognition</h4>
+                  <div className="space-y-1 text-white/80 text-sm">
+                    <div>• Recognizes major, minor, 7th chords</div>
+                    <div>• Shows chord name above controls</div>
+                    <div>• Play chord button strums all active notes</div>
+                    <div>• Accurate fret positioning based on physics</div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4">
+                  <h4 className="text-blue-400 font-medium mb-2">Practice Exercises</h4>
+                  <div className="space-y-2">
+                    {practiceExercises.map((exercise) => (
+                      <button
+                        key={exercise.id}
+                        onClick={() => startPractice(exercise)}
+                        className="w-full bg-amber-700 hover:bg-amber-600 text-white text-sm py-2 px-3 rounded-lg transition-colors text-left"
+                      >
+                        <div className="font-medium">{exercise.title}</div>
+                        <div className="text-xs opacity-80">{exercise.description}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  onClick={startTutorial}
+                  className="w-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 border border-amber-500/30 text-amber-200 py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2"
+                >
+                  <BookOpen className="h-4 w-4" />
+                  Start Tutorial
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Tutorial Overlay */}
+      <AnimatePresence>
+        {activeTutorial && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="bg-gradient-to-br from-amber-800 to-amber-900 rounded-xl p-6 max-w-md w-full border border-amber-600"
+            >
+              <h3 className="text-white font-semibold text-xl mb-2">
+                {activeTutorial.title}
+              </h3>
+              <p className="text-amber-100 mb-4">
+                {activeTutorial.instruction}
+              </p>
+              
+              <div className="bg-black/30 rounded-lg p-3 mb-4">
+                <h4 className="text-amber-300 font-medium mb-1">Hint:</h4>
+                <p className="text-amber-200 text-sm">
+                  {activeTutorial.hints[0]}
+                </p>
+              </div>
+              
+              <div className="flex justify-between">
+                <button
+                  onClick={() => {
+                    if (tutorialStep > 0) {
+                      setTutorialStep(tutorialStep - 1);
+                      setActiveTutorial(tutorialSteps[tutorialStep - 1]);
+                    }
+                  }}
+                  disabled={tutorialStep === 0}
+                  className="px-4 py-2 bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-amber-600 text-white rounded-lg transition-colors"
+                >
+                  Previous
+                </button>
+                
+                <div className="flex items-center gap-1">
+                  {tutorialSteps.map((_, i) => (
+                    <div
+                      key={i}
+                      className={`w-2 h-2 rounded-full ${
+                        i === tutorialStep ? 'bg-amber-400' : 'bg-amber-700'
+                      }`}
+                    />
+                  ))}
+                </div>
+                
+                <button
+                  onClick={() => {
+                    if (tutorialStep < tutorialSteps.length - 1) {
+                      setTutorialStep(tutorialStep + 1);
+                      setActiveTutorial(tutorialSteps[tutorialStep + 1]);
+                    } else {
+                      setActiveTutorial(null);
+                    }
+                  }}
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-white rounded-lg transition-colors"
+                >
+                  {tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Finish'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Complete Guitar Layout */}
       <div className="relative w-full h-64 sm:h-80 md:h-96 flex items-center overflow-hidden">
         
-        {/* HEADSTOCK - Enhanced Design */}
+        {/* HEADSTOCK */}
         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[15%] h-[70%] z-10">
           <div className="relative w-full h-full">
-            {/* Headstock shape - more guitar-like */}
             <div className="absolute inset-0 bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800 shadow-lg"
                  style={{
                    clipPath: 'polygon(0% 25%, 80% 20%, 95% 35%, 100% 50%, 95% 65%, 80% 80%, 0% 75%)'
                  }}>
-              
-              {/* Enhanced wood grain */}
               <div className="absolute inset-0 opacity-40"
                    style={{
                      backgroundImage: `repeating-linear-gradient(
@@ -645,14 +1160,10 @@ const InteractiveGuitar: React.FC = () => {
                        rgba(139, 69, 19, 0.5) 2px
                      )`
                    }} />
-              
-              {/* Headstock logo area */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-4 bg-gradient-to-br from-amber-800 to-amber-900 rounded-sm opacity-60"></div>
             </div>
             
-            {/* Enhanced tuning pegs in 3+3 configuration */}
             <div className="absolute inset-0">
-              {/* Top tuning pegs */}
               <div className="absolute top-6 left-3 flex flex-col gap-3">
                 {[5, 4, 3].map((stringIndex) => (
                   <div key={`top-${stringIndex}`} className="flex items-center">
@@ -666,7 +1177,6 @@ const InteractiveGuitar: React.FC = () => {
                 ))}
               </div>
               
-              {/* Bottom tuning pegs */}
               <div className="absolute bottom-6 left-3 flex flex-col gap-3">
                 {[2, 1, 0].map((stringIndex) => (
                   <div key={`bottom-${stringIndex}`} className="flex items-center">
@@ -680,7 +1190,6 @@ const InteractiveGuitar: React.FC = () => {
                 ))}
               </div>
               
-              {/* String notes display - reversed order (thickest at top) */}
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-2 text-xs font-bold text-amber-200">
                 {strings.slice().reverse().map((string, i) => (
                   <span key={i} className="text-center leading-none">{string.note}</span>
@@ -690,11 +1199,9 @@ const InteractiveGuitar: React.FC = () => {
           </div>
         </div>
 
-        {/* NECK & FRETBOARD - Ends at sound hole */}
+        {/* NECK & FRETBOARD */}
         <div className="absolute left-[12%] top-1/2 -translate-y-1/2 w-[50%] h-[65%] z-20">
-          {/* Neck back */}
           <div className="absolute inset-0 bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 shadow-lg rounded-lg">
-            {/* Enhanced wood grain */}
             <div className="absolute inset-0 opacity-30 rounded-lg"
                  style={{
                    backgroundImage: `repeating-linear-gradient(
@@ -706,15 +1213,11 @@ const InteractiveGuitar: React.FC = () => {
                  }} />
           </div>
           
-          {/* Fretboard - dark ebony overlay */}
           <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[60%] bg-gradient-to-b from-gray-900 via-black to-gray-900 shadow-inner rounded-lg">
-            {/* Binding - cream colored */}
             <div className="absolute inset-0 border-2 border-amber-100 rounded-lg"></div>
             
-            {/* Nut - bone colored */}
             <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-gray-100 via-white to-gray-100 z-30 rounded-l-lg shadow-sm"></div>
             
-            {/* Fret wires with accurate logarithmic positioning */}
             {fretPositions.slice(1, 15).map((position, i) => (
               <div
                 key={i + 1}
@@ -723,7 +1226,6 @@ const InteractiveGuitar: React.FC = () => {
               />
             ))}
             
-            {/* Fret markers - mother of pearl inlays */}
             <div className="absolute inset-0 z-5" style={{ pointerEvents: 'none' }}>
               {[3, 5, 7, 9, 12].map(fret => {
                 if (fret >= 15) return null;
@@ -749,7 +1251,6 @@ const InteractiveGuitar: React.FC = () => {
               })}
             </div>
             
-            {/* Strings - CORRECTED ORDER (thickest at top) */}
             <div className="absolute inset-0 flex flex-col justify-evenly py-1">
               {strings.map((string, stringIndex) => (
                 <motion.div
@@ -759,13 +1260,12 @@ const InteractiveGuitar: React.FC = () => {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: stringIndex * 0.05 }}
                 >
-                  {/* String line - varying thickness */}
                   <div 
                     className="absolute w-full transition-all duration-200 rounded-full"
                     style={{ 
                       top: '50%', 
                       transform: 'translateY(-50%)',
-                      height: `${stringIndex < 3 ? '2px' : '1.5px'}`, // Thicker for lower strings
+                      height: `${stringIndex < 3 ? '2px' : '1.5px'}`,
                       background: `linear-gradient(to right, ${
                         stringIndex < 3 ? '#8B4513, #CD853F, #D2691E' : '#C0C0C0, #E0E0E0, #F5F5F5'
                       })`,
@@ -774,11 +1274,11 @@ const InteractiveGuitar: React.FC = () => {
                     }}
                   />
                   
-                  {/* Interactive fret areas */}
                   <div className="relative w-full h-full flex">
                     {string.frets.slice(0, 14).map((fret, fretIndex) => {
                       const isActive = activeNoteKeysByString.current.get(stringIndex) === `${stringIndex}-${fretIndex}` || 
                                      isChordFret(stringIndex, fretIndex);
+                      const isHighlighted = highlightedNotes.includes(fret.note);
                       const leftPosition = fretIndex === 0 ? '0%' : `${fretPositions[fretIndex] * 100}%`;
                       const width = fretIndex === 0 ? `${fretPositions[1] * 100}%` : 
                                    fretIndex < 13 ? `${(fretPositions[fretIndex + 1] - fretPositions[fretIndex]) * 100}%` : 
@@ -790,6 +1290,8 @@ const InteractiveGuitar: React.FC = () => {
                           className={`absolute h-full border-r border-amber-600/20 flex items-center justify-center transition-all duration-200 z-20 rounded-sm ${
                             isActive
                               ? 'bg-yellow-400/50 shadow-lg scale-105 border-yellow-500/50'
+                              : isHighlighted
+                              ? 'bg-blue-400/30 shadow-md border-blue-400/30'
                               : 'hover:bg-amber-600/20 hover:shadow-md'
                           }`}
                           style={{ 
@@ -811,6 +1313,8 @@ const InteractiveGuitar: React.FC = () => {
                               className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full border-2 shadow-sm ${
                                 isActive
                                   ? 'bg-yellow-400 border-yellow-500 shadow-yellow-500/50' 
+                                  : isHighlighted
+                                  ? 'bg-blue-400 border-blue-500 shadow-blue-500/50'
                                   : 'bg-transparent border-white/30'
                               }`}
                               initial={{ scale: 0 }}
@@ -848,11 +1352,9 @@ const InteractiveGuitar: React.FC = () => {
           </div>
         </div>
 
-        {/* GUITAR BODY - Enhanced Design */}
+        {/* GUITAR BODY */}
         <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[40%] h-full">
-          {/* Guitar body with enhanced figure-8 shape */}
           <div className="relative w-full h-full">
-            {/* Upper bout */}
             <div className="absolute top-0 left-0 w-full h-[42%] bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 rounded-t-full shadow-lg border-2 border-amber-600/40">
               <div className="absolute inset-0 opacity-25 rounded-t-full"
                    style={{
@@ -865,10 +1367,8 @@ const InteractiveGuitar: React.FC = () => {
                    }} />
             </div>
             
-            {/* Waist - natural connection point */}
             <div className="absolute top-[38%] left-[8%] w-[84%] h-[24%] bg-gradient-to-r from-amber-500 to-amber-600 shadow-inner border-y-2 border-amber-600/40"></div>
             
-            {/* Lower bout */}
             <div className="absolute bottom-0 left-0 w-full h-[42%] bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 rounded-b-full shadow-lg border-2 border-amber-600/40">
               <div className="absolute inset-0 opacity-25 rounded-b-full"
                    style={{
@@ -881,20 +1381,15 @@ const InteractiveGuitar: React.FC = () => {
                    }} />
             </div>
             
-            {/* Enhanced Sound hole */}
             <div className="absolute top-[30%] left-[30%] -translate-x-1/2 -translate-y-1/2 z-10">
               <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-black shadow-inner relative border-4 border-amber-700">
-                {/* Rosette rings - more detailed */}
                 <div className="absolute inset-1 rounded-full border-2 border-amber-500"></div>
                 <div className="absolute inset-2 rounded-full border border-amber-400"></div>
                 <div className="absolute inset-3 rounded-full border border-amber-300"></div>
                 <div className="absolute inset-4 rounded-full border border-amber-200"></div>
                 <div className="absolute inset-5 rounded-full border border-amber-100"></div>
-                
-                {/* Inner pattern */}
                 <div className="absolute inset-6 rounded-full bg-gradient-to-br from-amber-900 to-black opacity-80"></div>
                 
-                {/* Decorative dots around rosette */}
                 {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((angle, i) => (
                   <div 
                     key={i}
@@ -909,22 +1404,17 @@ const InteractiveGuitar: React.FC = () => {
               </div>
             </div>
             
-            {/* Enhanced Bridge */}
             <div className="absolute bottom-[30%] left-[30%] -translate-x-1/2 w-20 h-3 bg-gradient-to-b from-amber-700 to-amber-900 rounded shadow-lg border border-amber-800">
-              {/* Bridge pins - more detailed */}
               <div className="absolute top-0 left-0 w-full h-full flex justify-evenly items-center">
                 {strings.map((_, i) => (
                   <div key={i} className="w-1.5 h-1.5 bg-gradient-to-br from-white to-gray-200 rounded-full shadow-sm border border-gray-300"></div>
                 ))}
               </div>
-              {/* Saddle - bone colored */}
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-gray-100 via-white to-gray-100 rounded-t shadow-sm"></div>
             </div>
             
-            {/* Body binding */}
             <div className="absolute inset-0 rounded-full border-4 border-amber-600/60 shadow-inner"></div>
             
-            {/* Top bracing pattern (visible through finish) */}
             <div className="absolute inset-0 opacity-10">
               <div className="absolute top-1/3 left-1/4 w-12 h-0.5 bg-amber-900 rotate-45"></div>
               <div className="absolute top-1/3 right-1/4 w-12 h-0.5 bg-amber-900 -rotate-45"></div>
@@ -964,23 +1454,64 @@ const InteractiveGuitar: React.FC = () => {
             key={index}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all ${
+            className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all flex items-center gap-1 ${
               heldChord === index 
                 ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg' 
+                : favoriteChords.includes(chord.name)
+                ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-amber-100 shadow-lg'
                 : 'bg-amber-700 text-amber-100 hover:bg-amber-600 shadow-md'
             }`}
-            onClick={() => applyChord(index)}
+            onClick={() => {
+              applyChord(index);
+              setTimeout(() => handleStrum('down'), 50);
+            }}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              toggleFavoriteChord(chord.name);
+            }}
           >
             {chord.name}
+            {favoriteChords.includes(chord.name) && <Star className="h-3 w-3 fill-current" />}
           </motion.button>
         ))}
       </div>
 
       {/* Current chord display */}
-      {currentChordName && (
-        <div className="text-center mt-4 bg-gradient-to-r from-amber-500/20 to-orange-500/20 backdrop-blur-sm rounded-full px-6 py-3 border border-amber-400/30">
-          <span className="text-amber-100 font-medium">Current Chord:</span>
-          <span className="ml-2 font-bold text-amber-300 text-xl">{currentChordName}</span>
+      {currentChord.name && (
+        <div className="text-center mt-4 bg-gradient-to-r from-amber-500/20 to-orange-500/20 backdrop-blur-sm rounded-xl p-4 border border-amber-400/30">
+          <span className="text-amber-100 font-medium">Current Chord: </span>
+          <span className="font-bold text-amber-300 text-xl">{currentChord.name}</span>
+          
+          {currentChord.notes.length > 0 && (
+            <div className="mt-2 text-amber-200 text-sm">
+              Notes: {currentChord.notes.join(', ')}
+            </div>
+          )}
+          
+          {currentChord.intervals.length > 0 && (
+            <div className="mt-1 text-amber-200 text-xs">
+              Intervals: {currentChord.intervals.join(', ')}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Practice mode display */}
+      {practiceMode && currentExercise && (
+        <div className="text-center mt-4 bg-gradient-to-r from-purple-500/20 to-blue-500/20 backdrop-blur-sm rounded-xl p-4 border border-purple-400/30">
+          <div className="text-white font-medium mb-2">{currentExercise.title}</div>
+          <div className="text-purple-200 text-sm mb-3">{currentExercise.description}</div>
+          
+          <div className="bg-white/10 rounded-full h-2 mb-2">
+            <div 
+              className="bg-purple-500 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${exerciseProgress}%` }}
+            />
+          </div>
+          
+          <div className="text-white text-sm">
+            Progress: {exerciseProgress}% Complete
+          </div>
         </div>
       )}
 
@@ -1023,27 +1554,44 @@ const InteractiveGuitar: React.FC = () => {
         >
           <RotateCcw className="h-5 w-5" />
         </button>
-        
+
         <button
-          onClick={() => setShowSettings(!showSettings)}
-          className={`text-white/80 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10 shadow-lg ${showSettings ? 'bg-white/20' : ''}`}
+          onClick={toggleRecording}
+          className={`text-white/80 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10 shadow-lg ${
+            isRecording ? 'bg-red-500/20 text-red-300' : ''
+          }`}
         >
-          <Settings className="h-5 w-5" />
-        </button>
-        
-        <button
-          onClick={() => setShowInfo(!showInfo)}
-          className={`text-white/80 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10 shadow-lg ${showInfo ? 'bg-white/20' : ''}`}
-        >
-          <Info className="h-5 w-5" />
+          <div className="relative">
+            <div className={`h-2 w-2 rounded-full bg-current ${isRecording ? 'animate-pulse' : ''}`}></div>
+            {isRecording && (
+              <div className="absolute inset-0 border border-current rounded-full animate-ping"></div>
+            )}
+          </div>
         </button>
 
-        {/* Play Chord Button */}
+        {recordedPerformance.length > 0 && !isRecording && (
+          <button
+            onClick={playRecording}
+            className="text-white/80 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10 shadow-lg"
+          >
+            <Play className="h-5 w-5" />
+          </button>
+        )}
+
+        <button
+          onClick={() => setMetronomeActive(!metronomeActive)}
+          className={`text-white/80 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10 shadow-lg ${
+            metronomeActive ? 'bg-green-500/20 text-green-300' : ''
+          }`}
+        >
+          <Metronome className="h-5 w-5" />
+        </button>
+
         <button
           onClick={playCurrentChord}
-          disabled={currentChordName === "" || isMuted}
+          disabled={currentChord.name === "" || isMuted}
           className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition-all shadow-lg ${
-            currentChordName === "" || isMuted 
+            currentChord.name === "" || isMuted 
               ? 'opacity-50 bg-gray-600' 
               : 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 hover:from-green-500/30 hover:to-emerald-500/30'
           }`}
@@ -1062,6 +1610,7 @@ const InteractiveGuitar: React.FC = () => {
             exit={{ opacity: 0, y: -20 }}
             className="text-center mt-4 bg-gradient-to-r from-amber-500/20 to-orange-500/20 backdrop-blur-sm border border-amber-500/30 rounded-full px-4 py-2 text-white text-sm font-medium inline-block"
           >
+            <Zap className="inline w-4 h-4 mr-2" />
             {isTouch ? 'Tap frets to play • Swipe to strum' : 'Click frets to play • Drag to strum'}
           </motion.div>
         )}
@@ -1081,143 +1630,33 @@ const InteractiveGuitar: React.FC = () => {
         </motion.div>
       )}
 
-      {/* Settings Panel */}
-      <AnimatePresence>
-        {showSettings && (
-          <motion.div
-            initial={{ opacity: 0, height: 0, scale: 0.95 }}
-            animate={{ opacity: 1, height: 'auto', scale: 1 }}
-            exit={{ opacity: 0, height: 0, scale: 0.95 }}
-            className="bg-gradient-to-br from-black/40 to-black/60 backdrop-blur-md rounded-xl p-6 mt-6 border border-white/10 shadow-2xl"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-white font-semibold text-lg flex items-center gap-2">
-                <Settings className="h-5 w-5" />
-                Guitar Settings
-              </h3>
-              <button
-                onClick={() => setShowSettings(false)}
-                className="text-white/60 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
-              >
-                ✕
-              </button>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div className="bg-white/5 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="text-white font-medium flex items-center gap-2">
-                      <Volume2 className="h-4 w-4" />
-                      Volume
-                    </label>
-                    <span className="text-amber-400 font-mono text-sm">
-                      {Math.round(volume * 100)}%
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.1"
-                    value={volume}
-                    onChange={(e) => setVolume(parseFloat(e.target.value))}
-                    className="w-full accent-amber-500 bg-white/10 rounded-lg"
-                  />
-                </div>
-                
-                <div className="bg-white/5 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="text-white font-medium">Tempo</label>
-                    <span className="text-purple-400 font-mono text-sm">
-                      {tempo} BPM
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min="60"
-                    max="180"
-                    step="10"
-                    value={tempo}
-                    onChange={(e) => setTempo(parseInt(e.target.value))}
-                    className="w-full accent-purple-500 bg-white/10 rounded-lg"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="bg-white/5 rounded-lg p-4">
-                  <label className="text-white font-medium block mb-3">Waveform</label>
-                  <select
-                    value={waveform}
-                    onChange={(e) => setWaveform(e.target.value as OscillatorType)}
-                    className="w-full bg-black/50 text-white rounded-lg px-3 py-2 border border-white/20 focus:border-blue-400 focus:outline-none"
-                  >
-                    <option value="sawtooth">Sawtooth (Guitar-like)</option>
-                    <option value="sine">Sine</option>
-                    <option value="square">Square</option>
-                    <option value="triangle">Triangle</option>
-                  </select>
-                </div>
-                
-                <div className="bg-white/5 rounded-lg p-4">
-                  <label className="text-white font-medium block mb-3">Tuning</label>
-                  <div className="bg-black/50 text-white rounded-lg px-3 py-2 border border-white/20">
-                    <span className="text-amber-400">Standard: E-A-D-G-B-E</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Recording indicator */}
+      {isRecording && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center mt-4"
+        >
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500/20 to-pink-500/20 backdrop-blur-sm rounded-full px-4 py-2 text-white text-sm border border-red-500/30">
+            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+            <span>Recording...</span>
+          </div>
+        </motion.div>
+      )}
 
-      {/* Info Panel */}
-      <AnimatePresence>
-        {showInfo && (
-          <motion.div
-            initial={{ opacity: 0, height: 0, scale: 0.95 }}
-            animate={{ opacity: 1, height: 'auto', scale: 1 }}
-            exit={{ opacity: 0, height: 0, scale: 0.95 }}
-            className="bg-gradient-to-br from-black/40 to-black/60 backdrop-blur-md rounded-xl p-6 mt-6 border border-white/10 shadow-2xl"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-white font-semibold text-lg flex items-center gap-2">
-                <Info className="h-5 w-5" />
-                Guitar Guide
-              </h3>
-              <button
-                onClick={() => setShowInfo(false)}
-                className="text-white/60 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
-              >
-                ✕
-              </button>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div className="bg-white/5 rounded-lg p-3">
-                <h4 className="text-amber-400 font-medium mb-2">Playing Guide</h4>
-                <div className="space-y-1 text-white/80">
-                  <div>• Click on frets to play notes</div>
-                  <div>• Swipe vertically to strum strings</div>
-                  <div>• Hold multiple frets to form chords</div>
-                  <div>• Use chord buttons to apply common chords</div>
-                </div>
-              </div>
-              
-              <div className="bg-white/5 rounded-lg p-3">
-                <h4 className="text-purple-400 font-medium mb-2">Chord Recognition</h4>
-                <div className="space-y-1 text-white/80">
-                  <div>• Recognizes major, minor, 7th chords</div>
-                  <div>• Shows chord name above controls</div>
-                  <div>• Play chord button strums all active notes</div>
-                  <div>• Accurate fret positioning based on physics</div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Metronome indicator */}
+      {metronomeActive && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center mt-4"
+        >
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-sm rounded-full px-4 py-2 text-white text-sm border border-green-500/30">
+            <Metronome className="h-4 w-4" />
+            <span>Metronome: {timeSignature.beats}/{timeSignature.noteValue} • {tempo} BPM</span>
+          </div>
+        </motion.div>
+      )}
     </motion.div>
   );
 };
