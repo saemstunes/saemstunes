@@ -231,7 +231,16 @@ const SupportUs = () => {
                 </p>
               </CardContent>
               <CardFooter>
-                <Button variant="outline" className="w-full">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() =>
+                    window.open(
+                      "mailto:contact@saemstunes.com?cc=saem@saemstunes.com&subject=I%27d%20Like%20To%20Volunteer&body=Dear%20Saem,%0A%0AThis%20is%20my%20formal%20request%20to%20register%20my%20interest%20as%20a%20volunteer%20with%20the%20Saem%27s%20Tunes%20fraternity.%20My%20skills%20are...",
+                      "_blank"
+                    )
+                  }
+                  >
                   Join as Volunteer
                 </Button>
               </CardFooter>
@@ -246,7 +255,7 @@ const SupportUs = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground mb-4">
-                  Share our platform with your network and help us reach more music enthusiasts.
+                  Share our platform with your network and help us reach more music lovers & enthusiasts alike.
                 </p>
               </CardContent>
               <CardFooter>
