@@ -14,6 +14,7 @@ import Metronome from "@/components/music-tools/Metronome";
 import PitchFinder from "@/components/music-tools/PitchFinder";
 import ToolSuggestionForm from "@/components/music-tools/ToolSuggestionForm";
 import { 
+  Music,
   Lightbulb, 
   Piano, 
   Guitar, 
