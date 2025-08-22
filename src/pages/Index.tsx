@@ -305,9 +305,31 @@ const useInstrumentSelectorLogic = (user: any) => {
   };
 };
 
-// IMPROVED HERO BUTTON TEXT
-// Update your HomeHero component
 const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void; onTryTools: () => void }) => {
+  // Configuration for the mask - easily adjustable
+  const maskConfig = {
+    shape: 'ellipse', // 'circle' or 'ellipse'
+    width: '80%',     // Width of the visible area
+    height: '70%',    // Height of the visible area
+    innerOpacity: 1,  // Opacity at center (0-1)
+    outerOpacity: 0,  // Opacity at edges (0-1)
+    featherSize: '30%', // Size of the feathering transition
+    position: 'center' // Position of the visible area
+  };
+
+  // Generate the mask image based on configuration
+  const generateMaskImage = () => {
+    if (maskConfig.shape === 'circle') {
+      return `radial-gradient(circle at ${maskConfig.position}, 
+        black ${maskConfig.innerOpacity * 100}%, 
+        transparent ${100 - parseFloat(maskConfig.featherSize)}%)`;
+    } else {
+      return `radial-gradient(ellipse ${maskConfig.width} ${maskConfig.height} at ${maskConfig.position}, 
+        black ${maskConfig.innerOpacity * 100}%, 
+        transparent ${100 - parseFloat(maskConfig.featherSize)}%)`;
+    }
+  };
+
   return (
     <motion.section 
       className="relative text-center space-y-4 py-8 sm:py-12 h-screen flex items-center justify-center"
@@ -315,27 +337,33 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
     >
-      {/* DotGrid Background with feathering effect */}
+      {/* Enhanced Music Icons Grid Background with customizable feathering */}
       <div className="absolute top-0 left-0 w-screen h-full z-0 pointer-events-none">
-        <div className="w-full h-full 
-            [mask-image:radial-gradient(ellipse_at_center,black_50%,transparent_100%)]
-            [-webkit-mask-image:radial-gradient(ellipse_at_center,black_50%,transparent_100%)]
-            [mask-size:100%_100%]
-            [-webkit-mask-size:100%_100%]
-            [mask-repeat:no-repeat]
-            [-webkit-mask-repeat:no-repeat]">
+        <div 
+          className="w-full h-full"
+          style={{
+            maskImage: generateMaskImage(),
+            WebkitMaskImage: generateMaskImage(),
+            maskSize: '100% 100%',
+            WebkitMaskSize: '100% 100%',
+            maskRepeat: 'no-repeat',
+            WebkitMaskRepeat: 'no-repeat',
+            maskPosition: 'center',
+            WebkitMaskPosition: 'center',
+          }}
+        >
           <DotGrid
-            dotSize={5.5}
-            gap={12}
+            iconSize={20}
+            gap={30}
             lightBaseColor="#f5f2e6"
             lightActiveColor="#A67C00"
             darkBaseColor="#3a2e2e"
             darkActiveColor="#A67C00"
-            proximity={70}
+            proximity={80}
             shockRadius={80}
             shockStrength={2.5}
-            resistance={800}
-            returnDuration={2.1}
+            resistance={700}
+            returnDuration={1.5}
             className="w-full h-full"
           />
         </div>
