@@ -13,7 +13,7 @@ import FourPointerSection from "@/components/homepage/FourPointerSection";
 import LazyVisionSection from '@/components/LazyVisionSection';
 import InstrumentSelector from "@/components/ui/InstrumentSelector";
 import MusicToolsCarousel from "@/components/ui/MusicToolsCarousel";
-import MusicIconGrid from "@/components/effects/MusicIconGrid";
+import DotGrid from "@/components/effects/DotGrid";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -324,7 +324,7 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
             [-webkit-mask-size:100%_100%]
             [mask-repeat:no-repeat]
             [-webkit-mask-repeat:no-repeat]">
-          <MusicIconGrid
+          <DotGrid
             dotSize={5}
             gap={25}
             lightBaseColor="#f5f2e6"
