@@ -315,7 +315,7 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
     >
-      {/* DotGrid Background with feathering effect */}
+      {/* Music Icons Grid Background with feathering effect */}
       <div className="absolute top-0 left-0 w-screen h-full z-0 pointer-events-none">
         <div className="w-full h-full 
             [mask-image:radial-gradient(ellipse_at_center,black_50%,transparent_100%)]
@@ -325,24 +325,23 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
             [mask-repeat:no-repeat]
             [-webkit-mask-repeat:no-repeat]">
           <DotGrid
-            dotSize={5}
-            gap={25}
+            dotSize={20} // Adjusted for icons
+            gap={30}
             lightBaseColor="#f5f2e6"
             lightActiveColor="#A67C00"
             darkBaseColor="#3a2e2e"
             darkActiveColor="#A67C00"
             proximity={80}
-            speedTrigger={80},
-            shockRadius={120}
+            shockRadius={80}
             shockStrength={2.5}
-            resistance={800}
-            returnDuration={2.1}
+            resistance={700}
+            returnDuration={1.5}
             className="w-full h-full"
           />
         </div>
       </div>
       
-      {/* Content */}
+      {/* Content remains the same */}
       <div className="relative z-10 max-w-4xl mx-auto px-4">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 sm:mb-6">
           Welcome to{" "}
