@@ -46,7 +46,7 @@ npm v8+
 
 Clone and install dependencies:
 
-git clone https://github.com/saem/tunes-app.git cd tunes-app npm install
+git clone https://github.com/saemstunes/saemstunes.git cd saemstunes npm install
 
 To start the development server:
 
