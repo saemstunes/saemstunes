@@ -388,7 +388,7 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
                           key={item.name}
                           variant="ghost"
                           size="sm"
-                          className="justify-start gap-3 text-muted-foreground hover:text-gold"
+                          className="justify-start gap-3 text-muted-foreground hover:text-gold-dark"
                           onClick={() => handleNavigation(item.href)}
                           aria-label={item.ariaLabel}
                         >
