@@ -3,7 +3,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CreditCard, RotateCcw, ShoppingBag, Music, Calendar, UserCheck, Zap, Loader2 } from "lucide-react";
+import { ArrowLeft, CreditCard, RotateCcw, ShoppingBag, Music, Calendar, UserCheck, Zap, Loader2, Crown, Star, Award } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -451,7 +451,7 @@ const Subscriptions = () => {
         >
           <TabsList className="grid grid-cols-3 w-full md:w-[500px]">
             <TabsTrigger value="subscriptions">
-              <RotateCcw className="h-4 w-4 mr-2" />
+              <Crown className="h-4 w-4 mr-2" />
               Subscriptions
             </TabsTrigger>
             <TabsTrigger value="payments">
@@ -467,20 +467,36 @@ const Subscriptions = () => {
           <TabsContent value="subscriptions" className="mt-6 space-y-6">
             <div className="space-y-6">
               {!user && (
-                <Alert>
-                  <AlertTitle>Sign in to manage subscriptions</AlertTitle>
-                  <AlertDescription>
-                    You need to be logged in to manage your subscriptions.
-                    <div className="flex gap-2 mt-2">
-                      <Button onClick={() => navigate("/auth")} size="sm">
+                <Card className="border-gold/30 bg-gradient-to-r from-gold/5 to-amber-50">
+                  <CardHeader>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 bg-gold/20 rounded-full">
+                        <Crown className="h-6 w-6 text-gold" />
+                      </div>
+                      <CardTitle className="text-gold-foreground">Unlock Premium Features</CardTitle>
+                    </div>
+                    <CardDescription className="text-base">
+                      Sign in to access and manage your subscriptions. Get personalized lessons, exclusive content, and track your progress.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Button 
+                        onClick={() => navigate("/auth")} 
+                        className="bg-gold hover:bg-gold/90 text-white"
+                      >
                         Sign In
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => navigate("/auth?signup=true")}>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => navigate("/auth?signup=true")}
+                        className="border-gold text-gold hover:bg-gold/10"
+                      >
                         Create Account
                       </Button>
                     </div>
-                  </AlertDescription>
-                </Alert>
+                  </CardContent>
+                </Card>
               )}
               
               {userSubscription && (
@@ -533,33 +549,33 @@ const Subscriptions = () => {
                 </div>
               </div>
               
-              <div className="bg-muted rounded-lg p-6 max-w-3xl mx-auto">
-                <h3 className="text-lg font-medium mb-2 text-center">Why subscribe to Saem's Tunes?</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                  <div className="text-center">
-                    <div className="bg-gold/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2">
-                      <Music className="h-6 w-6 text-gold" />
+              <div className="w-full bg-gradient-to-r from-amber-50 to-gold/5 rounded-lg p-6 md:p-8">
+                <h3 className="text-xl font-proxima font-semibold mb-6 text-center">Why subscribe to Saem's Tunes?</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="text-center bg-white p-6 rounded-lg shadow-sm border">
+                    <div className="bg-gold/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Award className="h-6 w-6 text-gold" />
                     </div>
-                    <h4 className="font-medium">Exclusive Content</h4>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <h4 className="font-proxima font-semibold mb-2">Exclusive Content</h4>
+                    <p className="text-sm text-muted-foreground">
                       Access premium lessons and resources not available to free users
                     </p>
                   </div>
-                  <div className="text-center">
-                    <div className="bg-gold/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <div className="text-center bg-white p-6 rounded-lg shadow-sm border">
+                    <div className="bg-gold/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
                       <UserCheck className="h-6 w-6 text-gold" />
                     </div>
-                    <h4 className="font-medium">Personal Coaching</h4>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <h4 className="font-proxima font-semibold mb-2">Personal Coaching</h4>
+                    <p className="text-sm text-muted-foreground">
                       Get personalized feedback and guidance from experienced instructors
                     </p>
                   </div>
-                  <div className="text-center">
-                    <div className="bg-gold/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <div className="text-center bg-white p-6 rounded-lg shadow-sm border">
+                    <div className="bg-gold/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
                       <Calendar className="h-6 w-6 text-gold" />
                     </div>
-                    <h4 className="font-medium">Flexible Booking</h4>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <h4 className="font-proxima font-semibold mb-2">Flexible Booking</h4>
+                    <p className="text-sm text-muted-foreground">
                       Book sessions at your convenience with our easy scheduling system
                     </p>
                   </div>
@@ -665,7 +681,39 @@ const Subscriptions = () => {
           </TabsContent>
           
           <TabsContent value="usage" className="mt-6 space-y-6">
-            {user && userSubscription && userCredits ? (
+            {!user ? (
+              <Card className="border-gold/30 bg-gradient-to-r from-gold/5 to-amber-50">
+                <CardHeader>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 bg-gold/20 rounded-full">
+                      <Star className="h-6 w-6 text-gold" />
+                    </div>
+                    <CardTitle className="text-gold-foreground">Track Your Progress</CardTitle>
+                  </div>
+                  <CardDescription className="text-base">
+                    Sign in to view your usage statistics, remaining credits, and upcoming sessions. 
+                    Monitor your musical journey and make the most of your subscription.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button 
+                      onClick={() => navigate("/auth")} 
+                      className="bg-gold hover:bg-gold/90 text-white"
+                    >
+                      Sign In
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => navigate("/auth?signup=true")}
+                      className="border-gold text-gold hover:bg-gold/10"
+                    >
+                      Create Account
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : userSubscription && userCredits ? (
               <>
                 <Card>
                   <CardHeader>
@@ -739,17 +787,12 @@ const Subscriptions = () => {
               </>
             ) : (
               <Alert>
-                <AlertTitle>{user ? "No active subscription" : "Authentication required"}</AlertTitle>
+                <AlertTitle>No active subscription</AlertTitle>
                 <AlertDescription>
-                  {user 
-                    ? "You need an active subscription to access credits and book sessions."
-                    : "You need to be logged in to view your usage and credits."
-                  }
-                  {user && (
-                    <Button className="ml-4" onClick={() => setActiveTab("subscriptions")}>
-                      View Plans
-                    </Button>
-                  )}
+                  You need an active subscription to access credits and book sessions.
+                  <Button className="ml-4" onClick={() => setActiveTab("subscriptions")}>
+                    View Plans
+                  </Button>
                 </AlertDescription>
               </Alert>
             )}
