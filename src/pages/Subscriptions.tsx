@@ -706,7 +706,7 @@ const Subscriptions = () => {
                     <Button 
                       variant="outline" 
                       onClick={() => navigate("/auth?signup=true")}
-                      className="border-gold text-gold hover:bg-gold/10 dark:border-gold dark:text-gold dark:hover:bg-gold/20"
+                      className="border-gold text-gold hover:bg-gold/10 dark:border-gold dark:text-gold dark:hover:bg-gold/80"
                     >
                       Create Account
                     </Button>
