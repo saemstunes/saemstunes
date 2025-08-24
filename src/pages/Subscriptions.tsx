@@ -3,7 +3,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CreditCard, RotateCcw, ShoppingBag, Music, Calendar, UserCheck, Zap, Loader2, Crown, Star, Award } from "lucide-react";
+import { ArrowLeft, CreditCard, ShoppingBag, Music, Calendar, UserCheck, Zap, Crown, Star, Award } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -363,15 +363,15 @@ const Subscriptions = () => {
   const getPaymentMethodColor = (type: string) => {
     switch (type) {
       case "card":
-        return "bg-blue-50 text-blue-500";
+        return "bg-blue-50 text-blue-500 dark:bg-blue-900/20 dark:text-blue-400";
       case "mpesa":
-        return "bg-green-50 text-green-600";
+        return "bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400";
       case "paypal":
-        return "bg-blue-100 text-blue-600";
+        return "bg-blue-100 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400";
       case "bank":
-        return "bg-gray-100 text-gray-600";
+        return "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400";
       default:
-        return "bg-gray-100 text-gray-500";
+        return "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400";
     }
   };
 
@@ -431,10 +431,10 @@ const Subscriptions = () => {
         </div>
   
         {contentType && contentId && (
-          <Alert className="bg-gold/10 border-gold">
+          <Alert className="bg-gold/10 border-gold dark:bg-gold/20 dark:border-gold/50">
             <ShoppingBag className="h-4 w-4 text-gold" />
-            <AlertTitle>Access Premium Content</AlertTitle>
-            <AlertDescription className="space-y-2">
+            <AlertTitle className="text-gold-foreground">Access Premium Content</AlertTitle>
+            <AlertDescription className="text-gold-foreground/90 space-y-2">
               <p>Subscribe to access {contentType === 'exclusive' ? 'exclusive content' : contentType}</p>
               <Button size="sm" className="bg-gold hover:bg-gold/90 text-white mt-2" onClick={() => setActiveTab("subscriptions")}>
                 View Plans
@@ -467,15 +467,15 @@ const Subscriptions = () => {
           <TabsContent value="subscriptions" className="mt-6 space-y-6">
             <div className="space-y-6">
               {!user && (
-                <Card className="border-gold/30 bg-gradient-to-r from-gold/5 to-amber-50">
+                <Card className="border-gold/30 bg-gradient-to-r from-amber-50 to-gold/5 dark:from-gold/10 dark:to-gold/5 dark:border-gold/20">
                   <CardHeader>
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="p-2 bg-gold/20 rounded-full">
-                        <Crown className="h-6 w-6 text-gold" />
+                      <div className="p-2 bg-gold/20 rounded-full dark:bg-gold/30">
+                        <Crown className="h-6 w-6 text-gold dark:text-gold" />
                       </div>
-                      <CardTitle className="text-gold-foreground">Unlock Premium Features</CardTitle>
+                      <CardTitle className="text-foreground">Unlock Premium Features</CardTitle>
                     </div>
-                    <CardDescription className="text-base">
+                    <CardDescription className="text-base text-foreground/80">
                       Sign in to access and manage your subscriptions. Get personalized lessons, exclusive content, and track your progress.
                     </CardDescription>
                   </CardHeader>
@@ -490,7 +490,7 @@ const Subscriptions = () => {
                       <Button 
                         variant="outline" 
                         onClick={() => navigate("/auth?signup=true")}
-                        className="border-gold text-gold hover:bg-gold/10"
+                        className="border-gold text-gold hover:bg-gold/10 dark:border-gold dark:text-gold dark:hover:bg-gold/20"
                       >
                         Create Account
                       </Button>
@@ -500,7 +500,7 @@ const Subscriptions = () => {
               )}
               
               {userSubscription && (
-                <Card className="border-gold/20 bg-gold/5">
+                <Card className="border-gold/20 bg-gold/5 dark:bg-gold/10 dark:border-gold/30">
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-center">
                       <div>
@@ -549,33 +549,33 @@ const Subscriptions = () => {
                 </div>
               </div>
               
-              <div className="w-full bg-gradient-to-r from-amber-50 to-gold/5 rounded-lg p-6 md:p-8">
-                <h3 className="text-xl font-proxima font-semibold mb-6 text-center">Why subscribe to Saem's Tunes?</h3>
+              <div className="w-full bg-gradient-to-r from-amber-50 to-gold/5 dark:from-gold/10 dark:to-gold/5 rounded-lg p-6 md:p-8">
+                <h3 className="text-xl font-proxima font-semibold mb-6 text-center text-foreground">Why subscribe to Saem's Tunes?</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="text-center bg-white p-6 rounded-lg shadow-sm border">
-                    <div className="bg-gold/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Award className="h-6 w-6 text-gold" />
+                  <div className="text-center bg-background p-6 rounded-lg shadow-sm border dark:bg-card dark:border-border">
+                    <div className="bg-gold/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-gold/30">
+                      <Award className="h-6 w-6 text-gold dark:text-gold" />
                     </div>
-                    <h4 className="font-proxima font-semibold mb-2">Exclusive Content</h4>
-                    <p className="text-sm text-muted-foreground">
+                    <h4 className="font-proxima font-semibold mb-2 text-foreground">Exclusive Content</h4>
+                    <p className="text-sm text-muted-foreground dark:text-muted-foreground">
                       Access premium lessons and resources not available to free users
                     </p>
                   </div>
-                  <div className="text-center bg-white p-6 rounded-lg shadow-sm border">
-                    <div className="bg-gold/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <UserCheck className="h-6 w-6 text-gold" />
+                  <div className="text-center bg-background p-6 rounded-lg shadow-sm border dark:bg-card dark:border-border">
+                    <div className="bg-gold/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-gold/30">
+                      <UserCheck className="h-6 w-6 text-gold dark:text-gold" />
                     </div>
-                    <h4 className="font-proxima font-semibold mb-2">Personal Coaching</h4>
-                    <p className="text-sm text-muted-foreground">
+                    <h4 className="font-proxima font-semibold mb-2 text-foreground">Personal Coaching</h4>
+                    <p className="text-sm text-muted-foreground dark:text-muted-foreground">
                       Get personalized feedback and guidance from experienced instructors
                     </p>
                   </div>
-                  <div className="text-center bg-white p-6 rounded-lg shadow-sm border">
-                    <div className="bg-gold/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Calendar className="h-6 w-6 text-gold" />
+                  <div className="text-center bg-background p-6 rounded-lg shadow-sm border dark:bg-card dark:border-border">
+                    <div className="bg-gold/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-gold/30">
+                      <Calendar className="h-6 w-6 text-gold dark:text-gold" />
                     </div>
-                    <h4 className="font-proxima font-semibold mb-2">Flexible Booking</h4>
-                    <p className="text-sm text-muted-foreground">
+                    <h4 className="font-proxima font-semibold mb-2 text-foreground">Flexible Booking</h4>
+                    <p className="text-sm text-muted-foreground dark:text-muted-foreground">
                       Book sessions at your convenience with our easy scheduling system
                     </p>
                   </div>
@@ -597,7 +597,7 @@ const Subscriptions = () => {
                   paymentMethods.map((method) => (
                     <div 
                       key={method.id} 
-                      className="flex items-center justify-between border rounded-lg p-4"
+                      className="flex items-center justify-between border rounded-lg p-4 dark:border-border"
                     >
                       <div className="flex items-center gap-4">
                         <div className={cn(
@@ -607,7 +607,7 @@ const Subscriptions = () => {
                           {getPaymentMethodIcon(method.type)}
                         </div>
                         <div>
-                          <p className="font-medium">
+                          <p className="font-medium text-foreground">
                             {formatPaymentMethodName(method)}
                           </p>
                           <p className="text-sm text-muted-foreground">
@@ -617,7 +617,7 @@ const Subscriptions = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         {method.is_default && (
-                          <Badge variant="secondary" className="bg-gold/20 text-gold-foreground">Default</Badge>
+                          <Badge variant="secondary" className="bg-gold/20 text-gold-foreground dark:bg-gold/30 dark:text-gold">Default</Badge>
                         )}
                         {!method.is_default && (
                           <Button 
@@ -641,7 +641,7 @@ const Subscriptions = () => {
                 ) : (
                   <div className="text-center py-8">
                     <CreditCard className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="font-medium mb-2">No payment methods</h3>
+                    <h3 className="font-medium mb-2 text-foreground">No payment methods</h3>
                     <p className="text-sm text-muted-foreground mb-4">
                       Add a payment method to make subscribing easier.
                     </p>
@@ -669,9 +669,9 @@ const Subscriptions = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="rounded-lg border border-dashed p-8 text-center">
+                <div className="rounded-lg border border-dashed p-8 text-center dark:border-border">
                   <CreditCard className="h-8 w-8 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="font-medium mb-2">No transactions yet</h3>
+                  <h3 className="font-medium mb-2 text-foreground">No transactions yet</h3>
                   <p className="text-sm text-muted-foreground mb-4">
                     Your billing history will appear here once you make a purchase.
                   </p>
@@ -682,15 +682,15 @@ const Subscriptions = () => {
           
           <TabsContent value="usage" className="mt-6 space-y-6">
             {!user ? (
-              <Card className="border-gold/30 bg-gradient-to-r from-gold/5 to-amber-50">
+              <Card className="border-gold/30 bg-gradient-to-r from-amber-50 to-gold/5 dark:from-gold/10 dark:to-gold/5 dark:border-gold/20">
                 <CardHeader>
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 bg-gold/20 rounded-full">
-                      <Star className="h-6 w-6 text-gold" />
+                    <div className="p-2 bg-gold/20 rounded-full dark:bg-gold/30">
+                      <Star className="h-6 w-6 text-gold dark:text-gold" />
                     </div>
-                    <CardTitle className="text-gold-foreground">Track Your Progress</CardTitle>
+                    <CardTitle className="text-foreground">Track Your Progress</CardTitle>
                   </div>
-                  <CardDescription className="text-base">
+                  <CardDescription className="text-base text-foreground/80">
                     Sign in to view your usage statistics, remaining credits, and upcoming sessions. 
                     Monitor your musical journey and make the most of your subscription.
                   </CardDescription>
@@ -706,7 +706,7 @@ const Subscriptions = () => {
                     <Button 
                       variant="outline" 
                       onClick={() => navigate("/auth?signup=true")}
-                      className="border-gold text-gold hover:bg-gold/10"
+                      className="border-gold text-gold hover:bg-gold/10 dark:border-gold dark:text-gold dark:hover:bg-gold/20"
                     >
                       Create Account
                     </Button>
@@ -740,21 +740,21 @@ const Subscriptions = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="border rounded-lg p-4">
-                        <h4 className="font-medium mb-2">Private Lesson</h4>
+                      <div className="border rounded-lg p-4 dark:border-border">
+                        <h4 className="font-medium mb-2 text-foreground">Private Lesson</h4>
                         <p className="text-sm text-muted-foreground mb-3">1-on-1 session with an instructor</p>
                         <div className="flex justify-between items-center">
-                          <span className="font-semibold">1 credit</span>
+                          <span className="font-semibold text-foreground">1 credit</span>
                           <Button size="sm" onClick={handleBookSession}>
                             Book Now
                           </Button>
                         </div>
                       </div>
-                      <div className="border rounded-lg p-4">
-                        <h4 className="font-medium mb-2">Group Session</h4>
+                      <div className="border rounded-lg p-4 dark:border-border">
+                        <h4 className="font-medium mb-2 text-foreground">Group Session</h4>
                         <p className="text-sm text-muted-foreground mb-3">Join a group learning session</p>
                         <div className="flex justify-between items-center">
-                          <span className="font-semibold">2 credits</span>
+                          <span className="font-semibold text-foreground">2 credits</span>
                           <Button size="sm" onClick={handleBookSession}>
                             Book Now
                           </Button>
@@ -772,9 +772,9 @@ const Subscriptions = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="rounded-lg border border-dashed p-8 text-center">
+                    <div className="rounded-lg border border-dashed p-8 text-center dark:border-border">
                       <Calendar className="h-8 w-8 mx-auto text-muted-foreground mb-4" />
-                      <h3 className="font-medium mb-2">No upcoming sessions</h3>
+                      <h3 className="font-medium mb-2 text-foreground">No upcoming sessions</h3>
                       <p className="text-sm text-muted-foreground mb-4">
                         Book your first session to get started on your musical journey.
                       </p>
