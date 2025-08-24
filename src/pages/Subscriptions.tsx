@@ -3,7 +3,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Bank, CreditCard, ShoppingBag, Music, Calendar, UserCheck, Zap, Crown, Star, Award } from "lucide-react";
+import { ArrowLeft, Wallet, CreditCard, ShoppingBag, Music, Calendar, UserCheck, Zap, Crown, Star, Award } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -455,7 +455,7 @@ const Subscriptions = () => {
               Subscriptions
             </TabsTrigger>
             <TabsTrigger value="payments">
-              <Bank className="h-4 w-4 mr-2" />
+              <Wallet className="h-4 w-4 mr-2" />
               Payment Methods
             </TabsTrigger>
             <TabsTrigger value="usage">
