@@ -455,7 +455,12 @@ const Subscriptions = () => {
               Subscriptions
             </TabsTrigger>
             <TabsTrigger value="payments">
-              <Wallet className="h-4 w-4 mr-2" />
+              <Wallet
+                className="h-4 w-4 mr-2"
+                stroke="currentColor"
+                fill="none"
+                strokeWidth={2}
+                />
               Payment Methods
             </TabsTrigger>
             <TabsTrigger value="usage">
