@@ -3,7 +3,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CreditCard, Gift, RotateCcw, ShoppingBag, Music, Calendar, UserCheck, Zap } from "lucide-react";
+import { ArrowLeft, CreditCard, RotateCcw, ShoppingBag, Music, Calendar, UserCheck, Zap, Loader2 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -13,43 +13,53 @@ import { useToast } from "@/hooks/use-toast";
 import PricingCard from "@/components/subscription/PricingCard";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface PaymentMethod {
   id: string;
-  name: string;
-  last4: string;
-  expiry: string;
+  user_id: string;
   type: "card" | "mpesa" | "paypal" | "bank";
-  isDefault: boolean;
+  provider_id: string | null;
+  is_default: boolean;
+  details: {
+    brand?: string;
+    last4?: string;
+    expiry_month?: number;
+    expiry_year?: number;
+    phone?: string;
+    email?: string;
+    [key: string]: any;
+  };
+  created_at: string;
+  updated_at: string;
 }
 
-// Mock user subscription data
-const mockUserSubscription = {
-  planId: "pro",
-  status: "active",
-  validUntil: "2024-12-31",
-  credits: 5,
-  usedCredits: 2
-};
+interface UserSubscription {
+  id: string;
+  user_id: string;
+  type: string;
+  status: string;
+  valid_from: string;
+  valid_until: string | null;
+  payment_id: string | null;
+  payment_method_id: string | null;
+  created_at: string;
+  updated_at: string;
+  plan: {
+    id: string;
+    name: string;
+    price: number;
+    interval: string;
+    credits: number;
+  };
+}
 
-const samplePaymentMethods: PaymentMethod[] = [
-  {
-    id: "card1",
-    name: "Visa ending in 4242",
-    last4: "4242",
-    expiry: "09/25",
-    type: "card",
-    isDefault: true
-  },
-  {
-    id: "mpesa1",
-    name: "M-Pesa",
-    last4: "2547",
-    expiry: "",
-    type: "mpesa",
-    isDefault: false
-  }
-];
+interface UserCredits {
+  total: number;
+  used: number;
+  available: number;
+}
 
 const Subscriptions = () => {
   const navigate = useNavigate();
@@ -57,21 +67,199 @@ const Subscriptions = () => {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"subscriptions" | "payments" | "usage">("subscriptions");
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>(samplePaymentMethods);
-  const [userSubscription, setUserSubscription] = useState(mockUserSubscription);
-  const [isLoading, setIsLoading] = useState(false);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [userSubscription, setUserSubscription] = useState<UserSubscription | null>(null);
+  const [userCredits, setUserCredits] = useState<UserCredits | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
   
   const urlSearchParams = new URLSearchParams(location.search);
   const contentType = urlSearchParams.get('contentType');
   const contentId = urlSearchParams.get('contentId');
 
   useEffect(() => {
-    // In a real app, you would fetch the user's subscription and payment methods here
-    // For demo purposes, we're using mock data
+    if (user) {
+      fetchUserData();
+    } else {
+      setIsLoading(false);
+    }
   }, [user]);
+
+  const fetchUserData = async () => {
+    try {
+      setIsLoading(true);
+      await Promise.all([
+        fetchUserSubscription(),
+        fetchPaymentMethods(),
+        fetchUserCredits()
+      ]);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load your data. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchUserSubscription = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .select(`
+        *,
+        payments(*)
+      `)
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .order('valid_until', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error("Error fetching subscription:", error);
+      return;
+    }
+
+    if (data) {
+      const plan = mockSubscriptionPlans.find(p => p.id === data.type) || {
+        id: data.type,
+        name: data.type.charAt(0).toUpperCase() + data.type.slice(1),
+        price: 0,
+        interval: 'month',
+        credits: 0
+      };
+      
+      setUserSubscription({
+        ...data,
+        plan
+      });
+    }
+  };
+
+  const fetchPaymentMethods = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('payment_methods')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('is_default', { ascending: false })
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("Error fetching payment methods:", error);
+      return;
+    }
+
+    setPaymentMethods(data);
+  };
+
+  const fetchUserCredits = async () => {
+    if (!user) return;
+
+    try {
+      const { data: subscriptionData } = await supabase
+        .from('subscriptions')
+        .select('type, valid_until')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .order('valid_until', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (subscriptionData) {
+        const plan = mockSubscriptionPlans.find(p => p.id === subscriptionData.type);
+        const totalCredits = plan?.credits || 0;
+        
+        const { count: usedCredits } = await supabase
+          .from('bookings')
+          .select('*', { count: 'exact' })
+          .eq('student_id', user.id)
+          .gte('start_time', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString())
+          .lte('start_time', new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString())
+          .eq('status', 'completed');
+
+        setUserCredits({
+          total: totalCredits,
+          used: usedCredits || 0,
+          available: totalCredits - (usedCredits || 0)
+        });
+      } else {
+        setUserCredits({
+          total: 0,
+          used: 0,
+          available: 0
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching user credits:", error);
+    }
+  };
 
   const handleAddPaymentMethod = () => {
     navigate("/add-payment-method");
+  };
+
+  const handleSetDefaultPaymentMethod = async (methodId: string) => {
+    try {
+      const { error } = await supabase
+        .from('payment_methods')
+        .update({ is_default: false })
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+
+      const { error: updateError } = await supabase
+        .from('payment_methods')
+        .update({ is_default: true })
+        .eq('id', methodId);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: "Success",
+        description: "Default payment method updated",
+      });
+
+      fetchPaymentMethods();
+    } catch (error) {
+      console.error("Error setting default payment method:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update default payment method",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRemovePaymentMethod = async (methodId: string) => {
+    try {
+      const { error } = await supabase
+        .from('payment_methods')
+        .delete()
+        .eq('id', methodId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Payment method removed",
+      });
+
+      fetchPaymentMethods();
+    } catch (error) {
+      console.error("Error removing payment method:", error);
+      toast({
+        title: "Error",
+        description: "Failed to remove payment method",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSubscribe = async (planId: string) => {
@@ -85,24 +273,72 @@ const Subscriptions = () => {
       return;
     }
 
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setUserSubscription({
-        planId,
-        status: "active",
-        validUntil: "2024-12-31",
-        credits: planId === "pro" ? 8 : 4,
-        usedCredits: 0
-      });
+    setIsProcessing(true);
+    try {
+      const defaultPaymentMethod = paymentMethods.find(method => method.is_default);
+      
+      if (!defaultPaymentMethod) {
+        toast({
+          title: "Payment method required",
+          description: "Please add a payment method before subscribing",
+          variant: "destructive",
+        });
+        setActiveTab("payments");
+        setIsProcessing(false);
+        return;
+      }
+
+      const plan = mockSubscriptionPlans.find(p => p.id === planId);
+      
+      const { data: payment, error: paymentError } = await supabase
+        .from('payments')
+        .insert({
+          user_id: user.id,
+          amount: plan?.price || 0,
+          method: defaultPaymentMethod.type,
+          status: 'completed',
+          reference: `sub_${Date.now()}`,
+          payment_method_id: defaultPaymentMethod.id,
+        })
+        .select()
+        .single();
+
+      if (paymentError) throw paymentError;
+
+      const validUntil = new Date();
+      validUntil.setMonth(validUntil.getMonth() + 1);
+
+      const { error: subError } = await supabase
+        .from('subscriptions')
+        .insert({
+          user_id: user.id,
+          type: planId,
+          status: 'active',
+          valid_from: new Date().toISOString(),
+          valid_until: validUntil.toISOString(),
+          payment_id: payment.id,
+          payment_method_id: defaultPaymentMethod.id,
+        });
+
+      if (subError) throw subError;
+
+      await fetchUserData();
       
       toast({
         title: "Subscription successful!",
-        description: `You've successfully subscribed to the ${mockSubscriptionPlans.find(p => p.id === planId)?.name} plan`,
+        description: `You've successfully subscribed to the ${plan?.name} plan`,
       });
       
-      setIsLoading(false);
-    }, 1500);
+    } catch (error) {
+      console.error("Error completing subscription:", error);
+      toast({
+        title: "Subscription failed",
+        description: "There was an error processing your subscription. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleBookSession = () => {
@@ -115,6 +351,10 @@ const Subscriptions = () => {
         return <div className="w-5 h-5 bg-green-600 rounded-full flex items-center justify-center text-white text-xs font-bold">M</div>;
       case "paypal":
         return <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">P</div>;
+      case "card":
+        return <CreditCard className="h-5 w-5" />;
+      case "bank":
+        return <div className="w-5 h-5 bg-gray-600 rounded-full flex items-center justify-center text-white text-xs font-bold">B</div>;
       default:
         return <CreditCard className="h-5 w-5" />;
     }
@@ -128,10 +368,47 @@ const Subscriptions = () => {
         return "bg-green-50 text-green-600";
       case "paypal":
         return "bg-blue-100 text-blue-600";
+      case "bank":
+        return "bg-gray-100 text-gray-600";
       default:
         return "bg-gray-100 text-gray-500";
     }
   };
+
+  const formatPaymentMethodName = (method: PaymentMethod) => {
+    switch (method.type) {
+      case "card":
+        return `${method.details.brand || 'Card'} ending in ${method.details.last4 || '****'}`;
+      case "mpesa":
+        return `M-Pesa ${method.details.phone ? `(${method.details.phone})` : ''}`;
+      case "paypal":
+        return `PayPal ${method.details.email ? `(${method.details.email})` : ''}`;
+      case "bank":
+        return `Bank Account ${method.details.last4 ? `(****${method.details.last4})` : ''}`;
+      default:
+        return "Payment Method";
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="space-y-6">
+          <div className="flex items-center">
+            <Skeleton className="h-10 w-24 mr-4" />
+            <div>
+              <Skeleton className="h-8 w-64 mb-2" />
+              <Skeleton className="h-4 w-80" />
+            </div>
+          </div>
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-full max-w-md" />
+            <Skeleton className="h-64 w-full" />
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
@@ -206,7 +483,7 @@ const Subscriptions = () => {
                 </Alert>
               )}
               
-              {userSubscription.status === "active" && (
+              {userSubscription && (
                 <Card className="border-gold/20 bg-gold/5">
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-center">
@@ -216,7 +493,7 @@ const Subscriptions = () => {
                           <Badge className="bg-green-600">Active</Badge>
                         </CardTitle>
                         <CardDescription>
-                          You're subscribed to the {mockSubscriptionPlans.find(p => p.id === userSubscription.planId)?.name} plan
+                          You're subscribed to the {userSubscription.plan.name} plan
                         </CardDescription>
                       </div>
                       <Button variant="outline" size="sm">
@@ -226,7 +503,7 @@ const Subscriptions = () => {
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground">
-                      Valid until: {new Date(userSubscription.validUntil).toLocaleDateString()}
+                      Valid until: {userSubscription.valid_until ? new Date(userSubscription.valid_until).toLocaleDateString() : "No expiration date"}
                     </p>
                   </CardContent>
                 </Card>
@@ -245,9 +522,9 @@ const Subscriptions = () => {
                       key={plan.id}
                       plan={plan}
                       variant={index === 1 ? "default" : "outline"}
-                      isCurrentPlan={userSubscription.planId === plan.id}
+                      isCurrentPlan={userSubscription?.plan.id === plan.id}
                       onSubscribe={() => handleSubscribe(plan.id)}
-                      isLoading={isLoading}
+                      isLoading={isProcessing}
                       className={cn(
                         index === 1 && "ring-2 ring-gold ring-offset-2"
                       )}
@@ -300,38 +577,60 @@ const Subscriptions = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {paymentMethods.map((method) => (
-                  <div 
-                    key={method.id} 
-                    className="flex items-center justify-between border rounded-lg p-4"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={cn(
-                        "p-2 rounded-full",
-                        getPaymentMethodColor(method.type)
-                      )}>
-                        {getPaymentMethodIcon(method.type)}
+                {paymentMethods.length > 0 ? (
+                  paymentMethods.map((method) => (
+                    <div 
+                      key={method.id} 
+                      className="flex items-center justify-between border rounded-lg p-4"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={cn(
+                          "p-2 rounded-full",
+                          getPaymentMethodColor(method.type)
+                        )}>
+                          {getPaymentMethodIcon(method.type)}
+                        </div>
+                        <div>
+                          <p className="font-medium">
+                            {formatPaymentMethodName(method)}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Added {new Date(method.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium">{method.name}</p>
-                        {method.expiry && (
-                          <p className="text-sm text-muted-foreground">Expires {method.expiry}</p>
+                      <div className="flex items-center gap-2">
+                        {method.is_default && (
+                          <Badge variant="secondary" className="bg-gold/20 text-gold-foreground">Default</Badge>
                         )}
+                        {!method.is_default && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleSetDefaultPaymentMethod(method.id)}
+                          >
+                            Set Default
+                          </Button>
+                        )}
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleRemovePaymentMethod(method.id)}
+                        >
+                          Remove
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {method.isDefault && (
-                        <Badge variant="secondary" className="bg-gold/20 text-gold-foreground">Default</Badge>
-                      )}
-                      <Button variant="ghost" size="sm">
-                        Edit
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        Remove
-                      </Button>
-                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <CreditCard className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="font-medium mb-2">No payment methods</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Add a payment method to make subscribing easier.
+                    </p>
                   </div>
-                ))}
+                )}
                 
                 <div className="flex flex-col sm:flex-row gap-3 mt-6">
                   <Button variant="outline" className="flex-1" onClick={handleAddPaymentMethod}>
@@ -366,20 +665,20 @@ const Subscriptions = () => {
           </TabsContent>
           
           <TabsContent value="usage" className="mt-6 space-y-6">
-            {userSubscription.status === "active" ? (
+            {user && userSubscription && userCredits ? (
               <>
                 <Card>
                   <CardHeader>
                     <CardTitle>Session Credits</CardTitle>
                     <CardDescription>
-                      You have {userSubscription.credits - userSubscription.usedCredits} out of {userSubscription.credits} credits remaining this month
+                      You have {userCredits.available} out of {userCredits.total} credits remaining this month
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Progress value={(userSubscription.usedCredits / userSubscription.credits) * 100} className="h-2 mb-4" />
+                    <Progress value={(userCredits.used / userCredits.total) * 100} className="h-2 mb-4" />
                     <div className="flex justify-between text-sm text-muted-foreground">
-                      <span>{userSubscription.usedCredits} used</span>
-                      <span>{userSubscription.credits - userSubscription.usedCredits} remaining</span>
+                      <span>{userCredits.used} used</span>
+                      <span>{userCredits.available} remaining</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -440,12 +739,17 @@ const Subscriptions = () => {
               </>
             ) : (
               <Alert>
-                <AlertTitle>No active subscription</AlertTitle>
+                <AlertTitle>{user ? "No active subscription" : "Authentication required"}</AlertTitle>
                 <AlertDescription>
-                  You need an active subscription to access credits and book sessions.
-                  <Button className="ml-4" onClick={() => setActiveTab("subscriptions")}>
-                    View Plans
-                  </Button>
+                  {user 
+                    ? "You need an active subscription to access credits and book sessions."
+                    : "You need to be logged in to view your usage and credits."
+                  }
+                  {user && (
+                    <Button className="ml-4" onClick={() => setActiveTab("subscriptions")}>
+                      View Plans
+                    </Button>
+                  )}
                 </AlertDescription>
               </Alert>
             )}
