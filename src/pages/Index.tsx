@@ -14,6 +14,7 @@ import LazyVisionSection from '@/components/LazyVisionSection';
 import InstrumentSelector from "@/components/ui/InstrumentSelector";
 import MusicToolsCarousel from "@/components/ui/MusicToolsCarousel";
 import { ShinyButton } from "@/components/magicui/shiny-button";
+import { ShinyText } from "@/components/effects/shiny-text";
 import DotGrid from "@/components/effects/DotGrid";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
