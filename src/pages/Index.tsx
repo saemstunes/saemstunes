@@ -372,7 +372,7 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
             className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-6 sm:px-8 group"
           >
             <PlayCircle className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
-            Try Music Tools
+            Try <span className="shiny-text button-shiny-text">Music Tools</span>
           </Button>
         </div>
       </div>
