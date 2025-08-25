@@ -13,8 +13,6 @@ import FourPointerSection from "@/components/homepage/FourPointerSection";
 import LazyVisionSection from '@/components/LazyVisionSection';
 import InstrumentSelector from "@/components/ui/InstrumentSelector";
 import MusicToolsCarousel from "@/components/ui/MusicToolsCarousel";
-import { ShinyButton } from "@/components/magicui/shiny-button";
-import { ShinyText } from "@/components/effects/shiny-text";
 import DotGrid from "@/components/effects/DotGrid";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -357,14 +355,14 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
           and join our vibrant community of music lovers.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-          <ShinyButton 
+          <Button 
             size="lg" 
             onClick={onExploreTracks}
             className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 group"
           >
             <Music className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
             Discover Music
-          </ShinyButton>
+          </Button>
           <Button 
             size="lg" 
             variant="outline"
@@ -372,7 +370,7 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
             className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-6 sm:px-8 group"
           >
             <PlayCircle className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
-            Try <span className="shiny-text button-shiny-text">Music Tools</span>
+            Try Music Tools
           </Button>
         </div>
       </div>

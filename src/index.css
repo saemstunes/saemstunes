@@ -219,60 +219,6 @@
       max-width: 240px;
     }
   }
-
-  /* Shiny Text Effect - Added for Music Tools button */
-  .shiny-text {
-    color: #b5b5b5a4;
-    background: linear-gradient(
-      120deg,
-      rgba(255, 255, 255, 0) 40%,
-      rgba(255, 255, 255, 0.8) 50%,
-      rgba(255, 255, 255, 0) 60%
-    );
-    background-size: 200% 100%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    display: inline-block;
-    animation: shine 3s linear infinite;
-  }
-
-  /* Dark mode adaptation for shiny text */
-  .dark .shiny-text {
-    color: rgba(255, 255, 255, 0.6);
-    background: linear-gradient(
-      120deg,
-      rgba(255, 215, 0, 0) 40%,
-      rgba(255, 215, 0, 0.7) 50%,
-      rgba(255, 215, 0, 0) 60%
-    );
-    background-size: 200% 100%;
-    -webkit-background-clip: text;
-    background-clip: text;
-  }
-
-  @keyframes shine {
-    0% {
-      background-position: 100%;
-    }
-    100% {
-      background-position: -100%;
-    }
-  }
-
-  .shiny-text.disabled {
-    animation: none;
-  }
-
-  /* Enhanced shiny text for button hover states */
-  .group:hover .shiny-text {
-    animation-duration: 1.5s;
-  }
-
-  /* Button-specific shiny text styling */
-  .button-shiny-text {
-    margin-left: 0.25rem;
-    font-weight: 500;
-  }
 }
 
 @layer components {
