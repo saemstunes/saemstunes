@@ -1,10 +1,9 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Users, MessageCircle, Music, Video, Bell, Bookmark, Award, Heart, Headphones } from "lucide-react";
+import { Users, MessageCircle, Music, Video, Bell, Award, Heart, Headphones, X, Mail, Sparkles } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +15,7 @@ import AudioSharingCard from "@/components/community/AudioSharingCard";
 import DirectMessaging from "@/components/community/DirectMessaging";
 import { useNavigate } from "react-router-dom";
 import SEOHead from "@/components/seo/SEOHead";
+import { Input } from "@/components/ui/input";
 
 // Mock audio tracks for audio sharing
 const AUDIO_TRACKS = [
@@ -24,7 +24,7 @@ const AUDIO_TRACKS = [
     title: 'Violin Practice - Bach Partita',
     artist: 'Sarah Williams',
     artistImage: '/placeholder.svg',
-    audioSrc: 'https://example.com/audio1.mp3', // Mock audio URL
+    audioSrc: 'https://example.com/audio1.mp3',
     duration: '1:45',
     likes: 24,
     comments: 4,
@@ -35,7 +35,7 @@ const AUDIO_TRACKS = [
     title: 'Piano Improvisation in G',
     artist: 'James Rodriguez',
     artistImage: '/placeholder.svg',
-    audioSrc: 'https://example.com/audio2.mp3', // Mock audio URL
+    audioSrc: 'https://example.com/audio2.mp3',
     duration: '2:30',
     likes: 37,
     comments: 12,
@@ -46,7 +46,7 @@ const AUDIO_TRACKS = [
     title: 'Guitar Solo - First Attempt',
     artist: 'Chris Thomas',
     artistImage: '/placeholder.svg',
-    audioSrc: 'https://example.com/audio3.mp3', // Mock audio URL
+    audioSrc: 'https://example.com/audio3.mp3',
     duration: '3:15',
     likes: 18,
     comments: 7,
@@ -59,7 +59,15 @@ const Community = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("discussions");
-  
+  const [showCommunityPreview, setShowCommunityPreview] = useState(true);
+  const [email, setEmail] = useState("");
+  const [emailSubmitted, setEmailSubmitted] = useState(false);
+
+  const handleEmailSubmit = (e) => {
+    e.preventDefault();
+    setEmailSubmitted(true);
+  };
+
   // SEO schema for community page
   const communitySchema = {
     "@context": "https://schema.org",
@@ -240,9 +248,47 @@ const Community = () => {
         url="https://saemstunes.app/community"
         structuredData={communitySchema}
       />
+      
+      {showCommunityPreview && (
+        <div className="relative bg-gradient-to-r from-gold/10 to-amber-50 border border-gold/30 rounded-lg p-4 mb-6">
+          <button 
+            onClick={() => setShowCommunityPreview(false)}
+            className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          
+          <div className="flex items-start gap-3">
+            <div className="bg-gold/20 p-2 rounded-full">
+              <Sparkles className="h-5 w-5 text-gold" />
+            </div>
+            
+            <div className="flex-1">
+              <h3 className="font-serif font-semibold text-lg mb-1">Community Hub Coming Soon!</h3>
+              <p className="text-sm text-muted-foreground mb-3">
+                We're building a vibrant space for musicians to connect, share, and grow together. 
+                While we're putting the finishing touches on chat and forums, you can still explore 
+                discussions, share audio, and connect with other music lovers.
+              </p>
+              
+              {!emailSubmitted ? (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Email us at <a href="mailto:contact@saemstunes.com" className="text-gold hover:underline">contact@saemstunes.com</a> to be notified when we launch.
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-green-50 text-green-700 text-sm p-2 rounded-md">
+                  Thanks for your interest! We'll be in touch when our community features are ready.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="space-y-6 pb-24 md:pb-12">
         {isMobile ? (
-          // Mobile Layout (Tab-based)
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h1 className="text-3xl font-serif font-bold">Community</h1>
@@ -403,7 +449,6 @@ const Community = () => {
             </Tabs>
           </div>
         ) : (
-          // Desktop Layout
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h1 className="text-3xl font-serif font-bold">Community</h1>
@@ -414,7 +459,6 @@ const Community = () => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Main content */}
               <div className="md:col-span-2 space-y-6">
                 <Tabs defaultValue="discussions">
                   <TabsList>
@@ -500,7 +544,6 @@ const Community = () => {
                 </Card>
               </div>
               
-              {/* Sidebar */}
               <div className="space-y-6">
                 <Card>
                   <CardHeader>
@@ -579,7 +622,6 @@ const Community = () => {
           </div>
         )}
         
-        {/* Legal Links Footer */}
         <div className="flex justify-center space-x-4 pt-8 border-t">
           <Button
             variant="link"
