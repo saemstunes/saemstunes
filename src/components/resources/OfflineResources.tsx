@@ -1,12 +1,13 @@
-
+// components/resources/OfflineResources.tsx
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { DownloadCloud, Search, Trash2, WifiOff } from 'lucide-react';
-import ResourceCard, { Resource } from './ResourceCard';
+import ResourceCard from './ResourceCard';
 import { useToast } from "@/hooks/use-toast";
+import { Resource } from "@/types/resource";
 
 interface OfflineResourcesProps {
   resources: Resource[];
@@ -24,22 +25,29 @@ const OfflineResources: React.FC<OfflineResourcesProps> = ({
   const filteredResources = resources.filter(resource => 
     resource.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     resource.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    resource.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+    (resource.tags && resource.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())))
   );
   
   const totalStorageUsed = resources.reduce((acc, resource) => {
-    const sizeMatch = resource.fileSize?.match(/(\d+)(\.\d+)?\s*(KB|MB|GB)/i);
-    if (!sizeMatch) return acc;
-    
-    const size = parseFloat(sizeMatch[1] + (sizeMatch[2] || ""));
-    const unit = sizeMatch[3].toUpperCase();
-    
-    switch(unit) {
-      case 'KB': return acc + size * 0.001;
-      case 'MB': return acc + size;
-      case 'GB': return acc + size * 1000;
-      default: return acc;
+    // Estimate storage based on resource type
+    let size = 0;
+    switch (resource.category_name) {
+      case "videos":
+        size = 100; // MB estimate
+        break;
+      case "infographics":
+        size = 5; // MB estimate
+        break;
+      case "audios":
+        size = 20; // MB estimate
+        break;
+      case "documents":
+        size = 2; // MB estimate
+        break;
+      default:
+        size = 5; // MB estimate
     }
+    return acc + size;
   }, 0);
   
   const availableStorage = 500; // 500 MB total storage
@@ -90,7 +98,7 @@ const OfflineResources: React.FC<OfflineResourcesProps> = ({
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div>
-          <h2 className="text-2xl font-proxima font-semibold">Offline Resources</h2>
+          <h2 className="text-2xl font-serif font-semibold">Offline Resources</h2>
           <p className="text-muted-foreground">Access your saved music resources without internet</p>
         </div>
         
@@ -127,7 +135,7 @@ const OfflineResources: React.FC<OfflineResourcesProps> = ({
           filteredResources.map((resource) => (
             <ResourceCard 
               key={resource.id}
-              resource={{...resource, offline: true}}
+              resource={resource}
               onBookmark={() => handleRemove(resource)}
               isBookmarked={true}
             />
