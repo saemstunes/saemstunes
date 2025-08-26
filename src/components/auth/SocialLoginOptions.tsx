@@ -112,7 +112,7 @@ export const SocialLoginOptions = () => {
 
   return (
     <div className="w-full space-y-4">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 mt-4">
         <Separator className="flex-1" />
         <span className="text-xs text-muted-foreground">OR CONTINUE WITH</span>
         <Separator className="flex-1" />
