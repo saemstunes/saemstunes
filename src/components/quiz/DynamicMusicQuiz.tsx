@@ -1,13 +1,12 @@
-// components/quiz/DynamicMusicQuiz.tsx
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Award, BookOpen, CheckCircle, ChevronRight, HelpCircle, RotateCcw } from 'lucide-react';
+import { Award, BookOpen, ChevronRight, HelpCircle, RotateCcw } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
-import { fetchQuestionsByTier, saveQuizAttempt, Quiz, QuizQuestion } from "@/services/quizService";
+import { QuizQuestion, saveQuizAttempt } from "@/services/quizService";
 
 interface DynamicMusicQuizProps {
   onComplete?: (score: number, totalQuestions: number) => void;
@@ -24,10 +23,12 @@ const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ onComplete }) => {
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
   const [userAnswers, setUserAnswers] = useState<Record<number, number>>({});
+  const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
     const loadQuestions = async () => {
       setLoading(true);
+      setError(null);
       setQuizCompleted(false);
       setCurrentQuestionIndex(0);
       setScore(0);
@@ -37,11 +38,14 @@ const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ onComplete }) => {
       setShowExplanation(false);
 
       try {
+        // Import the function dynamically to avoid circular dependencies
+        const { fetchQuestionsByTier } = await import('@/services/quizService');
         const userTier = user?.subscriptionTier || 'free';
         const questionsData = await fetchQuestionsByTier(userTier);
         setQuestions(questionsData);
-      } catch (error) {
-        console.error('Error loading questions:', error);
+      } catch (err) {
+        console.error('Error loading questions:', err);
+        setError('Failed to load questions. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -59,6 +63,25 @@ const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ onComplete }) => {
         </CardHeader>
         <CardContent className="flex justify-center py-8">
           <div className="animate-spin h-8 w-8 border-4 border-gold/60 border-t-gold rounded-full"></div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Error Loading Quiz</CardTitle>
+          <CardDescription>{error}</CardDescription>
+        </CardHeader>
+        <CardContent className="text-center py-8">
+          <Button 
+            onClick={() => window.location.reload()} 
+            className="bg-gold hover:bg-gold/90 text-white"
+          >
+            Try Again
+          </Button>
         </CardContent>
       </Card>
     );
@@ -113,7 +136,7 @@ const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ onComplete }) => {
       if (user) {
         try {
           // Create a dynamic quiz ID based on timestamp and tier
-          const quizId = `dynamic-${user.subscriptionTier}-${Date.now()}`;
+          const quizId = `dynamic-${user.subscriptionTier || 'free'}-${Date.now()}`;
           await saveQuizAttempt(user.id, quizId, score, userAnswers, true);
         } catch (error) {
           console.error('Error saving quiz attempt:', error);
@@ -139,11 +162,13 @@ const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ onComplete }) => {
     const reloadQuestions = async () => {
       setLoading(true);
       try {
+        const { fetchQuestionsByTier } = await import('@/services/quizService');
         const userTier = user?.subscriptionTier || 'free';
         const questionsData = await fetchQuestionsByTier(userTier);
         setQuestions(questionsData);
-      } catch (error) {
-        console.error('Error reloading questions:', error);
+      } catch (err) {
+        console.error('Error reloading questions:', err);
+        setError('Failed to load questions. Please try again.');
       } finally {
         setLoading(false);
       }
