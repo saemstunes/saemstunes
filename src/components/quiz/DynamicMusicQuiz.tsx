@@ -38,10 +38,38 @@ const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ onComplete }) => {
       setShowExplanation(false);
 
       try {
+        // Import the function dynamically to avoid circular dependencies
         const { fetchQuestionsByTier } = await import('@/services/quizService');
         const userTier = user?.subscriptionTier || 'free';
         const questionsData = await fetchQuestionsByTier(userTier);
-        setQuestions(questionsData);
+        
+        // Process questions to convert correct_answer string to correctAnswer index
+        const processedQuestions = questionsData.map(question => {
+          // If correctAnswer is already a number, use it directly
+          if (typeof question.correctAnswer === 'number') {
+            return question;
+          }
+          
+          // If correctAnswer is a string, find the index of the correct option
+          if (typeof question.correctAnswer === 'string') {
+            const correctIndex = question.options.findIndex(
+              option => option === question.correctAnswer
+            );
+            
+            return {
+              ...question,
+              correctAnswer: correctIndex
+            };
+          }
+          
+          // Fallback for any other case
+          return {
+            ...question,
+            correctAnswer: 0 // Default to first option
+          };
+        });
+        
+        setQuestions(processedQuestions);
       } catch (err) {
         console.error('Error loading questions:', err);
         setError('Failed to load questions. Please try again.');
@@ -115,9 +143,8 @@ const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ onComplete }) => {
     }));
     
     // Check if the selected option is correct
-    const isCorrect = optionIndex === currentQuestion.correctAnswer;
-    if (isCorrect) {
-      setScore(prevScore => prevScore + 1);
+    if (optionIndex === currentQuestion.correctAnswer) {
+      setScore(score + 1);
     }
     
     setShowExplanation(true);
@@ -166,7 +193,24 @@ const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ onComplete }) => {
         const { fetchQuestionsByTier } = await import('@/services/quizService');
         const userTier = user?.subscriptionTier || 'free';
         const questionsData = await fetchQuestionsByTier(userTier);
-        setQuestions(questionsData);
+        
+        // Process questions to convert correct_answer string to correctAnswer index
+        const processedQuestions = questionsData.map(question => {
+          if (typeof question.correctAnswer === 'string') {
+            const correctIndex = question.options.findIndex(
+              option => option === question.correctAnswer
+            );
+            
+            return {
+              ...question,
+              correctAnswer: correctIndex
+            };
+          }
+          
+          return question;
+        });
+        
+        setQuestions(processedQuestions);
       } catch (err) {
         console.error('Error reloading questions:', err);
         setError('Failed to load questions. Please try again.');
@@ -266,32 +310,26 @@ const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ onComplete }) => {
           
           <div className="space-y-2 mt-6">
             {currentQuestion?.options?.map((option, index) => {
-              const isSelected = selectedOption === index;
               const isCorrect = index === currentQuestion.correctAnswer;
-              
-              let variant: "default" | "destructive" | "outline" = "outline";
-              let buttonClass = "";
-              
-              if (isAnswered) {
-                if (isSelected) {
-                  variant = isCorrect ? "default" : "destructive";
-                  buttonClass = isCorrect 
-                    ? "bg-green-500 hover:bg-green-600 text-white" 
-                    : "bg-red-500 hover:bg-red-600 text-white";
-                } else if (isCorrect) {
-                  variant = "default";
-                  buttonClass = "bg-green-500 hover:bg-green-600 text-white";
-                }
-              }
+              const isSelected = selectedOption === index;
               
               return (
                 <Button
                   key={index}
-                  variant={variant}
+                  variant={
+                    isSelected
+                      ? isCorrect 
+                        ? "default" 
+                        : "destructive"
+                      : isAnswered && isCorrect
+                        ? "default"
+                        : "outline"
+                  }
                   className={cn(
-                    "w-full justify-start text-left p-4 h-auto transition-all duration-200",
-                    buttonClass,
-                    isSelected && !isAnswered ? "bg-gold/20 border-gold" : ""
+                    "w-full justify-start text-left p-4 h-auto transition-all",
+                    isSelected && isCorrect && "bg-green-500 hover:bg-green-600 text-white",
+                    isSelected && !isCorrect && "bg-red-500 hover:bg-red-600 text-white",
+                    !isSelected && isAnswered && isCorrect && "bg-green-500 hover:bg-green-600 text-white"
                   )}
                   onClick={() => handleOptionSelect(index)}
                   disabled={isAnswered}
@@ -315,18 +353,8 @@ const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ onComplete }) => {
                 ? "text-green-600 dark:text-green-400" 
                 : "text-amber-600 dark:text-amber-400"
             } />
-            <AlertTitle className={
-              selectedOption === currentQuestion.correctAnswer 
-                ? "text-green-800 dark:text-green-200" 
-                : "text-amber-800 dark:text-amber-200"
-            }>
-              {selectedOption === currentQuestion.correctAnswer ? "Correct!" : "Incorrect"}
-            </AlertTitle>
-            <AlertDescription className={
-              selectedOption === currentQuestion.correctAnswer 
-                ? "text-green-700 dark:text-green-300" 
-                : "text-amber-700 dark:text-amber-300"
-            }>
+            <AlertTitle>Explanation</AlertTitle>
+            <AlertDescription>
               {currentQuestion.explanation}
             </AlertDescription>
           </Alert>
