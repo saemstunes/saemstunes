@@ -1,8 +1,7 @@
-
+// components/resources/ResourceTypeFilter.tsx
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { ResourceType } from "./ResourceCard";
-import { BookOpen, FileText, Music, Video, Headphones, BarChart2 } from "lucide-react";
+import { BookOpen, FileText, Music, Video, Headphones, BarChart2, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { 
   DropdownMenu,
@@ -10,33 +9,35 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
-
-interface ResourceTypeOption {
-  id: ResourceType;
-  label: string;
-  icon: React.ReactNode;
-}
+import { ResourceCategory } from "@/types/resource";
 
 interface ResourceTypeFilterProps {
-  selectedType: ResourceType | 'all';
-  onSelectType: (type: ResourceType | 'all') => void;
+  categories: ResourceCategory[];
+  selectedCategory: string | 'all';
+  onSelectCategory: (categoryId: string | 'all') => void;
   vertical?: boolean;
 }
 
 const ResourceTypeFilter: React.FC<ResourceTypeFilterProps> = ({
-  selectedType,
-  onSelectType,
+  categories,
+  selectedCategory,
+  onSelectCategory,
   vertical = false
 }) => {
-  const resourceTypes: ResourceTypeOption[] = [
-    { id: 'sheet_music', label: 'Sheet Music', icon: <Music className="h-4 w-4" /> },
-    { id: 'tutorial', label: 'Tutorials', icon: <Video className="h-4 w-4" /> },
-    { id: 'article', label: 'Articles', icon: <FileText className="h-4 w-4" /> },
-    { id: 'audio', label: 'Audio', icon: <Headphones className="h-4 w-4" /> },
-    { id: 'video', label: 'Videos', icon: <Video className="h-4 w-4" /> },
-    { id: 'chord_chart', label: 'Chord Charts', icon: <BarChart2 className="h-4 w-4" /> },
-  ];
+  const getCategoryIcon = (iconName: string | null) => {
+    switch (iconName) {
+      case 'play':
+        return <Video className="h-4 w-4" />;
+      case 'image':
+        return <BarChart2 className="h-4 w-4" />;
+      case 'volume-2':
+        return <Headphones className="h-4 w-4" />;
+      case 'file-text':
+        return <FileText className="h-4 w-4" />;
+      default:
+        return <FileText className="h-4 w-4" />;
+    }
+  };
   
   // Mobile dropdown version
   const MobileFilter = () => (
@@ -44,15 +45,15 @@ const ResourceTypeFilter: React.FC<ResourceTypeFilterProps> = ({
       <DropdownMenuTrigger asChild>
         <Button variant="outline" className="w-full justify-between">
           <span className="flex items-center">
-            {selectedType === 'all' ? (
+            {selectedCategory === 'all' ? (
               <>
                 <BookOpen className="mr-2 h-4 w-4" />
                 All Resources
               </>
             ) : (
               <>
-                {resourceTypes.find(t => t.id === selectedType)?.icon}
-                <span className="ml-2">{resourceTypes.find(t => t.id === selectedType)?.label}</span>
+                {getCategoryIcon(categories.find(c => c.id === selectedCategory)?.icon || null)}
+                <span className="ml-2">{categories.find(c => c.id === selectedCategory)?.name}</span>
               </>
             )}
           </span>
@@ -61,21 +62,21 @@ const ResourceTypeFilter: React.FC<ResourceTypeFilterProps> = ({
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56">
         <DropdownMenuItem 
-          onClick={() => onSelectType('all')}
-          className={cn(selectedType === 'all' && "bg-muted")}
+          onClick={() => onSelectCategory('all')}
+          className={cn(selectedCategory === 'all' && "bg-muted")}
         >
           <BookOpen className="mr-2 h-4 w-4" />
           <span>All Resources</span>
         </DropdownMenuItem>
         
-        {resourceTypes.map((type) => (
+        {categories.map((category) => (
           <DropdownMenuItem
-            key={type.id}
-            onClick={() => onSelectType(type.id)}
-            className={cn(selectedType === type.id && "bg-muted")}
+            key={category.id}
+            onClick={() => onSelectCategory(category.id)}
+            className={cn(selectedCategory === category.id && "bg-muted")}
           >
-            {type.icon}
-            <span className="ml-2">{type.label}</span>
+            {getCategoryIcon(category.icon)}
+            <span className="ml-2">{category.name}</span>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
@@ -92,29 +93,29 @@ const ResourceTypeFilter: React.FC<ResourceTypeFilterProps> = ({
         
         <div className="hidden md:flex md:flex-col gap-1 w-full">
           <Button
-            variant={selectedType === 'all' ? "default" : "ghost"}
+            variant={selectedCategory === 'all' ? "default" : "ghost"}
             className={cn(
               "justify-start",
-              selectedType === 'all' ? "bg-gold hover:bg-gold/90 text-white" : ""
+              selectedCategory === 'all' ? "bg-gold hover:bg-gold/90 text-white" : ""
             )}
-            onClick={() => onSelectType('all')}
+            onClick={() => onSelectCategory('all')}
           >
             <BookOpen className="mr-2 h-4 w-4" />
             All Resources
           </Button>
           
-          {resourceTypes.map((type) => (
+          {categories.map((category) => (
             <Button
-              key={type.id}
-              variant={selectedType === type.id ? "default" : "ghost"}
+              key={category.id}
+              variant={selectedCategory === category.id ? "default" : "ghost"}
               className={cn(
                 "justify-start",
-                selectedType === type.id ? "bg-gold hover:bg-gold/90 text-white" : ""
+                selectedCategory === category.id ? "bg-gold hover:bg-gold/90 text-white" : ""
               )}
-              onClick={() => onSelectType(type.id)}
+              onClick={() => onSelectCategory(category.id)}
             >
-              {type.icon}
-              <span className="ml-2">{type.label}</span>
+              {getCategoryIcon(category.icon)}
+              <span className="ml-2">{category.name}</span>
             </Button>
           ))}
         </div>
@@ -131,23 +132,23 @@ const ResourceTypeFilter: React.FC<ResourceTypeFilterProps> = ({
       
       <div className="hidden md:flex md:flex-wrap gap-2">
         <Button
-          variant={selectedType === 'all' ? "default" : "outline"}
-          className={cn(selectedType === 'all' ? "bg-gold hover:bg-gold/90 text-white" : "")}
-          onClick={() => onSelectType('all')}
+          variant={selectedCategory === 'all' ? "default" : "outline"}
+          className={cn(selectedCategory === 'all' ? "bg-gold hover:bg-gold/90 text-white" : "")}
+          onClick={() => onSelectCategory('all')}
         >
           <BookOpen className="mr-2 h-4 w-4" />
           All
         </Button>
         
-        {resourceTypes.map((type) => (
+        {categories.map((category) => (
           <Button
-            key={type.id}
-            variant={selectedType === type.id ? "default" : "outline"}
-            className={cn(selectedType === type.id ? "bg-gold hover:bg-gold/90 text-white" : "")}
-            onClick={() => onSelectType(type.id)}
+            key={category.id}
+            variant={selectedCategory === category.id ? "default" : "outline"}
+            className={cn(selectedCategory === category.id ? "bg-gold hover:bg-gold/90 text-white" : "")}
+            onClick={() => onSelectCategory(category.id)}
           >
-            {type.icon}
-            <span className="ml-2 hidden lg:inline">{type.label}</span>
+            {getCategoryIcon(category.icon)}
+            <span className="ml-2 hidden lg:inline">{category.name}</span>
           </Button>
         ))}
       </div>
