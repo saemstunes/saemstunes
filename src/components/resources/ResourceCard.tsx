@@ -1,4 +1,4 @@
-// components/resources/ResourceCard.tsx
+// src/components/resources/ResourceCard.tsx
 import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Resource } from "@/types/resource";
 import { useAuth } from "@/context/AuthContext";
+import { useSubscription } from "@/context/SubscriptionContext";
+import { useNavigate } from "react-router-dom";
 
 interface ResourceCardProps {
   resource: Resource;
@@ -27,7 +29,9 @@ const ResourceCard: React.FC<ResourceCardProps> = ({
   isBookmarked = false
 }) => {
   const { user } = useAuth();
+  const { subscription } = useSubscription();
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const getResourceIcon = () => {
     switch (resource.category_name) {
@@ -104,10 +108,13 @@ const ResourceCard: React.FC<ResourceCardProps> = ({
     
     if (onView) {
       onView(resource);
+    } else {
+      navigate(`/resources/${resource.id}`);
     }
   };
 
   const userHasAccess = () => {
+    if (!resource.is_locked) return true;
     if (!user) return false;
     
     switch (resource.access_level) {
@@ -116,11 +123,11 @@ const ResourceCard: React.FC<ResourceCardProps> = ({
       case 'auth':
         return !!user;
       case 'basic':
-        return user.subscription_tier === 'basic' || user.subscription_tier === 'premium' || user.subscription_tier === 'professional';
+        return subscription?.tier === 'basic' || subscription?.tier === 'premium' || subscription?.tier === 'professional';
       case 'premium':
-        return user.subscription_tier === 'premium' || user.subscription_tier === 'professional';
+        return subscription?.tier === 'premium' || subscription?.tier === 'professional';
       case 'professional':
-        return user.subscription_tier === 'professional';
+        return subscription?.tier === 'professional';
       default:
         return false;
     }
