@@ -38,7 +38,6 @@ const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ onComplete }) => {
       setShowExplanation(false);
 
       try {
-        // Import the function dynamically to avoid circular dependencies
         const { fetchQuestionsByTier } = await import('@/services/quizService');
         const userTier = user?.subscriptionTier || 'free';
         const questionsData = await fetchQuestionsByTier(userTier);
@@ -115,8 +114,10 @@ const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ onComplete }) => {
       [currentQuestionIndex]: optionIndex
     }));
     
-    if (optionIndex === currentQuestion?.correctAnswer) {
-      setScore(score + 1);
+    // Check if the selected option is correct
+    const isCorrect = optionIndex === currentQuestion.correctAnswer;
+    if (isCorrect) {
+      setScore(prevScore => prevScore + 1);
     }
     
     setShowExplanation(true);
@@ -264,47 +265,68 @@ const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ onComplete }) => {
           </h3>
           
           <div className="space-y-2 mt-6">
-            {currentQuestion?.options?.map((option, index) => (
-              <Button
-                key={index}
-                variant={
-                  selectedOption === index 
-                    ? index === currentQuestion.correctAnswer 
-                      ? "default" 
-                      : "destructive"
-                    : selectedOption !== null && index === currentQuestion.correctAnswer
-                      ? "default"
-                      : "outline"
+            {currentQuestion?.options?.map((option, index) => {
+              const isSelected = selectedOption === index;
+              const isCorrect = index === currentQuestion.correctAnswer;
+              
+              let variant: "default" | "destructive" | "outline" = "outline";
+              let buttonClass = "";
+              
+              if (isAnswered) {
+                if (isSelected) {
+                  variant = isCorrect ? "default" : "destructive";
+                  buttonClass = isCorrect 
+                    ? "bg-green-500 hover:bg-green-600 text-white" 
+                    : "bg-red-500 hover:bg-red-600 text-white";
+                } else if (isCorrect) {
+                  variant = "default";
+                  buttonClass = "bg-green-500 hover:bg-green-600 text-white";
                 }
-                className={cn(
-                  "w-full justify-start text-left p-4 h-auto",
-                  selectedOption === index 
-                  ? index === currentQuestion.correctAnswer 
-                  ? "bg-green-500 dark:bg-green-600 hover:bg-green-600 dark:hover:bg-green-700 text-white" 
-                  : "bg-red-500 dark:bg-red-600 hover:bg-red-600 dark:hover:bg-red-700 text-white"
-                  : selectedOption !== null && index === currentQuestion.correctAnswer
-                  ? "bg-green-500 dark:bg-green-600 hover:bg-green-600 dark:hover:bg-green-700 text-white"
-                  : ""
-                )}
-                onClick={() => handleOptionSelect(index)}
-                disabled={isAnswered}
-              >
-                <span className="font-medium mr-2">{String.fromCharCode(65 + index)}.</span>
-                {option}
-              </Button>
-            ))}
+              }
+              
+              return (
+                <Button
+                  key={index}
+                  variant={variant}
+                  className={cn(
+                    "w-full justify-start text-left p-4 h-auto transition-all duration-200",
+                    buttonClass,
+                    isSelected && !isAnswered ? "bg-gold/20 border-gold" : ""
+                  )}
+                  onClick={() => handleOptionSelect(index)}
+                  disabled={isAnswered}
+                >
+                  <span className="font-medium mr-2">{String.fromCharCode(65 + index)}.</span>
+                  {option}
+                </Button>
+              );
+            })}
           </div>
         </div>
         
         {showExplanation && currentQuestion?.explanation && (
-          <Alert className={selectedOption === currentQuestion?.correctAnswer 
-            ? "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800" 
-            : "bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800"}>
-            <BookOpen className={`h-5 w-5 ${selectedOption === currentQuestion?.correctAnswer 
-                                            ? "text-green-600 dark:text-green-400" 
-                                            : "text-amber-600 dark:text-amber-400"}`} />
-            <AlertTitle>Explanation</AlertTitle>
-            <AlertDescription>
+          <Alert className={
+            selectedOption === currentQuestion.correctAnswer 
+              ? "bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800" 
+              : "bg-amber-50 border-amber-200 dark:bg-amber-950 dark:border-amber-800"
+          }>
+            <BookOpen className={
+              selectedOption === currentQuestion.correctAnswer 
+                ? "text-green-600 dark:text-green-400" 
+                : "text-amber-600 dark:text-amber-400"
+            } />
+            <AlertTitle className={
+              selectedOption === currentQuestion.correctAnswer 
+                ? "text-green-800 dark:text-green-200" 
+                : "text-amber-800 dark:text-amber-200"
+            }>
+              {selectedOption === currentQuestion.correctAnswer ? "Correct!" : "Incorrect"}
+            </AlertTitle>
+            <AlertDescription className={
+              selectedOption === currentQuestion.correctAnswer 
+                ? "text-green-700 dark:text-green-300" 
+                : "text-amber-700 dark:text-amber-300"
+            }>
               {currentQuestion.explanation}
             </AlertDescription>
           </Alert>
