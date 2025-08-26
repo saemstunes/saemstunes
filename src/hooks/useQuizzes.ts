@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { 
-  getAccessibleQuizzes, 
+  fetchQuizzes, 
   fetchUserQuizAttempts, 
   Quiz, 
   QuizAttempt 
@@ -11,13 +12,11 @@ export const useQuizzes = () => {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
 
   const loadQuizzes = async () => {
     try {
       setLoading(true);
-      const userSubscriptionTier = user?.subscriptionTier || 'free';
-      const data = await getAccessibleQuizzes(user, userSubscriptionTier);
+      const data = await fetchQuizzes();
       setQuizzes(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load quizzes');
@@ -28,7 +27,7 @@ export const useQuizzes = () => {
 
   useEffect(() => {
     loadQuizzes();
-  }, [user]);
+  }, []);
 
   return { quizzes, loading, error, refetch: loadQuizzes };
 };
