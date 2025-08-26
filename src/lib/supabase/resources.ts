@@ -1,5 +1,5 @@
 // src/lib/supabase/resources.ts
-import { supabase } from './client';
+import { supabase } from '@/integrations/supabase/client';
 import { Resource, ResourceCategory } from '@/types/resource';
 
 export const resourcesService = {
