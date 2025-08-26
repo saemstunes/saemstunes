@@ -1,4 +1,4 @@
-
+// components/auth/SignupForm.tsx
 import React, { useState, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -30,6 +30,13 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import SocialLoginOptions from "./SocialLoginOptions";
 import disposableDomains from "disposable-email-domains";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Additional disposable domains not in the package
 const additionalDisposableDomains = [
@@ -52,6 +59,7 @@ const formSchema = z.object({
   email: z.string().email("Please enter a valid email"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string().min(6, "Password must be at least 6 characters"),
+  role: z.enum(['student', 'adult_learner', 'tutor', 'parent', 'user']),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -76,6 +84,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
       email: "",
       password: "",
       confirmPassword: "",
+      role: "user",
     },
   });
 
@@ -116,7 +125,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
         options: {
           data: {
             name: data.name,
-            role: "student",
+            role: data.role,
             avatar: "/lovable-uploads/avatar-1.png", // Default avatar
             subscribed: false,
           },
@@ -135,6 +144,18 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
           return;
         }
         throw error;
+      }
+      
+      // Update the profile with the selected role
+      if (signUpData.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ role: data.role })
+          .eq('id', signUpData.user.id);
+          
+        if (profileError) {
+          console.error("Error updating profile role:", profileError);
+        }
       }
       
       if (signUpData.user && !signUpData.session) {
@@ -171,6 +192,22 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const getRoleDescription = (role: string) => {
+    switch (role) {
+      case 'student':
+        return 'I\'m a student looking to learn music';
+      case 'adult_learner':
+        return 'I\'m an adult pursuing music as a hobby or skill';
+      case 'tutor':
+        return 'I teach music and want to share my knowledge';
+      case 'parent':
+        return 'I\'m managing accounts for my children';
+      case 'user':
+      default:
+        return 'Standard access to explore resources';
     }
   };
 
@@ -238,6 +275,34 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
                   <FormControl>
                     <Input type="email" placeholder="you@example.com" {...field} disabled={isSubmitting} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Role</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your role" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="student">Student</SelectItem>
+                      <SelectItem value="adult_learner">Adult Learner</SelectItem>
+                      <SelectItem value="tutor">Tutor/Instructor</SelectItem>
+                      <SelectItem value="parent">Parent/Guardian</SelectItem>
+                      <SelectItem value="user">General User</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {getRoleDescription(form.watch('role') || 'user')}
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}
