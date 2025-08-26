@@ -1,4 +1,4 @@
-// types/resource.ts
+// src/types/resource.ts
 export type ResourceType = "videos" | "infographics" | "audios" | "documents";
 
 export interface Resource {
