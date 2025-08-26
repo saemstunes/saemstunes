@@ -250,7 +250,7 @@ const Community = () => {
       />
       
       {showCommunityPreview && (
-        <div className="relative bg-gradient-to-r from-gold/10 to-amber-50 border border-gold/30 rounded-lg p-4 mb-6">
+        <div className="relative bg-gradient-to-r from-amber-50 to-gold/5 dark:from-gold/10 dark:to-gold/5 border border-gold/30 dark:border-gold/20 rounded-lg p-4 mb-6">
           <button 
             onClick={() => setShowCommunityPreview(false)}
             className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
