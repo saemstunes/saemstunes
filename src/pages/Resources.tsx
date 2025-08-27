@@ -5,6 +5,7 @@ import { useSubscription } from "@/context/SubscriptionContext";
 import MainLayout from "@/components/layout/MainLayout";
 import ResourceCard from "@/components/resources/ResourceCard";
 import ResourceTypeFilter from "@/components/resources/ResourceTypeFilter";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
