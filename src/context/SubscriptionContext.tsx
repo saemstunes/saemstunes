@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 interface Subscription {
   id: string;
   tier: 'free' | 'basic' | 'premium' | 'professional';
-  status: 'active' | 'canceled' | 'past_due';
+  status: 'active' | 'canceled' | 'past_due' | 'trialing';
   current_period_end: string;
   cancel_at_period_end: boolean;
 }
@@ -41,6 +41,7 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
       
       if (!user) {
         setSubscription(null);
+        setLoading(false);
         return;
       }
 
@@ -49,7 +50,7 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
         .select('*')
         .eq('user_id', user.id)
         .in('status', ['active', 'trialing'])
-        .single();
+        .maybeSingle(); // Use maybeSingle to handle no rows
 
       if (error) {
         console.error('Error fetching subscription:', error);
@@ -69,16 +70,44 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     fetchSubscription();
     
     // Set up real-time subscription
-    const subscriptionChannel = supabase
-      .channel('subscription-changes')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'subscriptions' }, 
-        fetchSubscription
-      )
-      .subscribe();
+    let subscriptionChannel: any = null;
+    
+    const setupRealtime = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        subscriptionChannel = supabase
+          .channel('subscription-changes')
+          .on('postgres_changes', 
+            { event: '*', schema: 'public', table: 'subscriptions' }, 
+            fetchSubscription
+          )
+          .subscribe();
+      }
+    };
+    
+    setupRealtime();
 
     return () => {
-      supabase.removeChannel(subscriptionChannel);
+      if (subscriptionChannel) {
+        supabase.removeChannel(subscriptionChannel);
+      }
+    };
+  }, []);
+
+  // Listen for auth state changes
+  useEffect(() => {
+    const { data: { subscription: authListener } } = supabase.auth.onAuthStateChange(
+      async (event) => {
+        if (event === 'SIGNED_OUT') {
+          setSubscription(null);
+        } else if (event === 'SIGNED_IN') {
+          await fetchSubscription();
+        }
+      }
+    );
+
+    return () => {
+      authListener.unsubscribe();
     };
   }, []);
 
