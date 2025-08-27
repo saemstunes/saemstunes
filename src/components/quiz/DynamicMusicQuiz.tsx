@@ -1,28 +1,20 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Award, BookOpen, CheckCircle, ChevronRight, HelpCircle, RotateCcw } from 'lucide-react';
+import { Award, BookOpen, ChevronRight, HelpCircle, RotateCcw } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
-import { 
-  fetchQuizById, 
-  saveQuizAttempt, 
-  Quiz, 
-  QuizQuestion,
-  getDifficultyLabel 
-} from "@/services/quizService";
+import { fetchQuestionsByTier, saveQuizAttempt, QuizQuestion } from "@/services/quizService";
 
 interface DynamicMusicQuizProps {
-  quizId: string;
-  onComplete?: (score: number, totalQuestions: number, quizId: string) => void;
+  onComplete?: (score: number, totalQuestions: number) => void;
 }
 
-const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ quizId, onComplete }) => {
+const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ onComplete }) => {
   const { user } = useAuth();
-  const [quiz, setQuiz] = useState<Quiz | null>(null);
+  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
@@ -33,7 +25,7 @@ const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ quizId, onComplete 
   const [userAnswers, setUserAnswers] = useState<Record<number, number>>({});
   
   useEffect(() => {
-    const loadQuiz = async () => {
+    const loadQuestions = async () => {
       setLoading(true);
       setQuizCompleted(false);
       setCurrentQuestionIndex(0);
@@ -44,26 +36,25 @@ const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ quizId, onComplete 
       setShowExplanation(false);
 
       try {
-        const quizData = await fetchQuizById(quizId);
-        setQuiz(quizData);
+        const userTier = user?.subscriptionTier || 'free';
+        const questionsData = await fetchQuestionsByTier(userTier);
+        setQuestions(questionsData);
       } catch (error) {
-        console.error('Error loading quiz:', error);
+        console.error('Error loading questions:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    if (quizId) {
-      loadQuiz();
-    }
-  }, [quizId]);
+    loadQuestions();
+  }, [user]);
   
   if (loading) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>Loading Quiz...</CardTitle>
-          <CardDescription>Please wait while we load your quiz</CardDescription>
+          <CardDescription>Please wait while we prepare your questions</CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center py-8">
           <div className="animate-spin h-8 w-8 border-4 border-gold/60 border-t-gold rounded-full"></div>
@@ -72,21 +63,20 @@ const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ quizId, onComplete 
     );
   }
 
-  if (!quiz || !Array.isArray(quiz.questions) || quiz.questions.length === 0) {
+  if (!questions || questions.length === 0) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>Quiz Not Available</CardTitle>
-          <CardDescription>This quiz could not be loaded or has no questions</CardDescription>
+          <CardDescription>No questions could be loaded for your subscription tier</CardDescription>
         </CardHeader>
         <CardContent className="text-center py-8">
-          <p className="text-muted-foreground">Please select another quiz from the list.</p>
+          <p className="text-muted-foreground">Please check your subscription or try again later.</p>
         </CardContent>
       </Card>
     );
   }
 
-  const questions = quiz.questions as QuizQuestion[];
   const currentQuestion = questions[currentQuestionIndex];
   
   const handleOptionSelect = (optionIndex: number) => {
@@ -95,13 +85,12 @@ const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ quizId, onComplete 
     setSelectedOption(optionIndex);
     setIsAnswered(true);
     
-    // Store the answer
     setUserAnswers(prev => ({
       ...prev,
       [currentQuestionIndex]: optionIndex
     }));
     
-    if (optionIndex === currentQuestion?.correctAnswer) {
+    if (optionIndex === currentQuestion.correctAnswer) {
       setScore(score + 1);
     }
     
@@ -118,17 +107,17 @@ const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ quizId, onComplete 
     } else {
       setQuizCompleted(true);
       
-      // Save quiz attempt to database
       if (user) {
         try {
-          await saveQuizAttempt(user.id, quiz.id, score, userAnswers, true);
+          const quizId = `dynamic-${user.subscriptionTier}-${Date.now()}`;
+          await saveQuizAttempt(user.id, quizId, score, userAnswers, true);
         } catch (error) {
           console.error('Error saving quiz attempt:', error);
         }
       }
       
       if (onComplete) {
-        onComplete(score, questions.length, quiz.id);
+        onComplete(score, questions.length);
       }
     }
   };
@@ -141,6 +130,21 @@ const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ quizId, onComplete 
     setQuizCompleted(false);
     setShowExplanation(false);
     setUserAnswers({});
+    
+    const reloadQuestions = async () => {
+      setLoading(true);
+      try {
+        const userTier = user?.subscriptionTier || 'free';
+        const questionsData = await fetchQuestionsByTier(userTier);
+        setQuestions(questionsData);
+      } catch (error) {
+        console.error('Error reloading questions:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    reloadQuestions();
   };
   
   const getScoreCategory = (score: number, total: number) => {
@@ -184,8 +188,8 @@ const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ quizId, onComplete 
           <div className="mt-6">
             <h4 className="font-medium mb-2">Quiz Details:</h4>
             <div className="space-y-2 text-sm">
-              <p><span className="font-medium">Category:</span> {quiz.category}</p>
-              <p><span className="font-medium">Difficulty:</span> {getDifficultyLabel(quiz.difficulty)}</p>
+              <p><span className="font-medium">Your Tier:</span> {user?.subscriptionTier || 'free'}</p>
+              <p><span className="font-medium">Questions:</span> {questions.length}</p>
               <p><span className="font-medium">Your Score:</span> {score}/{questions.length} ({Math.round((score / questions.length) * 100)}%)</p>
             </div>
           </div>
@@ -193,7 +197,7 @@ const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ quizId, onComplete 
         <CardFooter>
           <Button onClick={restartQuiz} className="w-full bg-gold hover:bg-gold/90 text-white">
             <RotateCcw className="mr-2 h-4 w-4" />
-            Restart Quiz
+            Try Another Quiz
           </Button>
         </CardFooter>
       </Card>
@@ -205,16 +209,18 @@ const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ quizId, onComplete 
       <CardHeader>
         <div className="flex justify-between items-center">
           <div>
-            <CardTitle>{quiz.title}</CardTitle>
+            <CardTitle>Music Knowledge Quiz</CardTitle>
             <CardDescription>
-              {quiz.description}
+              Test your music knowledge with questions tailored to your subscription tier
             </CardDescription>
           </div>
           <div className="text-right">
             <p className="text-sm font-medium">
               Question {currentQuestionIndex + 1}/{questions.length}
             </p>
-            <p className="text-xs text-muted-foreground">{quiz.category}</p>
+            <p className="text-xs text-muted-foreground">
+              Tier: {user?.subscriptionTier || 'free'}
+            </p>
           </div>
         </div>
       </CardHeader>
@@ -224,50 +230,51 @@ const DynamicMusicQuiz: React.FC<DynamicMusicQuizProps> = ({ quizId, onComplete 
         <div className="py-4">
           <h3 className="text-lg font-medium mb-4 flex items-start">
             <HelpCircle className="h-5 w-5 mr-2 mt-0.5 shrink-0 text-gold" />
-            {currentQuestion?.question}
+            {currentQuestion.question}
           </h3>
           
           <div className="space-y-2 mt-6">
-            {currentQuestion?.options?.map((option, index) => (
-              <Button
-                key={index}
-                variant={
-                  selectedOption === index 
-                    ? index === currentQuestion.correctAnswer 
-                      ? "default" 
-                      : "destructive"
-                    : selectedOption !== null && index === currentQuestion.correctAnswer
-                      ? "default"
-                      : "outline"
-                }
-                className={cn(
-                  "w-full justify-start text-left p-4 h-auto",
-                  selectedOption === index 
-                  ? index === currentQuestion.correctAnswer 
-                  ? "bg-green-500 dark:bg-green-600 hover:bg-green-600 dark:hover:bg-green-700 text-white" 
-                  : "bg-red-500 dark:bg-red-600 hover:bg-red-600 dark:hover:bg-red-700 text-white"
-                  : selectedOption !== null && index === currentQuestion.correctAnswer
-                  ? "bg-green-500 dark:bg-green-600 hover:bg-green-600 dark:hover:bg-green-700 text-white"
-                  : ""
-                )}
-                onClick={() => handleOptionSelect(index)}
-                disabled={isAnswered}
-              >
-                <span className="font-medium mr-2">{String.fromCharCode(65 + index)}.</span>
-                {option}
-              </Button>
-            ))}
+            {currentQuestion.options.map((option, index) => {
+              const isCorrect = index === currentQuestion.correctAnswer;
+              const isSelected = selectedOption === index;
+              
+              return (
+                <Button
+                  key={index}
+                  variant={
+                    isSelected
+                      ? isCorrect 
+                        ? "default" 
+                        : "destructive"
+                      : isAnswered && isCorrect
+                        ? "default"
+                        : "outline"
+                  }
+                  className={cn(
+                    "w-full justify-start text-left p-4 h-auto transition-colors",
+                    isSelected && isCorrect && "bg-green-500 hover:bg-green-600 text-white",
+                    isSelected && !isCorrect && "bg-red-500 hover:bg-red-600 text-white",
+                    !isSelected && isAnswered && isCorrect && "bg-green-500 hover:bg-green-600 text-white"
+                  )}
+                  onClick={() => handleOptionSelect(index)}
+                  disabled={isAnswered}
+                >
+                  <span className="font-medium mr-2">{String.fromCharCode(65 + index)}.</span>
+                  {option}
+                </Button>
+              );
+            })}
           </div>
         </div>
         
-        {showExplanation && currentQuestion?.explanation && (
-      <Alert className={selectedOption === currentQuestion?.correctAnswer 
-        ? "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800" 
-      : "bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800"}>
-        <BookOpen className={`h-5 w-5 ${selectedOption === currentQuestion?.correctAnswer 
-                                        ? "text-green-600 dark:text-green-400" 
-                                        : "text-amber-600 dark:text-amber-400"}`} />
-        <AlertTitle>Explanation</AlertTitle>
+        {showExplanation && currentQuestion.explanation && (
+          <Alert className={selectedOption === currentQuestion.correctAnswer 
+            ? "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800" 
+            : "bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800"}>
+            <BookOpen className={`h-5 w-5 ${selectedOption === currentQuestion.correctAnswer 
+                                            ? "text-green-600 dark:text-green-400" 
+                                            : "text-amber-600 dark:text-amber-400"}`} />
+            <AlertTitle>Explanation</AlertTitle>
             <AlertDescription>
               {currentQuestion.explanation}
             </AlertDescription>
