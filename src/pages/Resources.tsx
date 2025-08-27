@@ -1,6 +1,7 @@
 // src/pages/Resources.tsx
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useSubscription } from "@/context/SubscriptionContext";
 import MainLayout from "@/components/layout/MainLayout";
 import ResourceCard from "@/components/resources/ResourceCard";
 import ResourceTypeFilter from "@/components/resources/ResourceTypeFilter";
@@ -19,7 +20,7 @@ import { useSubscription } from "@/context/SubscriptionContext";
 
 const Resources = () => {
   const { user } = useAuth();
-  const { subscription } = useSubscription();
+  const { subscription, loading: subscriptionLoading } = useSubscription(); // Use the hook
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [levelFilter, setLevelFilter] = useState("all");
@@ -92,11 +93,11 @@ const Resources = () => {
 
     // Show locked content only if user has appropriate access
     const hasAccess = !resource.is_locked || 
-      (user && 
-        ((resource.access_level === 'auth' && user.id) ||
-         (resource.access_level === 'basic' && subscription?.tier === 'basic') ||
-         (resource.access_level === 'premium' && subscription?.tier === 'premium') ||
-         (resource.access_level === 'professional' && subscription?.tier === 'professional')));
+    (user && 
+      ((resource.access_level === 'auth') ||
+       (resource.access_level === 'basic' && subscription?.tier === 'basic') ||
+       (resource.access_level === 'premium' && subscription?.tier === 'premium') ||
+       (resource.access_level === 'professional' && subscription?.tier === 'professional')));
     
     return matchesSearch && matchesCategory && matchesLevel && matchesSubject && hasAccess;
   });
