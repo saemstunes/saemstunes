@@ -10,26 +10,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import DynamicMusicQuiz from "@/components/quiz/DynamicMusicQuiz";
 import ResourceCard, { Resource } from "@/components/resources/ResourceCard";
 import { useToast } from "@/hooks/use-toast";
-import QuizSelection from "@/components/quiz/QuizSelection";
 import { useUserQuizProgress } from "@/hooks/useQuizzes";
 
 const Library = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("saved");
   const { toast } = useToast();
-  const [activeQuizId, setActiveQuizId] = useState<string>("");
   const { getCompletedQuizIds, refetch: refetchProgress } = useUserQuizProgress();
 
-  // Sample saved content data (would come from API in a real app)
   const savedVideos = mockVideos.slice(0, 4);
   const saemOfferings = mockVideos.slice(4, 8).map(video => ({...video, isExclusive: true}));
   
-  // Sample courses data
   const courses = [
     {
       id: "course1",
@@ -77,7 +71,6 @@ const Library = () => {
     }
   ];
   
-  // Sample offline resources
   const offlineResources: Resource[] = [
     {
       id: "res1",
@@ -130,7 +123,6 @@ const Library = () => {
   );
 
   const handleExclusiveContent = (contentId) => {
-    // Redirect to payment page for premium content
     navigate(`/subscriptions?contentType=exclusive&contentId=${contentId}`);
   };
 
@@ -190,16 +182,14 @@ const Library = () => {
     </Card>
   );
 
-  const handleQuizComplete = (score: number, total: number, quizId: string) => {
+  const handleQuizComplete = (score: number, total: number) => {
     toast({
       title: "Quiz Completed",
       description: `You scored ${score} out of ${total}! Keep learning and improving your music knowledge.`,
     });
     
-    // Refresh user progress to update completed quizzes
     refetchProgress();
     
-    // If not logged in, prompt to sign in to save progress
     if (!user && score >= total * 0.7) {
       setTimeout(() => {
         toast({
@@ -241,41 +231,69 @@ const Library = () => {
           )}
         </div>
         
-        {/* Music Quiz Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            {activeQuizId ? (
-              <DynamicMusicQuiz 
-                quizId={activeQuizId}
-                onComplete={handleQuizComplete}
-              />
-
-            ) : (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Select a Quiz</CardTitle>
-                  <CardDescription>Choose a quiz from the selection panel to begin</CardDescription>
-                </CardHeader>
-                <CardContent className="text-center py-8">
-                  <p className="text-muted-foreground">Pick a quiz topic from the right to start testing your music knowledge!</p>
-                </CardContent>
-              </Card>
-            )}
+            <DynamicMusicQuiz onComplete={handleQuizComplete} />
           </div>
           <div className="space-y-4">
-            <QuizSelection 
-              onQuizSelect={setActiveQuizId} 
-              activeQuizId={activeQuizId}
-              completedQuizIds={getCompletedQuizIds()}
-            />
+            <Card>
+              <CardHeader>
+                <CardTitle>Quiz Information</CardTitle>
+                <CardDescription>
+                  Your current subscription tier: <span className="font-bold capitalize">{user?.subscriptionTier || 'free'}</span>
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Based on your subscription, you'll receive:
+                </p>
+                <ul className="text-sm space-y-1 mb-4">
+                  <li>• Free: 10 questions of difficulty 1</li>
+                  <li>• Basic: 20 questions of difficulty 1-2</li>
+                  <li>• Premium: 30 questions of difficulty 1-4</li>
+                  <li>• Professional: 50 questions of difficulty 1-4</li>
+                </ul>
+                <p className="text-sm text-muted-foreground">
+                  Questions are randomly selected from our database of 91+ music questions.
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Your Progress</CardTitle>
+                <CardDescription>
+                  Track your learning journey
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Completed Quizzes</span>
+                    <Badge variant="outline">{getCompletedQuizIds().length}</Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Saved Resources</span>
+                    <Badge variant="outline">{offlineResources.length}</Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Enrolled Courses</span>
+                    <Badge variant="outline">{courses.filter(c => c.enrolled).length}</Badge>
+                  </div>
+                </div>
+                <Button 
+                  className="w-full mt-4"
+                  variant="outline"
+                  onClick={() => navigate("/progress")}
+                >
+                  View Detailed Progress
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
         
-        {/* Featured Saem's content */}
-        <div 
-          className="relative rounded-lg overflow-hidden h-48 md:h-64 bg-gradient-to-r from-gold/70 to-brown/70 mb-8 cursor-pointer"
-          onClick={() => handleExclusiveContent("master-class-guitar")}
-        >
+        <div className="relative rounded-lg overflow-hidden h-48 md:h-64 bg-gradient-to-r from-gold/70 to-brown/70 mb-8 cursor-pointer"
+          onClick={() => handleExclusiveContent("master-class-guitar")}>
           <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent z-10"></div>
           <img 
             src="/placeholder.svg" 
@@ -295,7 +313,6 @@ const Library = () => {
           </div>
         </div>
         
-        {/* Music Courses Section */}
         <div className="mb-8">
           <h2 className="text-xl font-proxima font-semibold mb-4 flex items-center">
             <GraduationCap className="h-5 w-5 text-gold mr-2" />
@@ -308,7 +325,6 @@ const Library = () => {
           </div>
         </div>
         
-        {/* Saem's exclusive content */}
         <div className="mb-8">
           <h2 className="text-xl font-proxima font-semibold mb-4 flex items-center">
             <BookOpen className="h-5 w-5 text-gold mr-2" />
@@ -327,7 +343,6 @@ const Library = () => {
           </div>
         </div>
         
-        {/* Offline Resources Section */}
         <div className="mb-8">
           <h2 className="text-xl font-proxima font-semibold mb-4 flex items-center">
             <BookOpen className="h-5 w-5 text-gold mr-2" />
@@ -360,7 +375,7 @@ const Library = () => {
           </div>
         </div>
         
-        <Tabs defaultValue="saved" className="w-full" onValueChange={setActiveTab}>
+        <Tabs defaultValue="saved" className="w-full">
           <TabsList className="grid grid-cols-4">
             <TabsTrigger value="saved">
               <Bookmark className="h-4 w-4 mr-2" />
@@ -426,7 +441,6 @@ const Library = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Legal Links Footer */}
         <div className="flex justify-center space-x-4 pt-8 border-t">
           <Button 
             variant="link" 
