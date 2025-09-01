@@ -6,8 +6,11 @@ from pathlib import Path
 from typing import List
 
 from crawler.html_crawler import HTMLCrawler
+from crawler.pdf_crawler import PDFCrawler
+from crawler.video_crawler import VideoCrawler
 from processors.metadata_enricher import MetadataEnricher
 from processors.quality_validator import QualityValidator
+from processors.image_processor import ImageProcessor
 from config.supabase_client import SupabaseClient
 from utils.logging import setup_logging
 from config.settings import settings
@@ -18,11 +21,58 @@ logger = logging.getLogger(__name__)
 
 class ResourcePipeline:
     def __init__(self):
-        self.crawler = HTMLCrawler()
+        self.html_crawler = HTMLCrawler()
+        self.pdf_crawler = PDFCrawler()
+        self.video_crawler = VideoCrawler()
         self.enricher = MetadataEnricher()
         self.validator = QualityValidator()
+        self.image_processor = ImageProcessor()
         self.supabase = SupabaseClient.get_instance()
         self.seen_hashes = set()
+    
+    def determine_crawler_type(self, url: str) -> str:
+        url_lower = url.lower()
+        
+        if url_lower.endswith('.pdf'):
+            return 'pdf'
+        elif 'youtube.com' in url_lower or 'youtu.be' in url_lower:
+            return 'video'
+        else:
+            return 'html'
+    
+    async def process_url(self, url: str):
+        try:
+            crawler_type = self.determine_crawler_type(url)
+            
+            if crawler_type == 'pdf':
+                resource = await self.pdf_crawler.process_url(url)
+            elif crawler_type == 'video':
+                resource = await self.video_crawler.process_url(url)
+            else:
+                resource = await self.html_crawler.process_url(url)
+            
+            if not resource:
+                return None
+            
+            # Process images for HTML resources
+            if crawler_type == 'html' and resource.metadata.get('images'):
+                best_image = await self.image_processor.select_best_image(resource.metadata['images'])
+                if best_image:
+                    resource.thumbnail_url = best_image
+            
+            resource = self.enricher.enrich_resource(resource)
+            
+            is_valid, score = self.validator.validate_resource(resource)
+            if is_valid:
+                logger.info(f"Processed valid resource: {resource.title} (score: {score:.2f})")
+                return resource
+            else:
+                logger.warning(f"Resource failed validation: {resource.title} (score: {score:.2f})")
+                return None
+        
+        except Exception as e:
+            logger.error(f"Failed to process URL {url}: {e}")
+            return None
     
     async def run(self):
         logger.info("Starting resource pipeline")
@@ -34,24 +84,14 @@ class ResourcePipeline:
                 logger.info(f"Crawling seed URL: {seed_url}")
                 
                 # Discover URLs
-                discovered_urls = await self.crawler.crawl(seed_url)
+                discovered_urls = await self.html_crawler.crawl(seed_url)
                 logger.info(f"Discovered {len(discovered_urls)} URLs from {seed_url}")
                 
                 # Process each URL
                 for url in discovered_urls:
-                    try:
-                        resource = await self.crawler.process_url(url)
-                        resource = self.enricher.enrich_resource(resource)
-                        
-                        if self.validator.validate_resource(resource):
-                            all_resources.append(resource)
-                            logger.info(f"Processed valid resource: {resource.title}")
-                        else:
-                            logger.warning(f"Resource failed validation: {resource.title}")
-                    
-                    except Exception as e:
-                        logger.error(f"Failed to process URL {url}: {e}")
-                        continue
+                    resource = await self.process_url(url)
+                    if resource:
+                        all_resources.append(resource)
                 
             except Exception as e:
                 logger.error(f"Failed to process seed URL {seed_url}: {e}")
