@@ -316,6 +316,7 @@ const SEOHead: React.FC<SEOHeadProps> = ({
         "name": courseData.name,
         "description": courseData.description,
         "provider": {
+          "@type": "Organization",
           "@id": "https://www.saemstunes.com/#organization"
         },
         "instructor": {
@@ -347,7 +348,7 @@ const SEOHead: React.FC<SEOHeadProps> = ({
       baseStructuredData["@graph"].push({
         "@type": "SoftwareApplication",
         "name": toolData.name,
-        "applicationCategory": "Music Education Tool",
+        "applicationCategory": "EducationalApplication",
         "applicationSubCategory": toolData.category,
         "operatingSystem": "Web Browser",
         "offers": {
@@ -380,10 +381,7 @@ const SEOHead: React.FC<SEOHeadProps> = ({
           "@type": "WebPage",
           "@id": canonicalUrl
         },
-        "image": {
-          "@type": "ImageObject",
-          "url": image
-        },
+        "image": image,
         "wordCount": articleData.wordCount,
         "inLanguage": "en-US"
       });
@@ -393,7 +391,7 @@ const SEOHead: React.FC<SEOHeadProps> = ({
     if (faqData && faqData.length > 0) {
       baseStructuredData["@graph"].push({
         "@type": "FAQPage",
-        "mainEntity": faqData.map(faq => ({
+        "mainEntity": faqData.map((faq: any) => ({
           "@type": "Question",
           "name": faq.question,
           "acceptedAnswer": {
@@ -408,7 +406,7 @@ const SEOHead: React.FC<SEOHeadProps> = ({
     if (breadcrumbData && breadcrumbData.length > 0) {
       baseStructuredData["@graph"].push({
         "@type": "BreadcrumbList",
-        "itemListElement": breadcrumbData.map((item, index) => ({
+        "itemListElement": breadcrumbData.map((item: any, index: number) => ({
           "@type": "ListItem",
           "position": index + 1,
           "name": item.name,
@@ -423,7 +421,7 @@ const SEOHead: React.FC<SEOHeadProps> = ({
         "@type": "VideoObject",
         "name": fullTitle,
         "description": fullDescription,
-        "thumbnailUrl": image,
+        "thumbnailUrl": [image],
         "uploadDate": videoData.uploadDate,
         "duration": videoData.duration,
         "contentUrl": videoData.contentUrl,
@@ -440,12 +438,12 @@ const SEOHead: React.FC<SEOHeadProps> = ({
         "@type": "LocalBusiness",
         "@id": "https://www.saemstunes.com/#localbusiness",
         "name": "Saem's Tunes",
-        "address": {
+        "address": businessLocation ? {
           "@type": "PostalAddress",
           "addressCountry": businessLocation.country,
           "addressRegion": businessLocation.region,
           "addressLocality": businessLocation.city
-        },
+        } : undefined,
         "geo": {
           "@type": "GeoCoordinates",
           "latitude": businessLocation.country === "Kenya" ? -1.2921 : undefined,
