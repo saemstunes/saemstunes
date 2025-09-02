@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { 
   Users, 
   Music, 
@@ -331,8 +330,10 @@ const SortableRow = ({
 
 const Admin = () => {
   const { user, logout } = useAuth();
-  const { isAdmin, loading: adminLoading } = useAdminAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loginForm, setLoginForm] = useState({ username: '', password: '' });
+  const [loginError, setLoginError] = useState('');
   const [editingItem, setEditingItem] = useState<FeaturedItem | null>(null);
   const { featuredItems, loading, refreshItems } = useFeaturedItems();
   
@@ -373,30 +374,30 @@ const Admin = () => {
 
   const totalContentCount = filteredContent.length;
 
-  // Redirect if not admin or not authenticated
   useEffect(() => {
-    if (!adminLoading && (!user || !isAdmin)) {
-      window.location.href = '/auth?tab=login';
+    const adminAuth = sessionStorage.getItem('adminAuth');
+    if (adminAuth === 'true') {
+      setIsAuthenticated(true);
     }
-  }, [user, isAdmin, adminLoading]);
+  }, []);
 
   useEffect(() => {
-    if (isAdmin && activeTab === 'dashboard') {
+    if (isAuthenticated && activeTab === 'dashboard') {
       fetchDashboardData();
     }
-  }, [isAdmin, activeTab]);
+  }, [isAuthenticated, activeTab]);
 
   useEffect(() => {
-    if (isAdmin && activeTab === 'users') {
+    if (isAuthenticated && activeTab === 'users') {
       fetchUsers();
     }
-  }, [isAdmin, activeTab, usersPage, usersSearch]);
+  }, [isAuthenticated, activeTab, usersPage, usersSearch]);
 
   useEffect(() => {
-    if (isAdmin && activeTab === 'content') {
+    if (isAuthenticated && activeTab === 'content') {
       fetchContent();
     }
-  }, [isAdmin, activeTab]);
+  }, [isAuthenticated, activeTab]);
 
   const fetchDashboardData = async () => {
     setDashboardLoading(true);
@@ -586,12 +587,29 @@ const Admin = () => {
     }
   };
 
-  // Remove insecure login function - admin auth now handled by useAdminAuth hook
+  const handleAdminLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
+
+    if (
+      loginForm.username === process.env.NEXT_PUBLIC_ADMIN_USERNAME &&
+      loginForm.password === process.env.NEXT_PUBLIC_ADMIN_PASSWORD
+    ) {
+      setIsAuthenticated(true);
+      sessionStorage.setItem('adminAuth', 'true');
+    } else {
+      setLoginError('Invalid credentials. Please check your username and password.');
+    }
+  };
 
   const handleLogout = async () => {
     try {
-      await logout();
-      window.location.href = '/';
+      sessionStorage.removeItem('adminAuth');
+      setIsAuthenticated(false);
+      setLoginForm({ username: '', password: '' });
+      if (user) {
+        await logout();
+      }
     } catch (error) {
       console.error("Logout failed:", error);
     }
@@ -781,21 +799,59 @@ const Admin = () => {
     }
   };
 
-  // Show loading state while checking admin status
-  if (adminLoading) {
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-muted/30">
-        <div className="text-center">
-          <Logo size="lg" className="mb-4" />
-          <p className="text-muted-foreground">Verifying admin access...</p>
-        </div>
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <Logo size="lg" />
+            </div>
+            <CardTitle className="text-2xl">Admin Access</CardTitle>
+            <CardDescription>
+              Enter your administrator credentials
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleAdminLogin} className="space-y-4">
+              {loginError && (
+                <div className="bg-destructive/10 text-destructive p-3 rounded-md text-sm">
+                  {loginError}
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  value={loginForm.username}
+                  onChange={(e) => setLoginForm(prev => ({ ...prev, username: e.target.value }))}
+                  placeholder="Enter username"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={loginForm.password}
+                  onChange={(e) => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
+                  placeholder="Enter password"
+                  required
+                />
+              </div>
+              <Button
+                type="submit"
+                className="w-full bg-gold hover:bg-gold/90 text-white"
+              >
+                Access Admin Panel
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     );
-  }
-
-  // If not authenticated or not admin, redirect is handled by useEffect above
-  if (!user || !isAdmin) {
-    return null;
   }
 
   return (
