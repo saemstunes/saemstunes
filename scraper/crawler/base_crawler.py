@@ -4,7 +4,7 @@ import logging
 from collections import deque
 from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
-from typing import Set, List, Tuple, Dict
+from typing import Set, List, Tuple, Dict, Union
 from ..utils.helpers import normalize_url, should_follow_link, normalize_image_url
 from ..config.settings import settings
 
@@ -27,11 +27,20 @@ class BaseCrawler:
         if self.session:
             await self.session.close()
     
-    async def fetch_url(self, url: str) -> Tuple[str, str]:
+    async def fetch_url(self, url: str) -> Tuple[Union[bytes, str], str]:
         async with self.semaphore:
+
             try:
                 async with self.session.get(url) as response:
-                    content = await response.text()
+                    content_type = response.headers.get("Content-Type", "")
+                
+                    if "text" in content_type or "html" in content_type:
+                        # decode text content
+                        content = await response.text()
+                    else:
+                        # keep binary content as bytes
+                        content = await response.read()
+                
                     final_url = str(response.url)
                     return content, final_url
             except Exception as e:
@@ -105,6 +114,9 @@ class BaseCrawler:
                 
                 try:
                     content, final_url = await self.fetch_url(url)
+
+                    if isinstance(content, bytes):
+                        continue
                     
                     if self.is_music_content(content, final_url):
                         discovered_urls.add(final_url)
