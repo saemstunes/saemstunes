@@ -7,6 +7,7 @@ import { Loader2, AlertCircle, ShieldAlert } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Form,
   FormControl,
@@ -17,9 +18,8 @@ import {
 } from "@/components/ui/form";
 
 const formSchema = z.object({
-  email: z.string().min(1, "Email or username is required"),
+  email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  adminCode: z.string().min(1, "Admin code is required"),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -27,12 +27,6 @@ type FormData = z.infer<typeof formSchema>;
 interface AdminLoginFormProps {
   onClose?: () => void;
 }
-
-// Fixed admin credentials - same as in Admin.tsx
-const FIXED_ADMIN_CREDENTIALS = {
-  username: 'saemstunes',
-  password: 'ilovetosing123'
-};
 
 const AdminLoginForm = ({ onClose = () => {} }: AdminLoginFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,7 +38,6 @@ const AdminLoginForm = ({ onClose = () => {} }: AdminLoginFormProps) => {
     defaultValues: {
       email: "",
       password: "",
-      adminCode: "",
     },
   });
 
@@ -52,38 +45,53 @@ const AdminLoginForm = ({ onClose = () => {} }: AdminLoginFormProps) => {
     setIsSubmitting(true);
 
     try {
-      // Verify admin code first
-      if (data.adminCode !== "ST-ADMIN-2024") {
-        form.setError("adminCode", { 
-          message: "Invalid admin code" 
+      // Authenticate the user first
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
+
+      if (authError) {
+        form.setError("root", { 
+          message: "Invalid email or password" 
         });
         setIsSubmitting(false);
         return;
       }
-      
-      // Check if credentials match fixed admin
-      if (
-        data.email === FIXED_ADMIN_CREDENTIALS.username && 
-        data.password === FIXED_ADMIN_CREDENTIALS.password
-      ) {
-        // Fixed admin authentication
-        sessionStorage.setItem('adminAuth', 'true');
-        navigate("/admin");
-        onClose();
+
+      if (!authData.user) {
+        form.setError("root", { 
+          message: "Authentication failed" 
+        });
+        setIsSubmitting(false);
         return;
       }
-      
-      // Regular user authentication
-      await login(data.email, data.password);
-      
-      // Set admin access for regular user
-      sessionStorage.setItem('adminAuth', 'true');
+
+      // Check if user has admin role
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', authData.user.id)
+        .eq('role', 'admin')
+        .single();
+
+      if (roleError || !roleData) {
+        // Sign out the user if they don't have admin rights
+        await supabase.auth.signOut();
+        form.setError("root", { 
+          message: "Access denied. Admin privileges required." 
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Success - redirect to admin
       navigate("/admin");
       onClose();
     } catch (error) {
       console.error("Admin login failed:", error);
       form.setError("root", { 
-        message: "Authentication failed. Please verify your credentials." 
+        message: "Authentication failed. Please try again." 
       });
     } finally {
       setIsSubmitting(false);
@@ -105,11 +113,11 @@ const AdminLoginForm = ({ onClose = () => {} }: AdminLoginFormProps) => {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email or Username</FormLabel>
+              <FormLabel>Admin Email</FormLabel>
               <FormControl>
                 <Input 
-                  type="text" 
-                  placeholder="admin@example.com or saemstunes" 
+                  type="email" 
+                  placeholder="admin@saemstunes.com" 
                   {...field} 
                   disabled={isSubmitting} 
                 />
@@ -129,25 +137,6 @@ const AdminLoginForm = ({ onClose = () => {} }: AdminLoginFormProps) => {
                 <Input 
                   type="password"
                   placeholder="••••••••"
-                  {...field}
-                  disabled={isSubmitting}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="adminCode"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Admin Code</FormLabel>
-              <FormControl>
-                <Input 
-                  type="password"
-                  placeholder="Enter admin verification code"
                   {...field}
                   disabled={isSubmitting}
                 />
