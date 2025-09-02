@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -44,6 +44,51 @@ export type Database = {
         }
         Relationships: []
       }
+      achievements: {
+        Row: {
+          active_months: number[] | null
+          category: string
+          created_at: string | null
+          description: string
+          icon: string
+          id: string
+          points: number
+          requirements: Json
+          seasonal: boolean | null
+          tier: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          active_months?: number[] | null
+          category: string
+          created_at?: string | null
+          description: string
+          icon: string
+          id: string
+          points?: number
+          requirements?: Json
+          seasonal?: boolean | null
+          tier?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          active_months?: number[] | null
+          category?: string
+          created_at?: string | null
+          description?: string
+          icon?: string
+          id?: string
+          points?: number
+          requirements?: Json
+          seasonal?: boolean | null
+          tier?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       activity_logs: {
         Row: {
           action: string | null
@@ -63,7 +108,15 @@ export type Database = {
           timestamp?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "activity_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       artist_followers: {
         Row: {
@@ -91,6 +144,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "artists"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "artist_followers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -177,6 +237,7 @@ export type Database = {
           influences: string[] | null
           lessons_available: boolean | null
           location: string | null
+          monthly_listeners: number | null
           name: string
           profile_image_url: string | null
           rating: number | null
@@ -201,6 +262,7 @@ export type Database = {
           influences?: string[] | null
           lessons_available?: boolean | null
           location?: string | null
+          monthly_listeners?: number | null
           name: string
           profile_image_url?: string | null
           rating?: number | null
@@ -225,6 +287,7 @@ export type Database = {
           influences?: string[] | null
           lessons_available?: boolean | null
           location?: string | null
+          monthly_listeners?: number | null
           name?: string
           profile_image_url?: string | null
           rating?: number | null
@@ -287,6 +350,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "bookings_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "bookings_tutor_id_fkey"
             columns: ["tutor_id"]
             isOneToOne: false
@@ -326,7 +396,15 @@ export type Database = {
           title?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "certificates_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       course_enrollments: {
         Row: {
@@ -363,6 +441,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "learning_paths"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_enrollments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -406,7 +491,15 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "email_breach_checks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       favorites: {
         Row: {
@@ -429,6 +522,85 @@ export type Database = {
           created_at?: string
           id?: string
           user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      feature_triggers: {
+        Row: {
+          created_at: string | null
+          feature_name: string
+          id: string
+          last_triggered_at: string | null
+          trigger_count: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          feature_name: string
+          id?: string
+          last_triggered_at?: string | null
+          trigger_count?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          feature_name?: string
+          id?: string
+          last_triggered_at?: string | null
+          trigger_count?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feature_triggers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      featured_items: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          image: string | null
+          is_external: boolean | null
+          link: string | null
+          order: number | null
+          title: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image?: string | null
+          is_external?: boolean | null
+          link?: string | null
+          order?: number | null
+          title?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image?: string | null
+          is_external?: boolean | null
+          link?: string | null
+          order?: number | null
+          title?: string | null
         }
         Relationships: []
       }
@@ -466,7 +638,15 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "infographics_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       learning_paths: {
         Row: {
@@ -475,6 +655,7 @@ export type Database = {
           id: string
           modules: Json | null
           status: string | null
+          title: string | null
           updated_at: string
           user_id: string
         }
@@ -484,6 +665,7 @@ export type Database = {
           id?: string
           modules?: Json | null
           status?: string | null
+          title?: string | null
           updated_at?: string
           user_id: string
         }
@@ -493,10 +675,19 @@ export type Database = {
           id?: string
           modules?: Json | null
           status?: string | null
+          title?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "learning_paths_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       lesson_progress: {
         Row: {
@@ -530,6 +721,13 @@ export type Database = {
           watched_duration?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "lesson_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
+          },
           {
             foreignKeyName: "lesson_progress_video_content_id_fkey"
             columns: ["video_content_id"]
@@ -669,7 +867,15 @@ export type Database = {
           title?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "news_feed_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -755,7 +961,56 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      payment_methods: {
+        Row: {
+          created_at: string
+          details: Json
+          id: string
+          is_default: boolean | null
+          provider_id: string | null
+          type: Database["public"]["Enums"]["payment_method_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json
+          id?: string
+          is_default?: boolean | null
+          provider_id?: string | null
+          type: Database["public"]["Enums"]["payment_method_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json
+          id?: string
+          is_default?: boolean | null
+          provider_id?: string | null
+          type?: Database["public"]["Enums"]["payment_method_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_methods_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       payment_sessions: {
         Row: {
@@ -806,6 +1061,7 @@ export type Database = {
           id: string
           method: Database["public"]["Enums"]["payment_method"]
           order_id: string | null
+          payment_method_id: string | null
           receipt_url: string | null
           reference: string | null
           status: string | null
@@ -820,6 +1076,7 @@ export type Database = {
           id?: string
           method: Database["public"]["Enums"]["payment_method"]
           order_id?: string | null
+          payment_method_id?: string | null
           receipt_url?: string | null
           reference?: string | null
           status?: string | null
@@ -834,6 +1091,7 @@ export type Database = {
           id?: string
           method?: Database["public"]["Enums"]["payment_method"]
           order_id?: string | null
+          payment_method_id?: string | null
           receipt_url?: string | null
           reference?: string | null
           status?: string | null
@@ -855,6 +1113,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "orders"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "user_payment_methods_formatted"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -937,7 +1216,15 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "playlists_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       practice_logs: {
         Row: {
@@ -973,7 +1260,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "practice_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -985,12 +1280,14 @@ export type Database = {
           first_name: string | null
           full_name: string | null
           id: string
+          is_admin: boolean | null
           last_active: string | null
           last_name: string | null
           onboarding_complete: boolean | null
           parent_id: string | null
           phone: string | null
-          role: Database["public"]["Enums"]["user_role"]
+          role: string
+          subscription_tier: string
           updated_at: string
         }
         Insert: {
@@ -1002,12 +1299,14 @@ export type Database = {
           first_name?: string | null
           full_name?: string | null
           id: string
+          is_admin?: boolean | null
           last_active?: string | null
           last_name?: string | null
           onboarding_complete?: boolean | null
           parent_id?: string | null
           phone?: string | null
-          role?: Database["public"]["Enums"]["user_role"]
+          role?: string
+          subscription_tier?: string
           updated_at?: string
         }
         Update: {
@@ -1019,15 +1318,32 @@ export type Database = {
           first_name?: string | null
           full_name?: string | null
           id?: string
+          is_admin?: boolean | null
           last_active?: string | null
           last_name?: string | null
           onboarding_complete?: boolean | null
           parent_id?: string | null
           phone?: string | null
-          role?: Database["public"]["Enums"]["user_role"]
+          role?: string
+          subscription_tier?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "profiles_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       quiz_attempts: {
         Row: {
@@ -1068,6 +1384,13 @@ export type Database = {
             referencedRelation: "quizzes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "quiz_attempts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       quizzes: {
@@ -1107,7 +1430,15 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "quizzes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       referrals: {
         Row: {
@@ -1137,7 +1468,15 @@ export type Database = {
           status?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "referrals_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       resource_categories: {
         Row: {
@@ -1162,6 +1501,71 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      resources: {
+        Row: {
+          access_level: string | null
+          category_id: string | null
+          created_at: string | null
+          description: string | null
+          duration: string | null
+          id: string
+          instructor: string | null
+          is_locked: boolean | null
+          level: string | null
+          metadata: Json | null
+          resource_url: string | null
+          subject_category: string | null
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          access_level?: string | null
+          category_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          duration?: string | null
+          id?: string
+          instructor?: string | null
+          is_locked?: boolean | null
+          level?: string | null
+          metadata?: Json | null
+          resource_url?: string | null
+          subject_category?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          access_level?: string | null
+          category_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          duration?: string | null
+          id?: string
+          instructor?: string | null
+          is_locked?: boolean | null
+          level?: string | null
+          metadata?: Json | null
+          resource_url?: string | null
+          subject_category?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resources_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "resource_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       security_events: {
         Row: {
@@ -1194,7 +1598,15 @@ export type Database = {
           paste_count?: number | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "security_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       song_requests: {
         Row: {
@@ -1227,7 +1639,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "song_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       subscriptions: {
         Row: {
@@ -1235,6 +1655,7 @@ export type Database = {
           id: string
           order_id: string | null
           payment_id: string | null
+          payment_method_id: string | null
           status: Database["public"]["Enums"]["subscription_status"]
           type: Database["public"]["Enums"]["subscription_type"]
           updated_at: string
@@ -1247,6 +1668,7 @@ export type Database = {
           id?: string
           order_id?: string | null
           payment_id?: string | null
+          payment_method_id?: string | null
           status?: Database["public"]["Enums"]["subscription_status"]
           type?: Database["public"]["Enums"]["subscription_type"]
           updated_at?: string
@@ -1259,6 +1681,7 @@ export type Database = {
           id?: string
           order_id?: string | null
           payment_id?: string | null
+          payment_method_id?: string | null
           status?: Database["public"]["Enums"]["subscription_status"]
           type?: Database["public"]["Enums"]["subscription_type"]
           updated_at?: string
@@ -1280,6 +1703,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "payments"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "user_payment_methods_formatted"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -1433,7 +1877,199 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tutors_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      user_achievements: {
+        Row: {
+          achievement_id: string | null
+          created_at: string | null
+          id: string
+          progress: number | null
+          unlocked: boolean | null
+          unlocked_at: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          achievement_id?: string | null
+          created_at?: string | null
+          id?: string
+          progress?: number | null
+          unlocked?: boolean | null
+          unlocked_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          achievement_id?: string | null
+          created_at?: string | null
+          id?: string
+          progress?: number | null
+          unlocked?: boolean | null
+          unlocked_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_achievements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      user_progress: {
+        Row: {
+          achievements_unlocked: number | null
+          chords_learned: number | null
+          christmas_songs_learned: number | null
+          community_interactions: number | null
+          completed_courses: number | null
+          completed_lessons: number | null
+          created_at: string | null
+          guitar_course_completed: boolean | null
+          guitar_course_progress: number | null
+          help_given: number | null
+          id: string
+          piano_course_completed: boolean | null
+          piano_course_progress: number | null
+          practice_streak: number | null
+          profile_completion: number | null
+          referrals: number | null
+          songs_learned: number | null
+          tools_used_count: number | null
+          total_practice_minutes: number | null
+          tutor_sessions: number | null
+          updated_at: string | null
+          user_id: string | null
+          videos_watched: number | null
+          vocal_course_completed: boolean | null
+          vocal_course_progress: number | null
+          worship_course_completed: boolean | null
+          worship_course_progress: number | null
+        }
+        Insert: {
+          achievements_unlocked?: number | null
+          chords_learned?: number | null
+          christmas_songs_learned?: number | null
+          community_interactions?: number | null
+          completed_courses?: number | null
+          completed_lessons?: number | null
+          created_at?: string | null
+          guitar_course_completed?: boolean | null
+          guitar_course_progress?: number | null
+          help_given?: number | null
+          id?: string
+          piano_course_completed?: boolean | null
+          piano_course_progress?: number | null
+          practice_streak?: number | null
+          profile_completion?: number | null
+          referrals?: number | null
+          songs_learned?: number | null
+          tools_used_count?: number | null
+          total_practice_minutes?: number | null
+          tutor_sessions?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          videos_watched?: number | null
+          vocal_course_completed?: boolean | null
+          vocal_course_progress?: number | null
+          worship_course_completed?: boolean | null
+          worship_course_progress?: number | null
+        }
+        Update: {
+          achievements_unlocked?: number | null
+          chords_learned?: number | null
+          christmas_songs_learned?: number | null
+          community_interactions?: number | null
+          completed_courses?: number | null
+          completed_lessons?: number | null
+          created_at?: string | null
+          guitar_course_completed?: boolean | null
+          guitar_course_progress?: number | null
+          help_given?: number | null
+          id?: string
+          piano_course_completed?: boolean | null
+          piano_course_progress?: number | null
+          practice_streak?: number | null
+          profile_completion?: number | null
+          referrals?: number | null
+          songs_learned?: number | null
+          tools_used_count?: number | null
+          total_practice_minutes?: number | null
+          tutor_sessions?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          videos_watched?: number | null
+          vocal_course_completed?: boolean | null
+          vocal_course_progress?: number | null
+          worship_course_completed?: boolean | null
+          worship_course_progress?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      user_ui_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          instrument_selector_views: number
+          last_instrument_selector_shown: string | null
+          preferences: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          instrument_selector_views?: number
+          last_instrument_selector_shown?: string | null
+          preferences?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          instrument_selector_views?: number
+          last_instrument_selector_shown?: string | null
+          preferences?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_ui_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       video_content: {
         Row: {
@@ -1483,11 +2119,32 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "video_content_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "video_content_resource_category_fkey"
             columns: ["resource_category"]
             isOneToOne: false
             referencedRelation: "resource_categories"
             referencedColumns: ["name"]
+          },
+          {
+            foreignKeyName: "video_content_resource_category_fkey"
+            columns: ["resource_category"]
+            isOneToOne: false
+            referencedRelation: "resources_by_category"
+            referencedColumns: ["category_name"]
+          },
+          {
+            foreignKeyName: "video_content_resource_category_fkey"
+            columns: ["resource_category"]
+            isOneToOne: false
+            referencedRelation: "resources_with_categories"
+            referencedColumns: ["category_name"]
           },
         ]
       }
@@ -1514,34 +2171,322 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      resources_by_category: {
+        Row: {
+          auth_resources: number | null
+          basic_resources: number | null
+          category_id: string | null
+          category_name: string | null
+          free_resources: number | null
+          premium_resources: number | null
+          professional_resources: number | null
+          resources: Json | null
+          total_resources: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resources_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "resource_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resources_with_categories: {
+        Row: {
+          access_level: string | null
+          category_description: string | null
+          category_icon: string | null
+          category_id: string | null
+          category_name: string | null
+          created_at: string | null
+          description: string | null
+          duration: string | null
+          id: string | null
+          instructor: string | null
+          is_locked: boolean | null
+          level: string | null
+          metadata: Json | null
+          resource_url: string | null
+          subject_category: string | null
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resources_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "resource_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_achievement_summary: {
+        Row: {
+          completion_percentage: number | null
+          email: string | null
+          role: string | null
+          total_achievements: number | null
+          total_points: number | null
+          unlocked_achievements: number | null
+          unlocked_points: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      user_payment_methods_formatted: {
+        Row: {
+          created_at: string | null
+          formatted_details: Json | null
+          id: string | null
+          is_default: boolean | null
+          provider_id: string | null
+          type: Database["public"]["Enums"]["payment_method_type"] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          formatted_details?: never
+          id?: string | null
+          is_default?: boolean | null
+          provider_id?: string | null
+          type?: Database["public"]["Enums"]["payment_method_type"] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          formatted_details?: never
+          id?: string | null
+          is_default?: boolean | null
+          provider_id?: string | null
+          type?: Database["public"]["Enums"]["payment_method_type"] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_methods_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_achievement_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
     }
     Functions: {
+      calculate_progress: {
+        Args: { calculator: Json; requirement: Json }
+        Returns: number
+      }
+      can_access_resource: {
+        Args: { resource_id: string }
+        Returns: boolean
+      }
+      check_requirement: {
+        Args: { calculator: Json; requirement: Json }
+        Returns: boolean
+      }
+      check_track_access: {
+        Args:
+          | { track_id: string; user_id: string }
+          | { track_id: string; user_tier: string }
+        Returns: boolean
+      }
       cleanup_old_breach_checks: {
         Args: Record<PropertyKey, never> | { days_old?: number }
         Returns: undefined
       }
-      get_user_activity: {
-        Args: { target_user_id?: string; limit_records?: number }
+      get_all_content: {
+        Args: Record<PropertyKey, never>
         Returns: {
-          activity_id: string
-          user_id: string
-          activity_type: string
+          created_at: string
+          downloads: number
+          enrollments: number
+          id: string
+          plays: number
+          title: string
+          type: string
+          views: number
+        }[]
+      }
+      get_all_content_unified: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string
+          downloads: number
+          enrollments: number
+          id: string
+          plays: number
+          title: string
+          type: string
+          views: number
+        }[]
+      }
+      get_audio_play_counts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          play_count: number
+          track_id: string
+        }[]
+      }
+      get_course_enrollment_counts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          enrollment_count: number
+          learning_path_id: string
+        }[]
+      }
+      get_current_month_revenue: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          total_revenue: number
+        }[]
+      }
+      get_recent_content: {
+        Args: Record<PropertyKey, never> | { limit_count: number }
+        Returns: {
+          created_at: string
+          downloads: number
+          enrollments: number
+          id: string
+          plays: number
+          title: string
+          type: string
+          views: number
+        }[]
+      }
+      get_resources_by_access: {
+        Args: { user_access_level: string }
+        Returns: {
+          access_level: string | null
+          category_id: string | null
+          created_at: string | null
+          description: string | null
+          duration: string | null
+          id: string
+          instructor: string | null
+          is_locked: boolean | null
+          level: string | null
+          metadata: Json | null
+          resource_url: string | null
+          subject_category: string | null
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string | null
+        }[]
+      }
+      get_resources_by_category_secure: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          auth_resources: number
+          basic_resources: number
+          category_id: string
+          category_name: string
+          free_resources: number
+          premium_resources: number
+          professional_resources: number
+          resources: Json
+          total_resources: number
+        }[]
+      }
+      get_total_content_views: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          total_views: number
+        }[]
+      }
+      get_user_activity: {
+        Args: { limit_records?: number; target_user_id?: string }
+        Returns: {
           activity_description: string
+          activity_id: string
+          activity_type: string
           created_at: string
           ip_address: unknown
           user_agent: string
+          user_id: string
         }[]
       }
       get_user_breach_summary: {
         Args: Record<PropertyKey, never> | { target_user_id?: string }
         Returns: undefined
       }
+      get_user_default_payment_method: {
+        Args: { user_uuid: string }
+        Returns: {
+          details: Json
+          id: string
+          is_default: boolean
+          provider_id: string
+          type: Database["public"]["Enums"]["payment_method_type"]
+        }[]
+      }
+      get_user_resource_updates: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          access_level: string
+          category_id: string
+          created_at: string
+          description: string
+          duration: string
+          id: string
+          instructor: string
+          is_locked: boolean
+          level: string
+          metadata: Json
+          resource_url: string
+          subject_category: string
+          tags: string[]
+          thumbnail_url: string
+          title: string
+          updated_at: string
+        }[]
+      }
+      get_video_view_counts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          video_content_id: string
+          view_count: number
+        }[]
+      }
       inspect_old_breach_checks: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: number
           created_at: string
+          id: number
+        }[]
+      }
+      is_admin: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      search_resources: {
+        Args: { search_term: string }
+        Returns: {
+          access_level: string | null
+          category_id: string | null
+          created_at: string | null
+          description: string | null
+          duration: string | null
+          id: string
+          instructor: string | null
+          is_locked: boolean | null
+          level: string | null
+          metadata: Json | null
+          resource_url: string | null
+          subject_category: string | null
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string | null
         }[]
       }
       validate_password_security: {
@@ -1553,15 +2498,16 @@ export type Database = {
       access_level: "free" | "basic" | "premium" | "private"
       booking_status: "pending" | "confirmed" | "canceled" | "completed"
       payment_method: "mpesa" | "paypal" | "card" | "bank_transfer"
+      payment_method_type: "card" | "mpesa" | "paypal" | "bank"
       subscription_status: "active" | "expired" | "canceled" | "pending"
       subscription_type: "free" | "basic" | "premium" | "enterprise"
       user_role:
         | "student"
         | "adult_learner"
-        | "parent"
         | "tutor"
-        | "admin"
+        | "parent"
         | "user"
+        | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1692,15 +2638,16 @@ export const Constants = {
       access_level: ["free", "basic", "premium", "private"],
       booking_status: ["pending", "confirmed", "canceled", "completed"],
       payment_method: ["mpesa", "paypal", "card", "bank_transfer"],
+      payment_method_type: ["card", "mpesa", "paypal", "bank"],
       subscription_status: ["active", "expired", "canceled", "pending"],
       subscription_type: ["free", "basic", "premium", "enterprise"],
       user_role: [
         "student",
         "adult_learner",
-        "parent",
         "tutor",
-        "admin",
+        "parent",
         "user",
+        "admin",
       ],
     },
   },
