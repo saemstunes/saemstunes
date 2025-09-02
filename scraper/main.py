@@ -5,15 +5,15 @@ from datetime import datetime
 from pathlib import Path
 from typing import List
 
-from crawler.html_crawler import HTMLCrawler
-from crawler.pdf_crawler import PDFCrawler
-from crawler.video_crawler import VideoCrawler
-from processors.metadata_enricher import MetadataEnricher
-from processors.quality_validator import QualityValidator
-from processors.image_processor import ImageProcessor
-from config.supabase_client import SupabaseClient
-from utils.logging import setup_logging
-from config.settings import settings
+from scraper.crawler.html_crawler import HTMLCrawler
+from scraper.crawler.pdf_crawler import PDFCrawler
+from scraper.crawler.video_crawler import VideoCrawler
+from scraper.processors.metadata_enricher import MetadataEnricher
+from scraper.processors.quality_validator import QualityValidator
+from scraper.processors.image_processor import ImageProcessor
+from scraper.config.supabase_client import SupabaseClient
+from scraper.utils.logging import setup_logging
+from scraper.config.settings import settings
 
 setup_logging()
 
