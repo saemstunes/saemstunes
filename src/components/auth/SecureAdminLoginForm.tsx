@@ -7,7 +7,8 @@ import { Loader2, AlertCircle, ShieldAlert } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { userRoleService } from "@/services/userRoleService";
+import { useToast } from "@/hooks/use-toast";
 import {
   Form,
   FormControl,
@@ -24,14 +25,15 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-interface AdminLoginFormProps {
+interface SecureAdminLoginFormProps {
   onClose?: () => void;
 }
 
-const AdminLoginForm = ({ onClose = () => {} }: AdminLoginFormProps) => {
+const SecureAdminLoginForm = ({ onClose = () => {} }: SecureAdminLoginFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -45,54 +47,45 @@ const AdminLoginForm = ({ onClose = () => {} }: AdminLoginFormProps) => {
     setIsSubmitting(true);
 
     try {
-      // Authenticate the user first
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      });
-
-      if (authError) {
-        form.setError("root", { 
-          message: "Invalid email or password" 
-        });
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (!authData.user) {
-        form.setError("root", { 
-          message: "Authentication failed" 
-        });
-        setIsSubmitting(false);
-        return;
-      }
-
+      // Attempt authentication with Supabase
+      await login(data.email, data.password);
+      
       // Check if user has admin role
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', authData.user.id)
-        .eq('role', 'admin')
-        .single();
-
-      if (roleError || !roleData) {
-        // Sign out the user if they don't have admin rights
-        await supabase.auth.signOut();
+      const isAdmin = await userRoleService.isCurrentUserAdmin();
+      
+      if (!isAdmin) {
         form.setError("root", { 
           message: "Access denied. Admin privileges required." 
         });
-        setIsSubmitting(false);
         return;
       }
-
-      // Success - redirect to admin
+      
+      // Success - redirect to admin page
+      toast({
+        title: "Admin Access Granted",
+        description: "Welcome to the admin panel.",
+      });
+      
       navigate("/admin");
       onClose();
-    } catch (error) {
+      
+    } catch (error: any) {
       console.error("Admin login failed:", error);
-      form.setError("root", { 
-        message: "Authentication failed. Please try again." 
-      });
+      
+      // Handle specific auth errors
+      if (error?.message?.includes("Invalid login credentials")) {
+        form.setError("root", { 
+          message: "Invalid email or password." 
+        });
+      } else if (error?.message?.includes("Email not confirmed")) {
+        form.setError("root", { 
+          message: "Please verify your email address before logging in." 
+        });
+      } else {
+        form.setError("root", { 
+          message: "Authentication failed. Please try again." 
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -117,7 +110,7 @@ const AdminLoginForm = ({ onClose = () => {} }: AdminLoginFormProps) => {
               <FormControl>
                 <Input 
                   type="email" 
-                  placeholder="admin@saemstunes.com" 
+                  placeholder="admin@example.com" 
                   {...field} 
                   disabled={isSubmitting} 
                 />
@@ -179,4 +172,4 @@ const AdminLoginForm = ({ onClose = () => {} }: AdminLoginFormProps) => {
   );
 };
 
-export default AdminLoginForm;
+export default SecureAdminLoginForm;
