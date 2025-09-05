@@ -85,11 +85,11 @@ const VideoCard: React.FC<VideoCardProps> = ({
       case 'auth':
         return !!user;
       case 'basic':
-        return user.subscriptionTier === 'basic' || user.subscriptionTier === 'premium' || user.subscriptionTier === 'professional';
+        return user.subscription_tier === 'basic' || user.subscription_tier === 'premium' || user.subscription_tier === 'professional';
       case 'premium':
-        return user.subscriptionTier === 'premium' || user.subscriptionTier === 'professional';
+        return user.subscription_tier === 'premium' || user.subscription_tier === 'professional';
       case 'professional':
-        return user.subscriptionTier === 'professional';
+        return user.subscription_tier === 'professional';
       default:
         return false;
     }

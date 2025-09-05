@@ -9,7 +9,7 @@ export const LoaderOne = () => {
       repeat: Infinity,
       repeatType: "loop" as const,
       delay: x * 0.2,
-      ease: "easeInOut" as const,
+      ease: "easeInOut",
     };
   };
   return (
@@ -55,7 +55,7 @@ export const LoaderTwo = () => {
       repeat: Infinity,
       repeatType: "loop" as const,
       delay: x * 0.2,
-      ease: "easeInOut" as const,
+      ease: "easeInOut",
     };
   };
   return (
@@ -120,9 +120,9 @@ export const LoaderThree = () => {
         animate={{ pathLength: 1, fill: "var(--fill-final)" }}
         transition={{
           duration: 2,
-          ease: "easeInOut" as const,
+          ease: "easeInOut",
           repeat: Infinity,
-          repeatType: "reverse" as const,
+          repeatType: "reverse",
         }}
       />
 
@@ -133,9 +133,9 @@ export const LoaderThree = () => {
         animate={{ pathLength: 1 }}
         transition={{
           duration: 2,
-          ease: "easeInOut" as const,
+          ease: "easeInOut",
           repeat: Infinity,
-          repeatType: "reverse" as const,
+          repeatType: "reverse",
         }}
       />
 
@@ -146,9 +146,9 @@ export const LoaderThree = () => {
         animate={{ pathLength: 1 }}
         transition={{
           duration: 2,
-          ease: "easeInOut" as const,
+          ease: "easeInOut",
           repeat: Infinity,
-          repeatType: "reverse" as const,
+          repeatType: "reverse",
         }}
       />
     </motion.svg>
@@ -233,9 +233,9 @@ export const LoaderFive = ({ text }: { text: string }) => {
           transition={{
             duration: 0.5,
             repeat: Infinity,
-            repeatType: "loop" as const,
+            repeatType: "loop",
             delay: i * 0.05,
-            ease: "easeInOut" as const,
+            ease: "easeInOut",
             repeatDelay: 2,
           }}
         >

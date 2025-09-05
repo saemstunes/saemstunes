@@ -27,10 +27,10 @@ const UpcomingBookings = ({ limit = 3 }: UpcomingBookingsProps) => {
           // For students, parents, adults - find bookings they booked
           ((user.role === "student" ||
             user.role === "parent" ||
-            user.role === "adult_learner") &&
+            user.role === "adult") &&
             booking.studentId === user.id) ||
           // For teachers - find bookings they are teaching
-          (user.role === "tutor" &&
+          (user.role === "teacher" &&
             booking.tutorId === user.id) ||
           // Admins can see all bookings
           user.role === "admin"

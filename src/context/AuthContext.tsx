@@ -15,9 +15,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { UserProfile, UserRole } from "@/types/user";
 
-export { UserRole } from "@/types/user";
-export type { ExtendedUser };
-
 interface ExtendedUser extends User {
   role: UserRole;
   subscribed?: boolean;
