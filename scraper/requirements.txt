@@ -18,4 +18,3 @@ supabase==1.0.3
 urllib3==1.26.15
 webencodings==0.5.1
 yarl==1.8.2
-PyMuPDF==1.22.5
