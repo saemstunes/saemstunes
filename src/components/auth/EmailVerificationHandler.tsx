@@ -24,18 +24,19 @@ export const EmailVerificationHandler = ({
   const { toast } = useToast();
   const checkIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Unified verification checker with leak detection
   const checkVerificationStatus = useCallback(async () => {
     try {
       const { data: { user }, error } = await supabase.auth.getUser();
       
       if (error) {
-        if (error.message.includes("Invalid Refresh Token") || 
-            error.message.includes("Auth session missing")) {
+        // Handle expired sessions specifically
+        if (error.message.includes("Invalid Refresh Token")) {
           return 'SESSION_EXPIRED';
         }
         throw error;
       }
-
+      
       if (user?.email_confirmed_at) {
         toast({
           title: "Email verified!",
@@ -44,38 +45,41 @@ export const EmailVerificationHandler = ({
         onVerificationComplete?.();
         return 'VERIFIED';
       }
-      
       return 'UNVERIFIED';
     } catch (error: any) {
       console.error('Verification check error:', error);
+      
+      // Handle leaked credentials
+      if (error.message.includes("leaked credentials")) {
+        toast({
+          title: "Security Alert",
+          description: "This password has been compromised. Please choose a different one.",
+          variant: "destructive",
+        });
+      }
+      
       return 'ERROR';
     }
   }, [toast, onVerificationComplete]);
 
-  const handleVerificationProcess = useCallback(async () => {
-    setIsResending(true);
+  // Handle all user scenarios
+  const handleUserScenarios = useCallback(async () => {
+    const status = await checkVerificationStatus();
+    
+    if (status === 'VERIFIED') return;
+    
     try {
-      const status = await checkVerificationStatus();
-      
-      if (status === 'VERIFIED') return;
-
+      // First-time users - resend initial verification
       if (status === 'UNVERIFIED') {
-        const { error } = await supabase.auth.resend({
+        await supabase.auth.resend({
           type: 'signup',
           email,
           options: { captchaToken }
         });
-
-        if (error) throw error;
-        
-        setResendAttempts(prev => prev + 1);
-        toast({
-          title: "Verification email sent",
-          description: "Please check your email inbox and spam folder.",
-        });
       }
       
-      if (status === 'SESSION_EXPIRED') {
+      // Returning users - magic link with OTP
+      if (status === 'SESSION_EXPIRED' || status === 'ERROR') {
         const { error } = await supabase.auth.signInWithOtp({
           email,
           options: {
@@ -83,23 +87,23 @@ export const EmailVerificationHandler = ({
             shouldCreateUser: false
           }
         });
-
-        if (error) throw error;
         
-        setResendAttempts(prev => prev + 1);
-        toast({
-          title: "Sign-in email sent",
-          description: "Please check your email to complete sign-in.",
-        });
+        if (error) throw error;
       }
+      
+      toast({
+        title: "Verification email sent",
+        description: "Please check your email inbox and spam folder.",
+      });
     } catch (error: any) {
       console.error('Resend error:', error);
+      
       let errorMessage = "Failed to send verification email";
       let cooldownTime = 60;
-
-      if (error.message?.includes("ratelimit")) {
+      
+      if (error.message?.includes("rate limit")) {
         errorMessage = "Too many requests. Please wait before trying again.";
-        cooldownTime = 300;
+        cooldownTime = 3600; // Respect 4/hour project limit
       } else if (error.message?.includes("already registered")) {
         errorMessage = "This email is already registered. Please sign in.";
       } else if (error.message?.includes("captcha")) {
@@ -107,13 +111,13 @@ export const EmailVerificationHandler = ({
         setShowCaptcha(true);
         cooldownTime = 0;
       }
-
+      
       toast({
         title: "Error",
         description: errorMessage,
         variant: "destructive",
       });
-
+      
       if (cooldownTime > 0) {
         setCooldown(cooldownTime);
         const timer = setInterval(() => {
@@ -129,8 +133,9 @@ export const EmailVerificationHandler = ({
     } finally {
       setIsResending(false);
     }
-  }, [email, checkVerificationStatus, toast, captchaToken]);
+  }, [email, checkVerificationStatus, toast]);
 
+  // Smart verification polling
   useEffect(() => {
     const startVerificationCheck = async () => {
       const status = await checkVerificationStatus();
@@ -139,7 +144,8 @@ export const EmailVerificationHandler = ({
         if (checkIntervalRef.current) clearInterval(checkIntervalRef.current);
         return;
       }
-
+      
+      // Progressive backoff: 5s, 10s, 30s, 60s
       const intervals = [5000, 10000, 30000, 60000];
       const intervalIndex = Math.min(resendAttempts, intervals.length - 1);
       
@@ -149,29 +155,34 @@ export const EmailVerificationHandler = ({
       );
     };
 
-    if (isVerificationChecked) {
-      startVerificationCheck();
-    }
-
+    startVerificationCheck();
+    
     return () => {
-      if (checkIntervalRef.current) {
-        clearTimeout(checkIntervalRef.current);
-      }
+      if (checkIntervalRef.current) clearTimeout(checkIntervalRef.current);
     };
   }, [isVerificationChecked, resendAttempts, checkVerificationStatus]);
 
+  // Handle initial verification state
   useEffect(() => {
     const initializeVerification = async () => {
-      await checkVerificationStatus();
+      const status = await checkVerificationStatus();
       setIsVerificationChecked(true);
+      
+      if (status === 'UNVERIFIED' || status === 'SESSION_EXPIRED') {
+        // Only auto-send for first-time users
+        if (resendAttempts === 0) {
+          handleUserScenarios();
+        }
+      }
     };
-    
+
     initializeVerification();
-  }, [checkVerificationStatus]);
+  }, [handleUserScenarios, checkVerificationStatus]);
 
   const handleResendEmail = async () => {
     if (cooldown > 0 || !email) return;
-
+    
+    // Require CAPTCHA after first attempt
     if (resendAttempts >= 1 && !captchaToken) {
       setShowCaptcha(true);
       toast({
@@ -181,8 +192,8 @@ export const EmailVerificationHandler = ({
       });
       return;
     }
-
-    await handleVerificationProcess();
+    
+    await handleUserScenarios();
   };
 
   const handleCaptchaVerify = (token: string) => {
@@ -192,8 +203,8 @@ export const EmailVerificationHandler = ({
     }, 100);
   };
 
+  // CAPTCHA handlers remain the same
   const handleCaptchaExpire = () => setCaptchaToken(null);
-  
   const handleCaptchaError = () => {
     setCaptchaToken(null);
     toast({
@@ -218,8 +229,8 @@ export const EmailVerificationHandler = ({
             ref={captchaRef}
             theme="light"
           />
-          <Button
-            variant="ghost"
+          <Button 
+            variant="ghost" 
             size="sm"
             onClick={() => {
               setShowCaptcha(false);
@@ -231,7 +242,7 @@ export const EmailVerificationHandler = ({
           </Button>
         </div>
       ) : (
-        <Button
+        <Button 
           variant="outline"
           onClick={handleResendEmail}
           disabled={isResending || cooldown > 0}
