@@ -10,48 +10,91 @@ const AuthCallback = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const [error, setError] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(true);
 
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Clean up URL hash
-        const currentUrl = new URL(window.location.href);
-        if (currentUrl.hash) {
-          const cleanUrl = `${currentUrl.origin}${currentUrl.pathname}${currentUrl.search}`;
-          window.history.replaceState({}, document.title, cleanUrl);
-        }
+        setIsProcessing(true);
+        
+        console.log("Auth callback parameters:", {
+          searchParams: Object.fromEntries(searchParams.entries()),
+          hash: location.hash,
+          pathname: location.pathname
+        });
 
-        // Extract parameters
+        const cleanUrl = () => {
+          const url = new URL(window.location.href);
+          url.hash = '';
+          url.search = '';
+          window.history.replaceState({}, document.title, url.toString());
+        };
+
         const hashParams = new URLSearchParams(location.hash.replace(/^#/, ''));
         const code = searchParams.get("code") || hashParams.get("code");
-        const provider = searchParams.get("provider") || hashParams.get("provider") || "google";
+        const provider = searchParams.get("provider") || hashParams.get("provider") || "email";
         const authError = searchParams.get("error") || hashParams.get("error");
         const errorDescription = searchParams.get("error_description") || hashParams.get("error_description");
         const errorCode = searchParams.get("error_code") || hashParams.get("error_code");
+        const accessToken = hashParams.get("access_token");
+        const refreshToken = hashParams.get("refresh_token");
+        const tokenType = hashParams.get("token_type");
+        const expiresIn = hashParams.get("expires_in");
+        const type = hashParams.get("type");
 
-        // Handle errors
+        cleanUrl();
+
         if (authError) {
-          if (errorCode === "provider_email_needs_verification") {
+          console.error("Auth error received:", { authError, errorDescription, errorCode });
+          
+          if (errorCode === "provider_email_needs_verification" || 
+              errorDescription?.includes("Unverified email")) {
             toast({
               title: `${provider.charAt(0).toUpperCase() + provider.slice(1)} Email Verification Required`,
               description: "Please verify your email to continue.",
               duration: 8000,
             });
-            navigate("/verification-waiting", { state: { provider, error: errorDescription } });
+            
+            let email = "";
+            if (errorDescription) {
+              const emailMatch = errorDescription.match(/email[:\s]+([^\s@]+@[^\s@]+\.[^\s@]+)/i);
+              email = emailMatch ? emailMatch[1] : "";
+            }
+            
+            navigate("/verification-waiting", { 
+              state: { provider, error: errorDescription, email } 
+            });
             return;
           }
-          throw new Error(errorDescription || "Authentication failed");
+          
+          throw new Error(errorDescription || `Authentication failed: ${authError}`);
         }
 
-        // Handle OAuth code exchange
         if (code) {
-          const { error: sessionError } = await supabase.auth.exchangeCodeForSession(code);
-          if (sessionError) throw sessionError;
+          console.log("Exchanging OAuth code for session");
+          const { error: sessionError, data: sessionData } = await supabase.auth.exchangeCodeForSession(code);
+          
+          if (sessionError) {
+            console.error("Session exchange error:", sessionError);
+            
+            if (sessionError.message.includes("email_not_confirmed") || 
+                sessionError.message.includes("unverified email")) {
+              const { data: { user } } = await supabase.auth.getUser();
+              
+              if (user && !user.email_confirmed_at) {
+                navigate("/verification-waiting", { 
+                  state: { email: user.email, provider } 
+                });
+                return;
+              }
+            }
+            throw sessionError;
+          }
 
           const { data: { user }, error: userError } = await supabase.auth.getUser();
           if (userError) throw userError;
 
-          if (user && user.app_metadata?.provider !== 'web3' && !user.email_confirmed_at) {
+          if (user && !user.email_confirmed_at) {
             navigate("/verification-waiting", { state: { email: user.email, provider } });
             return;
           }
@@ -60,31 +103,69 @@ const AuthCallback = () => {
             title: "Welcome!",
             description: `Successfully signed in with ${provider}`,
           });
-          window.location.href = '/';
+
+          navigate('/', { replace: true });
           return;
         }
 
-        // Handle fragment tokens for Web3
-        if (location.hash.includes("access_token")) {
-          const fragmentParams = new URLSearchParams(location.hash.substring(1));
-          const accessToken = fragmentParams.get("access_token");
-          const refreshToken = fragmentParams.get("refresh_token");
+        if (accessToken && refreshToken) {
+          console.log("Setting session from access token");
+          const { error: tokenError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
           
-          if (accessToken && refreshToken) {
-            const { error: tokenError } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
+          if (tokenError) {
+            console.error("Session set error:", tokenError);
+            throw tokenError;
+          }
+
+          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+          if (sessionError) throw sessionError;
+          
+          if (session) {
+            toast({
+              title: "Welcome!",
+              description: "Successfully signed in",
             });
-            if (tokenError) throw tokenError;
-            
-            toast({ title: "Welcome!", description: "Successfully signed in" });
-            window.location.href = '/';
+            navigate('/', { replace: true });
             return;
+          } else {
+            throw new Error("Failed to establish session");
           }
         }
 
-        throw new Error("Invalid authentication response");
+        if (type === "signup" || type === "recovery") {
+          console.log("Handling email verification type:", type);
+          
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            toast({
+              title: "Email verified!",
+              description: "Your email has been successfully verified.",
+            });
+            navigate('/', { replace: true });
+            return;
+          }
+          
+          toast({
+            title: "Email verified",
+            description: "Your email has been verified. Please sign in to continue.",
+          });
+          navigate("/auth?tab=login", { replace: true });
+          return;
+        }
+
+        console.warn("No valid authentication parameters found");
         
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          console.log("Found existing session, redirecting to home");
+          navigate('/', { replace: true });
+          return;
+        }
+        
+        throw new Error("Invalid authentication response - no valid parameters found");
       } catch (error: any) {
         console.error("Authentication error:", error);
         setError(error.message);
@@ -93,7 +174,10 @@ const AuthCallback = () => {
           description: error.message || "Could not authenticate",
           variant: "destructive",
         });
-        setTimeout(() => navigate("/auth?tab=login"), 3000);
+        
+        setTimeout(() => navigate("/auth?tab=login", { replace: true }), 3000);
+      } finally {
+        setIsProcessing(false);
       }
     };
 
@@ -107,7 +191,19 @@ const AuthCallback = () => {
         <p className="mt-4 text-lg">
           {error ? "Authentication failed - redirecting..." : "Authenticating..."}
         </p>
-        {error && <p className="mt-2 text-sm text-muted-foreground">{error}</p>}
+        {error && (
+          <div className="mt-4 max-w-md">
+            <p className="text-sm text-muted-foreground">{error}</p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Redirecting to login page...
+            </p>
+          </div>
+        )}
+        {!error && isProcessing && (
+          <p className="text-sm text-muted-foreground mt-2">
+            Processing authentication...
+          </p>
+        )}
       </div>
     </div>
   );
