@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/microfrontends.json",
+  "applications": {
+    "saemstunes": {
+      "development": {
+        "fallback": "www.saemstunes.com"
+      }
+    }
+  }
+}
