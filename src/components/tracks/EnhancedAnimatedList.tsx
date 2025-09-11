@@ -1,16 +1,5 @@
 import React, { useState } from 'react';
-import { 
-  Play, 
-  Pause, 
-  Music, 
-  Clock, 
-  MoreHorizontal, 
-  Download,
-  Share2,
-  Heart,
-  HeartOff,
-  Plus
-} from 'lucide-react';
+import { Play, Pause, Music, Clock, MoreHorizontal, Download, Share2, Heart, HeartOff, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -49,11 +38,7 @@ const formatTime = (seconds: number): string => {
   return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
 };
 
-const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
-  tracks,
-  className,
-  onTrackSelect
-}) => {
+const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({ tracks, className, onTrackSelect }) => {
   const [favorites, setFavorites] = useState<string[]>([]);
   const { toast } = useToast();
   const { state, playTrack } = useAudioPlayer();
@@ -61,7 +46,6 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
 
   const toggleFavorite = (trackId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    
     if (favorites.includes(trackId)) {
       setFavorites(favorites.filter(id => id !== trackId));
       toast({
@@ -79,14 +63,12 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
 
   const handleDownload = (track: AudioTrack, e: React.MouseEvent) => {
     e.stopPropagation();
-    
     const link = document.createElement('a');
     link.href = track.src;
-    link.download = `${track.artist} - ${track.name}.mp3`;
+    link.download = `${track.artist}-${track.name}.mp3`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
     toast({
       title: "Download started",
       description: `Downloading "${track.name}"`
@@ -95,30 +77,31 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
 
   const handleShare = (track: AudioTrack, e: React.MouseEvent) => {
     e.stopPropagation();
-    
     const trackUrl = generateTrackUrl(track);
     const shareData = {
       title: track.name,
       text: `Listen to ${track.name} by ${track.artist} on Saem's Tunes`,
       url: window.location.origin + trackUrl,
     };
-    
+
     if (navigator.share) {
       navigator.share(shareData)
-      .then(() => console.log('Successful share'))
-      .catch((error) => console.log('Error sharing', error));
+        .then(() => console.log('Successful share'))
+        .catch((error) => console.log('Error sharing', error));
     } else {
-      navigator.clipboard.writeText(shareData.url).then(() => {
-        toast({
-          title: "Link copied",
-          description: "Track link copied to clipboard"
+      navigator.clipboard.writeText(shareData.url)
+        .then(() => {
+          toast({
+            title: "Link copied",
+            description: "Track link copied to clipboard"
+          });
+        })
+        .catch(() => {
+          toast({
+            title: "Share failed",
+            description: "Unable to share or copy link"
+          });
         });
-      }).catch(() => {
-        toast({
-          title: "Share failed",
-          description: "Unable to share or copy link"
-        });
-      });
     }
   };
 
@@ -131,7 +114,7 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: index * 0.1 }}
           className={cn(
-            "flex items-center justify-between p-3 rounded-md hover:bg-accent cursor-pointer transition-colors",
+            "group flex items-center justify-between p-3 rounded-md hover:bg-accent cursor-pointer transition-all duration-300",
             state.currentTrack?.id === track.id && "bg-accent"
           )}
           onClick={() => {
@@ -153,52 +136,59 @@ const EnhancedAnimatedList: React.FC<EnhancedAnimatedListProps> = ({
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="relative h-10 w-10 flex-shrink-0">
               {track.artwork ? (
-                <img 
-                  src={track.artwork} 
-                  alt={track.name} 
-                  className="h-10 w-10 rounded object-cover" 
+                <img
+                  src={track.artwork}
+                  alt={track.name}
+                  className="h-10 w-10 rounded object-cover transition-transform duration-300 group-hover:scale-105"
                 />
               ) : (
-                <div className="h-10 w-10 rounded bg-muted flex items-center justify-center">
-                  <Music className="h-5 w-5 text-muted-foreground" />
+                <div className="h-10 w-10 rounded bg-muted flex items-center justify-center transition-colors duration-300 group-hover:bg-gold/20">
+                  <Music className="h-5 w-5 text-muted-foreground transition-colors duration-300 group-hover:text-gold" />
                 </div>
               )}
-              
               {state.currentTrack?.id === track.id && (
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded">
-                  {state.isPlaying ? <Pause className="h-5 w-5 text-white" /> : <Play className="h-5 w-5 text-white" />}
+                  {state.isPlaying ? (
+                    <Pause className="h-5 w-5 text-white" />
+                  ) : (
+                    <Play className="h-5 w-5 text-white" />
+                  )}
                 </div>
               )}
             </div>
-            
             <div className="flex-1 min-w-0">
-              <p className="font-medium truncate">{track.name}</p>
-              <p className="text-sm text-muted-foreground truncate">{track.artist}</p>
+              <p className="font-medium truncate transition-colors duration-300 group-hover:text-gold">
+                {track.name}
+              </p>
+              <p className="text-sm text-muted-foreground truncate transition-all duration-300 group-hover:text-foreground group-hover:font-medium">
+                {track.artist || 'Unknown Artist'}
+              </p>
             </div>
           </div>
-          
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground flex items-center gap-1 hidden sm:flex">
+            <span className="text-xs text-muted-foreground flex items-center gap-1 hidden sm:flex transition-colors duration-300 group-hover:text-foreground">
               <Clock className="h-3 w-3" />
               {formatTime(track.duration || 0)}
             </span>
-            
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-muted-foreground hover:text-primary"
+              className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors duration-300"
               onClick={(e) => toggleFavorite(String(track.id), e)}
             >
               {favorites.includes(String(track.id)) ? (
-                <Heart className="h-4 w-4 fill-gold text-gold" />
+                <Heart className="h-4 w-4 fill-gold text-gold transition-transform duration-300 hover:scale-110" />
               ) : (
-                <Heart className="h-4 w-4" />
+                <Heart className="h-4 w-4 transition-transform duration-300 hover:scale-110" />
               )}
             </Button>
-            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 transition-opacity duration-300 opacity-70 group-hover:opacity-100"
+                >
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
