@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "headers": [
-    // Security headers applied to all responses
+
     {
       "source": "/(.*)",
       "headers": [
@@ -17,7 +17,7 @@
         }
       ]
     },
-    // Cache and MIME type headers for specific static assets
+
     {
       "source": "/_next/static/(.*).js",
       "headers": [
@@ -97,7 +97,7 @@
     }
   ],
   "rewrites": [
-    // Explicitly serve static assets without rewriting
+  
     {
       "source": "/manifest.json",
       "destination": "/manifest.json"
@@ -110,7 +110,7 @@
       "source": "/static/(.*)",
       "destination": "/static/$1"
     },
-    // SPA fallback: all other requests go to index.html
+ 
     {
       "source": "/(.*)",
       "destination": "/"
