@@ -352,7 +352,7 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
         </h1>
         <p className="text-lg sm:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed">
           Your musical journey starts here. Discover amazing tracks, learn instruments, 
-          and join our vibrant community of music lovers.
+          and embark on learning music with ease.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
           <Button 
