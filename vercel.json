@@ -1,7 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "headers": [
-
     {
       "source": "/(.*)",
       "headers": [
@@ -17,100 +16,74 @@
         }
       ]
     },
-
     {
-      "source": "/_next/static/(.*).js",
+      "source": "/_next/static/:path*.(js|mjs)",
       "headers": [
         { "key": "Content-Type", "value": "application/javascript; charset=utf-8" },
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     },
     {
-      "source": "/_next/static/(.*).css",
+      "source": "/_next/static/:path*.css",
       "headers": [
         { "key": "Content-Type", "value": "text/css; charset=utf-8" },
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     },
     {
-      "source": "/static/(.*).js",
+      "source": "/static/:path*.(js|mjs)",
       "headers": [
         { "key": "Content-Type", "value": "application/javascript; charset=utf-8" },
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     },
     {
-      "source": "/static/(.*).css",
+      "source": "/static/:path*.css",
       "headers": [
         { "key": "Content-Type", "value": "text/css; charset=utf-8" },
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     },
     {
-      "source": "/(.*).woff2",
+      "source": "/:path*.(woff2|woff|ttf|otf)",
       "headers": [
-        { "key": "Content-Type", "value": "font/woff2" },
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     },
     {
-      "source": "/(.*).jpg",
+      "source": "/:path*.(jpg|jpeg|png|gif|webp|avif|ico|svg)",
       "headers": [
-        { "key": "Content-Type", "value": "image/jpeg" },
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     },
     {
-      "source": "/(.*).png",
+      "source": "/:path*.json",
       "headers": [
-        { "key": "Content-Type", "value": "image/png" },
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
-      ]
-    },
-    {
-      "source": "/(.*).webp",
-      "headers": [
-        { "key": "Content-Type", "value": "image/webp" },
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
-      ]
-    },
-    {
-      "source": "/(.*).svg",
-      "headers": [
-        { "key": "Content-Type", "value": "image/svg+xml" },
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
-      ]
-    },
-    {
-      "source": "/(.*).ico",
-      "headers": [
-        { "key": "Content-Type", "value": "image/x-icon" },
+        { "key": "Content-Type", "value": "application/json; charset=utf-8" },
         { "key": "Cache-Control", "value": "public, max-age=86400" }
       ]
     },
     {
-      "source": "/(.*).json",
+      "source": "/:path*.xml",
       "headers": [
-        { "key": "Content-Type", "value": "application/json; charset=utf-8" },
+        { "key": "Content-Type", "value": "application/xml; charset=utf-8" },
         { "key": "Cache-Control", "value": "public, max-age=86400" }
       ]
     }
   ],
   "rewrites": [
-  
     {
       "source": "/manifest.json",
       "destination": "/manifest.json"
     },
     {
-      "source": "/_next/static/(.*)",
-      "destination": "/_next/static/$1"
+      "source": "/_next/static/:path*",
+      "destination": "/_next/static/:path*"
     },
     {
-      "source": "/static/(.*)",
-      "destination": "/static/$1"
+      "source": "/static/:path*",
+      "destination": "/static/:path*"
     },
- 
     {
       "source": "/(.*)",
       "destination": "/"
