@@ -1,6 +1,7 @@
 // src/pages/Resources.tsx
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useSubscription } from "@/context/SubscriptionContext";
 import MainLayout from "@/components/layout/MainLayout";
 import ResourceCard from "@/components/resources/ResourceCard";
 import ResourceTypeFilter from "@/components/resources/ResourceTypeFilter";

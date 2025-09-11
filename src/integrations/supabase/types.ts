@@ -2033,38 +2033,6 @@ export type Database = {
           },
         ]
       }
-      user_roles: {
-        Row: {
-          created_at: string
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          role: Database["public"]["Enums"]["app_role"]
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_roles_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "user_achievement_summary"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
       user_ui_preferences: {
         Row: {
           created_at: string
@@ -2106,7 +2074,6 @@ export type Database = {
       video_content: {
         Row: {
           access_level: Database["public"]["Enums"]["access_level"]
-          approved: boolean
           category: string | null
           created_at: string
           created_by: string | null
@@ -2122,7 +2089,6 @@ export type Database = {
         }
         Insert: {
           access_level?: Database["public"]["Enums"]["access_level"]
-          approved?: boolean
           category?: string | null
           created_at?: string
           created_by?: string | null
@@ -2138,7 +2104,6 @@ export type Database = {
         }
         Update: {
           access_level?: Database["public"]["Enums"]["access_level"]
-          approved?: boolean
           category?: string | null
           created_at?: string
           created_by?: string | null
@@ -2492,13 +2457,6 @@ export type Database = {
           view_count: number
         }[]
       }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
       inspect_old_breach_checks: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -2508,10 +2466,6 @@ export type Database = {
       }
       is_admin: {
         Args: { user_id: string }
-        Returns: boolean
-      }
-      is_current_user_admin: {
-        Args: Record<PropertyKey, never>
         Returns: boolean
       }
       search_resources: {
@@ -2542,7 +2496,6 @@ export type Database = {
     }
     Enums: {
       access_level: "free" | "basic" | "premium" | "private"
-      app_role: "admin" | "tutor" | "user"
       booking_status: "pending" | "confirmed" | "canceled" | "completed"
       payment_method: "mpesa" | "paypal" | "card" | "bank_transfer"
       payment_method_type: "card" | "mpesa" | "paypal" | "bank"
@@ -2683,7 +2636,6 @@ export const Constants = {
   public: {
     Enums: {
       access_level: ["free", "basic", "premium", "private"],
-      app_role: ["admin", "tutor", "user"],
       booking_status: ["pending", "confirmed", "canceled", "completed"],
       payment_method: ["mpesa", "paypal", "card", "bank_transfer"],
       payment_method_type: ["card", "mpesa", "paypal", "bank"],

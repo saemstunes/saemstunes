@@ -8,16 +8,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useFeaturedItems } from '@/context/FeaturedItemsContext';
 import { Skeleton } from '@/components/ui/skeleton';
 
-interface FeaturedItem {
-  id: string;
-  title: string;
-  description: string;
-  image: string;
-  link: string;
-  is_external?: boolean;
-  order?: number;
-}
-
 const EnhancedFeaturedBanner = () => {
   const navigate = useNavigate();
   const { featuredItems, loading } = useFeaturedItems();

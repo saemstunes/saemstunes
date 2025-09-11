@@ -6,6 +6,7 @@ import { LoaderOne } from '@/components/ui/loader';
 // Lazy load VisionSection with error boundary
 const VisionSection = lazy(() => 
   import('@/components/homepage/VisionSection')
+    .then(module => ({ default: module.default || module.VisionSection }))
     .catch(error => {
       console.error('Failed to load VisionSection:', error);
       // Return a fallback component
@@ -32,7 +33,6 @@ const LazyVisionSection: React.FC = () => {
           fallback={
             <div className="min-h-[400px] flex flex-col items-center justify-center py-12 space-y-4">
               <LoaderOne />
-              <p className="text-primary text-sm">Loading our vision...</p>
             </div>
           }
         >

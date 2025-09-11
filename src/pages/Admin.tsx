@@ -773,7 +773,7 @@ const Admin = () => {
       }
       
       const { error } = await supabase
-        .from(tableName as any)
+        .from(tableName)
         .delete()
         .eq('id', contentId);
       

@@ -2,7 +2,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
-interface FeaturedItem {
+export interface FeaturedItem {
   id: string;
   title: string;
   description: string;

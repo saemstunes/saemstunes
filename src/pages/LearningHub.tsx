@@ -560,10 +560,10 @@ const LearningHub = () => {
                 Continue Learning
               </h3>
               <div className="space-y-3">
-                {learningCategories.flatMap(cat => cat.courses as any)
-                  .filter((course: any) => course.progress > 0 && course.progress < 100)
+                {learningCategories.flatMap(cat => cat.courses)
+                  .filter(course => course.progress > 0 && course.progress < 100)
                   .slice(0, 2)
-                  .map((course: any) => (
+                  .map(course => (
                     <Card key={course.id} className="relative group transition-transform hover:-translate-y-0.5">
                       <CardContent className="p-3">
                         <div className="flex items-center">
@@ -667,7 +667,7 @@ const LearningHub = () => {
                 Quick Actions
               </h3>
               <div className="grid grid-cols-2 gap-2">
-                <Button variant="default" size="sm" className="w-full bg-gold text-white hover:bg-gold/90">
+                <Button variant="gold" size="sm" className="w-full">
                   Book Class
                 </Button>
                 <Button variant="outline" size="sm" className="w-full">
@@ -725,9 +725,8 @@ const LearningHub = () => {
                               {access.status !== "granted" && (
                                 <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
                                   <Button 
-                                    variant="default"
+                                    variant="gold"
                                     size="sm"
-                                    className="bg-gold text-white hover:bg-gold/90"
                                     onClick={() => handleContentInteraction(course, 'preview')}
                                   >
                                     {access.status === "locked" 
@@ -870,7 +869,7 @@ const LearningHub = () => {
                 <p className="text-xs text-muted-foreground mt-1">1 hour ago</p>
               </div>
             </div>
-            <Button variant="default" className="w-full mt-4 bg-gold text-white hover:bg-gold/90">
+            <Button variant="gold" className="w-full mt-4">
               Join Community
             </Button>
           </section>
@@ -879,7 +878,7 @@ const LearningHub = () => {
 
       <div className="fixed bottom-4 left-4 lg:hidden z-40">
         <Button 
-          variant="default"
+          variant="gold"
           size="icon"
           className="shadow-lg shadow-gold/30"
           onClick={() => setMobileDockOpen(!mobileDockOpen)}

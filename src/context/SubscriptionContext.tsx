@@ -49,14 +49,14 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
         .from('subscriptions')
         .select('*')
         .eq('user_id', user.id)
-        .in('status', ['active'])
+        .in('status', ['active', 'trialing'])
         .maybeSingle(); // Use maybeSingle to handle no rows
 
       if (error) {
         console.error('Error fetching subscription:', error);
         setSubscription(null);
       } else {
-        setSubscription(data as any);
+        setSubscription(data);
       }
     } catch (error) {
       console.error('Error in fetchSubscription:', error);

@@ -29,10 +29,10 @@ const RecommendedContent = () => {
           });
           break;
         case "adult_learner":
-          // Adult learners might be interested in all levels
+          // Adults might be interested in all levels
           break;
         case "tutor":
-          // Tutors might be interested in teaching methods
+          // Teachers might be interested in teaching methods
           filteredVideos = filteredVideos.filter(
             (video) => video.category === "Vocal Development" || video.level === "advanced"
           );
