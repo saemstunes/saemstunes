@@ -474,9 +474,10 @@ const InteractiveGuitar: React.FC = () => {
     onSwiping: (eventData) => {
       if (guitarRef.current) {
         const rect = guitarRef.current.getBoundingClientRect();
-        const relativeY = eventData.event.touches ? 
-          eventData.event.touches[0].clientY - rect.top :
-          eventData.event.clientY - rect.top;
+        const event = eventData.event as TouchEvent | MouseEvent;
+        const relativeY = 'touches' in event ? 
+          event.touches[0].clientY - rect.top :
+          (event as MouseEvent).clientY - rect.top;
         setPickPosition(relativeY / rect.height);
         setShowPick(true);
       }

@@ -212,8 +212,8 @@ const SEOHead: React.FC<SEOHeadProps> = ({
   const robotsContent = `${noIndex ? 'noindex' : 'index'},${noFollow ? 'nofollow' : 'follow'},max-image-preview:large,max-snippet:-1,max-video-preview:-1`;
 
   // Generate Enhanced Structured Data
-  const generateEnhancedStructuredData = () => {
-    const baseStructuredData = {
+  const generateEnhancedStructuredData = (): Record<string, any> => {
+    const baseStructuredData: Record<string, any> = {
       "@context": "https://schema.org",
       "@graph": [
         {

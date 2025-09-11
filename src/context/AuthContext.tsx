@@ -23,6 +23,7 @@ interface ExtendedUser extends User {
   subscriptionTier?: SubscriptionTier;
   name: string;
   avatar?: string;
+  accessLevel?: string;
 }
 
 interface AuthContextProps {

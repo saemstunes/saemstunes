@@ -45,7 +45,7 @@ const SplitText = ({
     const element = ref.current;
     
     // Create SplitText instance
-    splitInstance.current = new GSAPSplitText(element, splitOptions);
+    splitInstance.current = new GSAPSplitText(element, splitOptions as any);
     
     // Get targets based on split type
     const targets = getSplitTargets(splitInstance.current, splitOptions.type || "chars");

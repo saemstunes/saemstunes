@@ -1,5 +1,5 @@
 // types/user.ts
-export type UserRole = 'student' | 'adult_learner' | 'tutor' | 'parent' | 'user' | 'admin';
+export type UserRole = 'student' | 'adult_learner' | 'tutor' | 'parent' | 'user' | 'admin' | 'teacher';
 
 export interface UserProfile {
   id: string;
