@@ -1,6 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "headers": [
+    // Security headers applied to all responses
     {
       "source": "/(.*)",
       "headers": [
@@ -16,20 +17,87 @@
         }
       ]
     },
+    // Cache and MIME type headers for specific static assets
     {
-      "source": "/_next/static/(.*)",
+      "source": "/_next/static/(.*).js",
       "headers": [
+        { "key": "Content-Type", "value": "application/javascript; charset=utf-8" },
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     },
     {
-      "source": "/static/(.*)",
+      "source": "/_next/static/(.*).css",
       "headers": [
+        { "key": "Content-Type", "value": "text/css; charset=utf-8" },
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/static/(.*).js",
+      "headers": [
+        { "key": "Content-Type", "value": "application/javascript; charset=utf-8" },
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/static/(.*).css",
+      "headers": [
+        { "key": "Content-Type", "value": "text/css; charset=utf-8" },
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/(.*).woff2",
+      "headers": [
+        { "key": "Content-Type", "value": "font/woff2" },
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/(.*).jpg",
+      "headers": [
+        { "key": "Content-Type", "value": "image/jpeg" },
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/(.*).png",
+      "headers": [
+        { "key": "Content-Type", "value": "image/png" },
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/(.*).webp",
+      "headers": [
+        { "key": "Content-Type", "value": "image/webp" },
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/(.*).svg",
+      "headers": [
+        { "key": "Content-Type", "value": "image/svg+xml" },
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/(.*).ico",
+      "headers": [
+        { "key": "Content-Type", "value": "image/x-icon" },
+        { "key": "Cache-Control", "value": "public, max-age=86400" }
+      ]
+    },
+    {
+      "source": "/(.*).json",
+      "headers": [
+        { "key": "Content-Type", "value": "application/json; charset=utf-8" },
+        { "key": "Cache-Control", "value": "public, max-age=86400" }
       ]
     }
   ],
   "rewrites": [
+    // Explicitly serve static assets without rewriting
     {
       "source": "/manifest.json",
       "destination": "/manifest.json"
@@ -42,6 +110,7 @@
       "source": "/static/(.*)",
       "destination": "/static/$1"
     },
+    // SPA fallback: all other requests go to index.html
     {
       "source": "/(.*)",
       "destination": "/"
