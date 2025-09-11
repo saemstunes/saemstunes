@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect } from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
-import "./TiltedCard.css";
 import { supabase } from "@/integrations/supabase/client";
 
 const springValues = {
@@ -23,6 +22,7 @@ interface TiltedCardProps {
   showTooltip?: boolean;
   overlayContent?: React.ReactNode;
   displayOverlayContent?: boolean;
+  onClick?: () => void;
 }
 
 export default function TiltedCard({
@@ -30,7 +30,7 @@ export default function TiltedCard({
   altText = "Tilted card image",
   captionText = "",
   containerHeight = "300px",
-  containerWidth = "100%",
+  containerWidth = "300px",
   imageHeight = "100%",
   imageWidth = "100%",
   scaleOnHover = 1.1,
@@ -39,21 +39,21 @@ export default function TiltedCard({
   showTooltip = true,
   overlayContent = null,
   displayOverlayContent = false,
+  onClick,
 }: TiltedCardProps) {
   const ref = useRef<HTMLElement>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [resolvedImageSrc, setResolvedImageSrc] = useState("");
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-
+  
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 640);
+      setIsMobile(window.innerWidth < 768);
     };
     
     checkMobile();
     window.addEventListener("resize", checkMobile);
-    
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
@@ -63,19 +63,15 @@ export default function TiltedCard({
         if (imageSrc.startsWith('http')) {
           setResolvedImageSrc(imageSrc);
         } else {
-          const { data } = supabase.storage
-            .from('tracks')
-            .getPublicUrl(imageSrc);
+          const { data } = supabase.storage.from('tracks').getPublicUrl(imageSrc);
           setResolvedImageSrc(data.publicUrl);
         }
       } catch (error) {
         setResolvedImageSrc('/default-cover.jpg');
       }
     };
-
     resolveImage();
   }, [imageSrc]);
-  
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -88,25 +84,22 @@ export default function TiltedCard({
     damping: 30,
     mass: 1,
   });
-
   const [lastY, setLastY] = useState(0);
 
   function handleMouse(e: React.MouseEvent) {
     if (!ref.current || isMobile) return;
-
     const rect = ref.current.getBoundingClientRect();
     const offsetX = e.clientX - rect.left - rect.width / 2;
     const offsetY = e.clientY - rect.top - rect.height / 2;
-
+    
     const rotationX = (offsetY / (rect.height / 2)) * -rotateAmplitude;
     const rotationY = (offsetX / (rect.width / 2)) * rotateAmplitude;
-
+    
     rotateX.set(rotationX);
     rotateY.set(rotationY);
-
     x.set(e.clientX - rect.left);
     y.set(e.clientY - rect.top);
-
+    
     const velocityY = offsetY - lastY;
     rotateFigcaption.set(-velocityY * 0.6);
     setLastY(offsetY);
@@ -134,6 +127,43 @@ export default function TiltedCard({
     setIsHovered(prev => !prev);
   };
 
+  // Mobile placeholder component
+  if (isMobile) {
+    return (
+      <div 
+        className="relative w-full h-64 rounded-lg overflow-hidden shadow-lg cursor-pointer"
+        onClick={onClick}
+      >
+        {!imageLoaded && (
+          <div className="absolute inset-0 bg-muted flex items-center justify-center">
+            <div className="text-muted-foreground">Loading image...</div>
+          </div>
+        )}
+        <img
+          src={resolvedImageSrc}
+          alt={altText}
+          className="w-full h-full object-cover"
+          onLoad={() => setImageLoaded(true)}
+          onError={(e) => {
+            e.currentTarget.src = '/default-cover.jpg';
+            setImageLoaded(true);
+          }}
+        />
+        {displayOverlayContent && overlayContent && (
+          <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+            {overlayContent}
+          </div>
+        )}
+        {showMobileWarning && (
+          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 text-white px-3 py-1 rounded-full text-xs">
+            Tap for details
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Desktop TiltedCard component
   return (
     <figure
       ref={ref}
@@ -145,26 +175,20 @@ export default function TiltedCard({
       onMouseMove={handleMouse}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      onTouchEnd={handleTouch}
+      onClick={onClick}
     >
-      {showMobileWarning && isMobile && (
-        <div className="tilted-card-mobile-alert">
-          Tap image for details
-        </div>
-      )}
-
       <motion.div
         className="tilted-card-inner"
         style={{
           width: imageWidth,
           height: imageHeight,
-          rotateX: isMobile ? 0 : rotateX,
-          rotateY: isMobile ? 0 : rotateY,
-          scale: isMobile ? 1 : scale,
+          rotateX,
+          rotateY,
+          scale,
         }}
       >
         <div 
-          className="tilted-card-image-container" 
+          className="tilted-card-image-container"
           style={{
             width: "100%",
             height: "100%",
@@ -175,7 +199,7 @@ export default function TiltedCard({
         >
           {!imageLoaded && (
             <div 
-              className="tilted-card-loading" 
+              className="tilted-card-loading"
               style={{
                 position: "absolute",
                 top: 0,
@@ -193,7 +217,7 @@ export default function TiltedCard({
               Loading image...
             </div>
           )}
-
+          
           {resolvedImageSrc && (
             <motion.img
               src={resolvedImageSrc}
@@ -214,7 +238,7 @@ export default function TiltedCard({
             />
           )}
         </div>
-
+        
         {displayOverlayContent && overlayContent && (
           <motion.div
             className="tilted-card-overlay"
@@ -231,7 +255,7 @@ export default function TiltedCard({
               color: "white",
               borderRadius: "15px",
               pointerEvents: "none",
-              opacity: isHovered || (isMobile && displayOverlayContent) ? 1 : 0,
+              opacity: isHovered ? 1 : 0,
               transition: "opacity 0.3s ease",
             }}
           >
@@ -239,8 +263,8 @@ export default function TiltedCard({
           </motion.div>
         )}
       </motion.div>
-
-      {showTooltip && !isMobile && (
+      
+      {showTooltip && (
         <motion.figcaption
           className="tilted-card-caption"
           style={{
