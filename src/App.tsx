@@ -138,17 +138,17 @@ const App = () => {
                             <Route path="/learning-hub/:moduleId" element={<LearningModulePage />} />
                             
                             <Route path="/bookings" element={
-                              <ProtectedRoute requiredRoles={["student", "adult", "parent"]}>
+                              <ProtectedRoute requiredRoles={["student", "adult_learner", "parent"]}>
                                 <Bookings />
                               </ProtectedRoute>
                             } />
                             <Route path="/book/:id" element={
-                              <ProtectedRoute requiredRoles={["student", "adult", "parent"]}>
+                              <ProtectedRoute requiredRoles={["student", "adult_learner", "parent"]}>
                                 <BookTutor />
                               </ProtectedRoute>
                             } />
                             <Route path="/book-tutor" element={
-                              <ProtectedRoute requiredRoles={["student", "adult", "parent"]}>
+                              <ProtectedRoute requiredRoles={["student", "adult_learner", "parent"]}>
                                 <BookTutor />
                               </ProtectedRoute>
                             } />

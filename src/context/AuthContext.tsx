@@ -15,6 +15,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { UserProfile, UserRole } from "@/types/user";
 
+export type { UserRole } from "@/types/user";
+
 interface ExtendedUser extends User {
   role: UserRole;
   subscribed?: boolean;
@@ -75,7 +77,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return null;
       }
       
-      setProfile(data);
+      setProfile(data as UserProfile);
       return data;
     } catch (error) {
       console.error('Error in fetchProfile:', error);
@@ -96,11 +98,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Create extended user with values from profile
         const extendedUser: ExtendedUser = {
           ...session.user,
-          role: userProfile?.role || 'student',
+          role: (userProfile?.role as UserRole) || 'user',
           name: userProfile?.display_name || session.user.user_metadata?.full_name || session.user.email || 'User',
           avatar: userProfile?.avatar_url || session.user.user_metadata?.avatar_url,
           subscribed: userProfile?.subscription_tier !== 'free',
-          subscriptionTier: userProfile?.subscription_tier || 'free'
+          subscriptionTier: (userProfile?.subscription_tier as SubscriptionTier) || 'free'
         };
         setUser(extendedUser);
       } else {
@@ -121,11 +123,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           
           const extendedUser: ExtendedUser = {
             ...session.user,
-            role: userProfile?.role || 'student',
+            role: (userProfile?.role as UserRole) || 'user',
             name: userProfile?.display_name || session.user.user_metadata?.full_name || session.user.email || 'User',
             avatar: userProfile?.avatar_url || session.user.user_metadata?.avatar_url,
             subscribed: userProfile?.subscription_tier !== 'free',
-            subscriptionTier: userProfile?.subscription_tier || 'free'
+            subscriptionTier: (userProfile?.subscription_tier as SubscriptionTier) || 'free'
           };
           setUser(extendedUser);
         } else {
