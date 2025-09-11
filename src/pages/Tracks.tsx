@@ -619,14 +619,12 @@ const Tracks = () => {
                           showMobileWarning={false}
                           showTooltip={true}
                           displayOverlayContent={true}
-                          overlayContent={
-                            <p className="tilted-card-demo-text">
-                              {featuredTrack.title}
-                            </p>
-                          }
-                        />
+                          overlayContent={<p className="text-white font-bold text-lg">{featuredTrack.title}</p>}
+                          onClick={handlePlayNow}
+                          />
                       </div>
                     </div>
+
                 
                       
                       <div className="space-y-4 order-1 md:order-2 text-center md:text-left">
