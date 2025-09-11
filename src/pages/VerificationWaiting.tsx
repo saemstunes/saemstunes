@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,6 @@ const VerificationWaiting = () => {
   const location = useLocation();
   const { toast } = useToast();
   
-  // Get email from location state
   const email = location.state?.email || "";
   const provider = location.state?.provider || "";
   const verificationError = location.state?.verificationError || "";
@@ -23,14 +21,12 @@ const VerificationWaiting = () => {
   const [isVerified, setIsVerified] = useState(false);
   const [isCheckingVerification, setIsCheckingVerification] = useState(false);
 
-  // Redirect to auth if no email is provided
   useEffect(() => {
     if (!email) {
       navigate("/auth?tab=signup", { replace: true });
       return;
     }
 
-    // Show toast if there's a verification error from OAuth provider
     if (verificationError) {
       toast({
         title: "Email verification required",
@@ -40,7 +36,6 @@ const VerificationWaiting = () => {
     }
   }, [email, navigate, verificationError, toast]);
 
-  // Check verification status periodically
   useEffect(() => {
     const checkVerificationStatus = async () => {
       try {
@@ -51,7 +46,6 @@ const VerificationWaiting = () => {
             title: "Email verified!",
             description: "Your account has been successfully verified.",
           });
-          // Redirect to login after a short delay
           setTimeout(() => {
             navigate("/auth?tab=login", { 
               state: { email, verified: true } 
@@ -63,11 +57,11 @@ const VerificationWaiting = () => {
       }
     };
 
-    // Check immediately and then every 5 seconds
-    checkVerificationStatus();
-    const interval = setInterval(checkVerificationStatus, 5000);
-
-    return () => clearInterval(interval);
+    if (email) {
+      checkVerificationStatus();
+      const interval = setInterval(checkVerificationStatus, 5000);
+      return () => clearInterval(interval);
+    }
   }, [navigate, email, toast]);
 
   const handleCheckVerification = async () => {
@@ -108,7 +102,6 @@ const VerificationWaiting = () => {
   };
 
   const handleOpenEmailApp = () => {
-    // Try to open default email app
     window.location.href = "mailto:";
   };
 
@@ -121,14 +114,12 @@ const VerificationWaiting = () => {
     }, 1500);
   };
 
-  // Don't render if no email
   if (!email) {
     return null;
   }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30 p-4">
-      {/* Background pattern */}
       <div className="absolute inset-0 music-note-pattern opacity-10 z-0"></div>
       
       <div className="relative z-10 w-full max-w-md">
@@ -179,7 +170,6 @@ const VerificationWaiting = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                 >
-                  {/* Show provider-specific message if applicable */}
                   {provider && (
                     <Alert className="mb-4 border-amber-200 bg-amber-50">
                       <AlertCircle className="h-4 w-4 text-amber-500" />
@@ -194,7 +184,6 @@ const VerificationWaiting = () => {
                     </Alert>
                   )}
 
-                  {/* Show custom error alert if provided */}
                   {verificationError && !provider && (
                     <Alert className="mb-4 border-red-200 bg-red-50">
                       <AlertCircle className="h-4 w-4 text-red-500" />
