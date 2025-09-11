@@ -54,6 +54,14 @@ const additionalDisposableDomains = [
 
 const allDisposableDomains = [...disposableDomains, ...additionalDisposableDomains];
 
+const roleMap: Record<string, string> = {
+  student: "user",
+  adult_learner: "user",
+  parent: "user",
+  tutor: "tutor",
+  user: "user",
+};
+
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email"),
@@ -88,7 +96,6 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
     },
   });
 
-  // Enhanced helper function to check if an email is from a disposable domain
   const isDisposableEmail = (email: string): boolean => {
     const domain = email.split("@")[1]?.toLowerCase();
     return allDisposableDomains.includes(domain);
@@ -104,7 +111,6 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
       return;
     }
 
-    // Check if the email is from a disposable domain
     if (isDisposableEmail(data.email)) {
       toast({
         title: "Disposable email not allowed",
@@ -118,15 +124,16 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
     setIsSubmitting(true);
     
     try {
-      // Using Supabase directly with captcha token
+      const mappedRole = roleMap[data.role] || "user";
+
       const { data: signUpData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
           data: {
             name: data.name,
-            role: data.role,
-            avatar: "/lovable-uploads/avatar-1.png", // Default avatar
+            role: mappedRole,
+            avatar: "/lovable-uploads/avatar-1.png",
             subscribed: false,
           },
           captchaToken,
@@ -146,11 +153,10 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
         throw error;
       }
       
-      // Update the profile with the selected role
       if (signUpData.user) {
         const { error: profileError } = await supabase
           .from('profiles')
-          .update({ role: data.role })
+          .update({ role: mappedRole })
           .eq('id', signUpData.user.id);
           
         if (profileError) {
@@ -163,7 +169,6 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
           title: "Account created!",
           description: "Please check your email and click the verification link to complete your registration.",
         });
-        // Redirect to verification waiting page instead of calling onSignupComplete
         navigate("/verification-waiting", { 
           state: { email: data.email }
         });
@@ -177,7 +182,6 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupComplete }) => {
       
     } catch (error: any) {
       console.error("Signup error:", error);
-      // Reset captcha on error
       captchaRef.current?.resetCaptcha();
       setCaptchaToken(null);
       

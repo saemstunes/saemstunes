@@ -148,4 +148,3 @@ const VisionSection = () => {
 };
 
 export default VisionSection;
-export { VisionSection };

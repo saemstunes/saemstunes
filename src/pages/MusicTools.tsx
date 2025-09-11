@@ -347,7 +347,7 @@ const MusicTools = () => {
                           {tool.props ? (
                             <CurrentComponent {...tool.props} />
                           ) : (
-                            <CurrentComponent />
+                            <CurrentComponent adminEmail="contact@saemstunes.com" />
                           )}
                         </div>
                       )}
