@@ -11,7 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import DynamicMusicQuiz from "@/components/quiz/DynamicMusicQuiz";
-import ResourceCard, { Resource } from "@/components/resources/ResourceCard";
+import ResourceCard from "@/components/resources/ResourceCard";
+import { Resource } from "@/types/resource";
 import { useToast } from "@/hooks/use-toast";
 import { useUserQuizProgress } from "@/hooks/useQuizzes";
 
@@ -76,31 +77,35 @@ const Library = () => {
       id: "res1",
       title: "Complete Guitar Chord Chart",
       description: "A comprehensive chart of guitar chords for beginners to advanced players",
-      type: "chord_chart",
-      thumbnail: "/placeholder.svg",
-      fileSize: "2.4 MB",
-      dateAdded: "2 days ago",
+      category_id: "1",
+      subject_category: "Guitar",
+      category_name: "documents",
+      thumbnail_url: "/placeholder.svg",
+      resource_url: "#",
+      level: "beginner",
+      is_locked: false,
+      access_level: "free",
+      metadata: {},
       tags: ["Guitar", "Chords", "Beginner"],
-      premium: false,
-      downloadUrl: "#",
-      views: 1245,
-      author: "Saem's Tunes",
-      offline: true
+      created_at: "2025-01-01T00:00:00Z",
+      updated_at: "2025-01-01T00:00:00Z"
     },
     {
       id: "res2",
       title: "Piano Scales PDF Reference",
       description: "All major and minor piano scales with fingering patterns",
-      type: "sheet_music",
-      thumbnail: "/placeholder.svg",
-      fileSize: "1.8 MB",
-      dateAdded: "1 week ago",
+      category_id: "2",
+      subject_category: "Piano",
+      category_name: "documents",
+      thumbnail_url: "/placeholder.svg",
+      resource_url: "#",
+      level: "intermediate",
+      is_locked: true,
+      access_level: "premium",
+      metadata: {},
       tags: ["Piano", "Scales", "Theory"],
-      premium: true,
-      downloadUrl: "#",
-      views: 789,
-      author: "Saem's Tunes",
-      offline: true
+      created_at: "2025-01-01T00:00:00Z",
+      updated_at: "2025-01-01T00:00:00Z"
     }
   ];
   

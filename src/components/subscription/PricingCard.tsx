@@ -73,9 +73,19 @@ interface PricingCardProps {
   plan: SubscriptionPlan;
   variant?: "default" | "outline";
   className?: string;
+  isCurrentPlan?: boolean;
+  onSubscribe?: () => Promise<void>;
+  isLoading?: boolean;
 }
 
-const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", className }) => {
+const PricingCard: React.FC<PricingCardProps> = ({ 
+  plan, 
+  variant = "default", 
+  className,
+  isCurrentPlan = false,
+  onSubscribe,
+  isLoading = false
+}) => {
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [paymentType, setPaymentType] = useState<'subscription' | 'one-time'>('subscription');
   const [classCount, setClassCount] = useState<number>(4);
@@ -114,8 +124,12 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, variant = "default", cl
   const oneTimePrice = isTieredPlan ? calculateOneTimePrice() : Math.round(plan.price * 130 * 0.3);
 
   const handleSubscribe = (type: 'subscription' | 'one-time') => {
-    setPaymentType(type);
-    setShowPaymentDialog(true);
+    if (onSubscribe) {
+      onSubscribe();
+    } else {
+      setPaymentType(type);
+      setShowPaymentDialog(true);
+    }
   };
   
  // Calculate raw price for payment dialog
