@@ -78,7 +78,9 @@ const Artists: React.FC = () => {
             bio: artist.bio || '',
             monthlyListeners: artist.monthly_listeners || 0,
             isFollowing: false,
-            socialLinks: artist.social_links || {}
+            socialLinks: typeof artist.social_links === 'object' && artist.social_links !== null 
+              ? artist.social_links as { instagram?: string; spotify?: string; youtube?: string; }
+              : {}
           }));
           setArtists(mappedArtists);
         }
