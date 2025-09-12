@@ -531,11 +531,15 @@ const Index = () => {
               onPlayTrack={handlePlayTrack}
               onShareTrack={handleShareTrack}
             />
-            
-            <QuickActionsSection />
-            
-            {/* <FourPointerSection /> */}
 
+            {/*
+            <QuickActionsSection />
+          
+            {/*
+            <Suspense fallback={<div className="h-64 bg-muted/20 animate-pulse rounded-lg" />}>
+              <FourPointerSection />
+            </Suspense> 
+            */}
             
             
             <section className="py-8 bg-background flex items-center justify-center">
