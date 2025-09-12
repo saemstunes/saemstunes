@@ -118,7 +118,7 @@ class SupabaseAudioEnricher:
             r'^(.*?)\s*feat\.?\s*(.*?)$',
         ]
         
-        artist, title = "Unknown Artist", name
+        artist, title = "unknown artist", name
         
         for pattern in patterns:
             match = re.search(pattern, name, re.IGNORECASE)
@@ -127,20 +127,13 @@ class SupabaseAudioEnricher:
                 title = match.group(2).strip()
                 break
                 
-        # Format artist with first letter capital for each word
-        artist = self.format_artist_name(artist)
+        artist = re.sub(r'[\(\)\[\]\-\_]', ' ', artist)
+        artist = re.sub(r'\s+', ' ', artist).strip().lower()
         
-        # Clean up title
         title = re.sub(r'[\(\)\[\]\-\_]', ' ', title)
         title = re.sub(r'\s+', ' ', title).strip()
         
         return artist, title
-    
-    def format_artist_name(self, name: str) -> str:
-        """Format artist name with first letter capital for each word"""
-        name = re.sub(r'[\(\)\[\]\-\_]', ' ', name)
-        name = re.sub(r'\s+', ' ', name).strip()
-        return ' '.join(word.capitalize() for word in name.split())
     
     def search_online_metadata(self, track_name: str, artist: str = None, sources: List[str] = None) -> Dict:
         if sources is None:
@@ -149,7 +142,7 @@ class SupabaseAudioEnricher:
         metadata = {}
         
         queries = []
-        if artist and artist != "Unknown Artist":
+        if artist and artist != "unknown artist":
             queries.append(f"{artist} {track_name}")
             queries.append(f"{track_name} {artist}")
         queries.append(track_name)
@@ -189,15 +182,12 @@ class SupabaseAudioEnricher:
                         video_id = item["id"]["videoId"]
                         youtube_url = f"https://youtu.be/{video_id}"
                         
-                        # Format artist name properly
-                        artist_name = self.format_artist_name(item["snippet"]["channelTitle"])
-                        
                         return {
                             "youtube_url": youtube_url,
                             "preview_url": youtube_url,
                             "video_url": youtube_url,
                             "description": item["snippet"]["description"],
-                            "artist": artist_name,
+                            "artist": item["snippet"]["channelTitle"],
                             "cover_url": item["snippet"]["thumbnails"]["high"]["url"]
                         }
                         
@@ -222,13 +212,9 @@ class SupabaseAudioEnricher:
             
             if "tracks" in data and data["tracks"]["items"]:
                 track = data["tracks"]["items"][0]
-                
-                # Format artist name properly
-                artist_names = [self.format_artist_name(a["name"]) for a in track["artists"]]
-                
                 return {
                     "duration": int(track["duration_ms"] / 1000),
-                    "artist": ", ".join(artist_names),
+                    "artist": ", ".join([a["name"] for a in track["artists"]]),
                     "title": track["name"],
                     "cover_url": track["album"]["images"][0]["url"] if track["album"]["images"] else None
                 }
@@ -345,17 +331,14 @@ class SupabaseAudioEnricher:
             
             color_scheme = self.get_random_color_scheme()
             
-            # Ensure artist name is properly formatted
-            final_artist = self.format_artist_name(metadata.get("artist", artist))
-            
             track_data = {
                 "title": metadata.get("title", title),
-                "description": metadata.get("description", f"Track: {title} by {final_artist}"),
+                "description": metadata.get("description", f"Track: {title} by {artist}"),
                 "audio_path": file["url"],
                 "cover_path": cover_path,
                 "access_level": "free",
                 "slug": self.generate_slug(metadata.get("title", title)),
-                "artist": final_artist,
+                "artist": metadata.get("artist", artist).lower(),
                 "duration": metadata.get("duration"),
                 "youtube_url": metadata.get("youtube_url"),
                 "preview_url": metadata.get("preview_url", metadata.get("youtube_url")),
