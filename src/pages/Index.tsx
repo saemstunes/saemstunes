@@ -338,7 +338,7 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
             returnDuration={1.5}
             velocityMultiplier={0.001}
             className="w-full h-full"
-            idleWaveInterval={3000} 
+            idleWaveInterval={7500} 
             waveAmplitude={1.2} 
             waveSpeed={0.8} 
           />
