@@ -103,13 +103,13 @@ const DotGrid = ({
   const WAVE_JITTER = 4000;
   const MAX_CONCURRENT_WAVES = 2;
   const BASE_WAVE = {
-    amplitude: 32,
-    speed: 1100,
+    amplitude: 34,
+    speed: 700,
     wavelength: 600,
-    alpha: 0.002,
-    sigma: 140,
-    duration: 4.5,
-    colorGain: 1.2
+    alpha: 0.0018,
+    sigma: 160,
+    duration: 7.0,
+    colorGain: 1.25
   };
 
   const markActivity = useCallback(() => {
