@@ -1,8 +1,8 @@
 // components/effects/DotGrid.tsx
 'use client';
-import { useRef, useEffect, useCallback, useMemo } from "react";
+import { useRef, useEffect, useCallback, useMemo, useState } from "react";
 import { gsap } from "gsap";
-import { useTheme } from "@/context/ThemeContext"; // Import the useTheme hook
+import { useTheme } from "@/context/ThemeContext";
 import "./DotGrid.css";
 
 const throttle = (func: Function, limit: number) => {
@@ -43,15 +43,18 @@ interface DotGridProps {
   className?: string;
   velocityMultiplier?: number;
   style?: React.CSSProperties;
+  idleWaveInterval?: number; // New prop for wave interval
+  waveAmplitude?: number;    // New prop for wave strength
+  waveSpeed?: number;        // New prop for wave speed
 }
 
 const DotGrid = ({
   dotSize = 7,
   gap = 22.5,
-  lightBaseColor = "#f5f2e6", // Light mode muted color
-  lightActiveColor = "#A67C00", // Gold default
-  darkBaseColor = "#3a2e2e", // Dark mode muted color
-  darkActiveColor = "#A67C00", // Gold default (same in both modes)
+  lightBaseColor = "#f5f2e6",
+  lightActiveColor = "#A67C00",
+  darkBaseColor = "#3a2e2e",
+  darkActiveColor = "#A67C00",
   proximity = 80,
   speedTrigger = 80,
   shockRadius = 250,
@@ -60,10 +63,13 @@ const DotGrid = ({
   resistance = 1200,
   returnDuration = 2.1,
   velocityMultiplier = 0.005,
+  idleWaveInterval = 5000, // Default: wave every 5 seconds
+  waveAmplitude = 0.7,     // Default wave strength
+  waveSpeed = 0.5,         // Default wave speed
   className = "",
   style,
 }: DotGridProps) => {
-  const { theme } = useTheme(); // Use the useTheme hook
+  const { theme } = useTheme();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dotsRef = useRef<any[]>([]);
@@ -77,6 +83,12 @@ const DotGrid = ({
     lastX: 0,
     lastY: 0,
   });
+  
+  // State for idle detection and wave effect
+  const [isIdle, setIsIdle] = useState(false);
+  const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastInteractionRef = useRef<number>(Date.now());
+  const wavePhaseRef = useRef<number>(0);
 
   // Determine colors based on current theme
   const baseColor = theme === "dark" ? darkBaseColor : lightBaseColor;
@@ -92,6 +104,20 @@ const DotGrid = ({
     p.arc(0, 0, dotSize / 2, 0, Math.PI * 2);
     return p;
   }, [dotSize]);
+
+  // Reset idle timer on user interaction
+  const resetIdleTimer = useCallback(() => {
+    lastInteractionRef.current = Date.now();
+    setIsIdle(false);
+    
+    if (idleTimeoutRef.current) {
+      clearTimeout(idleTimeoutRef.current);
+    }
+    
+    idleTimeoutRef.current = setTimeout(() => {
+      setIsIdle(true);
+    }, idleWaveInterval);
+  }, [idleWaveInterval]);
 
   const buildGrid = useCallback(() => {
     const wrap = wrapperRef.current;
@@ -126,7 +152,16 @@ const DotGrid = ({
       for (let x = 0; x < cols; x++) {
         const cx = startX + x * cell;
         const cy = startY + y * cell;
-        dots.push({ cx, cy, xOffset: 0, yOffset: 0, _inertiaApplied: false });
+        dots.push({ 
+          cx, 
+          cy, 
+          xOffset: 0, 
+          yOffset: 0, 
+          _inertiaApplied: false,
+          // Store original positions for wave effect
+          origX: cx,
+          origY: cy
+        });
       }
     }
     dotsRef.current = dots;
@@ -146,10 +181,34 @@ const DotGrid = ({
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const { x: px, y: py } = pointerRef.current;
+      
+      // Update wave phase if idle
+      if (isIdle) {
+        wavePhaseRef.current += waveSpeed * 0.01;
+      }
 
       for (const dot of dotsRef.current) {
-        const ox = dot.cx + dot.xOffset;
-        const oy = dot.cy + dot.yOffset;
+        let ox = dot.cx + dot.xOffset;
+        let oy = dot.cy + dot.yOffset;
+        
+        // Apply wave effect if idle
+        if (isIdle) {
+          // Calculate distance from center for circular wave
+          const centerX = canvas.width / (2 * (window.devicePixelRatio || 1));
+          const centerY = canvas.height / (2 * (window.devicePixelRatio || 1));
+          const distFromCenter = Math.sqrt(
+            Math.pow(dot.origX - centerX, 2) + 
+            Math.pow(dot.origY - centerY, 2)
+          );
+          
+          // Create wave effect based on distance and phase
+          const waveOffset = Math.sin(distFromCenter * 0.05 - wavePhaseRef.current) * waveAmplitude * 10;
+          
+          // Apply wave effect to position
+          ox += waveOffset;
+          oy += waveOffset;
+        }
+
         const dx = dot.cx - px;
         const dy = dot.cy - py;
         const dsq = dx * dx + dy * dy;
@@ -161,6 +220,19 @@ const DotGrid = ({
           const r = Math.round(baseRgb.r + (activeRgb.r - baseRgb.r) * t);
           const g = Math.round(baseRgb.g + (activeRgb.g - baseRgb.g) * t);
           const b = Math.round(baseRgb.b + (activeRgb.b - baseRgb.b) * t);
+          color = `rgb(${r},${g},${b})`;
+        } 
+        // Apply wave color effect if idle and not affected by pointer
+        else if (isIdle) {
+          // Calculate wave intensity based on position and phase
+          const waveIntensity = (Math.sin(
+            Math.sqrt(Math.pow(dot.origX, 2) + Math.pow(dot.origY, 2)) * 0.05 - 
+            wavePhaseRef.current
+          ) + 1) / 2; // Normalize to 0-1
+          
+          const r = Math.round(baseRgb.r + (activeRgb.r - baseRgb.r) * waveIntensity);
+          const g = Math.round(baseRgb.g + (activeRgb.g - baseRgb.g) * waveIntensity);
+          const b = Math.round(baseRgb.b + (activeRgb.b - baseRgb.b) * waveIntensity);
           color = `rgb(${r},${g},${b})`;
         }
 
@@ -176,7 +248,7 @@ const DotGrid = ({
 
     draw();
     return () => cancelAnimationFrame(rafId);
-  }, [proximity, baseColor, activeRgb, baseRgb, circlePath]);
+  }, [proximity, baseColor, activeRgb, baseRgb, circlePath, isIdle, waveAmplitude, waveSpeed]);
 
   useEffect(() => {
     buildGrid();
@@ -194,7 +266,12 @@ const DotGrid = ({
   }, [buildGrid]);
 
   useEffect(() => {
+    // Initialize idle timer
+    resetIdleTimer();
+
     const onMove = (e: MouseEvent) => {
+      resetIdleTimer(); // Reset idle timer on movement
+      
       const now = performance.now();
       const pr = pointerRef.current;
       const dt = pr.lastTime ? now - pr.lastTime : 16;
@@ -249,6 +326,8 @@ const DotGrid = ({
     };
 
     const onClick = (e: MouseEvent) => {
+      resetIdleTimer(); // Reset idle timer on click
+      
       const rect = canvasRef.current?.getBoundingClientRect();
       if (!rect) return;
       
@@ -288,8 +367,11 @@ const DotGrid = ({
     return () => {
       window.removeEventListener("mousemove", throttledMove as EventListener);
       window.removeEventListener("click", onClick as EventListener);
+      if (idleTimeoutRef.current) {
+        clearTimeout(idleTimeoutRef.current);
+      }
     };
-  }, [maxSpeed, speedTrigger, proximity, returnDuration, shockRadius, shockStrength]);
+  }, [maxSpeed, speedTrigger, proximity, returnDuration, shockRadius, shockStrength, resetIdleTimer]);
 
   return (
     <section className={`dot-grid ${className}`} style={style}>
