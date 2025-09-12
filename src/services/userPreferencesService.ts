@@ -40,7 +40,7 @@ export class UserPreferencesService {
       }
 
       // Determine if should show based on business logic
-      const shouldShow = this.shouldShowInstrumentSelector(prefs as UserUIPreferences);
+      const shouldShow = this.shouldShowInstrumentSelector(prefs);
 
       return {
         shouldShow,

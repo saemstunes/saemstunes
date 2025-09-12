@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef, Suspense, lazy } from "react";
+
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useAudioPlayer } from "@/context/AudioPlayerContext";
@@ -8,7 +9,10 @@ import RecommendedContent from "@/components/dashboard/RecommendedContent";
 import UpcomingBookings from "@/components/dashboard/UpcomingBookings";
 import SocialMediaContainer from "@/components/social/SocialMediaContainer";
 import { CurvedLoop } from "@/components/ui/curved-loop";
+import FourPointerSection from "@/components/homepage/FourPointerSection";
+import LazyVisionSection from '@/components/LazyVisionSection';
 import InstrumentSelector from "@/components/ui/InstrumentSelector";
+import MusicToolsCarousel from "@/components/ui/MusicToolsCarousel";
 import DotGrid from "@/components/effects/DotGrid";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,11 +30,6 @@ import { useWindowSize } from "@uidotdev/usehooks";
 import { AudioStorageManager } from "@/utils/audioStorageManager";
 import { getAudioUrl, convertTrackToAudioTrack, generateTrackUrl } from "@/lib/audioUtils";
 import { supabase } from "@/integrations/supabase/client.ts";
-
-// Lazy load heavy components
-const FourPointerSection = lazy(() => import("@/components/homepage/FourPointerSection"));
-const VisionSection = lazy(() => import("@/components/homepage/VisionSection"));
-const MusicToolsCarousel = lazy(() => import("@/components/ui/MusicToolsCarousel"));
 
 // Constants - PRESERVE ORIGINAL STRUCTURE
 const STATS = [
@@ -307,6 +306,7 @@ const useInstrumentSelectorLogic = (user: any) => {
 };
 
 // IMPROVED HERO BUTTON TEXT
+// Update your HomeHero component
 const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void; onTryTools: () => void }) => {
   return (
     <motion.section 
@@ -531,16 +531,11 @@ const Index = () => {
               onPlayTrack={handlePlayTrack}
               onShareTrack={handleShareTrack}
             />
-
-            {/*
+            
             <QuickActionsSection />
-            */}
+            
+            {/* <FourPointerSection /> */}
 
-            
-            <Suspense fallback={<div className="h-64 bg-muted/20 animate-pulse rounded-lg" />}>
-              <FourPointerSection />
-            </Suspense> 
-            
             
             
             <section className="py-8 bg-background flex items-center justify-center">
@@ -556,26 +551,19 @@ const Index = () => {
               </div>
             </section>
 
-            <Suspense fallback={<div className="h-96 bg-muted/20 animate-pulse rounded-lg" />}>
-              <VisionSection />
-            </Suspense>
             
-            {/*
-            <Suspense fallback={<div className="h-64 bg-muted/20 animate-pulse rounded-lg" />}>
-              <section>
-                <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">
-                  Try Our Music Tools
-                </h2>
-                <div className="overflow-x-hidden py-2">
-                  <MusicToolsCarousel />
-                </div>
-              </section>
-            </Suspense>
-            */}
-
-            {/*
-            <SocialMediaContainer />
-            */}
+            <LazyVisionSection />
+            
+            {/* <section>
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">
+                Try Our Music Tools
+              </h2>
+              <div className="overflow-x-hidden py-2">
+                <MusicToolsCarousel />
+              </div>
+            </section> 
+            
+            {/* <SocialMediaContainer /> */}
             
             {user && (
               <div className="overflow-x-auto">
