@@ -118,7 +118,7 @@ class SupabaseAudioEnricher:
             r'^(.*?)\s*feat\.?\s*(.*?)$',
         ]
         
-        artist, title = "unknown artist", name
+        artist, title = "Unknown Artist", name
         
         for pattern in patterns:
             match = re.search(pattern, name, re.IGNORECASE)
@@ -127,13 +127,37 @@ class SupabaseAudioEnricher:
                 title = match.group(2).strip()
                 break
                 
-        artist = re.sub(r'[\(\)\[\]\-\_]', ' ', artist)
-        artist = re.sub(r'\s+', ' ', artist).strip().lower()
+        artist = self.format_artist_name(artist)
         
         title = re.sub(r'[\(\)\[\]\-\_]', ' ', title)
         title = re.sub(r'\s+', ' ', title).strip()
         
         return artist, title
+    
+    def format_artist_name(self, name: str) -> str:
+        name = re.sub(r'[\(\)\[\]\-\_]', ' ', name)
+        name = re.sub(r'\s+', ' ', name).strip()
+        return ' '.join(word.capitalize() for word in name.split())
+    
+    def _get_spotify_token(self) -> Optional[str]:
+        client_id = os.getenv("SPOTIFY_CLIENT_ID")
+        client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
+
+        if not client_id or not client_secret:
+            logger.warning("Spotify credentials missing")
+            return None
+
+        url = "https://accounts.spotify.com/api/token"
+        headers = {"Content-Type": "application/x-www-form-urlencoded"}
+        data = {"grant_type": "client_credentials"}
+
+        try:
+            response = requests.post(url, data=data, auth=(client_id, client_secret), timeout=10)
+            response.raise_for_status()
+            return response.json().get("access_token")
+        except Exception as e:
+            logger.error(f"Failed to get Spotify token: {e}")
+            return None
     
     def search_online_metadata(self, track_name: str, artist: str = None, sources: List[str] = None) -> Dict:
         if sources is None:
@@ -142,7 +166,7 @@ class SupabaseAudioEnricher:
         metadata = {}
         
         queries = []
-        if artist and artist != "unknown artist":
+        if artist and artist != "Unknown Artist":
             queries.append(f"{artist} {track_name}")
             queries.append(f"{track_name} {artist}")
         queries.append(track_name)
@@ -161,17 +185,30 @@ class SupabaseAudioEnricher:
     
     def _search_youtube(self, query: str) -> Dict:
         try:
+            youtube_key = self.api_keys.get("youtube")
+            if not youtube_key or youtube_key == "YOUR_YOUTUBE_API_KEY":
+                logger.warning("YouTube API key not configured properly")
+                return {}
+                
             search_url = "https://www.googleapis.com/youtube/v3/search"
             params = {
                 "part": "snippet",
                 "q": f"{query} saemstunes",
                 "type": "video",
-                "key": self.api_keys.get("youtube"),
+                "key": youtube_key,
                 "maxResults": 5,
                 "videoCategoryId": "10"
             }
             
             response = requests.get(search_url, params=params, timeout=10)
+            
+            if response.status_code == 403:
+                logger.warning("YouTube API access forbidden. Check API key and quota.")
+                return {}
+            elif response.status_code != 200:
+                logger.warning(f"YouTube API returned status code: {response.status_code}")
+                return {}
+                
             response.raise_for_status()
             data = response.json()
             
@@ -182,12 +219,14 @@ class SupabaseAudioEnricher:
                         video_id = item["id"]["videoId"]
                         youtube_url = f"https://youtu.be/{video_id}"
                         
+                        artist_name = self.format_artist_name(item["snippet"]["channelTitle"])
+                        
                         return {
                             "youtube_url": youtube_url,
                             "preview_url": youtube_url,
                             "video_url": youtube_url,
                             "description": item["snippet"]["description"],
-                            "artist": item["snippet"]["channelTitle"],
+                            "artist": artist_name,
                             "cover_url": item["snippet"]["thumbnails"]["high"]["url"]
                         }
                         
@@ -198,30 +237,49 @@ class SupabaseAudioEnricher:
     
     def _search_spotify(self, query: str) -> Dict:
         try:
+            token = self.api_keys.get("spotify")
+            if not token:
+                token = self._get_spotify_token()
+                if token:
+                    self.api_keys["spotify"] = token
+                else:
+                    return {}
+
             search_url = "https://api.spotify.com/v1/search"
-            headers = {"Authorization": f"Bearer {self.api_keys.get('spotify')}"}
-            params = {
-                "q": query,
-                "type": "track",
-                "limit": 1
-            }
-            
+            headers = {"Authorization": f"Bearer {token}"}
+            params = {"q": query, "type": "track", "limit": 1}
+
             response = requests.get(search_url, headers=headers, params=params, timeout=10)
-            response.raise_for_status()
+
+            if response.status_code == 401:
+                logger.info("Spotify token expired, refreshing...")
+                token = self._get_spotify_token()
+                if not token:
+                    return {}
+                self.api_keys["spotify"] = token
+                headers["Authorization"] = f"Bearer {token}"
+                response = requests.get(search_url, headers=headers, params=params, timeout=10)
+
+            if response.status_code != 200:
+                logger.warning(f"Spotify API returned {response.status_code}")
+                return {}
+
             data = response.json()
-            
             if "tracks" in data and data["tracks"]["items"]:
                 track = data["tracks"]["items"][0]
+                artist_names = [self.format_artist_name(a["name"]) for a in track["artists"]]
+
                 return {
                     "duration": int(track["duration_ms"] / 1000),
-                    "artist": ", ".join([a["name"] for a in track["artists"]]),
+                    "artist": ", ".join(artist_names),
                     "title": track["name"],
-                    "cover_url": track["album"]["images"][0]["url"] if track["album"]["images"] else None
+                    "cover_url": track["album"]["images"][0]["url"] if track["album"]["images"] else None,
+                    "spotify_url": track["external_urls"]["spotify"]
                 }
-                
+
         except Exception as e:
             logger.warning(f"Spotify search failed for '{query}': {e}")
-            
+
         return {}
     
     def insert_track(self, track_data: Dict) -> bool:
@@ -247,8 +305,7 @@ class SupabaseAudioEnricher:
                         secondary_color = %(secondary_color)s,
                         background_gradient = %(background_gradient)s,
                         alternate_audio_path = %(alternate_audio_path)s,
-                        access_level = %(access_level)s,
-                        updated_at = NOW()
+                        access_level = %(access_level)s
                     WHERE audio_path = %(audio_path)s
                     """
                     cursor.execute(update_query, track_data)
@@ -280,7 +337,7 @@ class SupabaseAudioEnricher:
         slug = re.sub(r'[^a-zA-Z0-9\s-]', '', title.lower())
         slug = re.sub(r'\s+', '-', slug)
         slug = slug.strip('-')
-        return slug
+        return f"{slug}-{int(time.time())}"
     
     def get_random_color_scheme(self) -> Dict:
         return random.choice(self.color_palettes)
@@ -331,14 +388,16 @@ class SupabaseAudioEnricher:
             
             color_scheme = self.get_random_color_scheme()
             
+            final_artist = self.format_artist_name(metadata.get("artist", artist))
+            
             track_data = {
                 "title": metadata.get("title", title),
-                "description": metadata.get("description", f"Track: {title} by {artist}"),
+                "description": metadata.get("description", f"Track: {title} by {final_artist}"),
                 "audio_path": file["url"],
                 "cover_path": cover_path,
                 "access_level": "free",
                 "slug": self.generate_slug(metadata.get("title", title)),
-                "artist": metadata.get("artist", artist).lower(),
+                "artist": final_artist,
                 "duration": metadata.get("duration"),
                 "youtube_url": metadata.get("youtube_url"),
                 "preview_url": metadata.get("preview_url", metadata.get("youtube_url")),
