@@ -80,6 +80,7 @@ const DotGrid = ({
     alpha: number;
     sigma: number;
     duration: number;
+    colorGain: number;
   }>>([]);
   const waveId = useRef(0);
   const idleRef = useRef({ lastMove: performance.now(), idle: false });
@@ -102,12 +103,13 @@ const DotGrid = ({
   const WAVE_JITTER = 4000;
   const MAX_CONCURRENT_WAVES = 2;
   const BASE_WAVE = {
-    amplitude: 28,
-    speed: 900,
-    wavelength: 220,
-    alpha: 0.0045,
-    sigma: 90,
-    duration: 3.5
+    amplitude: 32,
+    speed: 1100,
+    wavelength: 600,
+    alpha: 0.002,
+    sigma: 140,
+    duration: 4.5,
+    colorGain: 1.2
   };
 
   const markActivity = useCallback(() => {
@@ -131,13 +133,27 @@ const DotGrid = ({
 
     if (fromEdge || x === undefined || y === undefined) {
       const edge = Math.floor(Math.random() * 4);
-      const offset = Math.random() * 100 - 50;
+      const offFactor = 0.25 + Math.random() * 0.25;
       switch (edge) {
-        case 0: originX = offset; originY = -50; break;
-        case 1: originX = rect.width + 50; originY = offset; break;
-        case 2: originX = offset; originY = rect.height + 50; break;
-        case 3: originX = -50; originY = offset; break;
-        default: originX = rect.width / 2; originY = rect.height / 2;
+        case 0: 
+          originX = Math.random() * rect.width; 
+          originY = -rect.height * offFactor; 
+          break;
+        case 1: 
+          originX = rect.width + rect.width * offFactor; 
+          originY = Math.random() * rect.height; 
+          break;
+        case 2: 
+          originX = Math.random() * rect.width; 
+          originY = rect.height + rect.height * offFactor; 
+          break;
+        case 3: 
+          originX = -rect.width * offFactor; 
+          originY = Math.random() * rect.height; 
+          break;
+        default: 
+          originX = rect.width / 2; 
+          originY = rect.height / 2;
       }
     } else {
       originX = x;
@@ -237,7 +253,7 @@ const DotGrid = ({
             totalDispX += ux * localAmp;
             totalDispY += uy * localAmp;
           }
-          intensity += Math.min(1, Math.abs(localAmp) / (wave.amplitude * 0.8));
+          intensity += Math.min(1, (Math.abs(localAmp) * wave.colorGain) / Math.max(0.001, wave.amplitude));
         }
 
         const ox = dot.cx + totalDispX;
