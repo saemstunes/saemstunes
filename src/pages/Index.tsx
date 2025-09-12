@@ -318,14 +318,14 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
       {/* DotGrid Background with feathering effect */}
       <div className="absolute top-0 left-0 w-screen h-full z-0 pointer-events-none">
         <div className="w-full h-full 
-            [mask-image:radial-gradient(ellipse_at_center,black_50%,transparent_100%)]
-            [-webkit-mask-image:radial-gradient(ellipse_at_center,black_50%,transparent_100%)]
+            [mask-image:radial-gradient(ellipse_at_center,black_70%,transparent_100%)]
+            [-webkit-mask-image:radial-gradient(ellipse_at_center,black_70%,transparent_100%)]
             [mask-size:100%_100%]
             [-webkit-mask-size:100%_100%]
             [mask-repeat:no-repeat]
             [-webkit-mask-repeat:no-repeat]">
           <DotGrid
-            dotSize={5.5}
+            dotSize={7}
             gap={22.5}
             lightBaseColor="#f5f2e6"
             lightActiveColor="#A67C00"
@@ -338,6 +338,9 @@ const HomeHero = ({ onExploreTracks, onTryTools }: { onExploreTracks: () => void
             returnDuration={1.5}
             velocityMultiplier={0.001}
             className="w-full h-full"
+            idleWaveInterval={7500} 
+            waveAmplitude={1.2} 
+            waveSpeed={0.8} 
           />
         </div>
       </div>

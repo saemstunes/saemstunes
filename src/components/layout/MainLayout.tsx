@@ -402,7 +402,7 @@ const MainLayout = ({ children, showMiniPlayer = false }: MainLayoutProps) => {
                     <Separator className="my-4" />
                     <div className="flex items-center justify-between pb-12">
                       <ThemeToggle />
-                      <span className="text-xs text-muted-foreground">v8.1.0</span>
+                      <span className="text-xs text-muted-foreground">v8.2.0</span>
                     </div>
                   </nav>
                 </div>
