@@ -46,7 +46,7 @@ interface DotGridProps {
 }
 
 const DotGrid = ({
-  dotSize = 5,
+  dotSize = 7,
   gap = 22.5,
   lightBaseColor = "#f5f2e6", // Light mode muted color
   lightActiveColor = "#A67C00", // Gold default
