@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Loader2, Music, Play, Headphones, Volume2 } from "lucide-react";
+import { Loader2, Play, Headphones, Volume2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Logo from "@/components/branding/Logo"; // Import your Logo component
 
 // Animation easings - centralized configuration
 const EASINGS = {
@@ -68,7 +68,7 @@ const SplashScreen = ({
 
   // Memoized music notes - prevents recreation on every render
   const musicNotes = useMemo(() => {
-    const musicIcons = [Music, Play, Headphones, Volume2];
+    const musicIcons = [Play, Headphones, Volume2];
     return Array.from({ length: 6 }, (_, i) => ({
       id: i,
       Icon: musicIcons[i % musicIcons.length],
@@ -238,7 +238,7 @@ const SplashScreen = ({
                 transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
               />
 
-              {/* Logo container */}
+              {/* Logo container - using your Logo component */}
               <div className="relative z-10 flex items-center justify-center bg-card/80 backdrop-blur-sm rounded-full p-6 border border-primary/30">
                 <div 
                   className="w-20 h-20 rounded-full flex items-center justify-center shadow-2xl"
@@ -246,7 +246,7 @@ const SplashScreen = ({
                     background: `linear-gradient(135deg, ${THEME_COLORS.primaryLight}, ${THEME_COLORS.primary})`
                   }}
                 >
-                  <Music className="w-10 h-10 text-white" />
+                  <Logo variant="icon" size="lg" clickable={false} />
                 </div>
               </div>
 
