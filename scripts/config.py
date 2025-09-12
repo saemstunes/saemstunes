@@ -17,4 +17,12 @@ DB_CONFIG = {
     "port": 5432
 }
 
-ONLINE_SOURCES = ["youtube", "soundcloud", "spotify", "genius", "discogs"]
+API_KEYS = {
+    "youtube": os.getenv("YOUTUBE_API_KEY"),
+    "soundcloud": os.getenv("SOUNDCLOUD_CLIENT_ID"),
+    "spotify": os.getenv("SPOTIFY_ACCESS_TOKEN"),
+    "genius": os.getenv("GENIUS_ACCESS_TOKEN"),
+    "discogs": os.getenv("DISCOGS_TOKEN")
+}
+
+ONLINE_SOURCES = ["youtube", "spotify", "soundcloud"]
