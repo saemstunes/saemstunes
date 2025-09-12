@@ -531,13 +531,17 @@ const Index = () => {
               onPlayTrack={handlePlayTrack}
               onShareTrack={handleShareTrack}
             />
-            
+
+            {/*
             <QuickActionsSection />
+            */}
+
             
-            {/* Lazy load heavy sections */}
             <Suspense fallback={<div className="h-64 bg-muted/20 animate-pulse rounded-lg" />}>
               <FourPointerSection />
-            </Suspense>
+            </Suspense> 
+            
+            
             
             <section className="py-8 bg-background flex items-center justify-center">
                <div className="container mx-auto px-4 max-w-full xl:max-w-7xl"> 
@@ -556,6 +560,7 @@ const Index = () => {
               <VisionSection />
             </Suspense>
             
+            {/*
             <Suspense fallback={<div className="h-64 bg-muted/20 animate-pulse rounded-lg" />}>
               <section>
                 <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">
@@ -566,8 +571,11 @@ const Index = () => {
                 </div>
               </section>
             </Suspense>
-            
+            */}
+
+            {/*
             <SocialMediaContainer />
+            */}
             
             {user && (
               <div className="overflow-x-auto">
