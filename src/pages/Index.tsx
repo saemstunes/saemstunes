@@ -31,63 +31,6 @@ import { AudioStorageManager } from "@/utils/audioStorageManager";
 import { getAudioUrl, convertTrackToAudioTrack, generateTrackUrl } from "@/lib/audioUtils";
 import { supabase } from "@/integrations/supabase/client.ts";
 
-// FEATURED_TRACKS constant moved to top to avoid temporal dead zone issues
-const FEATURED_TRACKS = [
-  {
-    id: 'featured-1',
-    title: "Pale Ulipo",
-    slug: "pale-ulipo",
-    artist: "Saem's Tunes",
-    imageSrc: "https://i.imgur.com/VfKXMyG.png",
-    audio_path: "Tracks/Pale Ulipo (Afrobeats).m4a",
-    alternate_audio_path: "Tracks/Cover_Tracks/Pale Ulipo cover.m4a",
-    get audioSrc() { 
-      return getAudioUrl(this);
-    },
-    likes: 71,
-    plays: 1202
-  },
-  {
-    id: 'featured-2',
-    title: "I Need You More",
-    slug: "i-need-you-more",
-    artist: "Saem's Tunes",
-    imageSrc: "https://i.imgur.com/6yr8BpG.jpeg",
-    audio_path: "Tracks/I Need You More.wav",
-    get audioSrc() { 
-      return getAudioUrl(this);
-    },
-    likes: 106,
-    plays: 2412
-  },
-  {
-    id: 'featured-3',
-    title: "Ni Hai",
-    slug: "ni-hai",
-    artist: "Saem's Tunes ft. Kendi Nkonge",
-    imageSrc: "https://i.imgur.com/LJQDADg.jpeg",
-    audio_path: "Tracks/Ni Hai (Demo) - Saem's Tunes (OFFICIAL MUSIC VIDEO) (128kbit_AAC).m4a",
-    get audioSrc() { 
-      return getAudioUrl(this);
-    },
-    likes: 1421,
-    plays: 127
-  },
-  {
-    id: 'featured-4',
-    title: "Mapenzi Ya Ajabu",
-    slug: "mapenzi-ya-ajabu",
-    artist: "Saem's Tunes",
-    imageSrc: "https://i.imgur.com/wrm7LI1.jpeg",
-    audio_path: "Tracks/Mapenzi Ya Ajabu (Demo) - Saem's Tunes (OFFICIAL MUSIC VIDEO) (128kbit_AAC).m4a",
-    get audioSrc() { 
-      return getAudioUrl(this);
-    },
-    likes: 28,
-    plays: 154
-  }
-];
-
 // Constants - PRESERVE ORIGINAL STRUCTURE
 const STATS = [
   { icon: TrendingUp, label: "Total Plays", value: 100000 },
@@ -689,6 +632,62 @@ const Index = () => {
 };
 
 export default Index;
+
+const FEATURED_TRACKS = [
+  {
+    id: 'featured-1',
+    title: "Pale Ulipo",
+    slug: "pale-ulipo",
+    artist: "Saem's Tunes",
+    imageSrc: "https://i.imgur.com/VfKXMyG.png",
+    audio_path: "Tracks/Pale Ulipo (Afrobeats).m4a",
+    alternate_audio_path: "Tracks/Cover_Tracks/Pale Ulipo cover.m4a",
+    get audioSrc() { 
+      return getAudioUrl(this);
+    },
+    likes: 71,
+    plays: 1202
+  },
+  {
+    id: 'featured-2',
+    title: "I Need You More",
+    slug: "i-need-you-more",
+    artist: "Saem's Tunes",
+    imageSrc: "https://i.imgur.com/6yr8BpG.jpeg",
+    audio_path: "Tracks/I Need You More.wav",
+    get audioSrc() { 
+      return getAudioUrl(this);
+    },
+    likes: 106,
+    plays: 2412
+  },
+  {
+    id: 'featured-3',
+    title: "Ni Hai",
+    slug: "ni-hai",
+    artist: "Saem's Tunes ft. Kendi Nkonge",
+    imageSrc: "https://i.imgur.com/LJQDADg.jpeg",
+    audio_path: "Tracks/Ni Hai (Demo) - Saem's Tunes (OFFICIAL MUSIC VIDEO) (128kbit_AAC).m4a",
+    get audioSrc() { 
+      return getAudioUrl(this);
+    },
+    likes: 1421,
+    plays: 127
+  },
+  {
+    id: 'featured-4',
+    title: "Mapenzi Ya Ajabu",
+    slug: "mapenzi-ya-ajabu",
+    artist: "Saem's Tunes",
+    imageSrc: "https://i.imgur.com/wrm7LI1.jpeg",
+    audio_path: "Tracks/Mapenzi Ya Ajabu (Demo) - Saem's Tunes (OFFICIAL MUSIC VIDEO) (128kbit_AAC).m4a",
+    get audioSrc() { 
+      return getAudioUrl(this);
+    },
+    likes: 28,
+    plays: 154
+  }
+];
 
 const StatsSection = () => (
   <section className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">

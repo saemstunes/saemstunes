@@ -47,7 +47,7 @@ class ProfileService {
       throw new Error('Failed to fetch profile data');
     }
 
-    return { ...data, role: data.role as any };
+    return data;
   }
 
   async updateProfile(userId: string, updates: UpdateProfileData): Promise<ProfileData> {
@@ -72,7 +72,7 @@ class ProfileService {
       throw new Error('Failed to update profile');
     }
 
-    return { ...data, role: data.role as any };
+    return data;
   }
 
   async updateLastActive(userId: string): Promise<void> {

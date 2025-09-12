@@ -11,8 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import DynamicMusicQuiz from "@/components/quiz/DynamicMusicQuiz";
-import ResourceCard from "@/components/resources/ResourceCard";
-import { Resource } from "@/types/resource";
+import ResourceCard, { Resource } from "@/components/resources/ResourceCard";
 import { useToast } from "@/hooks/use-toast";
 import { useUserQuizProgress } from "@/hooks/useQuizzes";
 
@@ -77,33 +76,31 @@ const Library = () => {
       id: "res1",
       title: "Complete Guitar Chord Chart",
       description: "A comprehensive chart of guitar chords for beginners to advanced players",
-      category_id: "chord_charts",
-      subject_category: "Guitar",
-      level: "beginner" as const,
-      is_locked: false,
-      access_level: "free" as const,
-      metadata: { fileSize: "2.4 MB", dateAdded: "2 days ago" },
-      thumbnail_url: "/placeholder.svg",
-      resource_url: "#",
+      type: "chord_chart",
+      thumbnail: "/placeholder.svg",
+      fileSize: "2.4 MB",
+      dateAdded: "2 days ago",
       tags: ["Guitar", "Chords", "Beginner"],
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      premium: false,
+      downloadUrl: "#",
+      views: 1245,
+      author: "Saem's Tunes",
+      offline: true
     },
     {
       id: "res2",
       title: "Piano Scales PDF Reference",
       description: "All major and minor piano scales with fingering patterns",
-      category_id: "scales",
-      subject_category: "Piano",
-      level: "intermediate" as const,
-      is_locked: true,
-      access_level: "basic" as const,
-      metadata: { fileSize: "1.8 MB", dateAdded: "1 week ago" },
-      thumbnail_url: "/placeholder.svg",
-      resource_url: "#",
+      type: "sheet_music",
+      thumbnail: "/placeholder.svg",
+      fileSize: "1.8 MB",
+      dateAdded: "1 week ago",
       tags: ["Piano", "Scales", "Theory"],
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      premium: true,
+      downloadUrl: "#",
+      views: 789,
+      author: "Saem's Tunes",
+      offline: true
     }
   ];
   
