@@ -72,6 +72,9 @@ export const calculateRawPrice = (
 interface PricingCardProps {
   plan: SubscriptionPlan;
   variant?: "default" | "outline";
+  isCurrentPlan?: boolean;   
+  onSubscribe: () => Promise<void> | void;
+  isLoading: boolean;
   className?: string;
 }
 
