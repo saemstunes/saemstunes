@@ -126,7 +126,7 @@ const Subscriptions = () => {
     }
 
     if (data) {
-      const plan = mockSubscriptionPlans.find(p => p.id === data.type) || {
+      const plan = mockSubscriptionPlans.find(p => p.id.toString() === data.type) || {
         id: data.type,
         name: data.type.charAt(0).toUpperCase() + data.type.slice(1),
         price: 0,
@@ -156,7 +156,12 @@ const Subscriptions = () => {
       return;
     }
 
-    setPaymentMethods(data);
+    setPaymentMethods(data.map(method => ({
+      ...method,
+      details: typeof method.details === 'object' && method.details !== null 
+        ? method.details as any 
+        : {}
+    })));
   };
 
   const fetchUserCredits = async () => {
@@ -173,8 +178,8 @@ const Subscriptions = () => {
         .single();
 
       if (subscriptionData) {
-        const plan = mockSubscriptionPlans.find(p => p.id === subscriptionData.type);
-        const totalCredits = plan?.credits || 0;
+        const plan = mockSubscriptionPlans.find(p => p.id.toString() === subscriptionData.type);
+        const totalCredits = (plan as any)?.credits || 0;
         
         const { count: usedCredits } = await supabase
           .from('bookings')
@@ -288,14 +293,14 @@ const Subscriptions = () => {
         return;
       }
 
-      const plan = mockSubscriptionPlans.find(p => p.id === planId);
+      const plan = mockSubscriptionPlans.find(p => p.id.toString() === planId);
       
       const { data: payment, error: paymentError } = await supabase
         .from('payments')
         .insert({
           user_id: user.id,
           amount: plan?.price || 0,
-          method: defaultPaymentMethod.type,
+          method: defaultPaymentMethod.type as 'card' | 'mpesa' | 'paypal' | 'bank_transfer',
           status: 'completed',
           reference: `sub_${Date.now()}`,
           payment_method_id: defaultPaymentMethod.id,
@@ -312,7 +317,7 @@ const Subscriptions = () => {
         .from('subscriptions')
         .insert({
           user_id: user.id,
-          type: planId,
+          type: planId as 'free' | 'basic' | 'premium' | 'enterprise',
           status: 'active',
           valid_from: new Date().toISOString(),
           valid_until: validUntil.toISOString(),

@@ -11,7 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import DynamicMusicQuiz from "@/components/quiz/DynamicMusicQuiz";
-import ResourceCard, { Resource } from "@/components/resources/ResourceCard";
+import ResourceCard from "@/components/resources/ResourceCard";
+import { Resource } from "@/types/resource";
 import { useToast } from "@/hooks/use-toast";
 import { useUserQuizProgress } from "@/hooks/useQuizzes";
 
@@ -76,31 +77,57 @@ const Library = () => {
       id: "res1",
       title: "Complete Guitar Chord Chart",
       description: "A comprehensive chart of guitar chords for beginners to advanced players",
-      type: "chord_chart",
-      thumbnail: "/placeholder.svg",
-      fileSize: "2.4 MB",
-      dateAdded: "2 days ago",
+      category_id: "chord_chart",
+      subject_category: "guitar",
+      level: "beginner",
+      is_locked: false,
+      access_level: "free",
+      metadata: {},
+      thumbnail_url: "/placeholder.svg",
+      resource_url: "#",
+      duration: "Reference",
+      instructor: "Saem's Tunes",
       tags: ["Guitar", "Chords", "Beginner"],
-      premium: false,
-      downloadUrl: "#",
-      views: 1245,
-      author: "Saem's Tunes",
-      offline: true
+      created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
     },
     {
       id: "res2",
       title: "Piano Scales PDF Reference",
       description: "All major and minor piano scales with fingering patterns",
-      type: "sheet_music",
-      thumbnail: "/placeholder.svg",
-      fileSize: "1.8 MB",
-      dateAdded: "1 week ago",
+      category_id: "sheet_music",
+      subject_category: "piano",
+      level: "intermediate",
+      is_locked: true,
+      access_level: "premium",
+      metadata: {},
+      thumbnail_url: "/placeholder.svg",
+      resource_url: "#",
+      duration: "Reference",
+      instructor: "Saem's Tunes",
       tags: ["Piano", "Scales", "Theory"],
-      premium: true,
-      downloadUrl: "#",
-      views: 789,
-      author: "Saem's Tunes",
-      offline: true
+      created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+    },
+    {
+      id: "res3",
+      title: "Music Theory Fundamentals",
+      description: "Essential theory concepts for any musician",
+      category_id: "theory",
+      subject_category: "theory",
+      level: "beginner",
+      is_locked: false,
+      access_level: "free",
+      metadata: {},
+      thumbnail_url: "/placeholder.svg",
+      resource_url: "#",
+      duration: "45 min read",
+      instructor: "Saem's Tunes",
+      tags: ["Theory", "Beginner", "Fundamentals"],
+      created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
+    }
+  ];
     }
   ];
   

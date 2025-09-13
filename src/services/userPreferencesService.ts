@@ -40,7 +40,13 @@ export class UserPreferencesService {
       }
 
       // Determine if should show based on business logic
-      const shouldShow = this.shouldShowInstrumentSelector(prefs);
+      const processedPrefs = {
+        ...prefs,
+        preferences: typeof prefs.preferences === 'object' && prefs.preferences !== null 
+          ? prefs.preferences as Record<string, any>
+          : {}
+      };
+      const shouldShow = this.shouldShowInstrumentSelector(processedPrefs);
 
       return {
         shouldShow,
