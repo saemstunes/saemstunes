@@ -302,12 +302,12 @@ const DotGrid = ({
       ro = new ResizeObserver(buildGrid);
       if (wrapperRef.current) ro.observe(wrapperRef.current);
     } else if (typeof window !== 'undefined') {
-      window.addEventListener("resize", buildGrid);
+      (window as any).addEventListener("resize", buildGrid);
     }
     return () => {
       if (ro) ro.disconnect();
-      else if (typeof window !== 'undefined' && window.removeEventListener) {
-        window.removeEventListener("resize", buildGrid);
+      else if (typeof window !== 'undefined' && (window as any).removeEventListener) {
+        (window as any).removeEventListener("resize", buildGrid);
       }
     };
   }, [buildGrid]);

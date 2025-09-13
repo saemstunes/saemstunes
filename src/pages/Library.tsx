@@ -128,8 +128,6 @@ const Library = () => {
       updated_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
     }
   ];
-    }
-  ];
   
   const EmptyState = ({ title, description, icon: Icon }) => (
     <div className="text-center py-16">
