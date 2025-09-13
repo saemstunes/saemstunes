@@ -264,6 +264,7 @@ export const mockSubscriptionPlans: SubscriptionPlan[] = [
     price: 9.23, // 1200 KSh / 130 (exchange rate)
     interval: "month",
     tier: 'basic',
+    credits: 4,
     shortDescription: "Perfect for beginners starting their musical journey",
     features: [
       "4 classes per month",
@@ -280,6 +281,7 @@ export const mockSubscriptionPlans: SubscriptionPlan[] = [
     price: 15.38, // 2000 KSh / 130
     interval: "month",
     tier: 'premium',
+    credits: 8,
     shortDescription: "Ideal for regular learners committed to improvement",
     annualDiscount: 25,
     features: [
@@ -299,6 +301,7 @@ export const mockSubscriptionPlans: SubscriptionPlan[] = [
     price: 34.62, // 4500 KSh / 130
     interval: "month",
     tier: 'professional',
+    credits: 12,
     shortDescription: "For serious musicians pursuing mastery",
     annualDiscount: 20,
     features: [
