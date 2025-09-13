@@ -249,6 +249,7 @@ export interface SubscriptionPlan {
   name: string;
   price: number; // This will be in USD for reference
   interval: "month" | "quarter" | "year";
+  credits: number;
   features: string[];
   isPopular?: boolean;
   shortDescription?: string;
