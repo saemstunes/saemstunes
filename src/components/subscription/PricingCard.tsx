@@ -126,7 +126,7 @@ const rawPrice = calculateRawPrice(plan.id, classCount, paymentType, plan.price)
 
 const paymentRequest = {
   orderType: (paymentType === 'subscription' ? 'subscription' : 'service') as 'subscription' | 'service' | 'product',
-  itemId: plan.id.toString(),
+  itemId: plan.id,
   itemName: `${plan.name} ${paymentType === 'subscription' ? 'Subscription' : `Class Pack (${classCount} classes)`}`,
   amount: Math.round(rawPrice * 100), // Amount in cents
   currency: 'KES',
