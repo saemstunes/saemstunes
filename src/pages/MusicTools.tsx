@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useWindowSize } from "@uidotdev/usehooks";
+import InteractiveGuitar from "@/components/ui/InteractiveGuitar";
 import InteractivePiano from "@/components/ui/InteractivePiano";
 import Metronome from "@/components/music-tools/Metronome";
 import PitchFinder from "@/components/music-tools/PitchFinder";
@@ -43,7 +44,7 @@ const useResponsiveLayout = () => {
 
 // Tool definitions
 const MUSIC_TOOLS = [
-  {/* {
+  {
     id: 'guitar',
     name: 'Interactive Guitar',
     icon: Guitar,
@@ -52,7 +53,7 @@ const MUSIC_TOOLS = [
     category: 'instruments',
     minWidth: 600,
     recommendedOrientation: 'landscape'
-  }, */},
+  },
   {
     id: 'piano',
     name: 'Interactive Piano',
