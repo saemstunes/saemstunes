@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useWindowSize } from "@uidotdev/usehooks";
-import InteractiveGuitar from "@/components/ui/InteractiveGuitar";
 import InteractivePiano from "@/components/ui/InteractivePiano";
 import Metronome from "@/components/music-tools/Metronome";
 import PitchFinder from "@/components/music-tools/PitchFinder";
