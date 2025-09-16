@@ -44,7 +44,7 @@ const useResponsiveLayout = () => {
 
 // Tool definitions
 const MUSIC_TOOLS = [
-  {
+  {/* {
     id: 'guitar',
     name: 'Interactive Guitar',
     icon: Guitar,
@@ -53,7 +53,7 @@ const MUSIC_TOOLS = [
     category: 'instruments',
     minWidth: 600,
     recommendedOrientation: 'landscape'
-  },
+  }, */}
   {
     id: 'piano',
     name: 'Interactive Piano',
