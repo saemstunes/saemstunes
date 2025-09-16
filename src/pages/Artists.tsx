@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { 
   Search, 
   User, 
@@ -35,6 +36,7 @@ interface Artist {
   bio: string;
   monthlyListeners: number;
   isFollowing: boolean;
+  slug: string;
   socialLinks?: {
     instagram?: string;
     spotify?: string;
@@ -78,6 +80,7 @@ const Artists: React.FC = () => {
             bio: artist.bio || '',
             monthlyListeners: artist.monthly_listeners || 0,
             isFollowing: false,
+            slug: artist.slug,
             socialLinks: typeof artist.social_links === 'object' && artist.social_links !== null 
               ? artist.social_links as { instagram?: string; spotify?: string; youtube?: string; }
               : {}
@@ -182,63 +185,60 @@ const Artists: React.FC = () => {
       >
         <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-card to-card/80 h-full">
           <CardContent className="p-0">
-            <div className="relative">
-              <img 
-                src={artist.profileImage} 
-                alt={artist.name}
-                className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-              
-              <div className="absolute bottom-4 left-4 right-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <h3 className="font-bold text-white text-lg truncate">{artist.name}</h3>
-                  {artist.isVerified && (
-                    <Verified className="h-4 w-4 text-blue-500 fill-current" />
-                  )}
-                </div>
-                <div className="flex items-center gap-2 text-white/80 text-sm mb-2">
-                  <MapPin className="h-3 w-3" />
-                  <span className="truncate">{artist.location}</span>
+            <Link to={`/artist/${artist.slug}`} className="block">
+              <div className="relative">
+                <img 
+                  src={artist.profileImage} 
+                  alt={artist.name}
+                  className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                
+                <div className="absolute bottom-4 left-4 right-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="font-bold text-white text-lg truncate">{artist.name}</h3>
+                    {artist.isVerified && (
+                      <Verified className="h-4 w-4 text-blue-500 fill-current" />
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 text-white/80 text-sm mb-2">
+                    <MapPin className="h-3 w-3" />
+                    <span className="truncate">{artist.location}</span>
+                  </div>
                 </div>
               </div>
-
-              <Button
-                size="icon"
-                className="absolute top-4 right-4 bg-gold hover:bg-gold-dark text-white h-10 w-10 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <Play className="h-4 w-4" />
-              </Button>
-            </div>
+            </Link>
             
             <div className="p-4">
-              <div className="flex flex-wrap gap-1 mb-3">
-                {artist.genre.slice(0, 2).map((genre) => (
-                  <Badge key={genre} variant="secondary" className="text-xs">
-                    {genre}
-                  </Badge>
-                ))}
-                {artist.genre.length > 2 && (
-                  <Badge variant="outline" className="text-xs">
-                    +{artist.genre.length - 2}
-                  </Badge>
-                )}
-              </div>
-
-              <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                {artist.bio}
-              </p>
-
-              <div className="grid grid-cols-2 gap-4 mb-4 text-center">
-                <div>
-                  <div className="font-bold text-sm">{formatNumber(artist.followerCount)}</div>
-                  <div className="text-xs text-muted-foreground">Followers</div>
+              <Link to={`/artist/${artist.slug}`} className="block">
+                <div className="flex flex-wrap gap-1 mb-3">
+                  {artist.genre.slice(0, 2).map((genre) => (
+                    <Badge key={genre} variant="secondary" className="text-xs">
+                      {genre}
+                    </Badge>
+                  ))}
+                  {artist.genre.length > 2 && (
+                    <Badge variant="outline" className="text-xs">
+                      +{artist.genre.length - 2}
+                    </Badge>
+                  )}
                 </div>
-                <div>
-                  <div className="font-bold text-sm">{formatNumber(artist.monthlyListeners)}</div>
-                  <div className="text-xs text-muted-foreground">Monthly</div>
+
+                <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                  {artist.bio}
+                </p>
+
+                <div className="grid grid-cols-2 gap-4 mb-4 text-center">
+                  <div>
+                    <div className="font-bold text-sm">{formatNumber(artist.followerCount)}</div>
+                    <div className="text-xs text-muted-foreground">Followers</div>
+                  </div>
+                  <div>
+                    <div className="font-bold text-sm">{formatNumber(artist.monthlyListeners)}</div>
+                    <div className="text-xs text-muted-foreground">Monthly</div>
+                  </div>
                 </div>
-              </div>
+              </Link>
 
               <div className="flex gap-2">
                 <Button
