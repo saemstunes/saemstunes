@@ -36,6 +36,13 @@ const featuredItems: FeaturedItem[] = [
     description: "Discover emerging artists making waves in the music industry",
     image: "https://i.imgur.com/LJQDADg.jpeg",
     link: "/artists"
+  },
+  {
+    id: '4',
+    title: "We're building a Music Library"",
+    decscription: "From quizzes and courses to offline resources and exclusive lessons — the Library is your hub for structured, engaging, and fun music learning.",
+    image: "https://i.imgur.com/wLMm6QD.jpeg",
+    link: "/library",
   }
 ];
 
@@ -87,7 +94,17 @@ const EnhancedFeaturedBanner = () => {
           transition={{ duration: 0.5 }}
           className="absolute inset-0 cursor-pointer"
           onClick={() => handleItemClick(currentItem)}
-        >
+        drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.2}
+          onDragEnd={(event, info) => {
+            if (info.offset.x < -50) {
+              goToNext(); // swipe left → next
+            } else if (info.offset.x > 50) {
+              goToPrevious(); // swipe right → previous
+            }
+          }}
+          >
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent z-10"></div>
           <img 
             src={currentItem.image} 
