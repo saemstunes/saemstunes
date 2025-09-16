@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -39,10 +38,10 @@ const featuredItems: FeaturedItem[] = [
   },
   {
     id: '4',
-    title: "We're building a Music Library"",
-    decscription: "From quizzes and courses to offline resources and exclusive lessons — the Library is your hub for structured, engaging, and fun music learning.",
+    title: "We're building a Music Library",
+    description: "From quizzes and courses to offline resources and exclusive lessons — the Library is your hub for structured, engaging, and fun music learning.",
     image: "https://i.imgur.com/wLMm6QD.jpeg",
-    link: "/library",
+    link: "/library"
   }
 ];
 
@@ -94,7 +93,19 @@ const EnhancedFeaturedBanner = () => {
           transition={{ duration: 0.5 }}
           className="absolute inset-0 cursor-pointer"
           onClick={() => handleItemClick(currentItem)}
-          >
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.2}
+          onDragStart={() => setIsAutoPlaying(false)}
+          onDragEnd={(event, info) => {
+            if (info.offset.x < -50) {
+              goToNext();
+            } else if (info.offset.x > 50) {
+              goToPrevious();
+            }
+            setIsAutoPlaying(true);
+          }}
+        >
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent z-10"></div>
           <img 
             src={currentItem.image} 
