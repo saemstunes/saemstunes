@@ -1,11 +1,10 @@
-// src/components/EnhancedFeaturedBanner.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useFeaturedItems } from '@/context/FeaturedItemsContext';
+import { supabase } from '@/lib/supabase';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface FeaturedItem {
@@ -20,11 +19,34 @@ interface FeaturedItem {
 
 const EnhancedFeaturedBanner = () => {
   const navigate = useNavigate();
-  const { featuredItems, loading } = useFeaturedItems();
+  const [featuredItems, setFeaturedItems] = useState<FeaturedItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
-  // Auto-play
+  useEffect(() => {
+    fetchFeaturedItems();
+  }, []);
+
+  const fetchFeaturedItems = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('featured_items')
+        .select('*')
+        .order('order', { ascending: true });
+
+      if (error) {
+        throw error;
+      }
+
+      setFeaturedItems(data || []);
+    } catch (error) {
+      console.error('Error fetching featured items:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!isAutoPlaying || featuredItems.length === 0) return;
 
@@ -51,7 +73,6 @@ const EnhancedFeaturedBanner = () => {
     setCurrentIndex((prev) => (prev + 1) % featuredItems.length);
   };
 
-  // Loading state
   if (loading) {
     return (
       <div className="relative rounded-lg overflow-hidden h-48 md:h-64 mb-8">
@@ -60,7 +81,6 @@ const EnhancedFeaturedBanner = () => {
     );
   }
 
-  // Empty state
   if (featuredItems.length === 0) {
     return (
       <div className="rounded-lg bg-muted/30 h-48 md:h-64 flex items-center justify-center">
@@ -122,7 +142,6 @@ const EnhancedFeaturedBanner = () => {
         </motion.div>
       </AnimatePresence>
 
-      {/* Navigation Buttons */}
       <Button
         variant="ghost"
         size="icon"
@@ -141,7 +160,6 @@ const EnhancedFeaturedBanner = () => {
         <ChevronRight className="h-5 w-5" />
       </Button>
 
-      {/* Dots Indicator */}
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-30">
         {featuredItems.map((_, index) => (
           <button
