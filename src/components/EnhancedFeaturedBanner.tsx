@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface FeaturedItem {
