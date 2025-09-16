@@ -53,7 +53,7 @@ const MUSIC_TOOLS = [
     category: 'instruments',
     minWidth: 600,
     recommendedOrientation: 'landscape'
-  }, */}
+  }, */},
   {
     id: 'piano',
     name: 'Interactive Piano',
