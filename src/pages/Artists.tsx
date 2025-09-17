@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -37,6 +36,7 @@ interface Artist {
   monthlyListeners: number;
   isFollowing: boolean;
   slug: string;
+  createdAt: string;
   socialLinks?: {
     instagram?: string;
     spotify?: string;
@@ -53,6 +53,7 @@ const Artists: React.FC = () => {
   const [followedArtists, setFollowedArtists] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [newThisMonth, setNewThisMonth] = useState(0);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -81,11 +82,22 @@ const Artists: React.FC = () => {
             monthlyListeners: artist.monthly_listeners || 0,
             isFollowing: false,
             slug: artist.slug,
+            createdAt: artist.created_at,
             socialLinks: typeof artist.social_links === 'object' && artist.social_links !== null 
               ? artist.social_links as { instagram?: string; spotify?: string; youtube?: string; }
               : {}
           }));
           setArtists(mappedArtists);
+          
+          // Calculate new artists this month
+          const now = new Date();
+          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+          const newArtistsCount = data.filter(artist => {
+            const createdAt = new Date(artist.created_at);
+            return createdAt >= startOfMonth;
+          }).length;
+          
+          setNewThisMonth(newArtistsCount);
         }
       } catch (err) {
         setError('Failed to load artists');
@@ -130,7 +142,8 @@ const Artists: React.FC = () => {
         case 'followers':
           return b.followerCount - a.followerCount;
         case 'recent':
-          return Math.random() - 0.5;
+          // Sort by creation date for recent sorting
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         default:
           return b.monthlyListeners - a.monthlyListeners;
       }
@@ -359,7 +372,7 @@ const Artists: React.FC = () => {
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1">
                   <TrendingUp className="h-4 w-4 text-green-500" />
-                  <span>24 new this month</span>
+                  <span>{newThisMonth} new this month</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Star className="h-4 w-4 text-gold" />
