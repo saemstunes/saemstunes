@@ -1,20 +1,17 @@
-
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { mockVideos } from "@/data/mockData";
-import VideoCard from "@/components/videos/VideoCard";
-import { Search, Filter, X, Bookmark, Clock, History, TrendingUp } from "lucide-react";
-import { 
-  Card,
-  CardContent
-} from "@/components/ui/card";
+import { Search, Filter, X, Clock, History, TrendingUp } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { userPreferences } from "@/lib/animation-utils";
+import { searchAll, SearchResult } from "@/lib/search";
+import { useDebounce } from "@/lib/hooks/useDebounce";
+import ResultsGrid from "@/components/search/ResultsGrid";
 
 const SearchPage = () => {
   const location = useLocation();
@@ -26,66 +23,98 @@ const SearchPage = () => {
   const [trendingSearches] = useState([
     "Piano basics", "Guitar chords", "Vocal warm-ups", "Music theory", "Saxophone lessons"
   ]);
-  
-  // Update search history
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [page, setPage] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+
+  const debouncedQuery = useDebounce(searchQuery, 500);
+
   useEffect(() => {
-    // Load recent searches from local storage
     const savedSearches = userPreferences.load<string[]>('recent-searches', []);
     setRecentSearches(savedSearches);
   }, []);
-  
-  // Save search to history when performed
+
+  useEffect(() => {
+    if (debouncedQuery) {
+      performSearch(debouncedQuery, 0);
+    } else {
+      setSearchResults([]);
+      setPage(0);
+      setHasMore(false);
+    }
+  }, [debouncedQuery, activeTab]);
+
+  const performSearch = async (query: string, pageNum: number) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const limit = 12;
+      const results = await searchAll(query, limit, pageNum * limit);
+      
+      if (pageNum === 0) {
+        setSearchResults(results);
+      } else {
+        setSearchResults(prev => [...prev, ...results]);
+      }
+      
+      setHasMore(results.length >= limit);
+      setPage(pageNum);
+    } catch (err) {
+      setError("Failed to search. Please try again.");
+      console.error("Search error:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const saveSearchToHistory = (query: string) => {
     if (!query.trim()) return;
-    
     const updatedSearches = [
       query,
       ...recentSearches.filter(item => item !== query)
     ].slice(0, 5);
-    
     setRecentSearches(updatedSearches);
     userPreferences.save('recent-searches', updatedSearches);
   };
-  
-  // Clear input and results
+
   const clearSearch = () => {
     setSearchQuery("");
+    setSearchResults([]);
+    setPage(0);
+    setHasMore(false);
   };
-  
-  // Perform search when enter is pressed
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && searchQuery) {
       saveSearchToHistory(searchQuery);
     }
   };
-  
-  // Handle clicking on a suggestion
+
   const handleSuggestionClick = (suggestion: string) => {
     setSearchQuery(suggestion);
     saveSearchToHistory(suggestion);
   };
-  
-  // Simple search function to filter mock data
-  const searchResults = mockVideos.filter((video) => {
-    const query = searchQuery.toLowerCase();
-    const matchesQuery = 
-      video.title.toLowerCase().includes(query) || 
-      video.description.toLowerCase().includes(query) ||
-      video.instructor.toLowerCase().includes(query) ||
-      video.tags.some(tag => tag.toLowerCase().includes(query));
-      
-    if (activeTab === "all") return matchesQuery;
-    if (activeTab === "beginner") return matchesQuery && video.level === "beginner";
-    if (activeTab === "intermediate") return matchesQuery && video.level === "intermediate";
-    if (activeTab === "advanced") return matchesQuery && video.level === "advanced";
-    
-    return false;
-  });
-  
-  // Extract all tags from search results for filtering
+
+  const loadMore = () => {
+    performSearch(debouncedQuery, page + 1);
+  };
+
+  const filterResultsByType = (results: SearchResult[], type: string) => {
+    if (type === "all") return results;
+    return results.filter(result => result.source_table === type);
+  };
+
+  const filteredResults = filterResultsByType(searchResults, activeTab);
   const allTags = Array.from(
-    new Set(searchResults.flatMap(video => video.tags))
-  );
+    new Set(
+      searchResults.flatMap(result => 
+        result.snippet.match(/#(\w+)/g) || []
+      )
+    )
+  ).slice(0, 10);
 
   return (
     <MainLayout>
@@ -103,7 +132,7 @@ const SearchPage = () => {
               onKeyDown={handleKeyDown}
             />
             {searchQuery && (
-              <button 
+              <button
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 onClick={clearSearch}
               >
@@ -111,8 +140,8 @@ const SearchPage = () => {
               </button>
             )}
           </div>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="icon"
             onClick={() => setShowFilters(!showFilters)}
             className={showFilters ? "bg-muted" : ""}
@@ -120,19 +149,19 @@ const SearchPage = () => {
             <Filter className="h-4 w-4" />
           </Button>
         </div>
-        
-        {/* Search suggestions when input is focused but empty */}
+
         {!searchQuery && (
           <div className="absolute top-full left-0 right-0 bg-background shadow-lg rounded-md mt-1 p-4 z-20 border">
             {recentSearches.length > 0 && (
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-sm font-medium flex items-center gap-1">
-                    <Clock className="h-3.5 w-3.5" /> Recent Searches
+                    <Clock className="h-3.5 w-3.5" />
+                    Recent Searches
                   </h3>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="h-auto py-1 px-2 text-xs"
                     onClick={() => {
                       setRecentSearches([]);
@@ -144,9 +173,9 @@ const SearchPage = () => {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {recentSearches.map((search, idx) => (
-                    <Badge 
-                      key={idx} 
-                      variant="outline" 
+                    <Badge
+                      key={idx}
+                      variant="outline"
                       className="cursor-pointer hover:bg-muted"
                       onClick={() => handleSuggestionClick(search)}
                     >
@@ -160,13 +189,14 @@ const SearchPage = () => {
             
             <div>
               <h3 className="text-sm font-medium flex items-center gap-1 mb-2">
-                <TrendingUp className="h-3.5 w-3.5" /> Trending
+                <TrendingUp className="h-3.5 w-3.5" />
+                Trending
               </h3>
               <div className="flex flex-wrap gap-2">
                 {trendingSearches.map((search, idx) => (
-                  <Badge 
-                    key={idx} 
-                    variant="outline" 
+                  <Badge
+                    key={idx}
+                    variant="outline"
                     className="cursor-pointer hover:bg-muted"
                     onClick={() => handleSuggestionClick(search)}
                   >
@@ -178,10 +208,9 @@ const SearchPage = () => {
           </div>
         )}
       </div>
-      
-      {/* Filters area */}
+
       {showFilters && (
-        <motion.div 
+        <motion.div
           className="mb-6"
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
@@ -192,23 +221,18 @@ const SearchPage = () => {
               <h3 className="text-sm font-medium mb-3">Filter by Tags</h3>
               <div className="flex flex-wrap gap-2">
                 {allTags.map((tag, index) => (
-                  <Badge 
-                    key={index} 
-                    variant="outline" 
+                  <Badge
+                    key={index}
+                    variant="outline"
                     className="cursor-pointer hover:bg-muted"
-                    onClick={() => handleSuggestionClick(tag)}
+                    onClick={() => handleSuggestionClick(tag.replace('#', ''))}
                   >
-                    #{tag}
+                    {tag}
                   </Badge>
                 ))}
               </div>
-              
               <div className="mt-4 flex justify-end">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setShowFilters(false)}
-                >
+                <Button variant="outline" size="sm" onClick={() => setShowFilters(false)}>
                   Close
                 </Button>
               </div>
@@ -216,38 +240,69 @@ const SearchPage = () => {
           </Card>
         </motion.div>
       )}
-      
+
       <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">
           <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="beginner">Beginner</TabsTrigger>
-          <TabsTrigger value="intermediate">Intermediate</TabsTrigger>
-          <TabsTrigger value="advanced">Advanced</TabsTrigger>
+          <TabsTrigger value="artists">Artists</TabsTrigger>
+          <TabsTrigger value="video_content">Videos</TabsTrigger>
+          <TabsTrigger value="resources">Resources</TabsTrigger>
+          <TabsTrigger value="courses">Courses</TabsTrigger>
+          <TabsTrigger value="tracks">Tracks</TabsTrigger>
+          <TabsTrigger value="tutors">Tutors</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value={activeTab} className="mt-0">
           {searchQuery ? (
             <>
               <p className="text-muted-foreground mb-4">
-                {searchResults.length} results for "{searchQuery}"
+                {filteredResults.length} results for "{searchQuery}"
+                {activeTab !== "all" && ` in ${activeTab.replace('_', ' ')}`}
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {searchResults.map(video => (
-                  <VideoCard key={video.id} video={video} isPremium={video.isLocked} />
-                ))}
-              </div>
               
-              {searchResults.length === 0 && (
+              {error && (
+                <div className="bg-destructive/10 text-destructive p-4 rounded-lg mb-4">
+                  {error}
+                </div>
+              )}
+              
+              {isLoading && page === 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <Card key={i} className="h-full">
+                      <CardContent className="p-4">
+                        <div className="animate-pulse">
+                          <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                          <div className="h-3 bg-muted rounded w-full mb-1"></div>
+                          <div className="h-3 bg-muted rounded w-5/6"></div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : filteredResults.length > 0 ? (
+                <>
+                  <ResultsGrid results={filteredResults} />
+                  
+                  {hasMore && (
+                    <div className="mt-8 text-center">
+                      <Button
+                        onClick={loadMore}
+                        disabled={isLoading}
+                        variant="outline"
+                      >
+                        {isLoading ? "Loading..." : "Load More Results"}
+                      </Button>
+                    </div>
+                  )}
+                </>
+              ) : (
                 <div className="text-center py-16">
                   <h2 className="text-xl font-medium">No results found</h2>
-                  <p className="text-muted-foreground mt-2">Try adjusting your search terms</p>
-                  <Button 
-                    variant="outline" 
-                    className="mt-4"
-                    onClick={() => {
-                      setSearchQuery("");
-                    }}
-                  >
+                  <p className="text-muted-foreground mt-2">
+                    Try adjusting your search terms or exploring different categories
+                  </p>
+                  <Button variant="outline" className="mt-4" onClick={clearSearch}>
                     Clear Search
                   </Button>
                 </div>
@@ -258,51 +313,6 @@ const SearchPage = () => {
               <p className="text-muted-foreground">
                 Enter search terms to find videos, resources, tutors and more
               </p>
-            </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="beginner" className="mt-0">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {searchResults.map(video => (
-              <VideoCard key={video.id} video={video} isPremium={video.isLocked} />
-            ))}
-          </div>
-          
-          {searchResults.length === 0 && searchQuery && (
-            <div className="text-center py-16">
-              <h2 className="text-xl font-medium">No beginner results found</h2>
-              <p className="text-muted-foreground mt-2">Try adjusting your search terms</p>
-            </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="intermediate" className="mt-0">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {searchResults.map(video => (
-              <VideoCard key={video.id} video={video} isPremium={video.isLocked} />
-            ))}
-          </div>
-          
-          {searchResults.length === 0 && searchQuery && (
-            <div className="text-center py-16">
-              <h2 className="text-xl font-medium">No intermediate results found</h2>
-              <p className="text-muted-foreground mt-2">Try adjusting your search terms</p>
-            </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="advanced" className="mt-0">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {searchResults.map(video => (
-              <VideoCard key={video.id} video={video} isPremium={video.isLocked} />
-            ))}
-          </div>
-          
-          {searchResults.length === 0 && searchQuery && (
-            <div className="text-center py-16">
-              <h2 className="text-xl font-medium">No advanced results found</h2>
-              <p className="text-muted-foreground mt-2">Try adjusting your search terms</p>
             </div>
           )}
         </TabsContent>
