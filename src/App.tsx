@@ -13,6 +13,7 @@ import { MediaStateProvider } from '@/components/idle-state/mediaStateContext';
 import { PlaylistProvider } from '@/context/PlaylistContext';
 import { FeaturedItemsProvider } from '@/context/FeaturedItemsContext';
 import { ThemeProvider } from '@/context/ThemeContext';
+import { Analytics } from "@vercel/analytics/react";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import SplashScreen from "@/components/ui/splash-screen";
 import GlobalMiniPlayer from "@/components/player/GlobalMiniPlayer";
@@ -169,6 +170,7 @@ const App = () => {
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                           <GlobalMiniPlayer />
+                          <Analytics />
                         </BrowserRouter>
                       </FeaturedItemsProvider>
                     </TooltipProvider>
