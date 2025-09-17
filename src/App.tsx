@@ -14,6 +14,7 @@ import { PlaylistProvider } from '@/context/PlaylistContext';
 import { FeaturedItemsProvider } from '@/context/FeaturedItemsContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import SplashScreen from "@/components/ui/splash-screen";
 import GlobalMiniPlayer from "@/components/player/GlobalMiniPlayer";
@@ -170,6 +171,7 @@ const App = () => {
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                           <GlobalMiniPlayer />
+                          <SpeedInsights />
                           <Analytics />
                         </BrowserRouter>
                       </FeaturedItemsProvider>
