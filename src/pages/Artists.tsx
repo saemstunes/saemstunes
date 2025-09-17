@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -54,7 +55,10 @@ const Artists: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [newThisMonth, setNewThisMonth] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const isMobile = useIsMobile();
+
+  const ARTISTS_PER_PAGE = 9;
 
   useEffect(() => {
     const fetchArtists = async () => {
@@ -149,7 +153,17 @@ const Artists: React.FC = () => {
       }
     });
 
-  const handleFollow = (artistId: string) => {
+  // Get artists for current page
+  const paginatedArtists = filteredArtists.slice(0, currentPage * ARTISTS_PER_PAGE);
+  const hasMoreArtists = paginatedArtists.length < filteredArtists.length;
+
+  const handleLoadMore = () => {
+    setCurrentPage(prev => prev + 1);
+  };
+
+  const handleFollow = (artistId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     setFollowedArtists(prev => {
       const newSet = new Set(prev);
       if (newSet.has(artistId)) {
@@ -255,7 +269,7 @@ const Artists: React.FC = () => {
 
               <div className="flex gap-2">
                 <Button
-                  onClick={() => handleFollow(artist.id)}
+                  onClick={(e) => handleFollow(artist.id, e)}
                   className={`flex-1 ${
                     isFollowing 
                       ? 'bg-muted text-muted-foreground hover:bg-muted/80' 
@@ -422,7 +436,7 @@ const Artists: React.FC = () => {
                 variants={containerVariants}
               >
                 <AnimatePresence>
-                  {filteredArtists.map((artist) => (
+                  {paginatedArtists.map((artist) => (
                     <ArtistCard key={artist.id} artist={artist} />
                   ))}
                 </AnimatePresence>
@@ -442,6 +456,7 @@ const Artists: React.FC = () => {
                     onClick={() => {
                       setSearchTerm('');
                       setSelectedGenre('all');
+                      setCurrentPage(1);
                     }}
                     className="bg-gold hover:bg-gold-dark text-white"
                   >
@@ -452,12 +467,16 @@ const Artists: React.FC = () => {
             </>
           )}
 
-          {!loading && !error && filteredArtists.length > 0 && (
+          {!loading && !error && hasMoreArtists && (
             <motion.div 
               className="text-center mt-12"
               variants={itemVariants}
             >
-              <Button variant="outline" className="border-gold text-gold hover:bg-gold hover:text-white">
+              <Button 
+                onClick={handleLoadMore}
+                variant="outline" 
+                className="border-gold text-gold hover:bg-gold hover:text-white"
+              >
                 Load More Artists
               </Button>
             </motion.div>
