@@ -1,4 +1,3 @@
-
 import { RefObject } from 'react';
 
 // Animation durations in ms
@@ -94,31 +93,9 @@ export const waitForAnimationComplete = (duration: number = DURATIONS.normal): P
   return new Promise(resolve => setTimeout(resolve, duration));
 };
 
+// Store and retrieve user preferences - SINGLE DEFINITION
 export const userPreferences = {
-  // ... existing methods ...
-  
-  load: <T>(key: string, defaultValue: T): T => {
-    try {
-      const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : defaultValue;
-    } catch (error) {
-      console.error(`Error loading ${key} from localStorage:`, error);
-      return defaultValue;
-    }
-  },
-  
   save: <T>(key: string, value: T): void => {
-    try {
-      window.localStorage.setItem(key, JSON.stringify(value));
-    } catch (error) {
-      console.error(`Error saving ${key} to localStorage:`, error);
-    }
-  }
-};
-
-// Store and retrieve user preferences
-export const userPreferences = {
-  save: (key: string, value: any): void => {
     try {
       localStorage.setItem(`rhythm-verse-${key}`, JSON.stringify(value));
     } catch (error) {
