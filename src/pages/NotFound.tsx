@@ -73,7 +73,7 @@ const NotFound: React.FC = () => {
 
             {/* Display suggestion if available */}
             {suggestion && (
-              <p className="text-gold/20 dark:text-gold/10 mb-4 text-sm">
+              <p className="text-gold/20 dark:text-gold/90 mb-4 text-sm">
                 {suggestion}
               </p>
             )}
