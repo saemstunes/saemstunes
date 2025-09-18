@@ -108,7 +108,7 @@ const NotFound: React.FC = () => {
           <a href={mailtoHref} className="underline hover:opacity-90">{SUPPORT_EMAIL}</a>.
         </p>
       </section>
-      <p className="text-[11px] font-mono text-muted-foreground/80 select-all break-all mt-4">
+      <p className="text-[11px] font-mono text-muted-foreground/80 select-all break-all mt-8 text-center">
           {pathname}
       </p>
     </main>
