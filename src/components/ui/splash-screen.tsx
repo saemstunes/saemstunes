@@ -260,7 +260,7 @@ const SplashScreen = ({
                   {/* Show logo immediately when loaded, or fallback to music icon */}
                   {logoLoaded ? (
                     <img 
-                      src="/logo.svg" 
+                      src="/lovable-uploads/logo-icon-md.webp" 
                       alt="Saem's Tunes Logo" 
                       className="w-18 h-18"
                       onError={(e) => {
