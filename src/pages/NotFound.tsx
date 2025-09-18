@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -73,7 +72,7 @@ const NotFound = () => {
         </div>
         
         <p className="text-xs text-muted-foreground mt-10">
-          If you believe this is an error, please contact support.
+          If you believe this is an error, please <a href="mailto:contact@saemstunes.com" className="text-gold hover:text-gold/80 underline">contact support</a>.
         </p>
       </div>
     </div>
