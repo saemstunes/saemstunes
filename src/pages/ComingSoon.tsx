@@ -90,7 +90,7 @@ const ComingSoon = () => {
                 Want to be notified when this feature launches?
               </p>
               <p className="text-gold font-medium">
-                Follow us for updates 
+                Follow us for updates{" "}
                 <Link to="/follow-us" className="underline hover:text-gold/90">
                      here
                 </Link>
