@@ -262,7 +262,7 @@ const SplashScreen = ({
                     <img 
                       src="/logo.svg" 
                       alt="Saem's Tunes Logo" 
-                      className="w-10 h-10"
+                      className="w-18 h-18"
                       onError={(e) => {
                         // Fallback to music icon if logo fails to load
                         e.currentTarget.style.display = 'none';
