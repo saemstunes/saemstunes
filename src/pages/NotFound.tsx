@@ -16,15 +16,30 @@ const NotFound: React.FC = () => {
   const [messageWithLinks, setMessageWithLinks] = useState<React.ReactNode>('');
 
   const goBack = useCallback(() => {
-    if (window.history.length > 2) {
+    if (window.history.length > 3) {
       navigate(-1);
     } else {
       navigate('/');
     }
   }, [navigate]);
 
-  const mailtoHref = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(`404 encountered: ${pathname}`)}&body=${encodeURIComponent(`Hello Support,\n\nI ran into a 404 error while visiting:\n\n${window.location.href}\n\nDetails:\n- Path: ${pathname}\n- Referrer: ${document.referrer || "N/A"}\n- User Agent: ${navigator.userAgent}\n- Time (local): ${new Date().toLocaleString()}\n\nI was trying to: [please describe what you were doing]\n\nThanks,\n[Your Name]`)}`;
-  
+  const mailtoHref = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(`404 encountered: ${pathname}`)}&body=${encodeURIComponent(`Hello Support,
+
+I ran into a 404 error while visiting:
+
+${window.location.href}
+
+Details:
+- Path: ${pathname}
+- Referrer: ${document.referrer || "N/A"}
+- User Agent: ${navigator.userAgent}
+- Time (local): ${new Date().toLocaleString()}
+
+I was trying to: [please describe what you were doing]
+
+Thanks,
+[Your Name]`)}`;
+
   useEffect(() => {
     const process404 = async () => {
       try {
