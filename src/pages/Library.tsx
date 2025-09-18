@@ -15,7 +15,7 @@ import ResourceCard from "@/components/resources/ResourceCard";
 import { Resource } from "@/types/resource";
 import { useToast } from "@/hooks/use-toast";
 import { useUserQuizProgress } from "@/hooks/useQuizzes";
-import { supabase } from "@/integrations/supabase";
+import { supabase } from "@/integrations/supabase/client";
 
 const Library = () => {
   const { user } = useAuth();
