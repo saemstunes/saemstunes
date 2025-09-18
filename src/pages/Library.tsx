@@ -29,16 +29,10 @@ const Library = () => {
       try {
         const { count, error } = await supabase
           .from('quizzes')
-          .select('*', { count: 'exact', head: true });
+          .select('*', { count: 'exact' });
         
-        if (error) {
-          console.error('Error fetching question count:', error);
-          return;
-        }
-        
-        if (count !== null) {
-          setTotalQuestions(count);
-        }
+        if (error) throw error;
+        if (count) setTotalQuestions(count);
       } catch (error) {
         console.error('Error fetching question count:', error);
       }
@@ -48,21 +42,14 @@ const Library = () => {
   }, []);
 
   const formatQuestionCount = (count: number) => {
-    if (count <= 0) return 0;
-    
-    if (count < 1000) {
+    if (count <= 999) {
       return Math.round(count / 100) * 100;
-    } else if (count < 10000) {
-      const thousands = Math.floor(count / 1000) * 1000;
-      const remainder = count % 1000;
-      const hundreds = Math.round(remainder / 100) * 100;
-      return thousands + hundreds;
+    } else if (count <= 9999) {
+      return Math.round(count / 1000) * 1000;
     } else {
       const tenThousands = Math.floor(count / 10000) * 10000;
-      const remainderAfterTenThousands = count % 10000;
-      const thousands = Math.round(remainderAfterTenThousands / 1000) * 1000;
-      const remainderAfterThousands = remainderAfterTenThousands % 1000;
-      const hundreds = Math.round(remainderAfterThousands / 100) * 100;
+      const thousands = Math.floor((count % 10000) / 1000) * 1000;
+      const hundreds = Math.round((count % 1000) / 100) * 100;
       return tenThousands + thousands + hundreds;
     }
   };
