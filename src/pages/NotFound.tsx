@@ -1,17 +1,18 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Home, ArrowLeft, Search, HelpCircle } from 'lucide-react';
 import Logo from '@/components/branding/Logo';
 
-const SUPPORT_EMAIL = 'support@saemstunes.com'; // <- change to your support address
+const SUPPORT_EMAIL = 'support@yourdomain.com';
 
 const NotFound: React.FC = () => {
   const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
+  const [message, setMessage] = useState<string>('We couldn\'t find the page you were looking for. It might have been moved or deleted.');
+  const [loading, setLoading] = useState<boolean>(true);
 
   const goBack = useCallback(() => {
-    // fallback: if there is no meaningful history, send user home
     if (window.history.length > 2) {
       navigate(-1);
     } else {
@@ -19,20 +20,41 @@ const NotFound: React.FC = () => {
     }
   }, [navigate]);
 
-  const mailtoHref = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
-    `404 encountered: ${pathname}`
-  )}&body=${encodeURIComponent(
-    `I hit a 404 on ${pathname}. Please describe what you were trying to do:`
-  )}`;
+  const mailtoHref = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(`404 encountered: ${pathname}`)}&body=${encodeURIComponent(`I hit a 404 on ${pathname}. Please describe what you were trying to do:`)}`;
+
+  useEffect(() => {
+    const fetch404Message = async () => {
+      try {
+        const response = await fetch('/api/404-message', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            path: pathname,
+            search,
+            referrer: document.referrer || '',
+            userAgent: navigator.userAgent,
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setMessage(data.message);
+        }
+      } catch (error) {
+        console.error('Failed to fetch 404 message:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetch404Message();
+  }, [pathname, search]);
 
   return (
     <main className="min-h-screen flex items-center justify-center p-6 bg-background">
-      <section
-        aria-labelledby="notfound-title"
-        className="max-w-md w-full text-center relative" // made relative for absolute positioning of pathname
-        role="article"
-      >
-        {/* absolutely positioned pathname (top-right) — won't affect layout or centering */}
+      <section aria-labelledby="notfound-title" className="max-w-md w-full text-center relative" role="article">
         <p className="absolute top-4 right-4 text-[11px] font-mono text-muted-foreground/80 select-all break-all">
           {pathname}
         </p>
@@ -42,22 +64,12 @@ const NotFound: React.FC = () => {
         </header>
 
         <div className="relative">
-          <div
-            aria-hidden="true"
-            className="text-8xl font-bold text-gold/20 select-none"
-          >
-            404
-          </div>
-
+          <div aria-hidden="true" className="text-8xl font-bold text-gold/20 select-none">404</div>
           <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 px-4">
-            <h1 id="notfound-title" className="text-2xl font-proxima font-bold mb-2">
-              Page not found
-            </h1>
+            <h1 id="notfound-title" className="text-2xl font-proxima font-bold mb-2">Page not found</h1>
             <p className="text-muted-foreground mb-6">
-              We couldn't find the page you were looking for. It might have been moved or deleted.
+              {loading ? 'Loading...' : message}
             </p>
-
-            {/* removed inline pathname here so overlay stays centered */}
           </div>
         </div>
 
@@ -72,9 +84,12 @@ const NotFound: React.FC = () => {
             <ArrowLeft className="h-4 w-4" />
             Go back
           </Button>
-
-          {/* Using asChild (if your Button supports it) so Link receives correct semantics */}
-          <Button asChild className="bg-gold hover:bg-gold/90 text-white flex items-center justify-center gap-2" aria-label="Go home" title="Go home">
+          <Button
+            asChild
+            className="bg-gold hover:bg-gold/90 text-white flex items-center justify-center gap-2"
+            aria-label="Go home"
+            title="Go home"
+          >
             <Link to="/" className="w-full flex items-center justify-center gap-2">
               <Home className="h-4 w-4" />
               Home
@@ -89,7 +104,6 @@ const NotFound: React.FC = () => {
               Search
             </Link>
           </Button>
-
           <Button asChild variant="ghost" size="sm" aria-label="Contact support">
             <Link to="/contact-us" className="flex items-center gap-2">
               <HelpCircle className="h-4 w-4" />
@@ -100,14 +114,9 @@ const NotFound: React.FC = () => {
 
         <p className="text-xs text-muted-foreground mt-10">
           If you believe this is an error, please{' '}
-          <Link to="/contact-us" className="underline hover:opacity-90">
-            contact support
-          </Link>
-          {' '}or email{' '}
-          <a href={mailtoHref} className="underline hover:opacity-90">
-            {SUPPORT_EMAIL}
-          </a>
-          .
+          <Link to="/contact-us" className="underline hover:opacity-90">contact support</Link>{' '}
+          or email{' '}
+          <a href={mailtoHref} className="underline hover:opacity-90">{SUPPORT_EMAIL}</a>.
         </p>
       </section>
     </main>
