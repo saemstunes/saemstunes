@@ -1,11 +1,5 @@
-import { supabase } from '@/integrations/supabase/server-client';
+import { supabase } from '@/integrations/supabase/client';
 
-// Initialize Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-// Define message variants
 const VARIANTS = {
   playful: [
     "Can't find `{path}`. Our squirrels looked and came up empty-pawed.",
@@ -51,7 +45,6 @@ const VARIANTS = {
   ]
 };
 
-// Levenshtein distance function for typo detection
 function levenshtein(a: string, b: string): number {
   const dp = Array.from({ length: a.length + 1 }, (_, i) => Array(b.length + 1).fill(0));
   for (let i = 0; i <= a.length; i++) dp[i][0] = i;
@@ -68,10 +61,8 @@ function levenshtein(a: string, b: string): number {
   return dp[a.length][b.length];
 }
 
-export async function post({ request }: { request: Request }) {
+export const handle404 = async (path: string, search: string, referrer: string, userAgent: string) => {
   try {
-    const { path, search, referrer, userAgent } = await request.json();
-
     // 1. Upsert the 404 hit into the database
     const now = new Date().toISOString();
     const { data: existing, error: selectError } = await supabase
@@ -116,13 +107,13 @@ export async function post({ request }: { request: Request }) {
       if (insertError) throw insertError;
     }
 
-    // 2. Get a list of known routes (you should replace this with your app's routes)
+    // 2. Get a list of known routes (replace with your app's routes)
     const knownRoutes = ['/', '/search', '/contact-us', '/blog', '/products'];
 
     // 3. Compute signals
     const hasQuery = !!search;
     const isFrequent = count > 10;
-    const externalReferrer = referrer && !referrer.includes(request.headers.get('host') || 'yourdomain.com');
+    const externalReferrer = referrer && !referrer.includes(window.location.hostname);
     let looksLikeTypo = false;
     let closest = '';
 
@@ -163,15 +154,9 @@ export async function post({ request }: { request: Request }) {
       .replace(/{count}/g, String(count))
       .replace(/{closest}/g, closest);
 
-    return new Response(JSON.stringify({ message, bucket, count }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return { message, bucket, count };
   } catch (error) {
-    console.error('Error in 404-message API:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    console.error('Error in 404 handler:', error);
+    return { message: `We couldn't find the page ${path}. It might have been moved or deleted.`, bucket: 'apologetic', count: 0 };
   }
-}
+};
