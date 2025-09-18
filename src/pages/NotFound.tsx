@@ -3,9 +3,9 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Home, ArrowLeft, Search, HelpCircle } from 'lucide-react';
 import Logo from '@/components/branding/Logo';
-import { handle404 } from '@/api/404Handler';
+import { handle404 } from '@/api/404-message.ts';
 
-const SUPPORT_EMAIL = 'support@yourdomain.com';
+const SUPPORT_EMAIL = 'contact@saemstunes.com';
 
 const NotFound: React.FC = () => {
   const navigate = useNavigate();
