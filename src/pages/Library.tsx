@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
@@ -15,12 +15,57 @@ import ResourceCard from "@/components/resources/ResourceCard";
 import { Resource } from "@/types/resource";
 import { useToast } from "@/hooks/use-toast";
 import { useUserQuizProgress } from "@/hooks/useQuizzes";
+import { supabase } from "@/lib/supabase";
 
 const Library = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { getCompletedQuizIds, refetch: refetchProgress } = useUserQuizProgress();
+  const [totalQuestions, setTotalQuestions] = useState(91);
+
+  useEffect(() => {
+    const fetchQuestionCount = async () => {
+      try {
+        const { count, error } = await supabase
+          .from('quizzes')
+          .select('*', { count: 'exact', head: true });
+        
+        if (error) {
+          console.error('Error fetching question count:', error);
+          return;
+        }
+        
+        if (count !== null) {
+          setTotalQuestions(count);
+        }
+      } catch (error) {
+        console.error('Error fetching question count:', error);
+      }
+    };
+
+    fetchQuestionCount();
+  }, []);
+
+  const formatQuestionCount = (count: number) => {
+    if (count <= 0) return 0;
+    
+    if (count < 1000) {
+      return Math.round(count / 100) * 100;
+    } else if (count < 10000) {
+      const thousands = Math.floor(count / 1000) * 1000;
+      const remainder = count % 1000;
+      const hundreds = Math.round(remainder / 100) * 100;
+      return thousands + hundreds;
+    } else {
+      const tenThousands = Math.floor(count / 10000) * 10000;
+      const remainderAfterTenThousands = count % 10000;
+      const thousands = Math.round(remainderAfterTenThousands / 1000) * 1000;
+      const remainderAfterThousands = remainderAfterTenThousands % 1000;
+      const hundreds = Math.round(remainderAfterThousands / 100) * 100;
+      return tenThousands + thousands + hundreds;
+    }
+  };
 
   const savedVideos = mockVideos.slice(0, 4);
   const saemOfferings = mockVideos.slice(4, 8).map(video => ({...video, isExclusive: true}));
@@ -279,7 +324,7 @@ const Library = () => {
                   <li>• Professional: 50 questions of difficulty 1-4</li>
                 </ul>
                 <p className="text-sm text-muted-foreground">
-                  Questions are randomly selected from our database of 91+ music questions.
+                  Questions are randomly selected from our database of {formatQuestionCount(totalQuestions)}+ music questions.
                 </p>
               </CardContent>
             </Card>
