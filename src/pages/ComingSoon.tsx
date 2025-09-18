@@ -1,9 +1,9 @@
-
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Music, Sparkles, Clock, ArrowLeft, MessageSquarePlus } from "lucide-react";
 import { motion } from "framer-motion";
+import GlitchText from "@/components/GlitchText";
 
 const ComingSoon = () => {
   const navigate = useNavigate();
@@ -22,7 +22,6 @@ const ComingSoon = () => {
       >
         <Card className="border-gold/20 shadow-2xl bg-card/80 backdrop-blur-sm">
           <CardContent className="p-8 text-center">
-            {/* Animated musical notes */}
             <div className="relative mb-8">
               <motion.div
                 animate={{ rotate: 360 }}
@@ -38,7 +37,6 @@ const ComingSoon = () => {
               >
                 <Sparkles className="h-6 w-6" />
               </motion.div>
-              
               <motion.div
                 animate={{ y: [-10, 10, -10] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
@@ -48,39 +46,49 @@ const ComingSoon = () => {
               </motion.div>
             </div>
 
-            <motion.h1 
+            <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
+              className="mb-4"
+            >
+              <GlitchText speed={1} enableShadows={true} enableOnHover={true} className="text-6xl text-gold">
+                404
+              </GlitchText>
+            </motion.div>
+
+            <motion.h1
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
               className="text-4xl font-bold mb-4 text-foreground"
             >
               🎵 New Feature Coming Soon! 🎵
             </motion.h1>
 
-            <motion.p 
+            <motion.p
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.4 }}
+              transition={{ delay: 0.5 }}
               className="text-xl text-muted-foreground mb-2"
             >
               We're crafting something <span className="text-gold font-semibold">amazing</span> for you!
             </motion.p>
 
-            <motion.p 
+            <motion.p
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.6 }}
+              transition={{ delay: 0.7 }}
               className="text-lg text-muted-foreground mb-8"
             >
-              This feature is currently under construction and will be available soon. 
-              <br />
-              Stay tuned for an incredible musical experience! 🎼
+              This feature is currently under construction and will be available soon.
+              <br /> Stay tuned for an incredible musical experience! 🎼
             </motion.p>
 
-            <motion.div 
+            <motion.div
               initial={{ y: 30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.8 }}
+              transition={{ delay: 0.9 }}
               className="flex flex-col sm:flex-row gap-4 justify-center items-center"
             >
               <Button
@@ -92,7 +100,6 @@ const ComingSoon = () => {
                 <ArrowLeft className="mr-2 h-5 w-5" />
                 Return to Home
               </Button>
-
               <Button
                 onClick={handleRequestFeature}
                 variant="outline"
@@ -104,7 +111,7 @@ const ComingSoon = () => {
               </Button>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1.2 }}
