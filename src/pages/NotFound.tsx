@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Home, ArrowLeft, Search, HelpCircle } from 'lucide-react';
 import Logo from '@/components/branding/Logo';
+import { handle404 } from '@/api/404Handler';
 
 const SUPPORT_EMAIL = 'support@yourdomain.com';
 
@@ -23,33 +24,24 @@ const NotFound: React.FC = () => {
   const mailtoHref = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(`404 encountered: ${pathname}`)}&body=${encodeURIComponent(`I hit a 404 on ${pathname}. Please describe what you were trying to do:`)}`;
 
   useEffect(() => {
-    const fetch404Message = async () => {
+    const process404 = async () => {
       try {
-        const response = await fetch('/api/404-message', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            path: pathname,
-            search,
-            referrer: document.referrer || '',
-            userAgent: navigator.userAgent,
-          }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setMessage(data.message);
-        }
+        const result = await handle404(
+          pathname,
+          search,
+          document.referrer || '',
+          navigator.userAgent
+        );
+        setMessage(result.message);
       } catch (error) {
-        console.error('Failed to fetch 404 message:', error);
+        console.error('Failed to process 404:', error);
+        setMessage(`We couldn't find the page ${pathname}. It might have been moved or deleted.`);
       } finally {
         setLoading(false);
       }
     };
 
-    fetch404Message();
+    process404();
   }, [pathname, search]);
 
   return (
