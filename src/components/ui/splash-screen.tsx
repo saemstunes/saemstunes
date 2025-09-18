@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Loader2, Music, Play, Headphones, Volume2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -58,6 +57,7 @@ const SplashScreen = ({
   const [progress, setProgress] = useState(0);
   const [showMusicNotes, setShowMusicNotes] = useState(false);
   const [currentMessage, setCurrentMessage] = useState(0);
+  const [logoLoaded, setLogoLoaded] = useState(false);
 
   const loadingMessages = [
     "Tuning the instruments...",
@@ -106,6 +106,17 @@ const SplashScreen = ({
       delay: 2,
     },
   ], []);
+
+  // Preload the logo to ensure it shows immediately
+  useEffect(() => {
+    const img = new Image();
+    img.src = "/logo.svg";
+    img.onload = () => setLogoLoaded(true);
+    img.onerror = () => {
+      console.error("Failed to load logo");
+      setLogoLoaded(true); // Continue even if logo fails to load
+    };
+  }, []);
 
   // Handle splash screen exit
   const handleSplashExit = useCallback(() => {
@@ -238,7 +249,7 @@ const SplashScreen = ({
                 transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
               />
 
-              {/* Logo container */}
+              {/* Logo container with SVG logo */}
               <div className="relative z-10 flex items-center justify-center bg-card/80 backdrop-blur-sm rounded-full p-6 border border-primary/30">
                 <div 
                   className="w-20 h-20 rounded-full flex items-center justify-center shadow-2xl"
@@ -246,7 +257,25 @@ const SplashScreen = ({
                     background: `linear-gradient(135deg, ${THEME_COLORS.primaryLight}, ${THEME_COLORS.primary})`
                   }}
                 >
-                  <Music className="w-10 h-10 text-white" />
+                  {/* Show logo immediately when loaded, or fallback to music icon */}
+                  {logoLoaded ? (
+                    <img 
+                      src="/logo.svg" 
+                      alt="Saem's Tunes Logo" 
+                      className="w-10 h-10"
+                      onError={(e) => {
+                        // Fallback to music icon if logo fails to load
+                        e.currentTarget.style.display = 'none';
+                        const fallback = document.createElement('div');
+                        fallback.innerHTML = '<svg data-icon="music" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>';
+                        e.currentTarget.parentNode?.appendChild(fallback);
+                      }}
+                    />
+                  ) : (
+                    <div className="w-10 h-10 flex items-center justify-center">
+                      <Music className="w-8 h-8 text-white" />
+                    </div>
+                  )}
                 </div>
               </div>
 
