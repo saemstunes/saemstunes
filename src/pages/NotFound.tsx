@@ -2,10 +2,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, ArrowLeft, Search, HelpCircle } from 'lucide-react';
+import { Home, ArrowLeft, Search, HelpCircle, ExternalLink } from 'lucide-react';
 import Logo from '@/components/branding/Logo';
 import { handle404 } from '@/api/404-message.ts';
-import { checkRoute } from '@/utils/routeSuggestions'; // Add this import
 
 const SUPPORT_EMAIL = 'contact@saemstunes.com';
 
@@ -14,7 +13,7 @@ const NotFound: React.FC = () => {
   const { pathname, search } = useLocation();
   const [message, setMessage] = useState<string>('We couldn\'t find the page you were looking for. It might have been moved or deleted.');
   const [loading, setLoading] = useState<boolean>(true);
-  const [suggestion, setSuggestion] = useState<string | null>(null); // Add state for suggestion
+  const [bestMatch, setBestMatch] = useState<string | null>(null);
 
   const goBack = useCallback(() => {
     if (window.history.length > 2) {
@@ -24,8 +23,27 @@ const NotFound: React.FC = () => {
     }
   }, [navigate]);
 
-  const mailtoHref = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(`404 encountered: ${pathname}`)}&body=${encodeURIComponent(`I hit a 404 on ${pathname}. Please describe what you were trying to do:`)}`;
-
+  const mailtoHref = `mailto:${SUPPORT_EMAIL}
+  ?subject=${encodeURIComponent(`404 encountered: ${pathname}`)}
+  &body=${encodeURIComponent(
+    `Hello Support,
+    
+    I ran into a 404 error while visiting:
+    
+       ${window.location.href}
+       
+       Details:
+       - Path: ${pathname}
+       - Referrer: ${document.referrer || "N/A"}
+       - User Agent: ${navigator.userAgent}
+       - Time (local): ${new Date().toLocaleString()}
+       
+       I was trying to: [please describe what you were doing]
+       
+       Thanks,
+       [Your Name]`
+  )}`;
+  
   useEffect(() => {
     const process404 = async () => {
       try {
@@ -36,17 +54,10 @@ const NotFound: React.FC = () => {
           navigator.userAgent
         );
         setMessage(result.message);
-        
-        // Check for route suggestion
-        const routeSuggestion = checkRoute(pathname);
-        setSuggestion(routeSuggestion);
+        setBestMatch(result.bestMatch);
       } catch (error) {
         console.error('Failed to process 404:', error);
         setMessage(`We couldn't find the page ${pathname}. It might have been moved or deleted.`);
-        
-        // Check for route suggestion even on error
-        const routeSuggestion = checkRoute(pathname);
-        setSuggestion(routeSuggestion);
       } finally {
         setLoading(false);
       }
@@ -67,15 +78,21 @@ const NotFound: React.FC = () => {
           <div aria-hidden="true" className="text-8xl font-bold text-gold/20 select-none">404</div>
           <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 px-4">
             <h1 id="notfound-title" className="text-2xl font-proxima font-bold mb-2">Page not found</h1>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-muted-foreground mb-4">
               {loading ? 'Loading...' : message}
             </p>
 
-            {/* Display suggestion if available */}
-            {suggestion && (
-              <p className="text-gold/20 dark:text-gold/90 mb-4 text-sm">
-                {suggestion}
-              </p>
+            {/* Display suggested route if available */}
+            {bestMatch && (
+              <div className="mb-4 p-3 bg-muted rounded-lg">
+                <p className="text-sm text-foreground mb-2">Were you looking for this page?</p>
+                <Button asChild variant="outline" className="w-full justify-between">
+                  <Link to={bestMatch}>
+                    <span>{bestMatch}</span>
+                    <ExternalLink className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
             )}
 
             <p className="text-[11px] font-mono text-muted-foreground/80 select-all break-all mb-6 text-center"> 
