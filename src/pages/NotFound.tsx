@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Home, ArrowLeft, Search, HelpCircle } from 'lucide-react';
 import Logo from '@/components/branding/Logo';
 import { handle404 } from '@/api/404-message.ts';
-import { isKnownRoute } from '@/config/routes';
 
 const SUPPORT_EMAIL = 'contact@saemstunes.com';
 
@@ -13,7 +12,6 @@ const NotFound: React.FC = () => {
   const { pathname, search } = useLocation();
   const [message, setMessage] = useState<string>('We couldn\'t find the page you were looking for. It might have been moved or deleted.');
   const [loading, setLoading] = useState<boolean>(true);
-  const [isKnownPath, setIsKnownPath] = useState<boolean>(false);
 
   const goBack = useCallback(() => {
     if (window.history.length > 2) {
@@ -28,20 +26,13 @@ const NotFound: React.FC = () => {
   useEffect(() => {
     const process404 = async () => {
       try {
-        const known = isKnownRoute(pathname);
-        setIsKnownPath(known);
-        
-        if (known) {
-          setMessage('This page exists but may be loading. Please wait or try refreshing.');
-        } else {
-          const result = await handle404(
-            pathname,
-            search,
-            document.referrer || '',
-            navigator.userAgent
-          );
-          setMessage(result.message);
-        }
+        const result = await handle404(
+          pathname,
+          search,
+          document.referrer || '',
+          navigator.userAgent
+        );
+        setMessage(result.message);
       } catch (error) {
         console.error('Failed to process 404:', error);
         setMessage(`We couldn't find the page ${pathname}. It might have been moved or deleted.`);
@@ -64,9 +55,7 @@ const NotFound: React.FC = () => {
         <div className="relative">
           <div aria-hidden="true" className="text-8xl font-bold text-gold/20 select-none">404</div>
           <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 px-4">
-            <h1 id="notfound-title" className="text-2xl font-proxima font-bold mb-2">
-              {isKnownPath ? 'Page Loading' : 'Page not found'}
-            </h1>
+            <h1 id="notfound-title" className="text-2xl font-proxima font-bold mb-2">Page not found</h1>
             <p className="text-muted-foreground mb-6">
               {loading ? 'Loading...' : message}
             </p>
@@ -101,22 +90,20 @@ const NotFound: React.FC = () => {
           </Button>
         </div>
 
-        {!isKnownPath && (
-          <div className="flex justify-center gap-6 mt-8">
-            <Button asChild variant="ghost" size="sm" aria-label="Search">
-              <Link to="/search" className="flex items-center gap-2">
-                <Search className="h-4 w-4" />
-                Search
-              </Link>
-            </Button>
-            <Button asChild variant="ghost" size="sm" aria-label="Contact support">
-              <Link to="/contact-us" className="flex items-center gap-2">
-                <HelpCircle className="h-4 w-4" />
-                Get help
-              </Link>
-            </Button>
-          </div>
-        )}
+        <div className="flex justify-center gap-6 mt-8">
+          <Button asChild variant="ghost" size="sm" aria-label="Search">
+            <Link to="/search" className="flex items-center gap-2">
+              <Search className="h-4 w-4" />
+              Search
+            </Link>
+          </Button>
+          <Button asChild variant="ghost" size="sm" aria-label="Contact support">
+            <Link to="/contact-us" className="flex items-center gap-2">
+              <HelpCircle className="h-4 w-4" />
+              Get help
+            </Link>
+          </Button>
+        </div>
 
         <p className="text-xs text-muted-foreground mt-10">
           If you believe this is an error, please{' '}
