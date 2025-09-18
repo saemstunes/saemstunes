@@ -47,10 +47,7 @@ const NotFound: React.FC = () => {
   return (
     <main className="min-h-screen flex items-center justify-center p-6 bg-background">
       <section aria-labelledby="notfound-title" className="max-w-md w-full text-center relative" role="article">
-        <p className="absolute top-4 right-4 text-[11px] font-mono text-muted-foreground/80 select-all break-all">
-          {pathname}
-        </p>
-
+    
         <header className="mb-8">
           <Logo size="lg" className="mx-auto" />
         </header>
@@ -111,6 +108,9 @@ const NotFound: React.FC = () => {
           <a href={mailtoHref} className="underline hover:opacity-90">{SUPPORT_EMAIL}</a>.
         </p>
       </section>
+      <p className="text-[11px] font-mono text-muted-foreground/80 select-all break-all mt-4">
+          {pathname}
+      </p>
     </main>
   );
 };
