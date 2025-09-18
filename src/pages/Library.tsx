@@ -15,7 +15,7 @@ import ResourceCard from "@/components/resources/ResourceCard";
 import { Resource } from "@/types/resource";
 import { useToast } from "@/hooks/use-toast";
 import { useUserQuizProgress } from "@/hooks/useQuizzes";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 
 const Library = () => {
   const { user } = useAuth();
@@ -23,23 +23,37 @@ const Library = () => {
   const { toast } = useToast();
   const { getCompletedQuizIds, refetch: refetchProgress } = useUserQuizProgress();
   const [totalQuestions, setTotalQuestions] = useState(91);
+  const [userTierInfo, setUserTierInfo] = useState(null);
 
   useEffect(() => {
-    const fetchQuestionCount = async () => {
+    const fetchData = async () => {
       try {
-        const { count, error } = await supabase
+        // Fetch total question count
+        const { count, error: countError } = await supabase
           .from('quizzes')
           .select('*', { count: 'exact' });
         
-        if (error) throw error;
+        if (countError) throw countError;
         if (count) setTotalQuestions(count);
+
+        // Fetch user's tier information if logged in
+        if (user) {
+          const { data: tierData, error: tierError } = await supabase
+            .from('access_tiers')
+            .select('*')
+            .eq('name', user.subscriptionTier || 'free')
+            .single();
+          
+          if (tierError) throw tierError;
+          setUserTierInfo(tierData);
+        }
       } catch (error) {
-        console.error('Error fetching question count:', error);
+        console.error('Error fetching data:', error);
       }
     };
 
-    fetchQuestionCount();
-  }, []);
+    fetchData();
+  }, [user]);
 
   const formatQuestionCount = (count: number) => {
     if (count <= 999) {
@@ -51,6 +65,28 @@ const Library = () => {
       const thousands = Math.floor((count % 10000) / 1000) * 1000;
       const hundreds = Math.round((count % 1000) / 100) * 100;
       return tenThousands + thousands + hundreds;
+    }
+  };
+
+  const getTierDescription = () => {
+    if (!userTierInfo) {
+      return "Access our growing database of music questions to test your knowledge.";
+    }
+    
+    const tierName = userTierInfo.name.toLowerCase();
+    const features = userTierInfo.features || {};
+    
+    switch(tierName) {
+      case 'free':
+        return "Start with basic questions to build your music foundation.";
+      case 'basic':
+        return "Expand your knowledge with more diverse questions.";
+      case 'premium':
+        return "Access our full question database with varied difficulty levels.";
+      case 'professional':
+        return "Unlock our complete question library with expert-level content.";
+      default:
+        return "Access our growing database of music questions to test your knowledge.";
     }
   };
 
@@ -301,18 +337,18 @@ const Library = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Based on your subscription, you'll receive:
-                </p>
-                <ul className="text-sm space-y-1 mb-4">
-                  <li>• Free: 10 questions of difficulty 1</li>
-                  <li>• Basic: 20 questions of difficulty 1-2</li>
-                  <li>• Premium: 30 questions of difficulty 1-4</li>
-                  <li>• Professional: 50 questions of difficulty 1-4</li>
-                </ul>
                 <p className="text-sm text-muted-foreground">
-                  Questions are randomly selected from our database of {formatQuestionCount(totalQuestions)}+ music questions.
+                  {getTierDescription()}
                 </p>
+                {!user && (
+                  <Button 
+                    className="w-full mt-4" 
+                    variant="outline"
+                    onClick={() => navigate("/subscriptions")}
+                  >
+                    View Subscription Options
+                  </Button>
+                )}
               </CardContent>
             </Card>
             <Card>
