@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Music, Sparkles, Clock, ArrowLeft, MessageSquarePlus } from "lucide-react";
@@ -141,7 +141,11 @@ const ComingSoon = () => {
                 Want to be notified when this feature launches?
               </p>
               <p className="text-gold font-medium">
-                Follow us on social media for updates
+                Follow us on{" "}
+                <Link to="/follow-us" className="underline hover:text-gold/90">
+                  social media
+                </Link>
+                  {" "}for updates
               </p>
             </motion.div>
           </CardContent>
