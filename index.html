@@ -4,15 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 
-    <!-- ✅ Content Security Policy - Updated -->
+    <!-- ✅ Content Security Policy - Updated with Vercel domains -->
     <meta http-equiv="Content-Security-Policy" content="
-      default-src 'self' https://uxyvhqtwkutstihtxdsv.supabase.co https://cdn.gpteng.co https://newassets.hcaptcha.com https://hcaptcha.com;
+      default-src 'self' https://uxyvhqtwkutstihtxdsv.supabase.co https://cdn.gpteng.co https://newassets.hcaptcha.com https://hcaptcha.com https://vitals.vercel-insights.com https://vercel.live;
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://embed.tawk.to;
       font-src 'self' https://fonts.gstatic.com;
-      img-src 'self' data: https://uxyvhqtwkutstihtxdsv.supabase.co https://images.unsplash.com https://i.imgur.com https://img.youtube.com https://lh3.googleusercontent.com https://upload.wikimedia.org https://*.googleusercontent.com https://embed.tawk.to https://va.tawk.to;
-      connect-src 'self' https://uxyvhqtwkutstihtxdsv.supabase.co wss://uxyvhqtwkutstihtxdsv.supabase.co https://sentry.hcaptcha.com https://embed.tawk.to https://va.tawk.to wss://vsa4.tawk.to;
+      img-src 'self' data: https://uxyvhqtwkutstihtxdsv.supabase.co https://images.unsplash.com https://i.imgur.com https://img.youtube.com https://lh3.googleusercontent.com https://upload.wikimedia.org https://*.googleusercontent.com https://embed.tawk.to https://va.tawk.to https://vitals.vercel-insights.com;
+      connect-src 'self' https://uxyvhqtwkutstihtxdsv.supabase.co wss://uxyvhqtwkutstihtxdsv.supabase.co https://sentry.hcaptcha.com https://embed.tawk.to https://va.tawk.to wss://vsa4.tawk.to https://vitals.vercel-insights.com https://vercel.live;
       frame-src 'self' https://newassets.hcaptcha.com https://hcaptcha.com https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://embed.tawk.to;
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.hcaptcha.com https://cdn.gpteng.co https://static.cloudflareinsights.com https://embed.tawk.to;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.hcaptcha.com https://cdn.gpteng.co https://static.cloudflareinsights.com https://embed.tawk.to https://vitals.vercel-insights.com https://vercel.live;
     ">
 
     <!-- ✅ Primary SEO Meta Tags -->
@@ -63,6 +63,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://uxyvhqtwkutstihtxdsv.supabase.co" />
 
+    <!-- ✅ Preload Key Resources -->
+    <link rel="preload" as="image" href="https://i.imgur.com/ltEen5M.png" type="image/png" />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" />
+    
     <!-- ✅ Nunito Font -->
     <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet" />
 
@@ -285,7 +289,7 @@
         
         <!-- Additional Keywords and Content -->
         <h3>Popular Searches</h3>
-        <p>Christian piano lessons online, music app, African, african tech, music tech, christian tech, saem's tunes, kenya tech, saemstunes, worship leader training, church music education, online guitar tutorials, vocal coaching for worship, music theory for beginners, Christian music community, worship song tutorials, church musician training, faith-based music education, interactive music tools, online metronome, digital piano practice, guitar chord charts, worship leading tips, Christian songwriting, music ministry resources, church music planning, contemporary worship training, biblical music education</p>
+        <p>Christian piano lessons online, music teacher nairobi, music lessons nairobi, kenya music teacher, piano lessons, singing lessons, vocal teacher, voice lessons nairobi, music app, African, african tech, music tech, christian tech, saem's tunes, kenya tech, saemstunes, worship leader training, church music education, online guitar tutorials, vocal coaching for worship, music theory for beginners, Christian music community, worship song tutorials, church musician training, faith-based music education, interactive music tools, online metronome, digital piano practice, guitar chord charts, worship leading tips, Christian songwriting, music ministry resources, church music planning, contemporary worship training, biblical music education</p>
 
         <h3>Target Audiences</h3>
         <p>Music students seeking Christian education, worship leaders and church musicians, parents looking for faith-based music lessons for children, music teachers incorporating Christian values, church music directors, youth pastors using music in ministry, homeschooling families, adult learners returning to music, seminary students studying worship, music ministry leaders, Christian recording artists, praise and worship teams, church pianists and guitarists, children's ministry leaders, contemporary Christian musicians</p>
@@ -298,7 +302,7 @@
     <div id="root"></div>
 
     <!-- GPT Engineer & App Entrypoint -->
-    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
+    <script src="https://cdn.gpteng.co/gptengineer.js" type="module" defer></script>
     <script type="module" src="/src/main.tsx"></script>
     <style>#lovable-badge { display: none !important; }</style>
 </body>
