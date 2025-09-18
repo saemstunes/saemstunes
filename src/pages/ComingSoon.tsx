@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Music, Sparkles, Clock, ArrowLeft, MessageSquarePlus } from "lucide-react";
 import { motion } from "framer-motion";
-import GlitchText from "./GlitchText";
+import GlitchText from "@/components/GlitchText";
 
 const ComingSoon = () => {
   const navigate = useNavigate();
