@@ -19,7 +19,7 @@ const ComingSoon = () => {
           speed={0.6}
           enableShadows={true}
           enableOnHover={true}
-          className="text-gold/5 opacity-20 text-[min(50vw,40rem)] select-none"
+          className="text-gold/5 opacity-50 text-[min(50vw,40rem)] select-none"
         >
           404
         </GlitchText>
