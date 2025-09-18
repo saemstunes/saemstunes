@@ -16,9 +16,9 @@ const ComingSoon = () => {
       {/* Large 404 Background Element */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
         <GlitchText
-          speed={0.8}
+          speed={0.6}
           enableShadows={true}
-          enableOnHover={false}
+          enableOnHover={true}
           className="text-gold/5 opacity-20 text-[min(50vw,40rem)] select-none"
         >
           404
@@ -54,7 +54,8 @@ const ComingSoon = () => {
 
             <div className="space-y-4 mb-8">
               <p className="text-muted-foreground">
-                This feature is currently under development and will be available in the near future.
+                This feature is currently under development<br /> 
+                and will be available soon.
               </p>
               <p className="text-muted-foreground">
                 Stay tuned for updates as we work to bring you this enhanced functionality.
