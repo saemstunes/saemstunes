@@ -1,111 +1,123 @@
-import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, MessageSquarePlus } from "lucide-react";
+import { Music, Sparkles, Clock, ArrowLeft, MessageSquarePlus } from "lucide-react";
 import { motion } from "framer-motion";
-import GlitchText from "@/components/GlitchText";
+import GlitchText from "./GlitchText";
 
-const ComingSoon: React.FC = () => {
+const ComingSoon = () => {
   const navigate = useNavigate();
-
   const handleRequestFeature = () => {
     navigate("/music-tools", { state: { openSuggestTool: true } });
   };
 
   return (
-    <div className="min-h-screen bg-card text-foreground flex items-center justify-center p-6">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#060010] via-background to-[#1a001f] p-4">
       <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="relative w-full max-w-4xl"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-2xl"
       >
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-full flex items-center justify-center">
-            <div className="opacity-20 w-full flex items-center justify-center">
-              <GlitchText
-                speed={1}
-                enableShadows={true}
-                enableOnHover={false}
-                className="text-[8rem] sm:text-[10rem] md:text-[12rem] lg:text-[14rem] xl:text-[18rem] font-serif leading-none"
+        <Card className="border-[#ffd700]/30 shadow-2xl bg-card/80 backdrop-blur-sm relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1IiBoZWlnaHQ9IjUiPgo8cmVjdCB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjZmZkNzAwIiBvcGFjaXR5PSIwLjEiPjwvcmVjdD4KPC9zdmc+')] opacity-20"></div>
+          <CardContent className="p-8 text-center relative z-10">
+            <div className="relative mb-8">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                className="absolute -top-4 -left-4 text-gold/30"
               >
-                404
-              </GlitchText>
+                <Music className="h-8 w-8" />
+              </motion.div>
+              <motion.div
+                animate={{ rotate: -360 }}
+                transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                className="absolute -top-2 -right-2 text-gold/30"
+              >
+                <Sparkles className="h-6 w-6" />
+              </motion.div>
+              <motion.div
+                animate={{ y: [-10, 10, -10] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="bg-gold/10 p-6 rounded-full inline-block"
+              >
+                <Clock className="h-16 w-16 text-gold mx-auto" />
+              </motion.div>
             </div>
-          </div>
-        </div>
 
-        <Card className="relative z-10 bg-card/90 border border-border/10 shadow-lg backdrop-blur-sm">
-          <CardContent className="px-8 py-12 lg:px-16 lg:py-20 text-center">
-            <motion.h2
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.05 }}
-              className="text-4xl sm:text-5xl md:text-5xl font-serif font-semibold text-foreground mb-3"
+            <GlitchText
+              speed={1}
+              enableShadows={true}
+              enableOnHover={true}
+              className="mb-4 text-gold"
             >
               Coming Soon
-            </motion.h2>
+            </GlitchText>
+
+            <motion.h1
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="text-4xl font-bold mb-4 text-gold"
+            >
+              New Feature Coming Soon!
+            </motion.h1>
 
             <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.45, delay: 0.15 }}
-              className="max-w-2xl mx-auto text-base sm:text-lg text-muted-foreground mb-6"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="text-xl text-muted-foreground mb-2"
             >
-              We are preparing a refined musical experience for Saem’s Tunes. The page you
-              requested is undergoing careful work and will be available shortly.
+              We're crafting something <span className="text-gold font-semibold">amazing</span> for you!
             </motion.p>
 
             <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.45, delay: 0.25 }}
-              className="max-w-xl mx-auto text-sm sm:text-base text-muted-foreground mb-8"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="text-lg text-muted-foreground mb-8"
             >
-              If you want to be notified when this feature launches or suggest a tool,
-              use the requests button below. For now, you can return to the homepage.
+              This feature is currently under construction and will be available soon.
+              <br />
+              Stay tuned for an incredible musical experience! 🎼
             </motion.p>
 
             <motion.div
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.35 }}
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.8 }}
               className="flex flex-col sm:flex-row gap-4 justify-center items-center"
             >
               <Button
                 onClick={() => navigate("/")}
                 variant="default"
                 size="lg"
-                aria-label="Return to home"
-                className="min-w-[160px] bg-gold text-background hover:bg-gold/95"
+                className="bg-gold hover:bg-gold/90 text-black min-w-[160px]"
               >
                 <ArrowLeft className="mr-2 h-5 w-5" />
-                Return Home
+                Return to Home
               </Button>
-
               <Button
                 onClick={handleRequestFeature}
                 variant="outline"
                 size="lg"
-                aria-label="Request a feature"
-                className="min-w-[160px] border border-gold text-gold hover:bg-gold/10"
+                className="border-gold text-gold hover:bg-gold/10 min-w-[160px]"
               >
                 <MessageSquarePlus className="mr-2 h-5 w-5" />
-                Request Feature
+                Request a Feature
               </Button>
             </motion.div>
 
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.45, delay: 0.6 }}
+              transition={{ delay: 1.2 }}
               className="mt-8 text-sm text-muted-foreground"
             >
-              <div className="max-w-prose mx-auto">
-                <p className="mb-1">Need faster updates? Follow Saem’s Tunes on social media.</p>
-                <p className="text-xs text-muted-foreground/80">Thank you for your patience — we’re building something worth the wait.</p>
-              </div>
+              <p>Want to be notified when this feature launches?</p>
+              <p className="text-gold">Follow us on social media for updates!</p>
             </motion.div>
           </CardContent>
         </Card>

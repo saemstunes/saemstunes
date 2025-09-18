@@ -1,120 +1,111 @@
-.glitch {
-  color: #fff;
-  font-size: clamp(2rem, 10vw, 8rem);
-  white-space: nowrap;
-  font-weight: 900;
-  position: relative;
-  margin: 0 auto;
-  user-select: none;
-  cursor: pointer;
-}
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowLeft, MessageSquarePlus } from "lucide-react";
+import { motion } from "framer-motion";
+import GlitchText from "@/components/GlitchText";
 
-.glitch::after,
-.glitch::before {
-  content: attr(data-text);
-  position: absolute;
-  top: 0;
-  color: #fff;
-  background-color: #060010;
-  overflow: hidden;
-  clip-path: inset(0 0 0 0);
-}
+const ComingSoon: React.FC = () => {
+  const navigate = useNavigate();
 
-.glitch:not(.enable-on-hover)::after {
-  left: 10px;
-  text-shadow: var(--after-shadow, -10px 0 red);
-  animation: animate-glitch var(--after-duration, 3s) infinite linear alternate-reverse;
-}
-.glitch:not(.enable-on-hover)::before {
-  left: -10px;
-  text-shadow: var(--before-shadow, 10px 0 cyan);
-  animation: animate-glitch var(--before-duration, 2s) infinite linear alternate-reverse;
-}
+  const handleRequestFeature = () => {
+    navigate("/music-tools", { state: { openSuggestTool: true } });
+  };
 
-.glitch.enable-on-hover::after,
-.glitch.enable-on-hover::before {
-  content: '';
-  opacity: 0;
-  animation: none;
-}
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gold/5 via-background to-gold/10 flex items-center justify-center p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="relative w-full max-w-5xl"
+      >
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <GlitchText
+            speed={1}
+            enableShadows={true}
+            enableOnHover={false}
+            className="opacity-20 select-none text-[6.5rem] sm:text-[8.5rem] md:text-[10.5rem] lg:text-[13rem] xl:text-[16rem] font-serif leading-none"
+          >
+            404
+          </GlitchText>
+        </div>
 
-.glitch.enable-on-hover:hover::after {
-  content: attr(data-text);
-  opacity: 1;
-  left: 10px;
-  text-shadow: var(--after-shadow, -10px 0 red);
-  animation: animate-glitch var(--after-duration, 3s) infinite linear alternate-reverse;
-}
-.glitch.enable-on-hover:hover::before {
-  content: attr(data-text);
-  opacity: 1;
-  left: -10px;
-  text-shadow: var(--before-shadow, 10px 0 cyan);
-  animation: animate-glitch var(--before-duration, 2s) infinite linear alternate-reverse;
-}
+        <Card className="relative z-10 bg-card/95 border border-border/10 shadow-2xl backdrop-blur-sm">
+          <CardContent className="px-8 py-12 lg:px-16 lg:py-20 text-center">
+            <motion.h1
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, delay: 0.05 }}
+              className="text-3xl sm:text-4xl md:text-5xl font-serif font-semibold text-foreground mb-3"
+            >
+              Coming Soon
+            </motion.h1>
 
-@keyframes animate-glitch {
-  0% {
-    clip-path: inset(20% 0 50% 0);
-  }
-  5% {
-    clip-path: inset(10% 0 60% 0);
-  }
-  10% {
-    clip-path: inset(15% 0 55% 0);
-  }
-  15% {
-    clip-path: inset(25% 0 35% 0);
-  }
-  20% {
-    clip-path: inset(30% 0 40% 0);
-  }
-  25% {
-    clip-path: inset(40% 0 20% 0);
-  }
-  30% {
-    clip-path: inset(10% 0 60% 0);
-  }
-  35% {
-    clip-path: inset(15% 0 55% 0);
-  }
-  40% {
-    clip-path: inset(25% 0 35% 0);
-  }
-  45% {
-    clip-path: inset(30% 0 40% 0);
-  }
-  50% {
-    clip-path: inset(20% 0 50% 0);
-  }
-  55% {
-    clip-path: inset(10% 0 60% 0);
-  }
-  60% {
-    clip-path: inset(15% 0 55% 0);
-  }
-  65% {
-    clip-path: inset(25% 0 35% 0);
-  }
-  70% {
-    clip-path: inset(30% 0 40% 0);
-  }
-  75% {
-    clip-path: inset(40% 0 20% 0);
-  }
-  80% {
-    clip-path: inset(20% 0 50% 0);
-  }
-  85% {
-    clip-path: inset(10% 0 60% 0);
-  }
-  90% {
-    clip-path: inset(15% 0 55% 0);
-  }
-  95% {
-    clip-path: inset(25% 0 35% 0);
-  }
-  100% {
-    clip-path: inset(30% 0 40% 0);
-  }
-}
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.45, delay: 0.18 }}
+              className="max-w-2xl mx-auto text-base sm:text-lg text-muted-foreground mb-6"
+            >
+              We are preparing a refined musical experience for Saem’s Tunes. The page you requested is under careful development and will be available shortly.
+            </motion.p>
+
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.45, delay: 0.32 }}
+              className="max-w-xl mx-auto text-sm sm:text-base text-muted-foreground mb-8"
+            >
+              If you would like to suggest a feature or be notified when this launches, use the button below.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, delay: 0.4 }}
+              className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+            >
+              <Button
+                onClick={() => navigate("/")}
+                variant="default"
+                size="lg"
+                aria-label="Return to Home"
+                className="min-w-[160px] bg-gold text-background hover:bg-gold/95"
+              >
+                <ArrowLeft className="mr-2 h-5 w-5" />
+                Return Home
+              </Button>
+
+              <Button
+                onClick={handleRequestFeature}
+                variant="outline"
+                size="lg"
+                aria-label="Request a feature"
+                className="min-w-[160px] border border-gold text-gold hover:bg-gold/10"
+              >
+                <MessageSquarePlus className="mr-2 h-5 w-5" />
+                Request Feature
+              </Button>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.45, delay: 0.7 }}
+              className="mt-8 text-sm text-muted-foreground"
+            >
+              <div className="max-w-prose mx-auto">
+                <p className="mb-1">Follow Saem’s Tunes on social media for updates and launch notices.</p>
+                <p className="text-xs text-muted-foreground/80">Thank you for your patience — we’re building something worth the wait.</p>
+              </div>
+            </motion.div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
+  );
+};
+
+export default ComingSoon;
