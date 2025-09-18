@@ -9,6 +9,13 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
   plugins: [
     react(),
@@ -18,7 +25,7 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "gsap/SplitText": resolve(__dirname, "node_modules/gsap/SplitText") // Added GSAP alias
+      "gsap/SplitText": resolve(__dirname, "node_modules/gsap/SplitText")
     },
   },
   build: {
@@ -30,7 +37,7 @@ export default defineConfig(({ mode }) => ({
           ui: ['@radix-ui/react-accordion', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
           supabase: ['@supabase/supabase-js'],
           utils: ['clsx', 'tailwind-merge', 'framer-motion'],
-          gsap: ['gsap'] // Added GSAP to vendor chunk
+          gsap: ['gsap']
         }
       }
     },
@@ -38,6 +45,6 @@ export default defineConfig(({ mode }) => ({
     minify: 'esbuild',
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom', 'gsap'] // Added GSAP to deps
+    include: ['react', 'react-dom', 'react-router-dom', 'gsap']
   }
 }));
