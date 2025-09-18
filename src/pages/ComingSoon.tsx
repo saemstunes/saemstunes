@@ -1,7 +1,7 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Clock, ArrowLeft, MessageSquarePlus } from "lucide-react";
+import { Music, Sparkles, Clock, ArrowLeft, MessageSquarePlus } from "lucide-react";
 import { motion } from "framer-motion";
 import GlitchText from "@/components/GlitchText";
 
@@ -13,57 +13,103 @@ const ComingSoon = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#060010] via-background to-[#1a001f] p-4 relative overflow-hidden">
-      {/* Large 404 Background Element */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+      {/* Background 404 Glitch Text */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
         <GlitchText
-          speed={0.6}
+          speed={0.7}
           enableShadows={true}
           enableOnHover={false}
-          className="text-gold/5 opacity-50 text-[min(50vw,40rem)] select-none"
+          className="text-gold/10 opacity-30 text-[min(40vw,30rem)]"
         >
           404
         </GlitchText>
       </div>
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7 }}
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
         className="w-full max-w-2xl relative z-10"
       >
-        <Card className="border-gold/20 shadow-2xl bg-card/90 backdrop-blur-sm relative overflow-hidden">
-          <CardContent className="p-8 text-center">
-            {/* Simplified animated element */}
-            <motion.div
-              animate={{ y: [-5, 5, -5] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              className="bg-gold/5 p-5 rounded-full inline-block mb-6"
-            >
-              <Clock className="h-12 w-12 text-gold mx-auto" />
-            </motion.div>
-
-            {/* Clear hierarchy with main heading */}
-            <h1 className="text-3xl font-bold mb-4 text-gold-light uppercase tracking-wide">
-              Feature In Development
-            </h1>
-
-            {/* Supporting text with clear hierarchy */}
-            <p className="text-xl text-muted-foreground mb-6">
-              We're crafting an exceptional experience for you
-            </p>
-
-            <div className="space-y-4 mb-8">
-              <p className="text-muted-foreground">
-                This feature is currently under development<br /> 
-                and will be available soon.
-              </p>
-              <p className="text-muted-foreground">
-                Stay tuned for updates as we work to bring you this enhanced functionality.
-              </p>
+        <Card className="border-[#ffd700]/30 shadow-2xl bg-card/90 backdrop-blur-sm relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1IiBoZWlnaHQ9IjUiPgo8cmVjdCB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjZmZkNzAwIiBvcGFjaXR5PSIwLjEiPjwvcmVjdD4KPC9zdmc+')] opacity-20"></div>
+          
+          <CardContent className="p-8 text-center relative z-10">
+            {/* Animated icons */}
+            <div className="relative mb-6">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                className="absolute -top-4 -left-4 text-gold/30"
+              >
+                <Music className="h-8 w-8" />
+              </motion.div>
+              <motion.div
+                animate={{ rotate: -360 }}
+                transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                className="absolute -top-2 -right-2 text-gold/30"
+              >
+                <Sparkles className="h-6 w-6" />
+              </motion.div>
+              <motion.div
+                animate={{ y: [-10, 10, -10] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="bg-gold/10 p-5 rounded-full inline-block"
+              >
+                <Clock className="h-12 w-12 text-gold mx-auto" />
+              </motion.div>
             </div>
 
+            {/* Main heading */}
+            <motion.h1
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="text-3xl font-bold mb-2 text-gold uppercase tracking-wider"
+            >
+              Feature In Development
+            </motion.h1>
+
+            {/* Subheading with glitch effect */}
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="mb-6"
+            >
+              <GlitchText
+                speed={1}
+                enableShadows={true}
+                enableOnHover={true}
+                className="text-2xl font-bold text-white"
+              >
+                Coming Soon
+              </GlitchText>
+            </motion.div>
+
+            {/* Description text */}
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="space-y-4 mb-8"
+            >
+              <p className="text-lg text-muted-foreground">
+                We're crafting something <span className="text-gold font-semibold">extraordinary</span> for you!
+              </p>
+              <p className="text-muted-foreground">
+                This feature is currently under development and will be available in the near future.
+                Stay tuned for an enhanced musical experience.
+              </p>
+            </motion.div>
+
             {/* Action buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-6">
+            <motion.div
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-6"
+            >
               <Button
                 onClick={() => navigate("/")}
                 variant="default"
@@ -82,20 +128,22 @@ const ComingSoon = () => {
                 <MessageSquarePlus className="mr-2 h-5 w-5" />
                 Request Feature
               </Button>
-            </div>
+            </motion.div>
 
             {/* Follow prompt */}
-            <div className="pt-6 border-t border-gold/20">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8 }}
+              className="pt-6 border-t border-gold/20"
+            >
               <p className="text-sm text-muted-foreground mb-1">
                 Want to be notified when this feature launches?
               </p>
               <p className="text-gold font-medium">
-                Follow us for updates{" "}
-                <Link to="/follow-us" className="underline hover:text-gold/90">
-                     here
-                </Link>
+                Follow us on social media for updates
               </p>
-            </div>
+            </motion.div>
           </CardContent>
         </Card>
       </motion.div>
