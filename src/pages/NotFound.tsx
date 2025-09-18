@@ -59,6 +59,10 @@ const NotFound: React.FC = () => {
             <p className="text-muted-foreground mb-6">
               {loading ? 'Loading...' : message}
             </p>
+
+            <p className="text-[11px] font-mono text-muted-foreground/80 select-all break-all mb-6 text-center"> 
+              {pathname}              
+            </p>
           </div>
         </div>
 
@@ -107,10 +111,8 @@ const NotFound: React.FC = () => {
           or email{' '}
           <a href={mailtoHref} className="underline hover:opacity-90">{SUPPORT_EMAIL}</a>.
         </p>
+
       </section>
-      <p className="text-[11px] font-mono text-muted-foreground/80 select-all break-all mt-8 text-center">
-          {pathname}
-      </p>
     </main>
   );
 };
