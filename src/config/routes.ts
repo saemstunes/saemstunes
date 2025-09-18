@@ -48,6 +48,10 @@ export interface AppRoute {
   requiredRoles?: string[];
 }
 
+// Helper components for redirects
+const MusicShowcaseRedirect = () => <Navigate to="/tracks" replace />;
+const AudioPlayerRedirect = () => <Navigate to="/tracks" replace />;
+
 export const appRoutes: AppRoute[] = [
   { path: '/', element: <Index /> },
   { path: '/admin', element: <Admin /> },
@@ -68,7 +72,7 @@ export const appRoutes: AppRoute[] = [
   { path: '/library', element: <Library /> },
   { path: '/community', element: <Community /> },
   { path: '/tracks', element: <Tracks /> },
-  { path: '/music-showcase', element: <Navigate to="/tracks" replace /> },
+  { path: '/music-showcase', element: <MusicShowcaseRedirect /> },
   { path: '/player', element: <Player /> },
   { path: '/learning-hub', element: <LearningHub /> },
   { path: '/learning-hub/:id', element: <LearningModulePage /> },
@@ -115,7 +119,7 @@ export const appRoutes: AppRoute[] = [
   },
   { path: '/coming-soon', element: <ComingSoon /> },
   { path: '/tracks/:slug', element: <AudioPlayer /> },
-  { path: '/audio-player/:id', element: <Navigate to="/tracks" replace /> },
+  { path: '/audio-player/:id', element: <AudioPlayerRedirect /> },
   { path: '*', element: <NotFound /> }
 ];
 
