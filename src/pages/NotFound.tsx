@@ -13,6 +13,7 @@ const NotFound: React.FC = () => {
   const [message, setMessage] = useState<string>('We couldn\'t find the page you were looking for. It might have been moved or deleted.');
   const [loading, setLoading] = useState<boolean>(true);
   const [bestMatch, setBestMatch] = useState<string | null>(null);
+  const [messageWithLinks, setMessageWithLinks] = useState<React.ReactNode>('');
 
   const goBack = useCallback(() => {
     if (window.history.length > 2) {
@@ -35,9 +36,28 @@ const NotFound: React.FC = () => {
         );
         setMessage(result.message);
         setBestMatch(result.bestMatch);
+        
+        // Create message with clickable links
+        if (result.bestMatch && result.message.includes(result.bestMatch)) {
+          const parts = result.message.split(result.bestMatch);
+          const messageWithLink = (
+            <>
+              {parts[0]}
+              <Link to={result.bestMatch} className="text-gold underline hover:opacity-90">
+                {result.bestMatch}
+              </Link>
+              {parts[1]}
+            </>
+          );
+          setMessageWithLinks(messageWithLink);
+        } else {
+          setMessageWithLinks(result.message);
+        }
       } catch (error) {
         console.error('Failed to process 404:', error);
-        setMessage(`We couldn't find the page ${pathname}. It might have been moved or deleted.`);
+        const errorMessage = `We couldn't find the page ${pathname}. It might have been moved or deleted.`;
+        setMessage(errorMessage);
+        setMessageWithLinks(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -58,21 +78,9 @@ const NotFound: React.FC = () => {
           <div aria-hidden="true" className="text-8xl font-bold text-gold/20 select-none">404</div>
           <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 px-4">
             <h1 id="notfound-title" className="text-2xl font-proxima font-bold mb-2">Page not found</h1>
-            <p className="text-muted-foreground mb-4">
-              {loading ? 'Loading...' : message}
-            </p>
-
-            {bestMatch && (
-              <div className="mb-4 p-3 bg-muted rounded-lg">
-                <p className="text-sm text-foreground mb-2">Were you looking for this page?</p>
-                <Button asChild variant="outline" className="w-full justify-between">
-                  <Link to={bestMatch}>
-                    <span>{bestMatch}</span>
-                    <ExternalLink className="h-4 w-4" />
-                  </Link>
-                </Button>
-              </div>
-            )}
+            <div className="text-muted-foreground mb-4">
+              {loading ? 'Loading...' : messageWithLinks}
+            </div>
 
             <p className="text-[11px] font-mono text-muted-foreground/80 select-all break-all mb-6 text-center"> 
               {pathname}              
