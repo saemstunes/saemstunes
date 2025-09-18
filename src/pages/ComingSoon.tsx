@@ -14,11 +14,11 @@ const ComingSoon = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#060010] via-background to-[#1a001f] p-4 relative overflow-hidden">
       {/* Large 404 Background Element */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
         <GlitchText
           speed={0.6}
           enableShadows={true}
-          enableOnHover={true}
+          enableOnHover={false}
           className="text-gold/5 opacity-50 text-[min(50vw,40rem)] select-none"
         >
           404
