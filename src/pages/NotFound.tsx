@@ -1,9 +1,11 @@
+// NotFound.tsx
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Home, ArrowLeft, Search, HelpCircle } from 'lucide-react';
 import Logo from '@/components/branding/Logo';
 import { handle404 } from '@/api/404-message.ts';
+import { checkRoute } from '@/utils/routeSuggestions'; // Add this import
 
 const SUPPORT_EMAIL = 'contact@saemstunes.com';
 
@@ -12,6 +14,7 @@ const NotFound: React.FC = () => {
   const { pathname, search } = useLocation();
   const [message, setMessage] = useState<string>('We couldn\'t find the page you were looking for. It might have been moved or deleted.');
   const [loading, setLoading] = useState<boolean>(true);
+  const [suggestion, setSuggestion] = useState<string | null>(null); // Add state for suggestion
 
   const goBack = useCallback(() => {
     if (window.history.length > 2) {
@@ -33,9 +36,17 @@ const NotFound: React.FC = () => {
           navigator.userAgent
         );
         setMessage(result.message);
+        
+        // Check for route suggestion
+        const routeSuggestion = checkRoute(pathname);
+        setSuggestion(routeSuggestion);
       } catch (error) {
         console.error('Failed to process 404:', error);
         setMessage(`We couldn't find the page ${pathname}. It might have been moved or deleted.`);
+        
+        // Check for route suggestion even on error
+        const routeSuggestion = checkRoute(pathname);
+        setSuggestion(routeSuggestion);
       } finally {
         setLoading(false);
       }
@@ -59,6 +70,13 @@ const NotFound: React.FC = () => {
             <p className="text-muted-foreground mb-6">
               {loading ? 'Loading...' : message}
             </p>
+
+            {/* Display suggestion if available */}
+            {suggestion && (
+              <p className="text-blue-600 dark:text-blue-400 mb-4 text-sm">
+                {suggestion}
+              </p>
+            )}
 
             <p className="text-[11px] font-mono text-muted-foreground/80 select-all break-all mb-6 text-center"> 
               {pathname}              
