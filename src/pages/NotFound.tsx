@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Home, ArrowLeft, Search, HelpCircle } from 'lucide-react';
 import Logo from '@/components/branding/Logo';
 
-const SUPPORT_EMAIL = 'support@yourdomain.com'; // <- change to your support address
+const SUPPORT_EMAIL = 'support@saemstunes.com'; // <- change to your support address
 
 const NotFound: React.FC = () => {
   const navigate = useNavigate();
@@ -29,9 +29,14 @@ const NotFound: React.FC = () => {
     <main className="min-h-screen flex items-center justify-center p-6 bg-background">
       <section
         aria-labelledby="notfound-title"
-        className="max-w-md w-full text-center"
+        className="max-w-md w-full text-center relative" // made relative for absolute positioning of pathname
         role="article"
       >
+        {/* absolutely positioned pathname (top-right) — won't affect layout or centering */}
+        <p className="absolute top-4 right-4 text-[11px] font-mono text-muted-foreground/80 select-all break-all">
+          {pathname}
+        </p>
+
         <header className="mb-8">
           <Logo size="lg" className="mx-auto" />
         </header>
@@ -52,10 +57,7 @@ const NotFound: React.FC = () => {
               We couldn't find the page you were looking for. It might have been moved or deleted.
             </p>
 
-            {/* show attempted path for debugging / context */}
-            <p className="text-xs text-muted-foreground mb-6">
-              <span className="font-mono text-[11px]">{pathname}</span>
-            </p>
+            {/* removed inline pathname here so overlay stays centered */}
           </div>
         </div>
 
