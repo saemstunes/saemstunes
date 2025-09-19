@@ -391,7 +391,7 @@ const Library = () => {
           onClick={() => handleExclusiveContent("master-class-guitar")}>
           <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent z-10"></div>
           <img 
-            src="/placeholder.svg" 
+            src="https://i.imgur.com/DYWd4Ds.jpeg" 
             alt="Featured Saem's content" 
             className="absolute inset-0 w-full h-full object-cover" 
           />
