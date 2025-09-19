@@ -292,10 +292,12 @@ const Library = () => {
             <Button 
               variant="outline" 
               size="sm"
+              className="whitespace-nowrap"
               onClick={() => navigate("/auth")}
-            >
+              >
               Sign In
             </Button>
+
           ),
         });
       }, 1500);
