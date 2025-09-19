@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,7 @@ const ComingSoon = () => {
               speed={0.7}
               enableShadows={true}
               enableOnHover={false}
-              className="text-gold/10 opacity-30 text-[min(30vw,20rem)]"
+              className="text-gold/10 opacity-30 text-[min(40vw,30rem)]"
             >
               SOON
             </GlitchText>
@@ -69,18 +70,20 @@ const ComingSoon = () => {
               </motion.div>
             </div>
 
-            {/* Combined header with "Coming" and glitched "SOON" */}
-            <h1 id="comingsoon-title" className="text-3xl font-proxima font-bold mb-2 flex justify-center items-center">
-              <span className="mr-2">Coming</span>
+            <h1 id="comingsoon-title" className="text-2xl font-proxima font-bold mb-2">
+              Feature In Development
+            </h1>
+            
+            <div className="mb-4">
               <GlitchText
                 speed={1}
                 enableShadows={true}
                 enableOnHover={true}
-                className="text-3xl font-bold text-gold"
+                className="text-2xl font-bold text-gold"
               >
-                SOON
+                Coming Soon
               </GlitchText>
-            </h1>
+            </div>
 
             <div className="space-y-4 mb-6">
               <p className="text-muted-foreground">
